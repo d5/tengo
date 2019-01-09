@@ -1,21 +1,19 @@
 package tengo
 
 import (
-	"fmt"
-
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/parser"
 	"github.com/d5/tengo/scanner"
 	"github.com/d5/tengo/vm"
 )
 
-func Compile(input []byte) (*compiler.Bytecode, error) {
+func Compile(input []byte, filename string) (*compiler.Bytecode, error) {
 	fileSet := scanner.NewFileSet()
 
-	p := parser.NewParser(fileSet.AddFile("", -1, len(input)), input, nil)
+	p := parser.NewParser(fileSet.AddFile(filename, -1, len(input)), input, nil)
 	file, err := p.ParseFile()
 	if err != nil {
-		return nil, fmt.Errorf("parse error: %s", err.Error())
+		return nil, err
 	}
 
 	c := compiler.NewCompiler(nil, nil)
