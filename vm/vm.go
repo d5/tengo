@@ -34,6 +34,10 @@ type VM struct {
 func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object) *VM {
 	if globals == nil {
 		globals = make([]*objects.Object, GlobalsSize)
+	} else if len(globals) < GlobalsSize {
+		g := make([]*objects.Object, GlobalsSize)
+		copy(g, globals)
+		globals = g
 	}
 
 	frames := make([]Frame, MaxFrames)
@@ -678,6 +682,10 @@ func (v *VM) Run() error {
 	}
 
 	return nil
+}
+
+func (v *VM) Globals() []*objects.Object {
+	return v.globals
 }
 
 // for tests

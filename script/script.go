@@ -1,4 +1,4 @@
-package tengo
+package script
 
 import (
 	"fmt"
@@ -10,42 +10,37 @@ import (
 	"github.com/d5/tengo/vm"
 )
 
-type Variable struct {
-	name  string
-	value *objects.Object
-}
-
-func (v *Variable) Name() string {
-	return v.name
-}
-
-func (v *Variable) Value() interface{} {
-	return nil
-}
-
+// Script can simplify compilation and execution of embedded scripts.
 type Script struct {
-	variables map[string]*objects.Object
+	variables map[string]*Variable
 	input     []byte
 }
 
-func NewScript(input []byte) *Script {
+// New creates a Script instance with an input script.
+func New(input []byte) *Script {
 	return &Script{
-		variables: make(map[string]*objects.Object),
+		variables: make(map[string]*Variable),
 		input:     input,
 	}
 }
 
+// Add adds a new variable or updates an existing variable to the script.
 func (s *Script) Add(name string, value interface{}) error {
-	obj, err := objects.FromValue(value)
+	obj, err := interfaceToObject(value)
 	if err != nil {
 		return err
 	}
 
-	s.variables[name] = &obj
+	s.variables[name] = &Variable{
+		name:  name,
+		value: &obj,
+	}
 
 	return nil
 }
 
+// Remove removes (undefines) an existing variable for the script.
+// It returns false if the variable name is not defined.
 func (s *Script) Remove(name string) bool {
 	if _, ok := s.variables[name]; !ok {
 		return false
@@ -56,7 +51,8 @@ func (s *Script) Remove(name string) bool {
 	return true
 }
 
-func (s *Script) Compile() (*CompiledScript, error) {
+// Compile compiles the script with all the defined variables, and, returns Compiled object.
+func (s *Script) Compile() (*Compiled, error) {
 	symbolTable, globals := s.prepCompile()
 
 	fileSet := scanner.NewFileSet()
@@ -72,10 +68,9 @@ func (s *Script) Compile() (*CompiledScript, error) {
 		return nil, err
 	}
 
-	return &CompiledScript{
-		bytecode:    c.Bytecode(),
+	return &Compiled{
 		symbolTable: symbolTable,
-		globals:     globals,
+		machine:     vm.NewVM(c.Bytecode(), globals),
 	}, nil
 }
 
@@ -94,36 +89,17 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, globals []*ob
 			panic(fmt.Errorf("wrong symbol index: %d != %d", idx, symbol.Index))
 		}
 
-		globals[symbol.Index] = s.variables[name]
+		globals[symbol.Index] = s.variables[name].value
 	}
 
 	return
 }
 
-type CompiledScript struct {
-	bytecode    *compiler.Bytecode
-	symbolTable *compiler.SymbolTable
-	globals     []*objects.Object
-}
-
-func (c *CompiledScript) Run() error {
-	v := vm.NewVM(c.bytecode, c.globals)
-
-	return v.Run()
-}
-
-func (c *CompiledScript) Update(name string, value interface{}) error {
-	symbol, _, ok := c.symbolTable.Resolve(name)
-	if !ok {
-		return fmt.Errorf("name not found: %s", name)
+func (s *Script) copyVariables() map[string]*Variable {
+	vars := make(map[string]*Variable)
+	for n, v := range s.variables {
+		vars[n] = v
 	}
 
-	updated, err := objects.FromValue(value)
-	if err != nil {
-		return err
-	}
-
-	c.globals[symbol.Index] = &updated
-
-	return nil
+	return vars
 }
