@@ -84,15 +84,15 @@ func (s *Scanner) Scan() (tok token.Token, literal string, pos Pos) {
 			return token.Semicolon, "\n", pos
 		case '"':
 			insertSemi = true
-			tok = token.STRING
+			tok = token.String
 			literal = s.scanString()
 		case '\'':
 			insertSemi = true
-			tok = token.CHAR
+			tok = token.Char
 			literal = s.scanRune()
 		case '`':
 			insertSemi = true
-			tok = token.STRING
+			tok = token.String
 			literal = s.scanRawString()
 		case ':':
 			tok = s.switch2(token.Colon, token.Define)

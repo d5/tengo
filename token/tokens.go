@@ -12,8 +12,8 @@ const (
 	Ident
 	Int
 	Float
-	CHAR
-	STRING
+	Char
+	String
 	_literalEnd
 	_operatorBeg
 	Add          // +
@@ -88,8 +88,8 @@ var tokens = [...]string{
 	Ident:        "IDENT",
 	Int:          "INT",
 	Float:        "FLOAT",
-	CHAR:         "CHAR",
-	STRING:       "STRING",
+	Char:         "CHAR",
+	String:       "STRING",
 	Add:          "+",
 	Sub:          "-",
 	Mul:          "*",

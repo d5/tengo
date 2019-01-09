@@ -285,7 +285,7 @@ func (p *Parser) parseOperand() ast.Expr {
 		p.next()
 		return x
 
-	case token.CHAR:
+	case token.Char:
 		v, _ := utf8.DecodeRuneInString(p.tokenLit)
 		x := &ast.CharLit{
 			Value:    v,
@@ -295,7 +295,7 @@ func (p *Parser) parseOperand() ast.Expr {
 		p.next()
 		return x
 
-	case token.STRING:
+	case token.String:
 		v, _ := strconv.Unquote(p.tokenLit)
 		x := &ast.StringLit{
 			Value:    v,
@@ -485,10 +485,10 @@ func (p *Parser) parseStmt() (stmt ast.Stmt) {
 	}
 
 	switch p.token {
-	case // simple statements
-		token.Func, token.Ident, token.Int, token.Float, token.CHAR, token.STRING, token.True, token.False, token.LParen, // operands
-		token.LBrace, token.LBrack, // composite types
-		token.Add, token.Sub, token.Mul, token.And, token.Xor, token.Not: // unary operators
+	case                                                                                                                  // simple statements
+		token.Func, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False, token.LParen, // operands
+		token.LBrace, token.LBrack,                                                                                       // composite types
+		token.Add, token.Sub, token.Mul, token.And, token.Xor, token.Not:                                                 // unary operators
 		s := p.parseSimpleStmt(false)
 		p.expectSemi()
 		return s
