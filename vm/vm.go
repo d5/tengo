@@ -10,7 +10,7 @@ import (
 
 const (
 	StackSize   = 2048
-	GlobalsSize = 65536
+	GlobalsSize = 1024
 	MaxFrames   = 1024
 )
 
