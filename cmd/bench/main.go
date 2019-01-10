@@ -23,9 +23,9 @@ func runFib(n int) {
 
 	input := `
 fib := func(x) {
-	if(x == 0) {
+	if x == 0 {
 		return 0
-	} else if(x == 1) {
+	} else if x == 1 {
 		return 1
 	} else {
 		return fib(x-1) + fib(x-2)
@@ -42,6 +42,8 @@ fib := func(x) {
 		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
 	}
 
+	fmt.Printf("fib(%d) = %d\n", n, nativeResult)
+	fmt.Println("-------------------------------------")
 	fmt.Printf("Go:      %s\n", nativeTime)
 	fmt.Printf("Parser:  %s\n", parseTime)
 	fmt.Printf("Compile: %s\n", compileTime)
