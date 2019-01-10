@@ -840,8 +840,8 @@ func (v *VM) executeCall(numArgs int) error {
 		return v.callFunction(callee.Fn, callee.Free, numArgs)
 	case *objects.CompiledFunction:
 		return v.callFunction(callee, nil, numArgs)
-	case objects.BuiltinFunction:
-		return v.callBuiltinFunction(callee, numArgs)
+	case objects.Callable:
+		return v.callCallable(callee, numArgs)
 	default:
 		return fmt.Errorf("calling non-function: %s", callee.TypeName())
 	}
@@ -864,19 +864,21 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 	return nil
 }
 
-func (v *VM) callBuiltinFunction(builtin objects.BuiltinFunction, numArgs int) error {
+func (v *VM) callCallable(callable objects.Callable, numArgs int) error {
 	var args []objects.Object
 	for _, arg := range v.stack[v.sp-numArgs : v.sp] {
 		args = append(args, *arg)
 	}
 
-	res, err := builtin(args...)
+	res, err := callable.Call(args...)
 	v.sp -= numArgs + 1
 
+	// runtime error
 	if err != nil {
 		return err
 	}
 
+	// nil return -> undefined
 	if res == nil {
 		res = undefinedObj
 	}
@@ -933,6 +935,6 @@ func selectorAssign(dst, src *objects.Object, selectors []interface{}) error {
 func init() {
 	builtinFuncs = make([]objects.Object, len(objects.Builtins))
 	for i, b := range objects.Builtins {
-		builtinFuncs[i] = objects.BuiltinFunction(b.Func)
+		builtinFuncs[i] = &objects.BuiltinFunction{Value: b.Func}
 	}
 }
