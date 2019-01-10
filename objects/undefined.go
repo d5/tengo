@@ -27,7 +27,7 @@ func (o Undefined) IsFalsy() bool {
 }
 
 func (o Undefined) Equals(x Object) bool {
-	_, ok := x.(Undefined)
+	_, ok := x.(*Undefined)
 
 	return ok
 }

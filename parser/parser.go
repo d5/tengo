@@ -489,7 +489,7 @@ func (p *Parser) parseStmt() (stmt ast.Stmt) {
 
 	switch p.token {
 	case // simple statements
-		token.Func, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False, token.LParen, // operands
+		token.Func, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False, token.Undefined, token.LParen, // operands
 		token.LBrace, token.LBrack, // composite types
 		token.Add, token.Sub, token.Mul, token.And, token.Xor, token.Not: // unary operators
 		s := p.parseSimpleStmt(false)

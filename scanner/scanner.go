@@ -62,7 +62,7 @@ func (s *Scanner) Scan() (tok token.Token, literal string, pos Pos) {
 		literal = s.scanIdentifier()
 		tok = token.Lookup(literal)
 		switch tok {
-		case token.Ident, token.Break, token.Continue, token.Return, token.True, token.False:
+		case token.Ident, token.Break, token.Continue, token.Return, token.True, token.False, token.Undefined:
 			insertSemi = true
 		}
 	case '0' <= ch && ch <= '9':
