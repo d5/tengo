@@ -285,13 +285,7 @@ func (p *Parser) parseOperand() ast.Expr {
 		return x
 
 	case token.Char:
-		x := &ast.CharLit{
-			Value:    rune(p.tokenLit[1]),
-			ValuePos: p.pos,
-			Literal:  p.tokenLit,
-		}
-		p.next()
-		return x
+		return p.parseCharLit()
 
 	case token.String:
 		v, _ := strconv.Unquote(p.tokenLit)
@@ -353,6 +347,28 @@ func (p *Parser) parseOperand() ast.Expr {
 	p.errorExpected(pos, "operand")
 	p.advance(stmtStart)
 	return &ast.BadExpr{From: pos, To: p.pos}
+}
+
+func (p *Parser) parseCharLit() ast.Expr {
+	if n := len(p.tokenLit); n >= 3 {
+		if code, _, _, err := strconv.UnquoteChar(p.tokenLit[1:n-1], '\''); err == nil {
+			x := &ast.CharLit{
+				Value:    rune(code),
+				ValuePos: p.pos,
+				Literal:  p.tokenLit,
+			}
+			p.next()
+			return x
+		}
+	}
+
+	pos := p.pos
+	p.error(pos, "illegal char literal")
+	p.next()
+	return &ast.BadExpr{
+		From: pos,
+		To:   p.pos,
+	}
 }
 
 func (p *Parser) parseFuncLit() ast.Expr {

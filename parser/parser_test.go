@@ -207,6 +207,10 @@ func stringLit(value string, pos scanner.Pos) *ast.StringLit {
 	return &ast.StringLit{Value: value, ValuePos: pos}
 }
 
+func charLit(value rune, pos scanner.Pos) *ast.CharLit {
+	return &ast.CharLit{Value: value, ValuePos: pos, Literal: fmt.Sprintf("'%c'", value)}
+}
+
 func boolLit(value bool, pos scanner.Pos) *ast.BoolLit {
 	return &ast.BoolLit{Value: value, ValuePos: pos}
 }
