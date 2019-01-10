@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"math"
 	"strconv"
 
 	"github.com/d5/tengo/token"
@@ -68,7 +69,7 @@ func (o *Float) Copy() Object {
 }
 
 func (o *Float) IsFalsy() bool {
-	return false
+	return math.IsNaN(o.Value)
 }
 
 func (o *Float) Equals(x Object) bool {

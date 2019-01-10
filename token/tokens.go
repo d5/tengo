@@ -78,6 +78,7 @@ const (
 	True
 	False
 	In
+	Undefined
 	_keywordEnd
 )
 
@@ -150,6 +151,7 @@ var tokens = [...]string{
 	True:         "true",
 	False:        "false",
 	In:           "in",
+	Undefined:    "undefined",
 }
 
 func (tok Token) String() string {

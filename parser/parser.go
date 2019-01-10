@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"unicode/utf8"
 
 	"github.com/d5/tengo/ast"
 	"github.com/d5/tengo/scanner"
@@ -286,9 +285,8 @@ func (p *Parser) parseOperand() ast.Expr {
 		return x
 
 	case token.Char:
-		v, _ := utf8.DecodeRuneInString(p.tokenLit)
 		x := &ast.CharLit{
-			Value:    v,
+			Value:    rune(p.tokenLit[1]),
 			ValuePos: p.pos,
 			Literal:  p.tokenLit,
 		}
@@ -320,6 +318,11 @@ func (p *Parser) parseOperand() ast.Expr {
 			ValuePos: p.pos,
 			Literal:  p.tokenLit,
 		}
+		p.next()
+		return x
+
+	case token.Undefined:
+		x := &ast.UndefinedLit{TokenPos: p.pos}
 		p.next()
 		return x
 
@@ -485,10 +488,10 @@ func (p *Parser) parseStmt() (stmt ast.Stmt) {
 	}
 
 	switch p.token {
-	case                                                                                                                  // simple statements
+	case // simple statements
 		token.Func, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False, token.LParen, // operands
-		token.LBrace, token.LBrack,                                                                                       // composite types
-		token.Add, token.Sub, token.Mul, token.And, token.Xor, token.Not:                                                 // unary operators
+		token.LBrace, token.LBrack, // composite types
+		token.Add, token.Sub, token.Mul, token.And, token.Xor, token.Not: // unary operators
 		s := p.parseSimpleStmt(false)
 		p.expectSemi()
 		return s

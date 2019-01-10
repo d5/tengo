@@ -162,6 +162,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 	case *ast.StringLit:
 		c.emit(OpConstant, c.addConstant(&objects.String{Value: node.Value}))
+	case *ast.CharLit:
+		c.emit(OpConstant, c.addConstant(&objects.Char{Value: node.Value}))
+	case *ast.UndefinedLit:
+		c.emit(OpNull)
 	case *ast.UnaryExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err

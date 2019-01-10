@@ -46,7 +46,7 @@ func (o *Array) Copy() Object {
 }
 
 func (o *Array) IsFalsy() bool {
-	return false
+	return len(o.Value) == 0
 }
 
 func (o *Array) Equals(x Object) bool {

@@ -38,7 +38,7 @@ func (o *Map) Copy() Object {
 }
 
 func (o *Map) IsFalsy() bool {
-	return false
+	return len(o.Value) == 0
 }
 
 func (o *Map) Get(key string) (Object, bool) {

@@ -22,4 +22,24 @@ var Builtins = []struct {
 		Name: "append",
 		Func: builtinAppend,
 	},
+	{
+		Name: "string",
+		Func: builtinString,
+	},
+	{
+		Name: "int",
+		Func: builtinInt,
+	},
+	{
+		Name: "bool",
+		Func: builtinBool,
+	},
+	{
+		Name: "float",
+		Func: builtinFloat,
+	},
+	{
+		Name: "char",
+		Func: builtinChar,
+	},
 }

@@ -1,8 +1,6 @@
 package objects
 
 import (
-	"fmt"
-
 	"github.com/d5/tengo/token"
 )
 
@@ -11,7 +9,7 @@ type Char struct {
 }
 
 func (o *Char) String() string {
-	return fmt.Sprintf("%q", string(o.Value))
+	return string(o.Value)
 }
 
 func (o *Char) TypeName() string {
@@ -27,7 +25,7 @@ func (o *Char) Copy() Object {
 }
 
 func (o *Char) IsFalsy() bool {
-	return false
+	return o.Value == 0
 }
 
 func (o *Char) Equals(x Object) bool {
