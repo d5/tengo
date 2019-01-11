@@ -3,7 +3,7 @@ package script
 import (
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/vm"
+	"github.com/d5/tengo/runtime"
 )
 
 var undefined objects.Object = &objects.Undefined{}
@@ -12,7 +12,7 @@ var undefined objects.Object = &objects.Undefined{}
 // Use Script.Compile() to create Compiled object.
 type Compiled struct {
 	symbolTable *compiler.SymbolTable
-	machine     *vm.VM
+	machine     *runtime.VM
 }
 
 // Run executes the compiled script in the virtual machine.

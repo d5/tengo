@@ -11,7 +11,7 @@ import (
 
 	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler"
-	"github.com/d5/tengo/vm"
+	"github.com/d5/tengo/runtime"
 )
 
 var (
@@ -113,7 +113,7 @@ func doRun(data []byte, _, _ string) (err error) {
 		return
 	}
 
-	machine := vm.NewVM(bytecode, nil)
+	machine := runtime.NewVM(bytecode, nil)
 
 	err = machine.Run()
 	if err != nil {

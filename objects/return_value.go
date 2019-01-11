@@ -1,6 +1,6 @@
 package objects
 
-import "github.com/d5/tengo/token"
+import "github.com/d5/tengo/compiler/token"
 
 type ReturnValue struct {
 	Value Object

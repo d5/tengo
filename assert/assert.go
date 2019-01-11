@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/d5/tengo/compiler"
+	"github.com/d5/tengo/compiler/source"
+	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/source"
-	"github.com/d5/tengo/token"
 )
 
 func NoError(t *testing.T, err error, msg ...interface{}) bool {

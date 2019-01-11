@@ -7,12 +7,12 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/d5/tengo/ast"
 	"github.com/d5/tengo/compiler"
+	"github.com/d5/tengo/compiler/ast"
+	"github.com/d5/tengo/compiler/parser"
+	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/source"
-	"github.com/d5/tengo/vm"
+	"github.com/d5/tengo/runtime"
 )
 
 const (
@@ -34,7 +34,7 @@ func startRepl(in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
 
 	fileSet := source.NewFileSet()
-	globals := make([]*objects.Object, vm.GlobalsSize)
+	globals := make([]*objects.Object, runtime.GlobalsSize)
 	symbolTable := compiler.NewSymbolTable()
 
 	for {
@@ -61,7 +61,7 @@ func startRepl(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		machine := vm.NewVM(c.Bytecode(), globals)
+		machine := runtime.NewVM(c.Bytecode(), globals)
 		if err != nil {
 			_, _ = fmt.Fprintf(out, "VM error:\n %s\n", err.Error())
 			continue

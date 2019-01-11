@@ -1,8 +1,8 @@
 package compiler
 
 import (
-	"github.com/d5/tengo/ast"
-	"github.com/d5/tengo/token"
+	"github.com/d5/tengo/compiler/ast"
+	"github.com/d5/tengo/compiler/token"
 )
 
 func (c *Compiler) compileLogical(node *ast.BinaryExpr) error {

@@ -1,7 +1,7 @@
 package objects
 
 import (
-	"github.com/d5/tengo/token"
+	"github.com/d5/tengo/compiler/token"
 )
 
 type CompiledFunction struct {

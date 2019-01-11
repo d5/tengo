@@ -5,9 +5,9 @@ import (
 	"io"
 	"reflect"
 
-	"github.com/d5/tengo/ast"
+	"github.com/d5/tengo/compiler/ast"
+	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/token"
 )
 
 type Compiler struct {

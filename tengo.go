@@ -2,9 +2,9 @@ package tengo
 
 import (
 	"github.com/d5/tengo/compiler"
-	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/source"
-	"github.com/d5/tengo/vm"
+	"github.com/d5/tengo/compiler/parser"
+	"github.com/d5/tengo/compiler/source"
+	"github.com/d5/tengo/runtime"
 )
 
 func Compile(input []byte, filename string) (*compiler.Bytecode, error) {
@@ -25,7 +25,7 @@ func Compile(input []byte, filename string) (*compiler.Bytecode, error) {
 }
 
 func Run(b *compiler.Bytecode) error {
-	v := vm.NewVM(b, nil)
+	v := runtime.NewVM(b, nil)
 
 	return v.Run()
 }

@@ -1,7 +1,7 @@
 package compiler
 
 import (
-	"github.com/d5/tengo/ast"
+	"github.com/d5/tengo/compiler/ast"
 )
 
 func (c *Compiler) compileForStmt(stmt *ast.ForStmt) error {

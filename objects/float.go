@@ -4,7 +4,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/d5/tengo/token"
+	"github.com/d5/tengo/compiler/token"
 )
 
 type Float struct {

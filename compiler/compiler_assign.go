@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/d5/tengo/ast"
-	"github.com/d5/tengo/token"
+	"github.com/d5/tengo/compiler/ast"
+	"github.com/d5/tengo/compiler/token"
 )
 
 func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {

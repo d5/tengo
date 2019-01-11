@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/d5/tengo/ast"
 	"github.com/d5/tengo/compiler"
+	"github.com/d5/tengo/compiler/ast"
+	"github.com/d5/tengo/compiler/parser"
+	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/source"
-	"github.com/d5/tengo/vm"
+	"github.com/d5/tengo/runtime"
 )
 
 func main() {
@@ -156,11 +156,11 @@ func compileFile(file *ast.File) (time.Duration, *compiler.Bytecode, error) {
 }
 
 func runVM(bytecode *compiler.Bytecode) (time.Duration, objects.Object, error) {
-	globals := make([]*objects.Object, vm.GlobalsSize)
+	globals := make([]*objects.Object, runtime.GlobalsSize)
 
 	start := time.Now()
 
-	v := vm.NewVM(bytecode, globals)
+	v := runtime.NewVM(bytecode, globals)
 	if err := v.Run(); err != nil {
 		return time.Since(start), nil, err
 	}

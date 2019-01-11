@@ -8,9 +8,9 @@ import (
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler"
+	"github.com/d5/tengo/compiler/parser"
+	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/source"
 )
 
 func TestCompiler_Compile(t *testing.T) {

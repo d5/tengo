@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/d5/tengo/compiler"
+	"github.com/d5/tengo/compiler/parser"
+	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/source"
-	"github.com/d5/tengo/vm"
+	"github.com/d5/tengo/runtime"
 )
 
 // Script can simplify compilation and execution of embedded scripts.
@@ -70,7 +70,7 @@ func (s *Script) Compile() (*Compiled, error) {
 
 	return &Compiled{
 		symbolTable: symbolTable,
-		machine:     vm.NewVM(c.Bytecode(), globals),
+		machine:     runtime.NewVM(c.Bytecode(), globals),
 	}, nil
 }
 
