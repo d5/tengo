@@ -44,8 +44,9 @@ fib := func(x, s) {
 	}
 
 	fmt.Println("-------------------------------------")
-	fmt.Printf("fibonacci(%d) = %d (tail-call)\n", n, nativeResult)
+	fmt.Printf("fibonacci(%d) (tail-call)\n", n)
 	fmt.Println("-------------------------------------")
+	fmt.Printf("Result:  %d\n", nativeResult)
 	fmt.Printf("Go:      %s\n", nativeTime)
 	fmt.Printf("Parser:  %s\n", parseTime)
 	fmt.Printf("Compile: %s\n", compileTime)
@@ -79,8 +80,9 @@ fib := func(x) {
 	}
 
 	fmt.Println("-------------------------------------")
-	fmt.Printf("fibonacci(%d) = %d\n", n, nativeResult)
+	fmt.Printf("fibonacci(%d)\n", n)
 	fmt.Println("-------------------------------------")
+	fmt.Printf("Result:  %d\n", nativeResult)
 	fmt.Printf("Go:      %s\n", nativeTime)
 	fmt.Printf("Parser:  %s\n", parseTime)
 	fmt.Printf("Compile: %s\n", compileTime)
