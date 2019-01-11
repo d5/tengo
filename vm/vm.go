@@ -880,9 +880,9 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 
 	// check if this is a tail-call (recursive call right before return)
 	curFrame := &(v.frames[v.framesIndex-1])
-	if fn == curFrame.fn {
+	if fn == curFrame.fn { // recursion
 		nextOp := compiler.Opcode(curFrame.fn.Instructions[curFrame.ip+1])
-		if nextOp == compiler.OpReturnValue ||
+		if nextOp == compiler.OpReturnValue || // tail call
 			(nextOp == compiler.OpPop &&
 				compiler.OpReturn == compiler.Opcode(curFrame.fn.Instructions[curFrame.ip+2])) {
 
@@ -904,10 +904,7 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 			//  |  ARG1  | <- BP  for current function
 			//  |--------|
 
-			for i := 0; i < numArgs; i++ {
-				v.stack[curFrame.basePointer+i] = v.stack[v.sp-numArgs+i]
-			}
-
+			copy(v.stack[curFrame.basePointer:], v.stack[v.sp-numArgs:v.sp])
 			v.sp -= numArgs
 			curFrame.ip = -1
 

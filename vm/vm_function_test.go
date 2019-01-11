@@ -194,19 +194,34 @@ out = outer() + g
 	out = f2();
 	`, 99)
 
-	// fibonacci
+	// recursion
 	expect(t, `
 	fib := func(x) {
-		if(x == 0) {
-			return 0;
+		if x == 0 {
+			return 0
+		} else if x == 1 {
+			return 1
 		} else {
-			if(x == 1) {
-				return 1;
-			} else {
-				return fib(x-1) + fib(x-2);
-			}
+			return fib(x-1) + fib(x-2)
 		}
-	};
-	out = fib(15);
-	`, 610)
+	}
+	out = fib(15)`, 610)
+
+	// TODO: currently recursion inside the local scope function definition is not supported.
+	// Workaround is to define the identifier first then assign the function like below.
+	// Want to fix this.
+	expect(t, `
+func() {
+	fib := 0
+	fib = func(x) {
+		if x == 0 {
+			return 0
+		} else if x == 1 {
+			return 1
+		} else {
+			return fib(x-1) + fib(x-2)
+		}
+	}
+	out = fib(15)
+}()`, 610)
 }
