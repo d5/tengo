@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type SelectorExpr struct {
 	Expr Expr
@@ -9,11 +9,11 @@ type SelectorExpr struct {
 
 func (e *SelectorExpr) exprNode() {}
 
-func (e *SelectorExpr) Pos() scanner.Pos {
+func (e *SelectorExpr) Pos() source.Pos {
 	return e.Expr.Pos()
 }
 
-func (e *SelectorExpr) End() scanner.Pos {
+func (e *SelectorExpr) End() source.Pos {
 	return e.Sel.End()
 }
 

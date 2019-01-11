@@ -3,22 +3,22 @@ package ast
 import (
 	"strings"
 
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 )
 
 type MapLit struct {
-	LBrace   scanner.Pos
+	LBrace   source.Pos
 	Elements []*MapElementLit
-	RBrace   scanner.Pos
+	RBrace   source.Pos
 }
 
 func (e *MapLit) exprNode() {}
 
-func (e *MapLit) Pos() scanner.Pos {
+func (e *MapLit) Pos() source.Pos {
 	return e.LBrace
 }
 
-func (e *MapLit) End() scanner.Pos {
+func (e *MapLit) End() source.Pos {
 	return e.RBrace + 1
 }
 

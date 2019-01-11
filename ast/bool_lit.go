@@ -1,21 +1,21 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type BoolLit struct {
 	Value    bool
-	ValuePos scanner.Pos
+	ValuePos source.Pos
 	Literal  string
 }
 
 func (e *BoolLit) exprNode() {}
 
-func (e *BoolLit) Pos() scanner.Pos {
+func (e *BoolLit) Pos() source.Pos {
 	return e.ValuePos
 }
 
-func (e *BoolLit) End() scanner.Pos {
-	return scanner.Pos(int(e.ValuePos) + len(e.Literal))
+func (e *BoolLit) End() source.Pos {
+	return source.Pos(int(e.ValuePos) + len(e.Literal))
 }
 
 func (e *BoolLit) String() string {

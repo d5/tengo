@@ -3,22 +3,22 @@ package ast
 import (
 	"strings"
 
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 )
 
 type ArrayLit struct {
 	Elements []Expr
-	LBrack   scanner.Pos
-	RBrack   scanner.Pos
+	LBrack   source.Pos
+	RBrack   source.Pos
 }
 
 func (e *ArrayLit) exprNode() {}
 
-func (e *ArrayLit) Pos() scanner.Pos {
+func (e *ArrayLit) Pos() source.Pos {
 	return e.LBrack
 }
 
-func (e *ArrayLit) End() scanner.Pos {
+func (e *ArrayLit) End() source.Pos {
 	return e.RBrack + 1
 }
 

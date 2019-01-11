@@ -3,20 +3,20 @@ package ast
 import (
 	"strings"
 
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 )
 
 type File struct {
-	InputFile *scanner.File
+	InputFile *source.File
 	Stmts     []Stmt
 }
 
-func (n *File) Pos() scanner.Pos {
-	return scanner.Pos(n.InputFile.Base())
+func (n *File) Pos() source.Pos {
+	return source.Pos(n.InputFile.Base())
 }
 
-func (n *File) End() scanner.Pos {
-	return scanner.Pos(n.InputFile.Base() + n.InputFile.Size())
+func (n *File) End() source.Pos {
+	return source.Pos(n.InputFile.Base() + n.InputFile.Size())
 }
 
 func (n *File) String() string {

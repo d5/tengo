@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/token"
 )
 
@@ -9,16 +9,16 @@ type BinaryExpr struct {
 	Lhs      Expr
 	Rhs      Expr
 	Token    token.Token
-	TokenPos scanner.Pos
+	TokenPos source.Pos
 }
 
 func (e *BinaryExpr) exprNode() {}
 
-func (e *BinaryExpr) Pos() scanner.Pos {
+func (e *BinaryExpr) Pos() source.Pos {
 	return e.Lhs.Pos()
 }
 
-func (e *BinaryExpr) End() scanner.Pos {
+func (e *BinaryExpr) End() source.Pos {
 	return e.Rhs.End()
 }
 

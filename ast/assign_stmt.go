@@ -3,7 +3,7 @@ package ast
 import (
 	"strings"
 
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/token"
 )
 
@@ -11,16 +11,16 @@ type AssignStmt struct {
 	Lhs      []Expr
 	Rhs      []Expr
 	Token    token.Token
-	TokenPos scanner.Pos
+	TokenPos source.Pos
 }
 
 func (s *AssignStmt) stmtNode() {}
 
-func (s *AssignStmt) Pos() scanner.Pos {
+func (s *AssignStmt) Pos() source.Pos {
 	return s.Lhs[0].Pos()
 }
 
-func (s *AssignStmt) End() scanner.Pos {
+func (s *AssignStmt) End() source.Pos {
 	return s.Rhs[len(s.Rhs)-1].End()
 }
 

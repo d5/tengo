@@ -9,11 +9,11 @@ import (
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/ast"
 	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/token"
 )
 
-type pfn func(int, int) scanner.Pos      // position conversion function
+type pfn func(int, int) source.Pos       // position conversion function
 type expectedFn func(pos pfn) []ast.Stmt // callback function to return expected results
 
 type tracer struct {
@@ -35,7 +35,7 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 //}
 
 func expect(t *testing.T, input string, fn expectedFn) (ok bool) {
-	testFileSet := scanner.NewFileSet()
+	testFileSet := source.NewFileSet()
 	testFile := testFileSet.AddFile("", -1, len(input))
 
 	defer func() {
@@ -55,8 +55,8 @@ func expect(t *testing.T, input string, fn expectedFn) (ok bool) {
 		return
 	}
 
-	expected := fn(func(line, column int) scanner.Pos {
-		return scanner.Pos(int(testFile.LineStart(line)) + (column - 1))
+	expected := fn(func(line, column int) source.Pos {
+		return source.Pos(int(testFile.LineStart(line)) + (column - 1))
 	})
 
 	if !assert.Equal(t, len(expected), len(actual.Stmts)) {
@@ -75,7 +75,7 @@ func expect(t *testing.T, input string, fn expectedFn) (ok bool) {
 }
 
 func expectError(t *testing.T, input string) (ok bool) {
-	testFileSet := scanner.NewFileSet()
+	testFileSet := source.NewFileSet()
 	testFile := testFileSet.AddFile("", -1, len(input))
 
 	defer func() {
@@ -98,7 +98,7 @@ func expectError(t *testing.T, input string) (ok bool) {
 }
 
 func expectString(t *testing.T, input, expected string) (ok bool) {
-	testFileSet := scanner.NewFileSet()
+	testFileSet := source.NewFileSet()
 	testFile := testFileSet.AddFile("", -1, len(input))
 
 	defer func() {
@@ -125,7 +125,7 @@ func expectString(t *testing.T, input, expected string) (ok bool) {
 }
 
 //func printTrace(input string) {
-//	testFileSet := scanner.NewFileSet()
+//	testFileSet := source.NewFileSet()
 //	testFile := testFileSet.AddFile("", -1, len(input))
 //
 //	_, _ = parser.ParseFile(testFile, []byte(input), &slowPrinter{})
@@ -139,55 +139,55 @@ func exprStmt(x ast.Expr) *ast.ExprStmt {
 	return &ast.ExprStmt{Expr: x}
 }
 
-func assignStmt(lhs, rhs []ast.Expr, token token.Token, pos scanner.Pos) *ast.AssignStmt {
+func assignStmt(lhs, rhs []ast.Expr, token token.Token, pos source.Pos) *ast.AssignStmt {
 	return &ast.AssignStmt{Lhs: lhs, Rhs: rhs, Token: token, TokenPos: pos}
 }
 
-func emptyStmt(implicit bool, pos scanner.Pos) *ast.EmptyStmt {
+func emptyStmt(implicit bool, pos source.Pos) *ast.EmptyStmt {
 	return &ast.EmptyStmt{Implicit: implicit, Semicolon: pos}
 }
 
-func returnStmt(pos scanner.Pos, results ...ast.Expr) *ast.ReturnStmt {
+func returnStmt(pos source.Pos, results ...ast.Expr) *ast.ReturnStmt {
 	return &ast.ReturnStmt{Results: results, ReturnPos: pos}
 }
 
-func forStmt(init ast.Stmt, cond ast.Expr, post ast.Stmt, body *ast.BlockStmt, pos scanner.Pos) *ast.ForStmt {
+func forStmt(init ast.Stmt, cond ast.Expr, post ast.Stmt, body *ast.BlockStmt, pos source.Pos) *ast.ForStmt {
 	return &ast.ForStmt{Cond: cond, Init: init, Post: post, Body: body, ForPos: pos}
 }
 
-func forInStmt(key, value *ast.Ident, seq ast.Expr, body *ast.BlockStmt, pos scanner.Pos) *ast.ForInStmt {
+func forInStmt(key, value *ast.Ident, seq ast.Expr, body *ast.BlockStmt, pos source.Pos) *ast.ForInStmt {
 	return &ast.ForInStmt{Key: key, Value: value, Iterable: seq, Body: body, ForPos: pos}
 }
 
-func ifStmt(init ast.Stmt, cond ast.Expr, body *ast.BlockStmt, elseStmt ast.Stmt, pos scanner.Pos) *ast.IfStmt {
+func ifStmt(init ast.Stmt, cond ast.Expr, body *ast.BlockStmt, elseStmt ast.Stmt, pos source.Pos) *ast.IfStmt {
 	return &ast.IfStmt{Init: init, Cond: cond, Body: body, Else: elseStmt, IfPos: pos}
 }
 
-func incDecStmt(expr ast.Expr, tok token.Token, pos scanner.Pos) *ast.IncDecStmt {
+func incDecStmt(expr ast.Expr, tok token.Token, pos source.Pos) *ast.IncDecStmt {
 	return &ast.IncDecStmt{Expr: expr, Token: tok, TokenPos: pos}
 }
 
-func funcType(params *ast.IdentList, pos scanner.Pos) *ast.FuncType {
+func funcType(params *ast.IdentList, pos source.Pos) *ast.FuncType {
 	return &ast.FuncType{Params: params, FuncPos: pos}
 }
 
-func blockStmt(lbrace, rbrace scanner.Pos, list ...ast.Stmt) *ast.BlockStmt {
+func blockStmt(lbrace, rbrace source.Pos, list ...ast.Stmt) *ast.BlockStmt {
 	return &ast.BlockStmt{Stmts: list, LBrace: lbrace, RBrace: rbrace}
 }
 
-func ident(name string, pos scanner.Pos) *ast.Ident {
+func ident(name string, pos source.Pos) *ast.Ident {
 	return &ast.Ident{Name: name, NamePos: pos}
 }
 
-func identList(opening, closing scanner.Pos, list ...*ast.Ident) *ast.IdentList {
+func identList(opening, closing source.Pos, list ...*ast.Ident) *ast.IdentList {
 	return &ast.IdentList{List: list, LParen: opening, RParen: closing}
 }
 
-func binaryExpr(x, y ast.Expr, op token.Token, pos scanner.Pos) *ast.BinaryExpr {
+func binaryExpr(x, y ast.Expr, op token.Token, pos source.Pos) *ast.BinaryExpr {
 	return &ast.BinaryExpr{Lhs: x, Rhs: y, Token: op, TokenPos: pos}
 }
 
-func unaryExpr(x ast.Expr, op token.Token, pos scanner.Pos) *ast.UnaryExpr {
+func unaryExpr(x ast.Expr, op token.Token, pos source.Pos) *ast.UnaryExpr {
 	return &ast.UnaryExpr{Expr: x, Token: op, TokenPos: pos}
 }
 
@@ -195,35 +195,35 @@ func exprs(list ...ast.Expr) []ast.Expr {
 	return list
 }
 
-func intLit(value int64, pos scanner.Pos) *ast.IntLit {
+func intLit(value int64, pos source.Pos) *ast.IntLit {
 	return &ast.IntLit{Value: value, ValuePos: pos}
 }
 
-func floatLit(value float64, pos scanner.Pos) *ast.FloatLit {
+func floatLit(value float64, pos source.Pos) *ast.FloatLit {
 	return &ast.FloatLit{Value: value, ValuePos: pos}
 }
 
-func stringLit(value string, pos scanner.Pos) *ast.StringLit {
+func stringLit(value string, pos source.Pos) *ast.StringLit {
 	return &ast.StringLit{Value: value, ValuePos: pos}
 }
 
-func charLit(value rune, pos scanner.Pos) *ast.CharLit {
+func charLit(value rune, pos source.Pos) *ast.CharLit {
 	return &ast.CharLit{Value: value, ValuePos: pos, Literal: fmt.Sprintf("'%c'", value)}
 }
 
-func boolLit(value bool, pos scanner.Pos) *ast.BoolLit {
+func boolLit(value bool, pos source.Pos) *ast.BoolLit {
 	return &ast.BoolLit{Value: value, ValuePos: pos}
 }
 
-func arrayLit(lbracket, rbracket scanner.Pos, list ...ast.Expr) *ast.ArrayLit {
+func arrayLit(lbracket, rbracket source.Pos, list ...ast.Expr) *ast.ArrayLit {
 	return &ast.ArrayLit{LBrack: lbracket, RBrack: rbracket, Elements: list}
 }
 
-func mapElementLit(key string, keyPos scanner.Pos, colonPos scanner.Pos, value ast.Expr) *ast.MapElementLit {
+func mapElementLit(key string, keyPos source.Pos, colonPos source.Pos, value ast.Expr) *ast.MapElementLit {
 	return &ast.MapElementLit{Key: key, KeyPos: keyPos, ColonPos: colonPos, Value: value}
 }
 
-func mapLit(lbrace, rbrace scanner.Pos, list ...*ast.MapElementLit) *ast.MapLit {
+func mapLit(lbrace, rbrace source.Pos, list ...*ast.MapElementLit) *ast.MapLit {
 	return &ast.MapLit{LBrace: lbrace, RBrace: rbrace, Elements: list}
 }
 
@@ -231,19 +231,19 @@ func funcLit(funcType *ast.FuncType, body *ast.BlockStmt) *ast.FuncLit {
 	return &ast.FuncLit{Type: funcType, Body: body}
 }
 
-func parenExpr(x ast.Expr, lparen, rparen scanner.Pos) *ast.ParenExpr {
+func parenExpr(x ast.Expr, lparen, rparen source.Pos) *ast.ParenExpr {
 	return &ast.ParenExpr{Expr: x, LParen: lparen, RParen: rparen}
 }
 
-func callExpr(f ast.Expr, lparen, rparen scanner.Pos, args ...ast.Expr) *ast.CallExpr {
+func callExpr(f ast.Expr, lparen, rparen source.Pos, args ...ast.Expr) *ast.CallExpr {
 	return &ast.CallExpr{Func: f, LParen: lparen, RParen: rparen, Args: args}
 }
 
-func indexExpr(x, index ast.Expr, lbrack, rbrack scanner.Pos) *ast.IndexExpr {
+func indexExpr(x, index ast.Expr, lbrack, rbrack source.Pos) *ast.IndexExpr {
 	return &ast.IndexExpr{Expr: x, Index: index, LBrack: lbrack, RBrack: rbrack}
 }
 
-func sliceExpr(x, low, high ast.Expr, lbrack, rbrack scanner.Pos) *ast.SliceExpr {
+func sliceExpr(x, low, high ast.Expr, lbrack, rbrack source.Pos) *ast.SliceExpr {
 	return &ast.SliceExpr{Expr: x, Low: low, High: high, LBrack: lbrack, RBrack: rbrack}
 }
 

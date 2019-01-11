@@ -1,9 +1,9 @@
 package parser
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type Error struct {
-	Pos scanner.FilePos
+	Pos source.FilePos
 	Msg string
 }
 

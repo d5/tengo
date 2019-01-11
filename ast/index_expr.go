@@ -1,21 +1,21 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type IndexExpr struct {
 	Expr   Expr
-	LBrack scanner.Pos
+	LBrack source.Pos
 	Index  Expr
-	RBrack scanner.Pos
+	RBrack source.Pos
 }
 
 func (e *IndexExpr) exprNode() {}
 
-func (e *IndexExpr) Pos() scanner.Pos {
+func (e *IndexExpr) Pos() source.Pos {
 	return e.Expr.Pos()
 }
 
-func (e *IndexExpr) End() scanner.Pos {
+func (e *IndexExpr) End() source.Pos {
 	return e.RBrack + 1
 }
 

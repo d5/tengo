@@ -1,20 +1,20 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type ParenExpr struct {
 	Expr   Expr
-	LParen scanner.Pos
-	RParen scanner.Pos
+	LParen source.Pos
+	RParen source.Pos
 }
 
 func (e *ParenExpr) exprNode() {}
 
-func (e *ParenExpr) Pos() scanner.Pos {
+func (e *ParenExpr) Pos() source.Pos {
 	return e.LParen
 }
 
-func (e *ParenExpr) End() scanner.Pos {
+func (e *ParenExpr) End() source.Pos {
 	return e.RParen + 1
 }
 

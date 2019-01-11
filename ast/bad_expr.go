@@ -1,19 +1,19 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type BadExpr struct {
-	From scanner.Pos
-	To   scanner.Pos
+	From source.Pos
+	To   source.Pos
 }
 
 func (e *BadExpr) exprNode() {}
 
-func (e *BadExpr) Pos() scanner.Pos {
+func (e *BadExpr) Pos() source.Pos {
 	return e.From
 }
 
-func (e *BadExpr) End() scanner.Pos {
+func (e *BadExpr) End() source.Pos {
 	return e.To
 }
 

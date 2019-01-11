@@ -1,21 +1,21 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type CharLit struct {
 	Value    rune
-	ValuePos scanner.Pos
+	ValuePos source.Pos
 	Literal  string
 }
 
 func (e *CharLit) exprNode() {}
 
-func (e *CharLit) Pos() scanner.Pos {
+func (e *CharLit) Pos() source.Pos {
 	return e.ValuePos
 }
 
-func (e *CharLit) End() scanner.Pos {
-	return scanner.Pos(int(e.ValuePos) + len(e.Literal))
+func (e *CharLit) End() source.Pos {
+	return source.Pos(int(e.ValuePos) + len(e.Literal))
 }
 
 func (e *CharLit) String() string {

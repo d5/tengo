@@ -4,10 +4,10 @@ import (
 	"io"
 
 	"github.com/d5/tengo/ast"
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 )
 
-func ParseFile(file *scanner.File, src []byte, trace io.Writer) (res *ast.File, err error) {
+func ParseFile(file *source.File, src []byte, trace io.Writer) (res *ast.File, err error) {
 	p := NewParser(file, src, trace)
 
 	defer func() {

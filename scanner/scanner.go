@@ -5,6 +5,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/token"
 )
 
@@ -12,7 +13,7 @@ import (
 const bom = 0xFEFF
 
 type Scanner struct {
-	file         *File        // source file handle
+	file         *source.File // source file handle
 	src          []byte       // source
 	ch           rune         // current character
 	offset       int          // character offset
@@ -24,7 +25,7 @@ type Scanner struct {
 	mode         Mode
 }
 
-func NewScanner(file *File, src []byte, errorHandler ErrorHandler, mode Mode) *Scanner {
+func NewScanner(file *source.File, src []byte, errorHandler ErrorHandler, mode Mode) *Scanner {
 	if file.Size() != len(src) {
 		panic(fmt.Sprintf("file size (%d) does not match src len (%d)", file.Size(), len(src)))
 	}
@@ -49,7 +50,7 @@ func (s *Scanner) ErrorCount() int {
 	return s.errorCount
 }
 
-func (s *Scanner) Scan() (tok token.Token, literal string, pos Pos) {
+func (s *Scanner) Scan() (tok token.Token, literal string, pos source.Pos) {
 	s.skipWhitespace()
 
 	pos = s.file.FileSetPos(s.offset)

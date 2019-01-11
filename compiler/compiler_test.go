@@ -10,7 +10,7 @@ import (
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 )
 
 func TestCompiler_Compile(t *testing.T) {
@@ -884,7 +884,7 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 }
 
 func traceCompile(input string, symbols map[string]objects.Object) (res *compiler.Bytecode, trace []string, err error) {
-	fileSet := scanner.NewFileSet()
+	fileSet := source.NewFileSet()
 	file := fileSet.AddFile("test", -1, len(input))
 
 	p := parser.NewParser(file, []byte(input), nil)

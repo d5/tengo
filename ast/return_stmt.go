@@ -3,21 +3,21 @@ package ast
 import (
 	"strings"
 
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 )
 
 type ReturnStmt struct {
-	ReturnPos scanner.Pos
+	ReturnPos source.Pos
 	Results   []Expr
 }
 
 func (s *ReturnStmt) stmtNode() {}
 
-func (s *ReturnStmt) Pos() scanner.Pos {
+func (s *ReturnStmt) Pos() source.Pos {
 	return s.ReturnPos
 }
 
-func (s *ReturnStmt) End() scanner.Pos {
+func (s *ReturnStmt) End() source.Pos {
 	if n := len(s.Results); n > 0 {
 		return s.Results[n-1].End()
 	}

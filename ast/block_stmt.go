@@ -3,22 +3,22 @@ package ast
 import (
 	"strings"
 
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 )
 
 type BlockStmt struct {
 	Stmts  []Stmt
-	LBrace scanner.Pos
-	RBrace scanner.Pos
+	LBrace source.Pos
+	RBrace source.Pos
 }
 
 func (s *BlockStmt) stmtNode() {}
 
-func (s *BlockStmt) Pos() scanner.Pos {
+func (s *BlockStmt) Pos() source.Pos {
 	return s.LBrace
 }
 
-func (s *BlockStmt) End() scanner.Pos {
+func (s *BlockStmt) End() source.Pos {
 	return s.RBrace + 1
 }
 

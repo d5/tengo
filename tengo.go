@@ -3,12 +3,12 @@ package tengo
 import (
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/vm"
 )
 
 func Compile(input []byte, filename string) (*compiler.Bytecode, error) {
-	fileSet := scanner.NewFileSet()
+	fileSet := source.NewFileSet()
 
 	p := parser.NewParser(fileSet.AddFile(filename, -1, len(input)), input, nil)
 	file, err := p.ParseFile()

@@ -1,19 +1,19 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type BadStmt struct {
-	From scanner.Pos
-	To   scanner.Pos
+	From source.Pos
+	To   source.Pos
 }
 
 func (s *BadStmt) stmtNode() {}
 
-func (s *BadStmt) Pos() scanner.Pos {
+func (s *BadStmt) Pos() source.Pos {
 	return s.From
 }
 
-func (s *BadStmt) End() scanner.Pos {
+func (s *BadStmt) End() source.Pos {
 	return s.To
 }
 

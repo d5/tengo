@@ -1,9 +1,9 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type IfStmt struct {
-	IfPos scanner.Pos
+	IfPos source.Pos
 	Init  Stmt
 	Cond  Expr
 	Body  *BlockStmt
@@ -12,11 +12,11 @@ type IfStmt struct {
 
 func (s *IfStmt) stmtNode() {}
 
-func (s *IfStmt) Pos() scanner.Pos {
+func (s *IfStmt) Pos() source.Pos {
 	return s.IfPos
 }
 
-func (s *IfStmt) End() scanner.Pos {
+func (s *IfStmt) End() source.Pos {
 	if s.Else != nil {
 		return s.Else.End()
 	}

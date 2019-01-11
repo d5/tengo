@@ -6,7 +6,7 @@ import (
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/vm"
 )
 
@@ -55,7 +55,7 @@ func (s *Script) Remove(name string) bool {
 func (s *Script) Compile() (*Compiled, error) {
 	symbolTable, globals := s.prepCompile()
 
-	fileSet := scanner.NewFileSet()
+	fileSet := source.NewFileSet()
 
 	p := parser.NewParser(fileSet.AddFile("", -1, len(s.input)), s.input, nil)
 	file, err := p.ParseFile()

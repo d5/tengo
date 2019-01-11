@@ -1,9 +1,9 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type ForInStmt struct {
-	ForPos   scanner.Pos
+	ForPos   source.Pos
 	Key      *Ident
 	Value    *Ident
 	Iterable Expr
@@ -12,11 +12,11 @@ type ForInStmt struct {
 
 func (s *ForInStmt) stmtNode() {}
 
-func (s *ForInStmt) Pos() scanner.Pos {
+func (s *ForInStmt) Pos() source.Pos {
 	return s.ForPos
 }
 
-func (s *ForInStmt) End() scanner.Pos {
+func (s *ForInStmt) End() source.Pos {
 	return s.Body.End()
 }
 

@@ -1,3 +1,5 @@
 package scanner
 
-type ErrorHandler func(pos FilePos, msg string)
+import "github.com/d5/tengo/source"
+
+type ErrorHandler func(pos source.FilePos, msg string)

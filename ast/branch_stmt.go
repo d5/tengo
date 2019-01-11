@@ -1,28 +1,28 @@
 package ast
 
 import (
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/token"
 )
 
 type BranchStmt struct {
 	Token    token.Token
-	TokenPos scanner.Pos
+	TokenPos source.Pos
 	Label    *Ident
 }
 
 func (s *BranchStmt) stmtNode() {}
 
-func (s *BranchStmt) Pos() scanner.Pos {
+func (s *BranchStmt) Pos() source.Pos {
 	return s.TokenPos
 }
 
-func (s *BranchStmt) End() scanner.Pos {
+func (s *BranchStmt) End() source.Pos {
 	if s.Label != nil {
 		return s.Label.End()
 	}
 
-	return scanner.Pos(int(s.TokenPos) + len(s.Token.String()))
+	return source.Pos(int(s.TokenPos) + len(s.Token.String()))
 }
 
 func (s *BranchStmt) String() string {

@@ -1,18 +1,18 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type UndefinedLit struct {
-	TokenPos scanner.Pos
+	TokenPos source.Pos
 }
 
 func (e *UndefinedLit) exprNode() {}
 
-func (e *UndefinedLit) Pos() scanner.Pos {
+func (e *UndefinedLit) Pos() source.Pos {
 	return e.TokenPos
 }
 
-func (e *UndefinedLit) End() scanner.Pos {
+func (e *UndefinedLit) End() source.Pos {
 	return e.TokenPos + 9 // len(undefined) == 9
 }
 

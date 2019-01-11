@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type FuncLit struct {
 	Type *FuncType
@@ -9,11 +9,11 @@ type FuncLit struct {
 
 func (e *FuncLit) exprNode() {}
 
-func (e *FuncLit) Pos() scanner.Pos {
+func (e *FuncLit) Pos() source.Pos {
 	return e.Type.Pos()
 }
 
-func (e *FuncLit) End() scanner.Pos {
+func (e *FuncLit) End() source.Pos {
 	return e.Body.End()
 }
 

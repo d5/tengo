@@ -13,7 +13,7 @@ import (
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/vm"
 )
 
@@ -246,7 +246,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object) (res map
 }
 
 func parse(t *testing.T, input string) *ast.File {
-	testFileSet := scanner.NewFileSet()
+	testFileSet := source.NewFileSet()
 	testFile := testFileSet.AddFile("", -1, len(input))
 
 	file, err := parser.ParseFile(testFile, []byte(input), nil)

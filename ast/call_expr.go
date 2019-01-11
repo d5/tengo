@@ -3,23 +3,23 @@ package ast
 import (
 	"strings"
 
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 )
 
 type CallExpr struct {
 	Func   Expr
-	LParen scanner.Pos
+	LParen source.Pos
 	Args   []Expr
-	RParen scanner.Pos
+	RParen source.Pos
 }
 
 func (e *CallExpr) exprNode() {}
 
-func (e *CallExpr) Pos() scanner.Pos {
+func (e *CallExpr) Pos() source.Pos {
 	return e.Func.Pos()
 }
 
-func (e *CallExpr) End() scanner.Pos {
+func (e *CallExpr) End() source.Pos {
 	return e.RParen + 1
 }
 

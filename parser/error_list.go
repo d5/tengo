@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 )
 
 type ErrorList []*Error
 
-func (p *ErrorList) Add(pos scanner.FilePos, msg string) {
+func (p *ErrorList) Add(pos source.FilePos, msg string) {
 	*p = append(*p, &Error{pos, msg})
 }
 
@@ -51,7 +51,7 @@ func (p ErrorList) Sort() {
 func (p *ErrorList) RemoveMultiples() {
 	sort.Sort(p)
 
-	var last scanner.FilePos // initial last.Line is != any legal error line
+	var last source.FilePos // initial last.Line is != any legal error line
 
 	i := 0
 	for _, e := range *p {

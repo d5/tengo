@@ -3,16 +3,16 @@ package ast
 import (
 	"strings"
 
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 )
 
 type IdentList struct {
-	LParen scanner.Pos
+	LParen source.Pos
 	List   []*Ident
-	RParen scanner.Pos
+	RParen source.Pos
 }
 
-func (n *IdentList) Pos() scanner.Pos {
+func (n *IdentList) Pos() source.Pos {
 	if n.LParen.IsValid() {
 		return n.LParen
 	}
@@ -21,10 +21,10 @@ func (n *IdentList) Pos() scanner.Pos {
 		return n.List[0].Pos()
 	}
 
-	return scanner.NoPos
+	return source.NoPos
 }
 
-func (n *IdentList) End() scanner.Pos {
+func (n *IdentList) End() source.Pos {
 	if n.RParen.IsValid() {
 		return n.RParen + 1
 	}
@@ -33,7 +33,7 @@ func (n *IdentList) End() scanner.Pos {
 		return n.List[l-1].End()
 	}
 
-	return scanner.NoPos
+	return source.NoPos
 }
 
 func (n *IdentList) NumFields() int {

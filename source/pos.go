@@ -1,4 +1,4 @@
-package scanner
+package source
 
 type Pos int
 

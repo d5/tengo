@@ -1,22 +1,22 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type SliceExpr struct {
 	Expr   Expr
-	LBrack scanner.Pos
+	LBrack source.Pos
 	Low    Expr
 	High   Expr
-	RBrack scanner.Pos
+	RBrack source.Pos
 }
 
 func (e *SliceExpr) exprNode() {}
 
-func (e *SliceExpr) Pos() scanner.Pos {
+func (e *SliceExpr) Pos() source.Pos {
 	return e.Expr.Pos()
 }
 
-func (e *SliceExpr) End() scanner.Pos {
+func (e *SliceExpr) End() source.Pos {
 	return e.RBrack + 1
 }
 

@@ -9,10 +9,11 @@ import (
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/token"
 )
 
-var testFileSet = scanner.NewFileSet()
+var testFileSet = source.NewFileSet()
 
 type scanResult struct {
 	Token   token.Token
@@ -220,7 +221,7 @@ func scanExpect(t *testing.T, input string, mode scanner.Mode, expected ...scanR
 	s := scanner.NewScanner(
 		testFile,
 		[]byte(input),
-		func(_ scanner.FilePos, msg string) { assert.Fail(t, msg) },
+		func(_ source.FilePos, msg string) { assert.Fail(t, msg) },
 		mode)
 
 	for idx, e := range expected {

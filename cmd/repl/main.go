@@ -11,7 +11,7 @@ import (
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/vm"
 )
 
@@ -33,7 +33,7 @@ func main() {
 func startRepl(in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
 
-	fileSet := scanner.NewFileSet()
+	fileSet := source.NewFileSet()
 	globals := make([]*objects.Object, vm.GlobalsSize)
 	symbolTable := compiler.NewSymbolTable()
 

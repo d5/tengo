@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type ExprStmt struct {
 	Expr Expr
@@ -8,11 +8,11 @@ type ExprStmt struct {
 
 func (s *ExprStmt) stmtNode() {}
 
-func (s *ExprStmt) Pos() scanner.Pos {
+func (s *ExprStmt) Pos() source.Pos {
 	return s.Expr.Pos()
 }
 
-func (s *ExprStmt) End() scanner.Pos {
+func (s *ExprStmt) End() source.Pos {
 	return s.Expr.End()
 }
 

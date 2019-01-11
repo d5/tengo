@@ -1,23 +1,23 @@
 package ast
 
 import (
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/token"
 )
 
 type UnaryExpr struct {
 	Expr     Expr
 	Token    token.Token
-	TokenPos scanner.Pos
+	TokenPos source.Pos
 }
 
 func (e *UnaryExpr) exprNode() {}
 
-func (e *UnaryExpr) Pos() scanner.Pos {
+func (e *UnaryExpr) Pos() source.Pos {
 	return e.Expr.Pos()
 }
 
-func (e *UnaryExpr) End() scanner.Pos {
+func (e *UnaryExpr) End() source.Pos {
 	return e.Expr.End()
 }
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/token"
 )
 
@@ -133,8 +133,8 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		if !equalSymbol(expected, actual.(compiler.Symbol)) {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
-	case scanner.Pos:
-		if expected != actual.(scanner.Pos) {
+	case source.Pos:
+		if expected != actual.(source.Pos) {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
 	case token.Token:

@@ -1,19 +1,19 @@
 package ast
 
-import "github.com/d5/tengo/scanner"
+import "github.com/d5/tengo/source"
 
 type EmptyStmt struct {
-	Semicolon scanner.Pos
+	Semicolon source.Pos
 	Implicit  bool
 }
 
 func (s *EmptyStmt) stmtNode() {}
 
-func (s *EmptyStmt) Pos() scanner.Pos {
+func (s *EmptyStmt) Pos() source.Pos {
 	return s.Semicolon
 }
 
-func (s *EmptyStmt) End() scanner.Pos {
+func (s *EmptyStmt) End() source.Pos {
 	if s.Implicit {
 		return s.Semicolon
 	}

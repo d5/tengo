@@ -8,7 +8,7 @@ import (
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/parser"
-	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/vm"
 )
 
@@ -126,7 +126,7 @@ func runBench(input []byte) (parseTime time.Duration, compileTime time.Duration,
 }
 
 func parse(input []byte) (time.Duration, *ast.File, error) {
-	fileSet := scanner.NewFileSet()
+	fileSet := source.NewFileSet()
 	inputFile := fileSet.AddFile("test", -1, len(input))
 
 	start := time.Now()

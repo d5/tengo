@@ -7,34 +7,35 @@ import (
 
 	"github.com/d5/tengo/ast"
 	"github.com/d5/tengo/scanner"
+	"github.com/d5/tengo/source"
 	"github.com/d5/tengo/token"
 )
 
 type bailout struct{}
 
 type Parser struct {
-	file      *scanner.File
+	file      *source.File
 	errors    ErrorList
 	scanner   *scanner.Scanner
-	pos       scanner.Pos
+	pos       source.Pos
 	token     token.Token
 	tokenLit  string
-	exprLevel int         // < 0: in control clause, >= 0: in expression
-	syncPos   scanner.Pos // last sync position
-	syncCount int         // number of advance calls without progress
+	exprLevel int        // < 0: in control clause, >= 0: in expression
+	syncPos   source.Pos // last sync position
+	syncCount int        // number of advance calls without progress
 	trace     bool
 	indent    int
 	traceOut  io.Writer
 }
 
-func NewParser(file *scanner.File, src []byte, trace io.Writer) *Parser {
+func NewParser(file *source.File, src []byte, trace io.Writer) *Parser {
 	p := &Parser{
 		file:     file,
 		trace:    trace != nil,
 		traceOut: trace,
 	}
 
-	p.scanner = scanner.NewScanner(p.file, src, func(pos scanner.FilePos, msg string) {
+	p.scanner = scanner.NewScanner(p.file, src, func(pos source.FilePos, msg string) {
 		p.errors.Add(pos, msg)
 	}, 0)
 
@@ -910,7 +911,7 @@ func (p *Parser) parseMapLit() *ast.MapLit {
 	}
 }
 
-func (p *Parser) expect(token token.Token) scanner.Pos {
+func (p *Parser) expect(token token.Token) source.Pos {
 	pos := p.pos
 
 	if p.token != token {
@@ -955,7 +956,7 @@ func (p *Parser) advance(to map[token.Token]bool) {
 	}
 }
 
-func (p *Parser) error(pos scanner.Pos, msg string) {
+func (p *Parser) error(pos source.Pos, msg string) {
 	filePos := p.file.Position(pos)
 
 	n := len(p.errors)
@@ -972,7 +973,7 @@ func (p *Parser) error(pos scanner.Pos, msg string) {
 	p.errors.Add(filePos, msg)
 }
 
-func (p *Parser) errorExpected(pos scanner.Pos, msg string) {
+func (p *Parser) errorExpected(pos source.Pos, msg string) {
 	msg = "expected " + msg
 	if pos == p.pos {
 		// error happened at the current position: provide more specific
@@ -1023,12 +1024,12 @@ func (p *Parser) printTrace(a ...interface{}) {
 	_, _ = fmt.Fprintln(p.traceOut, a...)
 }
 
-func (p *Parser) safePos(pos scanner.Pos) scanner.Pos {
+func (p *Parser) safePos(pos source.Pos) source.Pos {
 	fileBase := p.file.Base()
 	fileSize := p.file.Size()
 
 	if int(pos) < fileBase || int(pos) > fileBase+fileSize {
-		return scanner.Pos(fileBase + fileSize)
+		return source.Pos(fileBase + fileSize)
 	}
 
 	return pos
