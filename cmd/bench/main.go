@@ -17,42 +17,6 @@ func main() {
 	runFibTailCall(35)
 }
 
-func runFibTailCall(n int) {
-	start := time.Now()
-	nativeResult := fibTC(n, 0)
-	nativeTime := time.Since(start)
-
-	input := `
-fib := func(x, s) {
-	if x == 0 {
-		return s
-	} else if x == 1 {
-		return 1 + s
-	} else {
-		return fib(x-1, fib(x-2, s))
-	}
-}
-` + fmt.Sprintf("out = fib(%d, 0)", n)
-
-	parseTime, compileTime, runTime, result, err := runBench([]byte(input))
-	if err != nil {
-		panic(err)
-	}
-
-	if nativeResult != int(result.(*objects.Int).Value) {
-		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
-	}
-
-	fmt.Println("-------------------------------------")
-	fmt.Printf("fibonacci(%d) (tail-call)\n", n)
-	fmt.Println("-------------------------------------")
-	fmt.Printf("Result:  %d\n", nativeResult)
-	fmt.Printf("Go:      %s\n", nativeTime)
-	fmt.Printf("Parser:  %s\n", parseTime)
-	fmt.Printf("Compile: %s\n", compileTime)
-	fmt.Printf("VM:      %s\n", runTime)
-}
-
 func runFib(n int) {
 	start := time.Now()
 	nativeResult := fib(n)
@@ -89,6 +53,42 @@ fib := func(x) {
 	fmt.Printf("VM:      %s\n", runTime)
 }
 
+func runFibTailCall(n int) {
+	start := time.Now()
+	nativeResult := fibTC(n, 0, 1)
+	nativeTime := time.Since(start)
+
+	input := `
+fib := func(x, a, b) {
+	if x == 0 {
+		return a
+	} else if x == 1 {
+		return b
+	} else {
+		return fib(x-1, b, a+b)
+	}
+}
+` + fmt.Sprintf("out = fib(%d, 0, 1)", n)
+
+	parseTime, compileTime, runTime, result, err := runBench([]byte(input))
+	if err != nil {
+		panic(err)
+	}
+
+	if nativeResult != int(result.(*objects.Int).Value) {
+		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
+	}
+
+	fmt.Println("-------------------------------------")
+	fmt.Printf("fibonacci(%d) (tail-call)\n", n)
+	fmt.Println("-------------------------------------")
+	fmt.Printf("Result:  %d\n", nativeResult)
+	fmt.Printf("Go:      %s\n", nativeTime)
+	fmt.Printf("Parser:  %s\n", parseTime)
+	fmt.Printf("Compile: %s\n", compileTime)
+	fmt.Printf("VM:      %s\n", runTime)
+}
+
 func fib(n int) int {
 	if n == 0 {
 		return 0
@@ -99,13 +99,13 @@ func fib(n int) int {
 	}
 }
 
-func fibTC(n, s int) int {
+func fibTC(n, a, b int) int {
 	if n == 0 {
-		return s
+		return a
 	} else if n == 1 {
-		return 1 + s
+		return b
 	} else {
-		return fibTC(n-1, fibTC(n-2, s))
+		return fibTC(n-1, b, a+b)
 	}
 }
 
