@@ -25,7 +25,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Hello, %s! This is the Ghost programming language!\n", currentUser.Name)
+	fmt.Printf("Hello, %s! Welcome to the Tengo Language!\n", currentUser.Name)
 
 	startRepl(os.Stdin, os.Stdout)
 }
