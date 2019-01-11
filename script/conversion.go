@@ -37,7 +37,7 @@ func objectToString(o objects.Object) string {
 		return val.Value
 	}
 
-	return ""
+	return o.String()
 }
 
 func objectToInterface(o objects.Object) interface{} {
@@ -56,9 +56,11 @@ func objectToInterface(o objects.Object) interface{} {
 		return val.Value
 	case *objects.String:
 		return val.Value
+	case *objects.Undefined:
+		return nil
 	}
 
-	return nil
+	return o
 }
 
 func interfaceToObject(v interface{}) (objects.Object, error) {
