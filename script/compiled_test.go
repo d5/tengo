@@ -11,34 +11,34 @@ type M map[string]interface{}
 
 func TestCompiled_Get(t *testing.T) {
 	// simple script
-	c := compile(t, `a = 5`, nil)
+	c := compile(t, `a := 5`, nil)
 	compiledRun(t, c)
 	compiledGet(t, c, "a", int64(5))
 
 	// user-defined variables
-	compileError(t, `a = b`, nil)          // compile error because "b" is not defined
-	c = compile(t, `a = b`, M{"b": "foo"}) // now compile with b = "foo" defined
-	compiledGet(t, c, "a", nil)            // a = undefined; because it's before Compiled.Run()
-	compiledRun(t, c)                      // Compiled.Run()
-	compiledGet(t, c, "a", "foo")          // a = "foo"
+	compileError(t, `a := b`, nil)          // compile error because "b" is not defined
+	c = compile(t, `a := b`, M{"b": "foo"}) // now compile with b = "foo" defined
+	compiledGet(t, c, "a", nil)             // a = undefined; because it's before Compiled.Run()
+	compiledRun(t, c)                       // Compiled.Run()
+	compiledGet(t, c, "a", "foo")           // a = "foo"
 }
 
 func TestCompiled_GetAll(t *testing.T) {
-	c := compile(t, `a = 5`, nil)
+	c := compile(t, `a := 5`, nil)
 	compiledRun(t, c)
 	compiledGetAll(t, c, M{"a": int64(5)})
 
-	c = compile(t, `a = b`, M{"b": "foo"})
+	c = compile(t, `a := b`, M{"b": "foo"})
 	compiledRun(t, c)
 	compiledGetAll(t, c, M{"a": "foo", "b": "foo"})
 
-	c = compile(t, `a = b; b = 5`, M{"b": "foo"})
+	c = compile(t, `a := b; b = 5`, M{"b": "foo"})
 	compiledRun(t, c)
 	compiledGetAll(t, c, M{"a": "foo", "b": int64(5)})
 }
 
 func TestCompiled_IsDefined(t *testing.T) {
-	c := compile(t, `a = 5`, nil)
+	c := compile(t, `a := 5`, nil)
 	compiledIsDefined(t, c, "a", false) // a is not defined before Run()
 	compiledRun(t, c)
 	compiledIsDefined(t, c, "a", true)

@@ -14,6 +14,42 @@ import (
 
 func main() {
 	runFib(35)
+	runFibTailCall(35)
+}
+
+func runFibTailCall(n int) {
+	start := time.Now()
+	nativeResult := fibTC(n, 0)
+	nativeTime := time.Since(start)
+
+	input := `
+fib := func(x, s) {
+	if x == 0 {
+		return s
+	} else if x == 1 {
+		return 1 + s
+	} else {
+		return fib(x-1, fib(x-2, s))
+	}
+}
+` + fmt.Sprintf("out = fib(%d, 0)", n)
+
+	parseTime, compileTime, runTime, result, err := runBench([]byte(input))
+	if err != nil {
+		panic(err)
+	}
+
+	if nativeResult != int(result.(*objects.Int).Value) {
+		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
+	}
+
+	fmt.Println("-------------------------------------")
+	fmt.Printf("fibonacci(%d) = %d (tail-call)\n", n, nativeResult)
+	fmt.Println("-------------------------------------")
+	fmt.Printf("Go:      %s\n", nativeTime)
+	fmt.Printf("Parser:  %s\n", parseTime)
+	fmt.Printf("Compile: %s\n", compileTime)
+	fmt.Printf("VM:      %s\n", runTime)
 }
 
 func runFib(n int) {
@@ -42,7 +78,8 @@ fib := func(x) {
 		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
 	}
 
-	fmt.Printf("fib(%d) = %d\n", n, nativeResult)
+	fmt.Println("-------------------------------------")
+	fmt.Printf("fibonacci(%d) = %d\n", n, nativeResult)
 	fmt.Println("-------------------------------------")
 	fmt.Printf("Go:      %s\n", nativeTime)
 	fmt.Printf("Parser:  %s\n", parseTime)
@@ -57,6 +94,16 @@ func fib(n int) int {
 		return 1
 	} else {
 		return fib(n-1) + fib(n-2)
+	}
+}
+
+func fibTC(n, s int) int {
+	if n == 0 {
+		return s
+	} else if n == 1 {
+		return 1 + s
+	} else {
+		return fibTC(n-1, fibTC(n-2, s))
 	}
 }
 

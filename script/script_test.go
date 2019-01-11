@@ -8,7 +8,7 @@ import (
 )
 
 func TestScript_Add(t *testing.T) {
-	s := script.New([]byte(`a = b`))
+	s := script.New([]byte(`a := b`))
 	assert.NoError(t, s.Add("b", 5))     // b = 5
 	assert.NoError(t, s.Add("b", "foo")) // b = "foo"  (re-define before compilation)
 	c, err := s.Compile()
@@ -19,7 +19,7 @@ func TestScript_Add(t *testing.T) {
 }
 
 func TestScript_Remove(t *testing.T) {
-	s := script.New([]byte(`a = b`))
+	s := script.New([]byte(`a := b`))
 	err := s.Add("b", 5)
 	assert.NoError(t, err)
 	assert.True(t, s.Remove("b")) // b is removed

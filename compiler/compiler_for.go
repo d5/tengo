@@ -74,7 +74,7 @@ func (c *Compiler) compileForInStmt(stmt *ast.ForInStmt) error {
 
 	// for-in statement is compiled like following:
 	//
-	//   for :it = iterator(iterable); :it.next();  {
+	//   for :it := iterator(iterable); :it.next();  {
 	//     k, v := :it.get()  // DEFINE operator
 	//
 	//     ... body ...
@@ -93,7 +93,7 @@ func (c *Compiler) compileForInStmt(stmt *ast.ForInStmt) error {
 	if itSymbol.Scope == ScopeGlobal {
 		c.emit(OpSetGlobal, itSymbol.Index)
 	} else {
-		c.emit(OpSetLocal, itSymbol.Index)
+		c.emit(OpDefineLocal, itSymbol.Index)
 	}
 
 	// pre-condition position
@@ -126,7 +126,7 @@ func (c *Compiler) compileForInStmt(stmt *ast.ForInStmt) error {
 		if keySymbol.Scope == ScopeGlobal {
 			c.emit(OpSetGlobal, keySymbol.Index)
 		} else {
-			c.emit(OpSetLocal, keySymbol.Index)
+			c.emit(OpDefineLocal, keySymbol.Index)
 		}
 	}
 
@@ -142,7 +142,7 @@ func (c *Compiler) compileForInStmt(stmt *ast.ForInStmt) error {
 		if valueSymbol.Scope == ScopeGlobal {
 			c.emit(OpSetGlobal, valueSymbol.Index)
 		} else {
-			c.emit(OpSetLocal, valueSymbol.Index)
+			c.emit(OpDefineLocal, valueSymbol.Index)
 		}
 	}
 

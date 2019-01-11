@@ -81,6 +81,7 @@ func (v *VM) Run() error {
 			if err := v.push(&v.constants[cidx]); err != nil {
 				return err
 			}
+
 		case compiler.OpNull:
 			if err := v.push(&undefinedObj); err != nil {
 				return err
@@ -530,14 +531,29 @@ func (v *VM) Run() error {
 			if err := v.push(&undefinedObj); err != nil {
 				return err
 			}
+
+		case compiler.OpDefineLocal:
+			localIndex := compiler.ReadUint8(ins[ip+1:])
+			curFrame.ip += 1
+
+			sp := curFrame.basePointer + int(localIndex)
+
+			// local variables can be mutated by other actions
+			// so always store the copy of popped value
+			val := v.popValue()
+			v.stack[sp] = &val
+
 		case compiler.OpSetLocal:
 			localIndex := compiler.ReadUint8(ins[ip+1:])
 			curFrame.ip += 1
 
 			sp := curFrame.basePointer + int(localIndex)
-			val := v.pop()
 
-			v.stack[sp] = val
+			// update pointee of v.stack[sp] instead of replacing the pointer itself.
+			// this is needed because there can be free variables referencing the same local variables.
+			val := v.pop()
+			*v.stack[sp] = *val // also use a copy of popped value
+
 		case compiler.OpSetSelLocal:
 			localIndex := compiler.ReadUint8(ins[ip+1:])
 			numSelectors := int(compiler.ReadUint8(ins[ip+2:]))
@@ -559,7 +575,7 @@ func (v *VM) Run() error {
 			}
 
 			// RHS value
-			val := v.pop()
+			val := v.pop() // no need to copy value here; selectorAssign uses copy of value
 
 			sp := curFrame.basePointer + int(localIndex)
 
@@ -632,6 +648,7 @@ func (v *VM) Run() error {
 			val := v.pop()
 
 			*v.frames[v.framesIndex-1].freeVars[freeIndex] = *val
+
 		case compiler.OpIteratorInit:
 			var iterator objects.Object
 
@@ -650,6 +667,7 @@ func (v *VM) Run() error {
 			if err := v.push(&iterator); err != nil {
 				return err
 			}
+
 		case compiler.OpIteratorNext:
 			iterator := v.pop()
 			b := (*iterator).(objects.Iterator).Next()
@@ -714,6 +732,13 @@ func (v *VM) pop() *objects.Object {
 	v.sp--
 
 	return o
+}
+
+func (v *VM) popValue() objects.Object {
+	o := v.stack[v.sp-1]
+	v.sp--
+
+	return *o
 }
 
 func (v *VM) pushClosure(constIndex, numFree int) error {
@@ -853,6 +878,61 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 			fn.NumParameters, numArgs)
 	}
 
+	// check if this is a tail-call (recursive call right before return)
+	curFrame := &(v.frames[v.framesIndex-1])
+	if fn == curFrame.fn {
+		nextOp := compiler.Opcode(curFrame.fn.Instructions[curFrame.ip+1])
+		if nextOp == compiler.OpReturnValue ||
+			(nextOp == compiler.OpPop &&
+				compiler.OpReturn == compiler.Opcode(curFrame.fn.Instructions[curFrame.ip+2])) {
+
+			//  stack before tail-call
+			//
+			//  |--------|
+			//  |        | <- SP  current
+			//  |--------|
+			//  | *ARG2  |        for next function (tail-call)
+			//  |--------|
+			//  | *ARG1  |        for next function (tail-call)
+			//  |--------|
+			//  | LOCAL3 |        for current function
+			//  |--------|
+			//  | LOCAL2 |        for current function
+			//  |--------|
+			//  |  ARG2  |        for current function
+			//  |--------|
+			//  |  ARG1  | <- BP  for current function
+			//  |--------|
+
+			for i := 0; i < numArgs; i++ {
+				v.stack[curFrame.basePointer+i] = v.stack[v.sp-numArgs+i]
+			}
+
+			v.sp -= numArgs
+			curFrame.ip = -1
+
+			//  stack after tail-call
+			//
+			//  |--------|
+			//  |        |
+			//  |--------|
+			//  | *ARG2  |
+			//  |--------|
+			//  | *ARG1  | <- SP  current
+			//  |--------|
+			//  | LOCAL3 |        for current function
+			//  |--------|
+			//  | LOCAL2 |        for current function
+			//  |--------|
+			//  | *ARG2  |        (copied)
+			//  |--------|
+			//  | *ARG1  | <- BP  (copied)
+			//  |--------|
+
+			return nil
+		}
+	}
+
 	v.frames[v.framesIndex].fn = fn
 	v.frames[v.framesIndex].freeVars = freeVars
 	v.frames[v.framesIndex].ip = -1
@@ -860,6 +940,20 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 	v.framesIndex++
 
 	v.sp = v.sp - numArgs + fn.NumLocals
+
+	//  stack after the function call
+	//
+	//  |--------|
+	//  |        |        <- SP after function call
+	//  |--------|
+	//  | LOCAL4 | (BP+3)
+	//  |--------|
+	//  | LOCAL3 | (BP+2) <- SP before function call
+	//  |--------|
+	//  |  ARG2  | (BP+1)
+	//  |--------|
+	//  |  ARG1  | (BP+0) <- BP
+	//  |--------|
 
 	return nil
 }

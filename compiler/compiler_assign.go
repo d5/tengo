@@ -42,10 +42,6 @@ func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
 		}
 
 		symbol = c.symbolTable.Define(ident)
-	} else if op == token.Assign {
-		if !exists {
-			symbol = c.symbolTable.Define(ident)
-		}
 	} else {
 		if !exists {
 			return fmt.Errorf("unresolved reference '%s'", ident)
@@ -109,7 +105,11 @@ func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
 		if numSel > 0 {
 			c.emit(OpSetSelLocal, symbol.Index, numSel)
 		} else {
-			c.emit(OpSetLocal, symbol.Index)
+			if op == token.Define {
+				c.emit(OpDefineLocal, symbol.Index)
+			} else {
+				c.emit(OpSetLocal, symbol.Index)
+			}
 		}
 	case ScopeFree:
 		if numSel > 0 {

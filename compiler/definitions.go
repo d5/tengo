@@ -45,6 +45,7 @@ var definitions = map[Opcode]*Definition{
 	OpReturnValue:      {Name: "RETVAL", Operands: []int{1}},
 	OpGetLocal:         {Name: "GETL", Operands: []int{1}},
 	OpSetLocal:         {Name: "SETL", Operands: []int{1}},
+	OpDefineLocal:      {Name: "DEFL", Operands: []int{1}},
 	OpSetSelLocal:      {Name: "SETSL", Operands: []int{1, 1}},
 	OpGetBuiltin:       {Name: "BUILTIN", Operands: []int{1}},
 	OpClosure:          {Name: "CLOSURE", Operands: []int{2, 1}},

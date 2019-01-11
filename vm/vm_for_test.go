@@ -24,21 +24,21 @@ func TestFor(t *testing.T) {
 	}()`, 5)
 
 	expect(t, `
-	for a=1; a<=10; a++ {
+	for a:=1; a<=10; a++ {
 		out += a
 	}`, 55)
 
 	expect(t, `
-	for a=1; a<=3; a++ {
-		for b=3; b<=6; b++ {
+	for a:=1; a<=3; a++ {
+		for b:=3; b<=6; b++ {
 			out += b
 		}
 	}`, 54)
 
 	expect(t, `
 	out = func() {
-		sum = 0
-		for a=1; a<=10; a++ {
+		sum := 0
+		for a:=1; a<=10; a++ {
 			sum += a
 		}
 		return sum
@@ -46,17 +46,17 @@ func TestFor(t *testing.T) {
 
 	expect(t, `
 	out = func() {
-		sum = 0
-		for a=1; a<=4; a++ {
-			for b=3; b<=5; b++ {
+		sum := 0
+		for a:=1; a<=4; a++ {
+			for b:=3; b<=5; b++ {
 				sum += b
 			}
 		}
 		return sum
-	}()`, 48) // (3+4+5 * 4
+	}()`, 48) // (3+4+5) * 4
 
 	expect(t, `
-	a = 1
+	a := 1
 	for ; a<=10; a++ {
 		if a == 5 {
 			break
@@ -65,7 +65,7 @@ func TestFor(t *testing.T) {
 	out = a`, 5)
 
 	expect(t, `
-	for a=1; a<=10; a++ {
+	for a:=1; a<=10; a++ {
 		if a == 3 {
 			continue
 		}
@@ -76,9 +76,9 @@ func TestFor(t *testing.T) {
 	}`, 12) // 1 + 2 + 4 + 5
 
 	expect(t, `
-	for a=1; a<=10; {
+	for a:=1; a<=10; {
 		if a == 3 {
-			a++	
+			a++
 			continue
 		}
 		out += a

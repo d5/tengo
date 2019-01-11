@@ -20,5 +20,5 @@ func TestReturn(t *testing.T) {
 		}
 	}()`, 10)
 
-	expect(t, `f1 = func() { return 2 * 5; }; out = f1()`, 10)
+	expect(t, `f1 := func() { return 2 * 5; }; out = f1()`, 10)
 }

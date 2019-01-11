@@ -30,9 +30,6 @@ const (
 	OpOrJump
 	OpJump
 	OpNull
-	OpGetGlobal
-	OpSetGlobal
-	OpSetSelGlobal
 	OpArray
 	OpMap
 	OpIndex
@@ -40,14 +37,18 @@ const (
 	OpCall
 	OpReturn
 	OpReturnValue
+	OpGetGlobal
+	OpSetGlobal
+	OpSetSelGlobal
 	OpGetLocal
 	OpSetLocal
+	OpDefineLocal
 	OpSetSelLocal
-	OpGetBuiltin
-	OpClosure
 	OpGetFree
 	OpSetFree
 	OpSetSelFree
+	OpGetBuiltin
+	OpClosure
 	OpIteratorInit
 	OpIteratorNext
 	OpIteratorKey

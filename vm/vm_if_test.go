@@ -26,11 +26,11 @@ func TestIf(t *testing.T) {
 	expect(t, `if (1 > 2) { out = 10 } else if (1 == 2) { if (1 == 2) { out = 21 } else if (2 == 3) { out = 22 } else { out = 23 } } else { out = 30 }`, 30)
 	expect(t, `if (1 > 2) { out = 10 } else if (1 == 2) { out = 20 } else { if (1 == 2) { out = 31 } else if (2 == 3) { out = 32 } else { out = 33 } }`, 33)
 
-	expect(t, `if a=0; a<1 { out = 10 }`, 10)
-	expect(t, `a=0; if a++; a==1 { out = 10 }`, 10)
+	expect(t, `if a:=0; a<1 { out = 10 }`, 10)
+	expect(t, `a:=0; if a++; a==1 { out = 10 }`, 10)
 	expect(t, `
 func() {
-	a = 1
+	a := 1
 	if a++; a > 1 {
 		out = a
 	}
@@ -38,7 +38,7 @@ func() {
 `, 2)
 	expect(t, `
 func() {
-	a = 1
+	a := 1
 	if a++; a == 1 {
 		out = 10
 	} else {
@@ -48,7 +48,7 @@ func() {
 `, 20)
 	expect(t, `
 func() {
-	a = 1
+	a := 1
 
 	func() {
 		if a++; a > 1 {
