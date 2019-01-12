@@ -65,9 +65,9 @@ fibt := func(x, a, b) {
 
 Please see [tengobench](https://github.com/d5/tengobench) for more details.
 
-## Binary Compilation and Execution
+## Tengo Standalone Compiler and VM
 
-Although Tengo language is designed as an embedded script for Go, it can also be compiled and executed as native binary without any Go code.
+Although Tengo is designed as an embedded script language for Go, it can be compiled and executed as native binary without any Go code using `tengo` tool.
 
 ### Tengo tool
 
