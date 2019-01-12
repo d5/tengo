@@ -31,7 +31,7 @@ Also Tengo is ...
 | go-lua | 5,561,849,390 | 4,018,411 | Go-Lua-VM |
 | Anko | 114,157,535,022 | 13,238,407 | Go-Interpreter |
 | otto | 91,862,077,318 | 13,043,798 | Go-Interpreter |
-| Tengo | 6,646,884,016 | 4,396,387 | Go-VM |
+| **Tengo** | **6,646,884,016 **| **4,396,387** | Go-VM** |
 
 _*All units in nanoseconds._
 
