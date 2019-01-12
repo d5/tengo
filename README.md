@@ -22,19 +22,20 @@ Also Tengo is ...
 
 ## Benchmark
 
-| | Fib(35) | FibTC(35) | Type |
-|--|--|--|--|
-| [Go](https://github.com/yuin/gopher-lua) | 61.215ms | 381ns | Go |
-| [Lua](https://github.com/yuin/gopher-lua) | 100s | 100s | Lua |
-| [Python3](https://github.com/yuin/gopher-lua) | 100s | 100s | Python |
-| [GopherLua](https://github.com/yuin/gopher-lua) | 100s | 100s | Go-VM |
-| [go-lua](https://github.com/Shopify/go-lua) | 100s | 100s | Go-VM |
-| [otto](https://github.com/robertkrimen/otto) | 100s | 100s | Go-Interpreter |
-| [Anko](https://github.com/mattn/anko) | 100s | 100s | Go-Interpreter |
-| **Tengo** | **6.852s** | **78.728µs** | Go-VM |
+| Lang | fib(35) | fibt(35) |  Type  |
+| :--- |    ---: |     ---: |  :---: |
+| Go | 79,335,297 | 825 | Go |
+| Python | 3,041,348,388 | 23,416,612 | Python |
+| Lua | 1,898,257,490 | 2,979,080 | Lua |
+| GopherLua | 6,332,378,472 | 4,547,143 | Go-Lua-VM |
+| go-lua | 5,561,849,390 | 4,018,411 | Go-Lua-VM |
+| Anko | 114,157,535,022 | 13,238,407 | Go-Interpreter |
+| otto | 91,862,077,318 | 13,043,798 | Go-Interpreter |
+| Tengo | 6,646,884,016 | 4,396,387 | Go-VM |
 
+_*All units in nanoseconds._
 
-`Fib(35)` is a function to calculate 35th Fibonacci number.
+`fib(35)` is a function to calculate 35th Fibonacci number.
 
 ```golang
 fib := func(x) {
@@ -48,21 +49,21 @@ fib := func(x) {
 }
 ```
 
-`FibTC(35)` is a [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of `Fib(35)`.
+`fibt(35)` is a [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of `fib(35)`.
 
 ```golang
-fibtc := func(x, a, b) {
+fibt := func(x, a, b) {
 	if x == 0 {
 		return a
 	} else if x == 1 {
 		return b
 	} else {
-		return fibtc(x-1, b, a+b)
+		return fibt(x-1, b, a+b)
 	}
 }
 ```
 
-Please see this [Wiki](https://github.com/d5/tengo/wiki/Benchmarks) for more details.
+Please see [tengobench](https://github.com/d5/tengobench) for more details.
 
 ## Binary Compilation and Execution
 
