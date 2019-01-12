@@ -47,6 +47,7 @@ fib := func(x) {
 		return fib(x-1) + fib(x-2)
 	}
 }
+fib(35)
 ```
 
 `fibt(35)` is a [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of `fib(35)`.
@@ -61,6 +62,7 @@ fibt := func(x, a, b) {
 		return fibt(x-1, b, a+b)
 	}
 }
+fibt(35, 0, 1)
 ```
 
 Please see [tengobench](https://github.com/d5/tengobench) for more details.
