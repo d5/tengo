@@ -14,6 +14,10 @@ import (
 	"github.com/d5/tengo/runtime"
 )
 
+const (
+	sourceFileExt = ".tengo"
+)
+
 var (
 	compile    bool
 	outputFile = flag.String("o", "", "Output file")
@@ -40,6 +44,11 @@ func main() {
 
 	if compile {
 		if err := doCompile(inputData, inputFile, *outputFile); err != nil {
+			_, _ = fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+	} else if filepath.Ext(inputFile) == sourceFileExt {
+		if err := doCompileRun(inputData, inputFile, *outputFile); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
@@ -102,6 +111,22 @@ func doCompile(data []byte, inputFile, outputFile string) (err error) {
 	}
 
 	fmt.Println(outputFile)
+
+	return
+}
+
+func doCompileRun(data []byte, inputFile, _ string) (err error) {
+	bytecode, err := tengo.Compile(data, filepath.Base(inputFile))
+	if err != nil {
+		return
+	}
+
+	machine := runtime.NewVM(bytecode, nil)
+
+	err = machine.Run()
+	if err != nil {
+		return
+	}
 
 	return
 }
