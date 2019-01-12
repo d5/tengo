@@ -20,8 +20,6 @@ Also Tengo is ...
 - Written in native Go (no CGO or any external dependencies)
 - _(Can be)_ compiled and executed as a standalone language (without any Go code)
 
-## Compiling and Execution
-
 ## Benchmark
 
 | Lang | fib(35) | fibt(35) |  Type  |
@@ -67,7 +65,11 @@ fibt := func(x, a, b) {
 
 Please see [tengobench](https://github.com/d5/tengobench) for more details.
 
-## Tengo Standalone Compiler and VM
+## Tengo as an Embedded Script
+
+...
+
+## Tengo as a Standalone Language
 
 Although Tengo is designed as an embedded script language for Go, it can be compiled and executed as native binary without any Go code using `tengo` tool.
 
