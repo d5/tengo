@@ -24,16 +24,16 @@ Also Tengo is ...
 
 | Lang | fib(35) | fibt(35) |  Type  |
 | :--- |    ---: |     ---: |  :---: |
-| Go | `79,335,297` | `825` | Go |
-| Python | `3,041,348,388` | `23,416,612` | Python |
-| Lua | `1,898,257,490` | `2,979,080` | Lua |
-| GopherLua | `6,332,378,472` | `4,547,143` | Go-Lua-VM |
-| go-lua | `5,561,849,390` | `4,018,411` | Go-Lua-VM |
-| Anko | `114,157,535,022` | `13,238,407` | Go-Interpreter |
-| otto | `91,862,077,318` | `13,043,798` | Go-Interpreter |
-| **Tengo** | `6,646,884,016`| `4,396,387` | Go-VM |
+| Go | `75,245,201` | `527` | Go (native) |
+| **Tengo** | `6,716,413,970` | `4,338,042` | Go-VM |
+| Lua | `1,839,627,814` | `3,768,932` | Lua (native) |
+| go-lua | `5,466,274,012` | `4,508,039` | Go-Lua-VM |
+| GopherLua | `5,740,626,066` | `5,027,486` | Go-Lua-VM |
+| Python | `3,021,823,532` | `22,829,440` | Python (native) |
+| otto | `92,194,561,922` | `13,250,326` | Go-JS-Interpreter |
+| Anko | `125,748,242,982` | `15,296,442` | Go-Interpreter |
 
-_*All units in nanoseconds._
+_*Nanoseconds_
 
 `fib(35)` is a function to calculate 35th Fibonacci number.
 
