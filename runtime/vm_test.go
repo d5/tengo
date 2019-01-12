@@ -1,7 +1,6 @@
 package runtime_test
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	_runtime "runtime"
@@ -148,7 +147,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object) (res map
 
 			var ipstr string
 			if v != nil {
-				frameIdx, ip := v.FrameDebug()
+				frameIdx, ip := v.FrameInfo()
 				ipstr = fmt.Sprintf("\n  (Frame=%d, IP=%d)", frameIdx, ip)
 			}
 			trace = append(trace, fmt.Sprintf("[Panic]\n\n  %v%s\n", e, ipstr))
@@ -217,29 +216,9 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object) (res map
 			}
 		}
 		trace = append(trace, fmt.Sprintf("\n[Globals]\n\n%s", strings.Join(globalsStr, "\n")))
-		var stack []string
-		for sidx, s := range v.Stack() {
-			if s == nil {
-				continue
-			}
-
-			if cmFn, ok := (*s).(*objects.Closure); ok {
-				stack = append(stack, fmt.Sprintf("[% 3d] (Closure|%p)", sidx, s))
-				for _, l := range compiler.FormatInstructions(cmFn.Fn.Instructions, 0) {
-					stack = append(stack, fmt.Sprintf("     %s", l))
-				}
-			} else {
-				stack = append(stack, fmt.Sprintf("[% 3d] %s (%s|%p)", sidx, *s, reflect.TypeOf(*s).Name(), s))
-			}
-		}
-		trace = append(trace, fmt.Sprintf("\n[Stack]\n\n%s", strings.Join(stack, "\n")))
 	}
 	if err != nil {
 		return
-	}
-
-	if len(v.Stack()) > 0 {
-		err = errors.New("value left in the stack")
 	}
 
 	return

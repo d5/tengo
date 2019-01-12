@@ -699,6 +699,11 @@ func (v *VM) Run() error {
 		}
 	}
 
+	// check if stack still has some objects left
+	if v.sp > 0 && !v.aborting {
+		return fmt.Errorf("non empty stack after execution")
+	}
+
 	return nil
 }
 
@@ -706,13 +711,7 @@ func (v *VM) Globals() []*objects.Object {
 	return v.globals
 }
 
-// for tests
-func (v *VM) Stack() []*objects.Object {
-	return v.stack[:v.sp]
-}
-
-// for tests
-func (v *VM) FrameDebug() (frameIndex int, ip int) {
+func (v *VM) FrameInfo() (frameIndex int, ip int) {
 	return v.framesIndex - 1, v.frames[v.framesIndex-1].ip
 }
 
