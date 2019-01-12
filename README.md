@@ -1,4 +1,4 @@
-# Tengo Language
+# The Tengo Language
 
 Tengo is an embeddable script language for Go.
 
@@ -6,7 +6,7 @@ Tengo is an embeddable script language for Go.
 
 ## Features
 
-The Tengo language, as a programming language, has the following features:
+Tengo, as a programming language, has the following features:
 
 - Dynamically typed
 - Bytecode compiled: very fast (see [benchmark](#benchmark) results below)
@@ -66,6 +66,20 @@ fibt(35, 0, 1)
 ```
 
 Please see [tengobench](https://github.com/d5/tengobench) for more details.
+
+## Syntax
+
+### Variables and Types
+
+...
+
+### Flow Control
+
+...
+
+### Functions
+
+...
 
 ## Tengo as an Embedded Script
 
