@@ -82,6 +82,13 @@ Please see [tengobench](https://github.com/d5/tengobench) for more details.
 
 ## Tengo Syntax in 5 Minutes
 
+### Comments
+
+```golang
+/* multi-line block comments */
+// line comments
+```
+
 ### Variables and Types
 
 Tengo is a dynamically typed language, and, you can initialize the variables using `:=` operator. 
@@ -116,7 +123,46 @@ print(a) 		// still "foo"
 
 ### Flow Control
 
-...
+Tengo currently supports **if-else**, **for**, **for-in** statements.
+
+```golang
+// IF-ELSE
+if a < 0 {
+    // ...
+} else if a == 0 {
+    // ...
+} else {
+    // ...
+}
+
+// IF with init statement
+if a := 0; a < 10 {
+    // ...
+} else {
+    // ...
+}
+
+// FOR
+for a:=0; a<10; a++ {
+    // ...
+}
+
+// FOR condition-only (like WHILE in other languages)
+for a < 10 {
+    // ...
+}
+
+// FOR-IN
+for x in [1, 2, 3] {		// array
+    // ...
+}
+for i, x in [1, 2, 3] {		// array: index and element
+    // ...
+} 
+for k, v in {k1: 1, k2: 2} {	// map: key and value
+    // ...
+}
+```
 
 ### Functions
 
@@ -196,3 +242,4 @@ The next big features planned include:
 - Native executables compilation
 - Performance improvements
 - Syntax highlighter for IDEs
+
