@@ -6,8 +6,6 @@ Tengo is an embedded script language for Go.
 
 ## Language Features
 
-Tengo, as a programming language, has the following features:
-
 - Simple and intuitive syntax
 - Dynamically typed with type coercions
 - Bytecode compiled _(see the [benchmark](#benchmark) results)_
@@ -15,7 +13,7 @@ Tengo, as a programming language, has the following features:
 - Garbage collected _(thanks to Go runtime)_
 - Easily extendible using customizable types
 - Written in pure Go _(no CGO, no external dependencies)_
-- _(Can be)_ a standalone language _(without writing any Go code)_
+- Excutable as a standalone language _(without writing any Go code)_
 
 ## Benchmark
 
@@ -193,7 +191,7 @@ for k, v in {k1: 1, k2: 2} {	// map: key and value
 }
 ``` 
 
-## Tengo as an Embedded Script
+## Embed Tengo in Go
 
 ...
 
