@@ -4,16 +4,30 @@ Tengo is an embedded script language for Go.
 
 Try Tengo language **[here](https://tengolang.com/)**!
 
+```golang
+each := func(seq, fn) {
+    for x in seq { // array iteration
+        fn(x) 
+    }
+}
+
+sum := func(seq) {
+   s := 0
+   each(seq, func(x) { s += x }) // closure: capturing variable 's'
+   return s
+}
+
+print(sum([1, 2, 3])) // "6"
+```
+
 ## Language Features
 
 Tengo, as a programming language, has the following features:
 
+- Simple and intuitive syntax
 - Dynamically typed with type coercions
-- Bytecode compiled _(see [benchmark](#benchmark))_
+- Bytecode compiled _(see the [benchmark](#benchmark) results)_
 - First-class functions and Closures
-
-Also the Tengo is ...
-
 - Garbage collected _(thanks to Go runtime)_
 - Easily extendible using customizable types
 - Written in pure Go _(no CGO, no external dependencies)_
