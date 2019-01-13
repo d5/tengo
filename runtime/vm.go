@@ -28,6 +28,9 @@ type VM struct {
 	globals     []*objects.Object
 	frames      []Frame
 	framesIndex int
+	curFrame    *Frame
+	curInsts    []byte
+	curIPLimit  int
 	aborting    bool
 }
 
@@ -53,6 +56,9 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object) *VM {
 		globals:     globals,
 		frames:      frames,
 		framesIndex: 1,
+		curFrame:    &(frames[0]),
+		curInsts:    frames[0].fn.Instructions,
+		curIPLimit:  len(frames[0].fn.Instructions) - 1,
 	}
 }
 
@@ -62,21 +68,16 @@ func (v *VM) Abort() {
 
 func (v *VM) Run() error {
 	var ip int
-	var ins []byte
-	var op compiler.Opcode
 
-	for v.frames[v.framesIndex-1].ip < len(v.frames[v.framesIndex-1].fn.Instructions)-1 && !v.aborting {
-		curFrame := &(v.frames[v.framesIndex-1])
-		curFrame.ip++
+	for v.curFrame.ip < v.curIPLimit && !v.aborting {
+		v.curFrame.ip++
 
-		ip = curFrame.ip
-		ins = curFrame.fn.Instructions
-		op = compiler.Opcode(ins[ip])
+		ip = v.curFrame.ip
 
-		switch op {
+		switch compiler.Opcode(v.curInsts[ip]) {
 		case compiler.OpConstant:
-			cidx := compiler.ReadUint16(ins[ip+1:])
-			curFrame.ip += 2
+			cidx := compiler.ReadUint16(v.curInsts[ip+1:])
+			v.curFrame.ip += 2
 
 			if err := v.push(&v.constants[cidx]); err != nil {
 				return err
@@ -320,47 +321,47 @@ func (v *VM) Run() error {
 				return fmt.Errorf("invalid operation on %s", (*operand).TypeName())
 			}
 		case compiler.OpJumpFalsy:
-			pos := int(compiler.ReadUint16(ins[ip+1:]))
-			curFrame.ip += 2
+			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
+			v.curFrame.ip += 2
 
 			condition := v.pop()
 			if (*condition).IsFalsy() {
-				curFrame.ip = pos - 1
+				v.curFrame.ip = pos - 1
 			}
 		case compiler.OpAndJump:
-			pos := int(compiler.ReadUint16(ins[ip+1:]))
-			curFrame.ip += 2
+			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
+			v.curFrame.ip += 2
 
 			condition := *v.stack[v.sp-1]
 			if condition.IsFalsy() {
-				curFrame.ip = pos - 1
+				v.curFrame.ip = pos - 1
 			} else {
 				_ = v.pop()
 			}
 		case compiler.OpOrJump:
-			pos := int(compiler.ReadUint16(ins[ip+1:]))
-			curFrame.ip += 2
+			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
+			v.curFrame.ip += 2
 
 			condition := *v.stack[v.sp-1]
 			if !condition.IsFalsy() {
-				curFrame.ip = pos - 1
+				v.curFrame.ip = pos - 1
 			} else {
 				_ = v.pop()
 			}
 		case compiler.OpJump:
-			pos := int(compiler.ReadUint16(ins[ip+1:]))
-			curFrame.ip = pos - 1
+			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
+			v.curFrame.ip = pos - 1
 		case compiler.OpSetGlobal:
-			globalIndex := compiler.ReadUint16(ins[ip+1:])
-			curFrame.ip += 2
+			globalIndex := compiler.ReadUint16(v.curInsts[ip+1:])
+			v.curFrame.ip += 2
 
 			val := v.pop()
 
 			v.globals[globalIndex] = val
 		case compiler.OpSetSelGlobal:
-			globalIndex := compiler.ReadUint16(ins[ip+1:])
-			numSelectors := int(compiler.ReadUint8(ins[ip+3:]))
-			curFrame.ip += 3
+			globalIndex := compiler.ReadUint16(v.curInsts[ip+1:])
+			numSelectors := int(compiler.ReadUint8(v.curInsts[ip+3:]))
+			v.curFrame.ip += 3
 
 			// pop selector outcomes (left to right)
 			selectors := make([]interface{}, numSelectors, numSelectors)
@@ -384,8 +385,8 @@ func (v *VM) Run() error {
 				return err
 			}
 		case compiler.OpGetGlobal:
-			globalIndex := compiler.ReadUint16(ins[ip+1:])
-			curFrame.ip += 2
+			globalIndex := compiler.ReadUint16(v.curInsts[ip+1:])
+			v.curFrame.ip += 2
 
 			val := v.globals[globalIndex]
 
@@ -393,8 +394,8 @@ func (v *VM) Run() error {
 				return err
 			}
 		case compiler.OpArray:
-			numElements := int(compiler.ReadUint16(ins[ip+1:]))
-			curFrame.ip += 2
+			numElements := int(compiler.ReadUint16(v.curInsts[ip+1:]))
+			v.curFrame.ip += 2
 
 			var elements []objects.Object
 			for i := v.sp - numElements; i < v.sp; i++ {
@@ -408,8 +409,8 @@ func (v *VM) Run() error {
 				return err
 			}
 		case compiler.OpMap:
-			numElements := int(compiler.ReadUint16(ins[ip+1:]))
-			curFrame.ip += 2
+			numElements := int(compiler.ReadUint16(v.curInsts[ip+1:]))
+			v.curFrame.ip += 2
 
 			kv := make(map[string]objects.Object)
 			for i := v.sp - numElements; i < v.sp; i += 2 {
@@ -496,15 +497,15 @@ func (v *VM) Run() error {
 				return fmt.Errorf("cannot slice %s", left.TypeName())
 			}
 		case compiler.OpCall:
-			numArgs := compiler.ReadUint8(ins[ip+1:])
-			curFrame.ip += 1
+			numArgs := compiler.ReadUint8(v.curInsts[ip+1:])
+			v.curFrame.ip += 1
 
 			if err := v.executeCall(int(numArgs)); err != nil {
 				return err
 			}
 		case compiler.OpReturnValue:
-			numRets := int(compiler.ReadUint8(ins[ip+1:]))
-			curFrame.ip += 1
+			numRets := int(compiler.ReadUint8(v.curInsts[ip+1:]))
+			v.curFrame.ip += 1
 
 			var rets []*objects.Object
 			for i := 0; i < numRets; i++ {
@@ -513,9 +514,12 @@ func (v *VM) Run() error {
 			}
 
 			v.framesIndex--
-			frame := v.frames[v.framesIndex]
+			lastFrame := v.frames[v.framesIndex]
+			v.curFrame = &v.frames[v.framesIndex-1]
+			v.curInsts = v.curFrame.fn.Instructions
+			v.curIPLimit = len(v.curInsts) - 1
 
-			v.sp = frame.basePointer - 1
+			v.sp = lastFrame.basePointer - 1
 
 			for _, retVal := range rets {
 				if err := v.push(retVal); err != nil {
@@ -524,19 +528,22 @@ func (v *VM) Run() error {
 			}
 		case compiler.OpReturn:
 			v.framesIndex--
-			frame := v.frames[v.framesIndex]
+			lastFrame := v.frames[v.framesIndex]
+			v.curFrame = &v.frames[v.framesIndex-1]
+			v.curInsts = v.curFrame.fn.Instructions
+			v.curIPLimit = len(v.curInsts) - 1
 
-			v.sp = frame.basePointer - 1
+			v.sp = lastFrame.basePointer - 1
 
 			if err := v.push(undefinedPtr); err != nil {
 				return err
 			}
 
 		case compiler.OpDefineLocal:
-			localIndex := compiler.ReadUint8(ins[ip+1:])
-			curFrame.ip += 1
+			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
+			v.curFrame.ip += 1
 
-			sp := curFrame.basePointer + int(localIndex)
+			sp := v.curFrame.basePointer + int(localIndex)
 
 			// local variables can be mutated by other actions
 			// so always store the copy of popped value
@@ -544,10 +551,10 @@ func (v *VM) Run() error {
 			v.stack[sp] = &val
 
 		case compiler.OpSetLocal:
-			localIndex := compiler.ReadUint8(ins[ip+1:])
-			curFrame.ip += 1
+			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
+			v.curFrame.ip += 1
 
-			sp := curFrame.basePointer + int(localIndex)
+			sp := v.curFrame.basePointer + int(localIndex)
 
 			// update pointee of v.stack[sp] instead of replacing the pointer itself.
 			// this is needed because there can be free variables referencing the same local variables.
@@ -555,9 +562,9 @@ func (v *VM) Run() error {
 			*v.stack[sp] = *val // also use a copy of popped value
 
 		case compiler.OpSetSelLocal:
-			localIndex := compiler.ReadUint8(ins[ip+1:])
-			numSelectors := int(compiler.ReadUint8(ins[ip+2:]))
-			curFrame.ip += 2
+			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
+			numSelectors := int(compiler.ReadUint8(v.curInsts[ip+2:]))
+			v.curFrame.ip += 2
 
 			// pop selector outcomes (left to right)
 			selectors := make([]interface{}, numSelectors, numSelectors)
@@ -577,48 +584,48 @@ func (v *VM) Run() error {
 			// RHS value
 			val := v.pop() // no need to copy value here; selectorAssign uses copy of value
 
-			sp := curFrame.basePointer + int(localIndex)
+			sp := v.curFrame.basePointer + int(localIndex)
 
 			if err := selectorAssign(v.stack[sp], val, selectors); err != nil {
 				return err
 			}
 		case compiler.OpGetLocal:
-			localIndex := compiler.ReadUint8(ins[ip+1:])
-			curFrame.ip += 1
+			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
+			v.curFrame.ip += 1
 
-			val := v.stack[curFrame.basePointer+int(localIndex)]
+			val := v.stack[v.curFrame.basePointer+int(localIndex)]
 
 			if err := v.push(val); err != nil {
 				return err
 			}
 		case compiler.OpGetBuiltin:
-			builtinIndex := compiler.ReadUint8(ins[ip+1:])
-			curFrame.ip += 1
+			builtinIndex := compiler.ReadUint8(v.curInsts[ip+1:])
+			v.curFrame.ip += 1
 
 			if err := v.push(&builtinFuncs[builtinIndex]); err != nil {
 				return err
 			}
 		case compiler.OpClosure:
-			constIndex := compiler.ReadUint16(ins[ip+1:])
-			numFree := compiler.ReadUint8(ins[ip+3:])
-			curFrame.ip += 3
+			constIndex := compiler.ReadUint16(v.curInsts[ip+1:])
+			numFree := compiler.ReadUint8(v.curInsts[ip+3:])
+			v.curFrame.ip += 3
 
 			if err := v.pushClosure(int(constIndex), int(numFree)); err != nil {
 				return err
 			}
 		case compiler.OpGetFree:
-			freeIndex := compiler.ReadUint8(ins[ip+1:])
-			curFrame.ip += 1
+			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
+			v.curFrame.ip += 1
 
-			val := curFrame.freeVars[freeIndex]
+			val := v.curFrame.freeVars[freeIndex]
 
 			if err := v.push(val); err != nil {
 				return err
 			}
 		case compiler.OpSetSelFree:
-			freeIndex := compiler.ReadUint8(ins[ip+1:])
-			numSelectors := int(compiler.ReadUint8(ins[ip+2:]))
-			curFrame.ip += 2
+			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
+			numSelectors := int(compiler.ReadUint8(v.curInsts[ip+2:]))
+			v.curFrame.ip += 2
 
 			// pop selector outcomes (left to right)
 			selectors := make([]interface{}, numSelectors, numSelectors)
@@ -638,16 +645,16 @@ func (v *VM) Run() error {
 			// RHS value
 			val := v.pop()
 
-			if err := selectorAssign(curFrame.freeVars[freeIndex], val, selectors); err != nil {
+			if err := selectorAssign(v.curFrame.freeVars[freeIndex], val, selectors); err != nil {
 				return err
 			}
 		case compiler.OpSetFree:
-			freeIndex := compiler.ReadUint8(ins[ip+1:])
-			curFrame.ip += 1
+			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
+			v.curFrame.ip += 1
 
 			val := v.pop()
 
-			*v.frames[v.framesIndex-1].freeVars[freeIndex] = *val
+			*v.curFrame.freeVars[freeIndex] = *val
 
 		case compiler.OpIteratorInit:
 			var iterator objects.Object
@@ -695,7 +702,7 @@ func (v *VM) Run() error {
 				return err
 			}
 		default:
-			return fmt.Errorf("unknown opcode: %d", op)
+			return fmt.Errorf("unknown opcode: %d", v.curInsts[ip])
 		}
 	}
 
@@ -878,12 +885,11 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 	}
 
 	// check if this is a tail-call (recursive call right before return)
-	curFrame := &(v.frames[v.framesIndex-1])
-	if fn == curFrame.fn { // recursion
-		nextOp := compiler.Opcode(curFrame.fn.Instructions[curFrame.ip+1])
+	if fn == v.curFrame.fn { // recursion
+		nextOp := compiler.Opcode(v.curInsts[v.curFrame.ip+1])
 		if nextOp == compiler.OpReturnValue || // tail call
 			(nextOp == compiler.OpPop &&
-				compiler.OpReturn == compiler.Opcode(curFrame.fn.Instructions[curFrame.ip+2])) {
+				compiler.OpReturn == compiler.Opcode(v.curInsts[v.curFrame.ip+2])) {
 
 			//  stack before tail-call
 			//
@@ -905,9 +911,11 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 			//  |  ARG1  | <- BP  for current function
 			//  |--------|
 
-			copy(v.stack[curFrame.basePointer:], v.stack[v.sp-numArgs:v.sp])
+			for p := 0; p < numArgs; p++ {
+				v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
+			}
 			v.sp -= numArgs + 1
-			curFrame.ip = -1
+			v.curFrame.ip = -1 // reset IP to beginning of the frame
 
 			//  stack after tail-call
 			//
@@ -933,10 +941,13 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 		}
 	}
 
-	v.frames[v.framesIndex].fn = fn
-	v.frames[v.framesIndex].freeVars = freeVars
-	v.frames[v.framesIndex].ip = -1
-	v.frames[v.framesIndex].basePointer = v.sp - numArgs
+	v.curFrame = &(v.frames[v.framesIndex])
+	v.curFrame.fn = fn
+	v.curFrame.freeVars = freeVars
+	v.curFrame.ip = -1
+	v.curFrame.basePointer = v.sp - numArgs
+	v.curInsts = fn.Instructions
+	v.curIPLimit = len(v.curInsts) - 1
 	v.framesIndex++
 
 	v.sp = v.sp - numArgs + fn.NumLocals
