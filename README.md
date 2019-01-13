@@ -2,23 +2,7 @@
 
 Tengo is an embedded script language for Go.
 
-Try Tengo language **[here](https://tengolang.com/)**!
-
-```golang
-each := func(seq, fn) {
-    for x in seq { // array iteration
-        fn(x) 
-    }
-}
-
-sum := func(seq) {
-   s := 0
-   each(seq, func(x) { s += x }) // closure: capturing variable 's'
-   return s
-}
-
-print(sum([1, 2, 3])) // "6"
-```
+Try the Tengo language in **[Playground](https://tengolang.com/)**!
 
 ## Language Features
 
