@@ -73,6 +73,8 @@ Tengo supports line comments (`//...`) and block comments (`/* ... */`).
 
 a := 5 // line comments
 ```
+> [Run in Playground](https://tengolang.com/?s=02e384399a0397b0a752f08604ccb244d1a6cb37)
+
 
 Tengo is a dynamically typed language, and, you can initialize the variables using `:=` operator. 
 
@@ -92,6 +94,8 @@ k := func(l, m) {	// function
     return l + m
 }
 ```
+> [Run in Playground](https://tengolang.com/?s=f8626a711769502ce20e4560ace65c0e9c1279f4)
+
 After the variable is initialized, it can be re-assigned different value using `=` operator. 
 
 ```golang
@@ -101,8 +105,10 @@ f := func() {
     a := false		// 'a' is defined in the function scope
     a = [1, 2, 3]	// and thus does not affect 'a' in global scope.
 }
-print(a) 		// still "foo"
+a == "foo" 		// still "foo"
 ```
+> [Run in Playground](https://tengolang.com/?s=1d39bc2af5c51417df82b32db47a0e6a156d48ec)
+
 
 Type is not explicitly specified, but, you can use type coercion functions to convert between types.
 
@@ -113,6 +119,7 @@ f3 := float(-51)    // -51.0
 b4 := bool(1)       // true
 c5 := char("X")     // 'X'
 ```
+> [Run in Playground](https://tengolang.com/?s=8d57905b82959eb244e9bbd2111e12ee04a33045)
 
 You can use dot selector (`.`) and indexer (`[]`) operator to read or write elemens of arrays or maps.
 
@@ -128,17 +135,20 @@ m.a				// == 1
 m["b"][1]			// == 3
 m.c()				// == 10
 m.x = 5				// add 'x' to map 'm'
-m.b[5] = 0			// but this is an error: index out of bounds
+//m.b[5] = 0			// but this is an error: index out of bounds
 ```
+> [Run in Playground](https://tengolang.com/?s=d510c75ed8f06ef1e22c1aaf8a7d4565c793514c)
 
 For sequence types (string or array), you can use slice operator (`[:]`) too.
 
 ```golang
-[1, 2, 3, 4, 5][1:3]	// == [2, 3]
-[1, 2, 3, 4, 5][3:]	// == [4, 5]
-[1, 2, 3, 4, 5][:3]	// == [1, 2, 3]
-"hello world"[2:10]	// == "llo worl"
+a := [1, 2, 3, 4, 5][1:3]	// == [2, 3]
+b := [1, 2, 3, 4, 5][3:]	// == [4, 5]
+c := [1, 2, 3, 4, 5][:3]	// == [1, 2, 3]
+d := "hello world"[2:10]	// == "llo worl"
 ```
+> [Run in Playground](https://tengolang.com/?s=214ab490bb24549578770984985f6b161aed915d)
+
 
 In Tengo, functions are first-class citizen and be treated like any other variables. Tengo also supports closures, functions that captures variables in outer scopes. In the following example, the function that's being returned from `adder` function is capturing `base` variable.
 
@@ -149,6 +159,8 @@ adder := func(base) {
 add5 := adder(5)
 nine := add5(4)		// nine
 ```
+> [Run in Playground](https://tengolang.com/?s=fba79990473d5b38cc944dfa225d38580ddaf422)
+
 
 For flow control, Tengo currently supports **if-else**, **for**, **for-in** statements.
 
@@ -191,9 +203,9 @@ for k, v in {k1: 1, k2: 2} {	// map: key and value
 }
 ``` 
 
-## Tengo in Go
+## Embedding Tengo in Go
 
-To execute Tengo code in your Go codebase, you should use **Script**. In the simple use cases, all you need is to do is to create a new Script instance and call its `Script.Run()` function like this:  
+To execute Tengo code in your Go codebase, you should use **Script**. In the simple use cases, all you need is to do is to create a new Script instance and call its `Script.Run()` function.
 
 ```golang
 import "github.com/d5/tengo/script"
@@ -216,7 +228,7 @@ func main() {
 }
 ```
 
-If you want to compile the source script and execute it multiple times, consider using `Script.Compile()` function that returns `Compiled` instance.
+If you want to compile the source script once and execute it multiple times, you can use `Script.Compile()` function that returns **Compiled** instance.
 
 ```golang
 import (
@@ -238,7 +250,7 @@ func main() {
 	}
 
 	// run the compiled bytecode
-	// a compiled bytecode can be executed multiple without re-compiling it
+	// a compiled bytecode 'c' can be executed multiple without re-compiling it
 	if err := c.Run(); err != nil {
 		panic(err)
 	}
@@ -249,9 +261,9 @@ func main() {
 }
 ```
 
-In the example above, a variable `b` is defined by the user using `Script.Add()` function. Then a compiled bytecode (created by `Script.Compile()`) is used to execute the code and get the value of global variables, like `a` in this example. 
+In the example above, a variable `b` is defined by the user before compiliation using `Script.Add()` function. Then a compiled bytecode `c` is used to execute the bytecode and get the value of global variables. In thie example, the value of global variable `a` is read using `Compiled.Get()` function.
 
-If you want to use your own data type (outside Tengo's primitive types), you can create your `struct` that implements `objects.Object` interface _(and `objects.Callable` if you want to make function-like invokable objects)_.
+If you need the custom data types (outside Tengo's primitive types), you can define your own `struct` that implements `objects.Object` interface _(and optinoally `objects.Callable` if you want to make function-like invokable objects)_.
 
 ```golang
 import (
@@ -342,10 +354,10 @@ func main() {
 
 ```
 
-Alternatively, you can directly create and interact with the parser, compiler and VMs directly. There's no good documentations for them, but, you can look at Script code to see how they work each other. 
+As an alternative to using **Script**, you can directly create and interact with the parser, compiler and VMs directly. There's no good documentations yet, but, check out Script code if you are interested.
 
 
-## Tengo Standalone
+## Tengo as a Standalone Language
 
 Although Tengo is designed as an embedded script language for Go, it can be compiled and executed as native binary without any Go code using `tengo` tool.
 
