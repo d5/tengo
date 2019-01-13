@@ -1,6 +1,6 @@
 # The Tengo Language
 
-Tengo is an embeddable script language for Go. Tengo is fast because it's compiled to bytecode and executed on stack-based VM that's written in Go natively. _(See the [benchmark](#benchmark) results.)_
+Tengo is an embeddable script language for Go. Tengo is fast because it's compiled to bytecode and executed on stack-based VM that's written in native Go. _(See the [benchmark](#benchmark) results.)_
 
 \>> **Try Tengo in online [Playground](https://tengolang.com/)** << 
 
@@ -393,7 +393,7 @@ tengo
 
 ## Roadmap
 
-The next big features planned include:
+Development roadmap for Tengo:
 
 - Module system _(or packages)_
 - Standard libraries
