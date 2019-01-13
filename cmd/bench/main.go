@@ -14,7 +14,8 @@ import (
 
 func main() {
 	runFib(35)
-	runFibTailCall(35)
+	runFibTC1(35)
+	runFibTC2(35)
 }
 
 func runFib(n int) {
@@ -53,9 +54,44 @@ fib := func(x) {
 	fmt.Printf("VM:      %s\n", runTime)
 }
 
-func runFibTailCall(n int) {
+func runFibTC1(n int) {
 	start := time.Now()
-	nativeResult := fibTC(n, 0, 1)
+	nativeResult := fibTC1(n, 0)
+	nativeTime := time.Since(start)
+
+	input := `
+fib := func(x, s) {
+	if x == 0 {
+		return 0 + s
+	} else if x == 1 {
+		return 1 + s
+	}
+	return fib(x-1, fib(x-2, s))
+}
+` + fmt.Sprintf("out = fib(%d, 0)", n)
+
+	parseTime, compileTime, runTime, result, err := runBench([]byte(input))
+	if err != nil {
+		panic(err)
+	}
+
+	if nativeResult != int(result.(*objects.Int).Value) {
+		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
+	}
+
+	fmt.Println("-------------------------------------")
+	fmt.Printf("fibonacci(%d) (tail-call #1)\n", n)
+	fmt.Println("-------------------------------------")
+	fmt.Printf("Result:  %d\n", nativeResult)
+	fmt.Printf("Go:      %s\n", nativeTime)
+	fmt.Printf("Parser:  %s\n", parseTime)
+	fmt.Printf("Compile: %s\n", compileTime)
+	fmt.Printf("VM:      %s\n", runTime)
+}
+
+func runFibTC2(n int) {
+	start := time.Now()
+	nativeResult := fibTC2(n, 0, 1)
 	nativeTime := time.Since(start)
 
 	input := `
@@ -80,7 +116,7 @@ fib := func(x, a, b) {
 	}
 
 	fmt.Println("-------------------------------------")
-	fmt.Printf("fibonacci(%d) (tail-call)\n", n)
+	fmt.Printf("fibonacci(%d) (tail-call #2)\n", n)
 	fmt.Println("-------------------------------------")
 	fmt.Printf("Result:  %d\n", nativeResult)
 	fmt.Printf("Go:      %s\n", nativeTime)
@@ -99,13 +135,22 @@ func fib(n int) int {
 	}
 }
 
-func fibTC(n, a, b int) int {
+func fibTC1(n, s int) int {
+	if n == 0 {
+		return 0 + s
+	} else if n == 1 {
+		return 1 + s
+	}
+	return fibTC1(n-1, fibTC1(n-2, s))
+}
+
+func fibTC2(n, a, b int) int {
 	if n == 0 {
 		return a
 	} else if n == 1 {
 		return b
 	} else {
-		return fibTC(n-1, b, a+b)
+		return fibTC2(n-1, b, a+b)
 	}
 }
 
