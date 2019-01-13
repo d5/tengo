@@ -1,24 +1,23 @@
 # The Tengo Language
 
-Tengo is an embeddable script language for Go.
+Tengo is an embedded script language for Go.
 
-\>> Try **[Tengo Playground](https://tengolang.com/)**!
+Try Tengo language **[here](https://tengolang.com/)**!
 
-## Features
+## Language Features
 
 Tengo, as a programming language, has the following features:
 
-- Dynamically typed
-- Bytecode compiled: very fast (see [benchmark](#benchmark) results below)
-- First-class functions and closures
-- Type coercions
+- Dynamically typed with type coercions
+- Bytecode compiled _(see [benchmark](#benchmark))_
+- First-class functions and Closures
 
-Also Tengo is ...
+Also the Tengo is ...
 
-- Garbage collected (free bonus as a Go embedded script)
+- Garbage collected _(thanks to Go runtime)_
 - Easily extendible using customizable types
-- Written in native Go (no CGO or any external dependencies)
-- _(Can be)_ compiled and executed as a standalone language (without any Go code)
+- Written in pure Go _(no CGO, no external dependencies)_
+- _(Can be)_ a standalone language _(without writing any Go code)_
 
 ## Benchmark
 
@@ -89,7 +88,7 @@ Please see [tengobench](https://github.com/d5/tengobench) for more details.
 
 Although Tengo is designed as an embedded script language for Go, it can be compiled and executed as native binary without any Go code using `tengo` tool.
 
-### Tengo tool
+### Installing Tengo Tool
 
 To install `tengo` tool, run:
 
@@ -97,24 +96,34 @@ To install `tengo` tool, run:
 go get github.com/d5/tengo/cmd/tengo
 ```
 
-_(In the future release, prebuilt binaries for `tengo` tool will be provided so the users don't need `go` tool.)_
+### Compiling and Executing Tengo Code
 
-To compile a Tengo source code, use `-c` or `-compile` flag:
-
-```bash
-tengo -c myapp.tengo
-```
-
-This will compile the source code (`myapp.tengo`) and generate a compiled binary `myapp.out`. You can use `-o` flag to override the output file name:
+You can directly execute the Tengo source code by running `tengo` tool with your Tengo source file (`*.tengo`).
 
 ```bash
-tengo -c -o myapp myapp.tengo
+tengo myapp.tengo
 ```
 
-Now the compiled binary can be executed using the same `tengo` tool:
+Or, you can compile the code into a binary file and execute it later.
 
 ```bash
-tengo myapp
+tengo -c -o myapp myapp.tengo   # compile 'myapp.tengo' into binary file 'myapp'
+tengo myapp                     # execute the compiled binary `myapp`	
 ```
 
-_(`tengo` tool is still needed for execution like you need `java` tool to execute Java applications. In the future release, `tengo` compiler might be able to generate native executables directly.)_
+### Tengo REPL
+
+You can run Tengo [REPL](https://en.wikipedia.org/wiki/Read–eval–print_loop) if you run `tengo` with no arguments.
+
+```bash
+tengo
+```
+
+## Roadmap
+
+The next big features planned include:
+
+- Module _(or package)_ system
+- Standard libraries _(most likely with modules)_
+- Tengo tool to compile into native executables
+
