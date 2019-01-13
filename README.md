@@ -18,11 +18,11 @@ Tengo is an embeddable script language for Go. Tengo is fast because it's compil
 
 | | fib(35) | fibt(35) |  Type  |
 | :--- |    ---: |     ---: |  :---: |
-| Go | `86ms` | `4ms` | Go (native) |
-| [**Tengo**](https://github.com/d5/tengo) | `6,811ms` | `4ms` | VM on Go |
-| Lua | `1,857ms` | `4ms` | Lua (native) |
-| [go-lua](https://github.com/Shopify/go-lua) | `5,678ms` | `4ms` | Lua VM on Go |
-| [GopherLua](https://github.com/yuin/gopher-lua) | `6,052ms` | `5ms` | Lua VM on Go |
+| Go | `68ms` | `4ms` | Go (native) |
+| [**Tengo**](https://github.com/d5/tengo) | `6,786ms` | `4ms` | VM on Go |
+| Lua | `1,917ms` | `3ms` | Lua (native) |
+| [go-lua](https://github.com/Shopify/go-lua) | `5,669ms` | `5ms` | Lua VM on Go |
+| [GopherLua](https://github.com/yuin/gopher-lua) | `6,120ms` | `5ms` | Lua VM on Go |
 | Python | `3,037ms` | `23ms` | Python (native) |
 | [otto](https://github.com/robertkrimen/otto) | `95,398ms` | `13ms` | JS Interpreter on Go |
 | [Anko](https://github.com/mattn/anko) | `111,908ms` | `20ms` | Interpreter on Go |
