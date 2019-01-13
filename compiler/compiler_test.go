@@ -165,13 +165,12 @@ func TestCompiler_Compile(t *testing.T) {
 	expect(t, `if true { 10 }; 3333`,
 		bytecode(
 			concat(
-				compiler.MakeInstruction(compiler.OpTrue),          // 0000
-				compiler.MakeInstruction(compiler.OpJumpFalsy, 11), // 0001
-				compiler.MakeInstruction(compiler.OpConstant, 0),   // 0004
-				compiler.MakeInstruction(compiler.OpPop),           // 0007
-				compiler.MakeInstruction(compiler.OpJump, 11),      // 0008
-				compiler.MakeInstruction(compiler.OpConstant, 1),   // 0011
-				compiler.MakeInstruction(compiler.OpPop)),          // 0014
+				compiler.MakeInstruction(compiler.OpTrue),         // 0000
+				compiler.MakeInstruction(compiler.OpJumpFalsy, 8), // 0001
+				compiler.MakeInstruction(compiler.OpConstant, 0),  // 0004
+				compiler.MakeInstruction(compiler.OpPop),          // 0007
+				compiler.MakeInstruction(compiler.OpConstant, 1),  // 0008
+				compiler.MakeInstruction(compiler.OpPop)),         // 0011
 			objectsArray(
 				intObject(10),
 				intObject(3333))))

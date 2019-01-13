@@ -207,22 +207,27 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
-		// second jump placeholder
-		jumpPos2 := c.emit(OpJump, 0)
-
-		// update first jump offset
-		curPos := len(c.currentInstructions())
-		c.changeOperand(jumpPos1, curPos)
-
 		if node.Else != nil {
+			// second jump placeholder
+			jumpPos2 := c.emit(OpJump, 0)
+
+			// update first jump offset
+			curPos := len(c.currentInstructions())
+			c.changeOperand(jumpPos1, curPos)
+
 			if err := c.Compile(node.Else); err != nil {
 				return err
 			}
+
+			// update second jump offset
+			curPos = len(c.currentInstructions())
+			c.changeOperand(jumpPos2, curPos)
+		} else {
+			// update first jump offset
+			curPos := len(c.currentInstructions())
+			c.changeOperand(jumpPos1, curPos)
 		}
 
-		// update second jump offset
-		curPos = len(c.currentInstructions())
-		c.changeOperand(jumpPos2, curPos)
 	case *ast.ForStmt:
 		return c.compileForStmt(node)
 	case *ast.ForInStmt:
