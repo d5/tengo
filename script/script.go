@@ -74,6 +74,19 @@ func (s *Script) Compile() (*Compiled, error) {
 	}, nil
 }
 
+// Run compiles and runs the scripts.
+// Use returned compiled object to access global variables.
+func (s *Script) Run() (compiled *Compiled, err error) {
+	compiled, err = s.Compile()
+	if err != nil {
+		return
+	}
+
+	err = compiled.Run()
+
+	return
+}
+
 func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, globals []*objects.Object) {
 	var names []string
 	for name := range s.variables {
