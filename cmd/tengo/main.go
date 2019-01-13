@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/ast"
 	"github.com/d5/tengo/compiler/parser"
@@ -78,12 +77,12 @@ func main() {
 func doHelp() {
 	fmt.Println("Usage:")
 	fmt.Println()
-	fmt.Println("	tengo [flags] [input-file]")
+	fmt.Println("	tengo [flags] {input-file}")
 	fmt.Println()
 	fmt.Println("Flags:")
 	fmt.Println()
-	fmt.Println("	-compile/-c compile source file")
-	fmt.Println("	-o          output file")
+	fmt.Println("	-c/-compile compile the input and produce bytecode file")
+	fmt.Println("	-o          output")
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println()
@@ -91,19 +90,19 @@ func doHelp() {
 	fmt.Println("	            : Start Tengo REPL")
 	fmt.Println()
 	fmt.Println("	tengo myapp.tengo")
-	fmt.Println("	            : Compile and execute a Tengo code (myapp.tengo)")
+	fmt.Println("	            : Compile and execute source file (myapp.tengo)")
 	fmt.Println()
-	fmt.Println("	tengo -c -o myapp myapp.tengo")
-	fmt.Println("	            : Compile a Tengo code (myapp.tengo) into compiled binary (myapp)")
+	fmt.Println("	tengo -c myapp myapp.tengo")
+	fmt.Println("	            : Compile source file (myapp.tengo) and produce bytecode file (myapp)")
 	fmt.Println()
 	fmt.Println("	tengo myapp")
-	fmt.Println("	            : Execute compiled binary (myapp)")
+	fmt.Println("	            : Execute bytecode file (myapp)")
 	fmt.Println()
 	fmt.Println()
 }
 
 func doCompile(data []byte, inputFile, outputFile string) (err error) {
-	bytecode, err := tengo.Compile(data, filepath.Base(inputFile))
+	bytecode, err := compileSrc(data, filepath.Base(inputFile))
 	if err != nil {
 		return
 	}
@@ -135,7 +134,7 @@ func doCompile(data []byte, inputFile, outputFile string) (err error) {
 }
 
 func doCompileRun(data []byte, inputFile, _ string) (err error) {
-	bytecode, err := tengo.Compile(data, filepath.Base(inputFile))
+	bytecode, err := compileSrc(data, filepath.Base(inputFile))
 	if err != nil {
 		return
 	}
@@ -208,6 +207,23 @@ func doRepl(in io.Reader, out io.Writer) {
 			continue
 		}
 	}
+}
+
+func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
+	fileSet := source.NewFileSet()
+
+	p := parser.NewParser(fileSet.AddFile(filename, -1, len(src)), src, nil)
+	file, err := p.ParseFile()
+	if err != nil {
+		return nil, err
+	}
+
+	c := compiler.NewCompiler(nil, nil)
+	if err := c.Compile(file); err != nil {
+		return nil, err
+	}
+
+	return c.Bytecode(), nil
 }
 
 func addPrints(file *ast.File) *ast.File {

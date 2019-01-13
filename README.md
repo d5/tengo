@@ -193,7 +193,7 @@ for k, v in {k1: 1, k2: 2} {	// map: key and value
 
 ## Tengo in Go
 
-To embed and execute Tengo code in your Go codebase, ...
+To execute Tengo code in your Go codebase, you should use **Script**. In the simple use cases, all you need is to do is to create a new Script instance and call its `Script.Run()` function like this:  
 
 ```golang
 import "github.com/d5/tengo/script"
@@ -216,7 +216,133 @@ func main() {
 }
 ```
 
-...
+If you want to compile the source script and execute it multiple times, consider using `Script.Compile()` function that returns `Compiled` instance.
+
+```golang
+import (
+	"fmt"
+
+	"github.com/d5/tengo/script"
+)
+
+func main() {
+	s := script.New([]byte(`a := b + 20`))
+
+	// define variable 'b'
+	_ = s.Add("b", 10)
+
+	// compile the source
+	c, err := s.Compile()
+	if err != nil {
+		panic(err)
+	}
+
+	// run the compiled bytecode
+	// a compiled bytecode can be executed multiple without re-compiling it
+	if err := c.Run(); err != nil {
+		panic(err)
+	}
+
+	// retrieve value of 'a'
+	a := c.Get("a")
+	fmt.Println(a.Int())
+}
+```
+
+In the example above, a variable `b` is defined by the user using `Script.Add()` function. Then a compiled bytecode (created by `Script.Compile()`) is used to execute the code and get the value of global variables, like `a` in this example. 
+
+If you want to use your own data type (outside Tengo's primitive types), you can create your `struct` that implements `objects.Object` interface _(and `objects.Callable` if you want to make function-like invokable objects)_.
+
+```golang
+import (
+	"errors"
+	"fmt"
+
+	"github.com/d5/tengo/compiler/token"
+	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo/script"
+)
+
+type Counter struct {
+	value int64
+}
+
+func (o *Counter) TypeName() string {
+	return "counter"
+}
+
+func (o *Counter) String() string {
+	return fmt.Sprintf("Counter(%d)", o.value)
+}
+
+func (o *Counter) BinaryOp(op token.Token, rhs objects.Object) (objects.Object, error) {
+	switch rhs := rhs.(type) {
+	case *Counter:
+		switch op {
+		case token.Add:
+			return &Counter{value: o.value + rhs.value}, nil
+		case token.Sub:
+			return &Counter{value: o.value - rhs.value}, nil
+		}
+	case *objects.Int:
+		switch op {
+		case token.Add:
+			return &Counter{value: o.value + rhs.Value}, nil
+		case token.Sub:
+			return &Counter{value: o.value - rhs.Value}, nil
+		}
+	}
+
+	return nil, errors.New("invalid operator")
+}
+
+func (o *Counter) IsFalsy() bool {
+	return o.value == 0
+}
+
+func (o *Counter) Equals(t objects.Object) bool {
+	if tc, ok := t.(*Counter); ok {
+		return o.value == tc.value
+	}
+
+	return false
+}
+
+func (o *Counter) Copy() objects.Object {
+	return &Counter{value: o.value}
+}
+
+func (o *Counter) Call(args ...objects.Object) (objects.Object, error) {
+	return &objects.Int{Value: o.value}, nil
+}
+
+var code = []byte(`
+arr := [1, 2, 3, 4]
+for x in arr {
+	c1 += x
+}
+out := c1()`)
+
+func main() {
+	s := script.New(code)
+
+	// define variable 'c1'
+	_ = s.Add("c1", &Counter{value: 5})
+
+	// compile the source
+	c, err := s.Run()
+	if err != nil {
+		panic(err)
+	}
+
+	// retrieve value of 'out'
+	out := c.Get("out")
+	fmt.Println(out.Int()) // prints "15" ( = 5 + (1 + 2 + 3 + 4) )
+}
+
+```
+
+Alternatively, you can directly create and interact with the parser, compiler and VMs directly. There's no good documentations for them, but, you can look at Script code to see how they work each other. 
 
 
 ## Tengo Standalone
