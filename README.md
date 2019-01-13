@@ -37,14 +37,14 @@ Tengo, as a programming language, has the following features:
 
 | | fib(35) | fibt(35) |  Type  |
 | :--- |    ---: |     ---: |  :---: |
-| Go | `75,245,201` | `527` | Go (native) |
-| **Tengo** | `6,716,413,970` | `4,338,042` | Go-VM |
-| Lua | `1,839,627,814` | `3,768,932` | Lua (native) |
-| go-lua | `5,466,274,012` | `4,508,039` | Go-Lua-VM |
-| GopherLua | `5,740,626,066` | `5,027,486` | Go-Lua-VM |
-| Python | `3,021,823,532` | `22,829,440` | Python (native) |
-| otto | `92,194,561,922` | `13,250,326` | Go-JS-Interpreter |
-| Anko | `125,748,242,982` | `15,296,442` | Go-Interpreter |
+| Go | `68,713,331` | `3,264,992` | Go (native) |
+| [**Tengo**](https://github.com/d5/tengo) | `6,811,234,411` | `4,699,512` | Go-VM |
+| Lua | `1,946,451,017` | `3,220,991` | Lua (native) |
+| [go-lua](https://github.com/Shopify/go-lua) | `5,658,423,479` | `4,247,160` | Go-Lua-VM |
+| [GopherLua](https://github.com/yuin/gopher-lua) | `6,301,424,553` | `5,194,735` | Go-Lua-VM |
+| Python | `3,159,870,102` | `28,512,040` | Python (native) |
+| [otto](https://github.com/robertkrimen/otto) | `91,616,109,035` | `13,780,650` | Go-JS-Interpreter |
+| [Anko](https://github.com/mattn/anko) | `119,395,411,432` | `22,266,008` | Go-Interpreter |
 
 _*Nanoseconds_
 
