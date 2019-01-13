@@ -29,9 +29,9 @@ fib := func(x) {
 		return 0
 	} else if x == 1 {
 		return 1
-	} else {
-		return fib(x-1) + fib(x-2)
 	}
+
+	return fib(x-1) + fib(x-2)
 }
 ` + fmt.Sprintf("out = fib(%d)", n)
 
@@ -66,6 +66,7 @@ fib := func(x, s) {
 	} else if x == 1 {
 		return 1 + s
 	}
+
 	return fib(x-1, fib(x-2, s))
 }
 ` + fmt.Sprintf("out = fib(%d, 0)", n)
@@ -100,9 +101,9 @@ fib := func(x, a, b) {
 		return a
 	} else if x == 1 {
 		return b
-	} else {
-		return fib(x-1, b, a+b)
 	}
+
+	return fib(x-1, b, a+b)
 }
 ` + fmt.Sprintf("out = fib(%d, 0, 1)", n)
 
