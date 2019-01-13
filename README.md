@@ -18,16 +18,14 @@ Tengo is an embeddable script language for Go. Tengo is fast because it's compil
 
 | | fib(35) | fibt(35) |  Type  |
 | :--- |    ---: |     ---: |  :---: |
-| Go | `68,713,331` | `3,264,992` | Go (native) |
-| [**Tengo**](https://github.com/d5/tengo) | `6,811,234,411` | `4,699,512` | Go-VM |
-| Lua | `1,946,451,017` | `3,220,991` | Lua (native) |
-| [go-lua](https://github.com/Shopify/go-lua) | `5,658,423,479` | `4,247,160` | Go-Lua-VM |
-| [GopherLua](https://github.com/yuin/gopher-lua) | `6,301,424,553` | `5,194,735` | Go-Lua-VM |
-| Python | `3,159,870,102` | `28,512,040` | Python (native) |
-| [otto](https://github.com/robertkrimen/otto) | `91,616,109,035` | `13,780,650` | Go-JS-Interpreter |
-| [Anko](https://github.com/mattn/anko) | `119,395,411,432` | `22,266,008` | Go-Interpreter |
-
-_*All units in nanoseconds_
+| Go | `86ms` | `4ms` | Go (native) |
+| [**Tengo**](https://github.com/d5/tengo) | `6,811ms` | `4ms` | VM on Go |
+| Lua | `1,857ms` | `4ms` | Lua (native) |
+| [go-lua](https://github.com/Shopify/go-lua) | `5,678ms` | `4ms` | Lua VM on Go |
+| [GopherLua](https://github.com/yuin/gopher-lua) | `6,052ms` | `5ms` | Lua VM on Go |
+| Python | `3,037ms` | `23ms` | Python (native) |
+| [otto](https://github.com/robertkrimen/otto) | `95,398ms` | `13ms` | JS Interpreter on Go |
+| [Anko](https://github.com/mattn/anko) | `111,908ms` | `20ms` | Interpreter on Go |
 
 `fib(35)` is a function to calculate 35th Fibonacci number.
 
