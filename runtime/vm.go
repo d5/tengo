@@ -894,6 +894,8 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 			//  |--------|
 			//  | *ARG1  |        for next function (tail-call)
 			//  |--------|
+			//  |  FUNC  |        function itself
+			//  |--------|
 			//  | LOCAL3 |        for current function
 			//  |--------|
 			//  | LOCAL2 |        for current function
@@ -904,7 +906,7 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 			//  |--------|
 
 			copy(v.stack[curFrame.basePointer:], v.stack[v.sp-numArgs:v.sp])
-			v.sp -= numArgs
+			v.sp -= numArgs + 1
 			curFrame.ip = -1
 
 			//  stack after tail-call
@@ -914,7 +916,9 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 			//  |--------|
 			//  | *ARG2  |
 			//  |--------|
-			//  | *ARG1  | <- SP  current
+			//  | *ARG1  |
+			//  |--------|
+			//  |  FUNC  | <- SP  current
 			//  |--------|
 			//  | LOCAL3 |        for current function
 			//  |--------|

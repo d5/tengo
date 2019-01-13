@@ -66,6 +66,19 @@ func TestTailCall(t *testing.T) {
 		return f2(5, 0)
 	}
 	out = f1()`, 15)
+
+	// tail-call replacing loop
+	// without tail-call optimization, this code will cause stack overflow
+	expect(t, `
+iter := func(n, max) {
+	if n == max {
+		return n
+	}
+
+	return iter(n+1, max)
+}
+out = iter(0, 9999)
+`, 9999)
 }
 
 // tail call with free vars
