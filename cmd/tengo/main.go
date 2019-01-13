@@ -76,8 +76,6 @@ func main() {
 }
 
 func doHelp() {
-	fmt.Println("Tengo is a tool to compile Tengo source code or execute compiled Tengo binary.")
-	fmt.Println()
 	fmt.Println("Usage:")
 	fmt.Println()
 	fmt.Println("	tengo [flags] [input-file]")
