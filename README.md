@@ -4,7 +4,7 @@ Tengo is an embedded script language for Go.
 
 \>> **Try Tengo in online [Playground](https://tengolang.com/)** << 
 
-## Language Features
+## Features
 
 - Simple and intuitive syntax
 - Dynamically typed with type coercions
@@ -191,9 +191,9 @@ for k, v in {k1: 1, k2: 2} {	// map: key and value
 }
 ``` 
 
-## Embed Tengo in Go
+## Tengo in Go
 
-...
+To embed and execute Tengo code in your Go codebase, ...
 
 ```golang
 import "github.com/d5/tengo/script"
@@ -219,7 +219,7 @@ func main() {
 ...
 
 
-## Tengo as a Standalone Language
+## Tengo Standalone
 
 Although Tengo is designed as an embedded script language for Go, it can be compiled and executed as native binary without any Go code using `tengo` tool.
 
