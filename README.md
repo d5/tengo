@@ -80,11 +80,39 @@ fibt(35, 0, 1)
 
 Please see [tengobench](https://github.com/d5/tengobench) for more details.
 
-## Syntax
+## Tengo Syntax in 5 Minutes
 
 ### Variables and Types
 
-...
+Tengo is a dynamically typed language, and, you can initialize the variables using `:=` operator. 
+
+```golang
+a := 1984 		// int
+b := "aomame"		// string
+c := -9.22		// float
+d := true		// bool
+e := '九'		// char
+f := [1, false, "foo"]	// array
+g := {			// map
+    h: 439,
+    i: 12.34,
+    j: [0, 9, false]
+}
+k := func(l, m) {	// function
+    return l + m
+}
+```
+After the variable is initialized, it can be re-assigned different value using `=` operator. 
+
+```golang
+a := 1928		// int
+a = "foo"		// string
+f := func() {
+    a := false		// 'a' is defined in the function scope
+    a = [1, 2, 3]	// and thus does not affect 'a' in global scope.
+}
+print(a) 		// still "foo"
+```
 
 ### Flow Control
 
@@ -95,6 +123,8 @@ Please see [tengobench](https://github.com/d5/tengobench) for more details.
 ...
 
 ## Tengo as an Embedded Script
+
+...
 
 ```golang
 import "github.com/d5/tengo/script"
@@ -116,6 +146,9 @@ func main() {
     }
 }
 ```
+
+...
+
 
 ## Tengo as a Standalone Language
 
@@ -158,6 +191,8 @@ The next big features planned include:
 
 - Module system _(or packages)_
 - Standard libraries
+- Better documentations
 - More language constructs such as error handling, object methods, switch-case statements
 - Native executables compilation
 - Performance improvements
+- Syntax highlighter for IDEs
