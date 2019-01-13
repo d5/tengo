@@ -1,6 +1,6 @@
 # The Tengo Language
 
-Tengo is an embedded script language for Go.
+Tengo is an embeddable script language for Go. Tengo is fast because it's compiled to bytecode and executed on stack-based VM that's written in Go natively. _(See the [benchmark](#benchmark) results.)_
 
 \>> **Try Tengo in online [Playground](https://tengolang.com/)** << 
 
@@ -8,7 +8,6 @@ Tengo is an embedded script language for Go.
 
 - Simple and intuitive syntax
 - Dynamically typed with type coercions
-- Bytecode compiled _(see the [benchmark](#benchmark) results)_
 - First-class functions and Closures
 - Garbage collected _(thanks to Go runtime)_
 - Easily extendible using customizable types
@@ -28,7 +27,7 @@ Tengo is an embedded script language for Go.
 | [otto](https://github.com/robertkrimen/otto) | `91,616,109,035` | `13,780,650` | Go-JS-Interpreter |
 | [Anko](https://github.com/mattn/anko) | `119,395,411,432` | `22,266,008` | Go-Interpreter |
 
-_*Nanoseconds_
+_*All units in nanoseconds_
 
 `fib(35)` is a function to calculate 35th Fibonacci number.
 
