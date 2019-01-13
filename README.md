@@ -35,7 +35,7 @@ Tengo, as a programming language, has the following features:
 
 ## Benchmark
 
-| Lang | fib(35) | fibt(35) |  Type  |
+| | fib(35) | fibt(35) |  Type  |
 | :--- |    ---: |     ---: |  :---: |
 | Go | `75,245,201` | `527` | Go (native) |
 | **Tengo** | `6,716,413,970` | `4,338,042` | Go-VM |
@@ -96,7 +96,26 @@ Please see [tengobench](https://github.com/d5/tengobench) for more details.
 
 ## Tengo as an Embedded Script
 
-...
+```golang
+import "github.com/d5/tengo/script"
+
+var code = `
+reduce := func(seq, fn) {
+    s := 0
+    for x in seq { fn(x, s) }
+    return s
+}
+
+print(reduce([1, 2, 3], func(x, s) { s += x }))
+`
+
+func main() {
+    s := script.New([]byte(code))
+    if _, err := s.Run(); err != nil {
+        panic(err)
+    }
+}
+```
 
 ## Tengo as a Standalone Language
 
