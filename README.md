@@ -153,7 +153,7 @@ for a < 10 {
 }
 
 // FOR-IN
-for x in [1, 2, 3] {		// array
+for x in [1, 2, 3] {		// array: element
     // ...
 }
 for i, x in [1, 2, 3] {		// array: index and element
@@ -162,11 +162,19 @@ for i, x in [1, 2, 3] {		// array: index and element
 for k, v in {k1: 1, k2: 2} {	// map: key and value
     // ...
 }
-```
+``` 
 
 ### Functions
 
-...
+In Tengo, functions are first-class citizen and be treated like any other variables. Tengo also supports closures, functions that captures variables in outer scopes. In the following example, the function that's being returned from `adder` function is capturing `base` variable.
+
+```golang
+adder := func(base) {
+    return func(x) { return base + x }	// capturing 'base'
+}
+add5 := adder(5)
+nine := add5(4)		// nine
+```
 
 ## Tengo as an Embedded Script
 
