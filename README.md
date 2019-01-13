@@ -2,7 +2,7 @@
 
 Tengo is an embedded script language for Go.
 
-Try the Tengo language in **[Playground](https://tengolang.com/)**!
+\>> **Try Tengo in online [Playground](https://tengolang.com/)** << 
 
 ## Language Features
 
