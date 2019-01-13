@@ -82,14 +82,15 @@ Please see [tengobench](https://github.com/d5/tengobench) for more details.
 
 ## Tengo Syntax in 5 Minutes
 
-### Comments
+Tengo supports line comments (`//...`) and block comments (`/* ... */`).
 
 ```golang
-/* multi-line block comments */
-// line comments
-```
+/* 
+  multi-line block comments 
+*/
 
-### Variables and Types
+a := 5 // line comments
+```
 
 Tengo is a dynamically typed language, and, you can initialize the variables using `:=` operator. 
 
@@ -121,9 +122,53 @@ f := func() {
 print(a) 		// still "foo"
 ```
 
-### Flow Control
+Type is not explicitly specified, but, you can use type coercion functions to convert between types.
 
-Tengo currently supports **if-else**, **for**, **for-in** statements.
+```golang
+s1 := string(1984)  // "1984"
+i2 := int("-999")   // -999
+f3 := float(-51)    // -51.0
+b4 := bool(1)       // true
+c5 := char("X")     // 'X'
+```
+
+You can use dot selector (`.`) and indexer (`[]`) operator to read or write elemens of arrays or maps.
+
+```golang
+["one", "two", "three"][1]	// == "two"
+
+m := {
+    a: 1,
+    b: [2, 3, 4],
+    c: func() { return 10 }
+}
+m.a				// == 1
+m["b"][1]			// == 3
+m.c()				// == 10
+m.x = 5				// add 'x' to map 'm'
+m.b[5] = 0			// but this is an error: index out of bounds
+```
+
+For sequence types (string or array), you can use slice operator (`[:]`) too.
+
+```golang
+[1, 2, 3, 4, 5][1:3]	// == [2, 3]
+[1, 2, 3, 4, 5][3:]	// == [4, 5]
+[1, 2, 3, 4, 5][:3]	// == [1, 2, 3]
+"hello world"[2:10]	// == "llo worl"
+```
+
+In Tengo, functions are first-class citizen and be treated like any other variables. Tengo also supports closures, functions that captures variables in outer scopes. In the following example, the function that's being returned from `adder` function is capturing `base` variable.
+
+```golang
+adder := func(base) {
+    return func(x) { return base + x }	// capturing 'base'
+}
+add5 := adder(5)
+nine := add5(4)		// nine
+```
+
+For flow control, Tengo currently supports **if-else**, **for**, **for-in** statements.
 
 ```golang
 // IF-ELSE
@@ -163,18 +208,6 @@ for k, v in {k1: 1, k2: 2} {	// map: key and value
     // ...
 }
 ``` 
-
-### Functions
-
-In Tengo, functions are first-class citizen and be treated like any other variables. Tengo also supports closures, functions that captures variables in outer scopes. In the following example, the function that's being returned from `adder` function is capturing `base` variable.
-
-```golang
-adder := func(base) {
-    return func(x) { return base + x }	// capturing 'base'
-}
-add5 := adder(5)
-nine := add5(4)		// nine
-```
 
 ## Tengo as an Embedded Script
 
