@@ -156,8 +156,8 @@ tengo
 
 The next big features planned include:
 
-- Module system _(or packages)
-- Standard libraries _(most likely with modules)_
+- Module system _(or packages)_
+- Standard libraries
 - More language constructs such as error handling, object methods, switch-case statements
-- Tengo tool to compile into native executables
-- Improvements on compilation and execution performance 
+- Native executables compilation
+- Performance improvements
