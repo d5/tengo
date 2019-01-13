@@ -23,6 +23,9 @@ func (o *String) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	case *String:
 		switch op {
 		case token.Add:
+			if rhs.Value == "" {
+				return o, nil
+			}
 			return &String{Value: o.Value + rhs.Value}, nil
 		}
 	case *Char:

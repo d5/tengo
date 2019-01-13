@@ -23,35 +23,91 @@ func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	case *Int:
 		switch op {
 		case token.Add:
-			return &Int{o.Value + rhs.Value}, nil
+			r := o.Value + rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.Sub:
-			return &Int{o.Value - rhs.Value}, nil
+			r := o.Value - rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.Mul:
-			return &Int{o.Value * rhs.Value}, nil
+			r := o.Value * rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.Quo:
-			return &Int{o.Value / rhs.Value}, nil
+			r := o.Value / rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.Rem:
-			return &Int{o.Value % rhs.Value}, nil
+			r := o.Value % rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.And:
-			return &Int{o.Value & rhs.Value}, nil
+			r := o.Value & rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.Or:
-			return &Int{o.Value | rhs.Value}, nil
+			r := o.Value | rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.Xor:
-			return &Int{o.Value ^ rhs.Value}, nil
+			r := o.Value ^ rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.AndNot:
-			return &Int{o.Value &^ rhs.Value}, nil
+			r := o.Value &^ rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.Shl:
-			return &Int{o.Value << uint(rhs.Value)}, nil
+			r := o.Value << uint64(rhs.Value)
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.Shr:
-			return &Int{o.Value >> uint(rhs.Value)}, nil
+			r := o.Value >> uint64(rhs.Value)
+			if r == o.Value {
+				return o, nil
+			}
+			return &Int{Value: r}, nil
 		case token.Less:
-			return &Bool{o.Value < rhs.Value}, nil
+			if o.Value < rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.Greater:
-			return &Bool{o.Value > rhs.Value}, nil
+			if o.Value > rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.LessEq:
-			return &Bool{o.Value <= rhs.Value}, nil
+			if o.Value <= rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.GreaterEq:
-			return &Bool{o.Value >= rhs.Value}, nil
+			if o.Value >= rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		}
 	case *Float:
 		switch op {
@@ -64,13 +120,25 @@ func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 		case token.Quo:
 			return &Float{float64(o.Value) / rhs.Value}, nil
 		case token.Less:
-			return &Bool{float64(o.Value) < rhs.Value}, nil
+			if float64(o.Value) < rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.Greater:
-			return &Bool{float64(o.Value) > rhs.Value}, nil
+			if float64(o.Value) > rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.LessEq:
-			return &Bool{float64(o.Value) <= rhs.Value}, nil
+			if float64(o.Value) <= rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.GreaterEq:
-			return &Bool{float64(o.Value) >= rhs.Value}, nil
+			if float64(o.Value) >= rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		}
 	}
 

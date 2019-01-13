@@ -29,6 +29,9 @@ func (o *Array) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	if rhs, ok := rhs.(*Array); ok {
 		switch op {
 		case token.Add:
+			if len(rhs.Value) == 0 {
+				return o, nil
+			}
 			return &Array{Value: append(o.Value, rhs.Value...)}, nil
 		}
 	}

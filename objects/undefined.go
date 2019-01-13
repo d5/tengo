@@ -2,8 +2,6 @@ package objects
 
 import "github.com/d5/tengo/compiler/token"
 
-var undefined = &Undefined{}
-
 type Undefined struct{}
 
 func (o Undefined) TypeName() string {

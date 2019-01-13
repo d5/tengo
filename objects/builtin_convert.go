@@ -14,7 +14,7 @@ func builtinString(args ...Object) (Object, error) {
 	case *String:
 		return arg, nil
 	case *Undefined:
-		return undefined, nil
+		return UndefinedValue, nil
 	default:
 		return &String{Value: arg.String()}, nil
 	}
@@ -44,7 +44,7 @@ func builtinInt(args ...Object) (Object, error) {
 		}
 	}
 
-	return undefined, nil
+	return UndefinedValue, nil
 }
 
 func builtinFloat(args ...Object) (Object, error) {
@@ -64,7 +64,7 @@ func builtinFloat(args ...Object) (Object, error) {
 		}
 	}
 
-	return undefined, nil
+	return UndefinedValue, nil
 }
 
 func builtinBool(args ...Object) (Object, error) {
@@ -100,5 +100,5 @@ func builtinChar(args ...Object) (Object, error) {
 		}
 	}
 
-	return undefined, nil
+	return UndefinedValue, nil
 }

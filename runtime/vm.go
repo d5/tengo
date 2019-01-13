@@ -15,9 +15,9 @@ const (
 )
 
 var (
-	trueObj      objects.Object = &objects.Bool{Value: true}
-	falseObj     objects.Object = &objects.Bool{Value: false}
-	undefinedObj objects.Object = &objects.Undefined{}
+	truePtr      = &objects.TrueValue
+	falsePtr     = &objects.FalseValue
+	undefinedPtr = &objects.UndefinedValue
 	builtinFuncs []objects.Object
 )
 
@@ -83,7 +83,7 @@ func (v *VM) Run() error {
 			}
 
 		case compiler.OpNull:
-			if err := v.push(&undefinedObj); err != nil {
+			if err := v.push(undefinedPtr); err != nil {
 				return err
 			}
 		case compiler.OpAdd:
@@ -223,11 +223,11 @@ func (v *VM) Run() error {
 			left := v.pop()
 
 			if (*right).Equals(*left) {
-				if err := v.push(&trueObj); err != nil {
+				if err := v.push(truePtr); err != nil {
 					return err
 				}
 			} else {
-				if err := v.push(&falseObj); err != nil {
+				if err := v.push(falsePtr); err != nil {
 					return err
 				}
 			}
@@ -236,11 +236,11 @@ func (v *VM) Run() error {
 			left := v.pop()
 
 			if (*right).Equals(*left) {
-				if err := v.push(&falseObj); err != nil {
+				if err := v.push(falsePtr); err != nil {
 					return err
 				}
 			} else {
-				if err := v.push(&trueObj); err != nil {
+				if err := v.push(truePtr); err != nil {
 					return err
 				}
 			}
@@ -271,22 +271,22 @@ func (v *VM) Run() error {
 		case compiler.OpPop:
 			_ = v.pop()
 		case compiler.OpTrue:
-			if err := v.push(&trueObj); err != nil {
+			if err := v.push(truePtr); err != nil {
 				return err
 			}
 		case compiler.OpFalse:
-			if err := v.push(&falseObj); err != nil {
+			if err := v.push(falsePtr); err != nil {
 				return err
 			}
 		case compiler.OpLNot:
 			operand := v.pop()
 
 			if (*operand).IsFalsy() {
-				if err := v.push(&trueObj); err != nil {
+				if err := v.push(truePtr); err != nil {
 					return err
 				}
 			} else {
-				if err := v.push(&falseObj); err != nil {
+				if err := v.push(falsePtr); err != nil {
 					return err
 				}
 			}
@@ -528,7 +528,7 @@ func (v *VM) Run() error {
 
 			v.sp = frame.basePointer - 1
 
-			if err := v.push(&undefinedObj); err != nil {
+			if err := v.push(undefinedPtr); err != nil {
 				return err
 			}
 
@@ -672,11 +672,11 @@ func (v *VM) Run() error {
 			iterator := v.pop()
 			b := (*iterator).(objects.Iterator).Next()
 			if b {
-				if err := v.push(&trueObj); err != nil {
+				if err := v.push(truePtr); err != nil {
 					return err
 				}
 			} else {
-				if err := v.push(&falseObj); err != nil {
+				if err := v.push(falsePtr); err != nil {
 					return err
 				}
 			}
@@ -783,7 +783,7 @@ func (v *VM) executeArrayIndex(arr *objects.Array, index int64) error {
 }
 
 func (v *VM) executeMapIndex(map_ *objects.Map, key string) error {
-	var res = undefinedObj
+	var res = objects.UndefinedValue
 	val, ok := map_.Value[key]
 	if ok {
 		res = val
@@ -974,7 +974,7 @@ func (v *VM) callCallable(callable objects.Callable, numArgs int) error {
 
 	// nil return -> undefined
 	if res == nil {
-		res = undefinedObj
+		res = objects.UndefinedValue
 	}
 
 	return v.push(&res)

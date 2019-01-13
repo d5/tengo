@@ -24,40 +24,96 @@ func (o *Float) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	case *Float:
 		switch op {
 		case token.Add:
-			return &Float{o.Value + rhs.Value}, nil
+			r := o.Value + rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Float{Value: r}, nil
 		case token.Sub:
-			return &Float{o.Value - rhs.Value}, nil
+			r := o.Value - rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Float{Value: r}, nil
 		case token.Mul:
-			return &Float{o.Value * rhs.Value}, nil
+			r := o.Value * rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Float{Value: r}, nil
 		case token.Quo:
-			return &Float{o.Value / rhs.Value}, nil
+			r := o.Value / rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Float{Value: r}, nil
 		case token.Less:
-			return &Bool{o.Value < rhs.Value}, nil
+			if o.Value < rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.Greater:
-			return &Bool{o.Value > rhs.Value}, nil
+			if o.Value > rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.LessEq:
-			return &Bool{o.Value <= rhs.Value}, nil
+			if o.Value <= rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.GreaterEq:
-			return &Bool{o.Value >= rhs.Value}, nil
+			if o.Value >= rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		}
 	case *Int:
 		switch op {
 		case token.Add:
-			return &Float{o.Value + float64(rhs.Value)}, nil
+			r := o.Value + float64(rhs.Value)
+			if r == o.Value {
+				return o, nil
+			}
+			return &Float{Value: r}, nil
 		case token.Sub:
-			return &Float{o.Value - float64(rhs.Value)}, nil
+			r := o.Value - float64(rhs.Value)
+			if r == o.Value {
+				return o, nil
+			}
+			return &Float{Value: r}, nil
 		case token.Mul:
-			return &Float{o.Value * float64(rhs.Value)}, nil
+			r := o.Value * float64(rhs.Value)
+			if r == o.Value {
+				return o, nil
+			}
+			return &Float{Value: r}, nil
 		case token.Quo:
-			return &Float{o.Value / float64(rhs.Value)}, nil
+			r := o.Value / float64(rhs.Value)
+			if r == o.Value {
+				return o, nil
+			}
+			return &Float{Value: r}, nil
 		case token.Less:
-			return &Bool{o.Value < float64(rhs.Value)}, nil
+			if o.Value < float64(rhs.Value) {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.Greater:
-			return &Bool{o.Value > float64(rhs.Value)}, nil
+			if o.Value > float64(rhs.Value) {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.LessEq:
-			return &Bool{o.Value <= float64(rhs.Value)}, nil
+			if o.Value <= float64(rhs.Value) {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		case token.GreaterEq:
-			return &Bool{o.Value >= float64(rhs.Value)}, nil
+			if o.Value >= float64(rhs.Value) {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
 		}
 	}
 
