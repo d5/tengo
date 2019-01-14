@@ -18,46 +18,16 @@ Tengo is an embeddable script language for Go. Tengo is fast because it's compil
 
 | | fib(35) | fibt(35) |  Type  |
 | :--- |    ---: |     ---: |  :---: |
-| Go | `68ms` | `4ms` | Go (native) |
-| [**Tengo**](https://github.com/d5/tengo) | `6,786ms` | `4ms` | VM on Go |
-| Lua | `1,917ms` | `3ms` | Lua (native) |
-| [go-lua](https://github.com/Shopify/go-lua) | `5,669ms` | `5ms` | Lua VM on Go |
-| [GopherLua](https://github.com/yuin/gopher-lua) | `6,120ms` | `5ms` | Lua VM on Go |
-| Python | `3,037ms` | `23ms` | Python (native) |
-| [otto](https://github.com/robertkrimen/otto) | `95,398ms` | `13ms` | JS Interpreter on Go |
-| [Anko](https://github.com/mattn/anko) | `111,908ms` | `20ms` | Interpreter on Go |
+| Go | `59ms` | `4ms` | Go (native) |
+| [**Tengo**](https://github.com/d5/tengo) | `4,809ms` | `5ms` | VM on Go |
+| Lua | `1,752ms` | `3ms` | Lua (native) |
+| [go-lua](https://github.com/Shopify/go-lua) | `5,236ms` | `5ms` | Lua VM on Go |
+| [GopherLua](https://github.com/yuin/gopher-lua) | `5,558ms` | `5ms` | Lua VM on Go |
+| Python | `3,132ms` | `28ms` | Python (native) |
+| [otto](https://github.com/robertkrimen/otto) | `85,765ms` | `22ms` | JS Interpreter on Go |
+| [Anko](https://github.com/mattn/anko) | `99,235ms` | `24ms` | Interpreter on Go |
 
-`fib(35)` is a function to calculate 35th Fibonacci number.
-
-```golang
-fib := func(x) {
-	if x == 0 {
-		return 0
-	} else if x == 1 {
-		return 1
-	} else {
-		return fib(x-1) + fib(x-2)
-	}
-}
-fib(35)
-```
-
-`fibt(35)` is a [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of `fib(35)`.
-
-```golang
-fibt := func(x, a, b) {
-	if x == 0 {
-		return a
-	} else if x == 1 {
-		return b
-	} else {
-		return fibt(x-1, b, a+b)
-	}
-}
-fibt(35, 0, 1)
-```
-
-Please see [tengobench](https://github.com/d5/tengobench) for more details.
+[fib(35)](https://github.com/d5/tengobench/blob/master/code/fib.tengo) is a function to compute 35th Fibonacci number, and, [fibt(35)](https://github.com/d5/tengobench/blob/master/code/fibtc.tengo) is the [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of the same function. You can see all the code used for this test in [tengobench](https://github.com/d5/tengobench).
 
 ## Tengo Syntax in 5 Minutes
 
