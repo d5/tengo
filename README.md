@@ -1,7 +1,6 @@
 # The Tengo Language
 
 [![GoDoc](https://godoc.org/github.com/d5/tengo?status.svg)](https://godoc.org/github.com/d5/tengo/script)
-[![cover.run](https://cover.run/go/github.com/d5/tengo.svg?style=flat&tag=golang-1.10)](https://cover.run/go?tag=golang-1.10&repo=github.com%2Fd5%2Ftengo)
 
 Tengo is an embeddable script language for Go. 
 
