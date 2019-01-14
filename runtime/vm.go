@@ -79,255 +79,364 @@ func (v *VM) Run() error {
 			cidx := compiler.ReadUint16(v.curInsts[ip+1:])
 			v.curFrame.ip += 2
 
-			if err := v.push(&v.constants[cidx]); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
 
+			v.stack[v.sp] = &v.constants[cidx]
+			v.sp++
+
 		case compiler.OpNull:
-			if err := v.push(undefinedPtr); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = undefinedPtr
+			v.sp++
+
 		case compiler.OpAdd:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.Add, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpSub:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.Sub, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpMul:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.Mul, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpDiv:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.Quo, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpRem:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.Rem, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpBAnd:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.And, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpBOr:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.Or, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpBXor:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.Xor, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpBAndNot:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.AndNot, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpBShiftLeft:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.Shl, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpBShiftRight:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.Shr, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpEqual:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
+
+			if v.sp >= StackSize {
+				return ErrStackOverflow
+			}
 
 			if (*right).Equals(*left) {
-				if err := v.push(truePtr); err != nil {
-					return err
-				}
+				v.stack[v.sp] = truePtr
 			} else {
-				if err := v.push(falsePtr); err != nil {
-					return err
-				}
+				v.stack[v.sp] = falsePtr
 			}
+			v.sp++
+
 		case compiler.OpNotEqual:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
+
+			if v.sp >= StackSize {
+				return ErrStackOverflow
+			}
 
 			if (*right).Equals(*left) {
-				if err := v.push(falsePtr); err != nil {
-					return err
-				}
+				v.stack[v.sp] = falsePtr
 			} else {
-				if err := v.push(truePtr); err != nil {
-					return err
-				}
+				v.stack[v.sp] = truePtr
 			}
+			v.sp++
+
 		case compiler.OpGreaterThan:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.Greater, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpGreaterThanEqual:
-			right := v.pop()
-			left := v.pop()
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			res, err := (*left).BinaryOp(token.GreaterEq, *right)
 			if err != nil {
 				return err
 			}
 
-			if err := v.push(&res); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &res
+			v.sp++
+
 		case compiler.OpPop:
-			_ = v.pop()
+			v.sp--
+
 		case compiler.OpTrue:
-			if err := v.push(truePtr); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = truePtr
+			v.sp++
+
 		case compiler.OpFalse:
-			if err := v.push(falsePtr); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = falsePtr
+			v.sp++
+
 		case compiler.OpLNot:
-			operand := v.pop()
+			operand := v.stack[v.sp-1]
+			v.sp--
+
+			if v.sp >= StackSize {
+				return ErrStackOverflow
+			}
 
 			if (*operand).IsFalsy() {
-				if err := v.push(truePtr); err != nil {
-					return err
-				}
+				v.stack[v.sp] = truePtr
 			} else {
-				if err := v.push(falsePtr); err != nil {
-					return err
-				}
+				v.stack[v.sp] = falsePtr
 			}
+			v.sp++
+
 		case compiler.OpBComplement:
-			operand := v.pop()
+			operand := v.stack[v.sp-1]
+			v.sp--
 
 			switch x := (*operand).(type) {
 			case *objects.Int:
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
 				var res objects.Object = &objects.Int{Value: ^x.Value}
-				if err := v.push(&res); err != nil {
-					return err
-				}
+
+				v.stack[v.sp] = &res
+				v.sp++
 			default:
 				return fmt.Errorf("invalid operation on %s", (*operand).TypeName())
 			}
+
 		case compiler.OpMinus:
-			operand := v.pop()
+			operand := v.stack[v.sp-1]
+			v.sp--
 
 			switch x := (*operand).(type) {
 			case *objects.Int:
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
 				var res objects.Object = &objects.Int{Value: -x.Value}
-				if err := v.push(&res); err != nil {
-					return err
-				}
+
+				v.stack[v.sp] = &res
+				v.sp++
 			case *objects.Float:
-				var res objects.Object = &objects.Float{Value: -x.Value}
-				if err := v.push(&res); err != nil {
-					return err
+				if v.sp >= StackSize {
+					return ErrStackOverflow
 				}
+
+				var res objects.Object = &objects.Float{Value: -x.Value}
+
+				v.stack[v.sp] = &res
+				v.sp++
 			default:
 				return fmt.Errorf("invalid operation on %s", (*operand).TypeName())
 			}
+
 		case compiler.OpJumpFalsy:
 			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
 			v.curFrame.ip += 2
 
-			condition := v.pop()
+			condition := v.stack[v.sp-1]
+			v.sp--
+
 			if (*condition).IsFalsy() {
 				v.curFrame.ip = pos - 1
 			}
+
 		case compiler.OpAndJump:
 			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
 			v.curFrame.ip += 2
@@ -336,8 +445,9 @@ func (v *VM) Run() error {
 			if condition.IsFalsy() {
 				v.curFrame.ip = pos - 1
 			} else {
-				_ = v.pop()
+				v.sp--
 			}
+
 		case compiler.OpOrJump:
 			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
 			v.curFrame.ip += 2
@@ -346,18 +456,21 @@ func (v *VM) Run() error {
 			if !condition.IsFalsy() {
 				v.curFrame.ip = pos - 1
 			} else {
-				_ = v.pop()
+				v.sp--
 			}
+
 		case compiler.OpJump:
 			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
 			v.curFrame.ip = pos - 1
+
 		case compiler.OpSetGlobal:
 			globalIndex := compiler.ReadUint16(v.curInsts[ip+1:])
 			v.curFrame.ip += 2
 
-			val := v.pop()
+			v.sp--
 
-			v.globals[globalIndex] = val
+			v.globals[globalIndex] = v.stack[v.sp]
+
 		case compiler.OpSetSelGlobal:
 			globalIndex := compiler.ReadUint16(v.curInsts[ip+1:])
 			numSelectors := int(compiler.ReadUint8(v.curInsts[ip+3:]))
@@ -366,7 +479,8 @@ func (v *VM) Run() error {
 			// pop selector outcomes (left to right)
 			selectors := make([]interface{}, numSelectors, numSelectors)
 			for i := 0; i < numSelectors; i++ {
-				sel := v.pop()
+				sel := v.stack[v.sp-1]
+				v.sp--
 
 				switch sel := (*sel).(type) {
 				case *objects.String: // map key
@@ -379,20 +493,26 @@ func (v *VM) Run() error {
 			}
 
 			// RHS value
-			val := v.pop()
+			val := v.stack[v.sp-1]
+			v.sp--
 
 			if err := selectorAssign(v.globals[globalIndex], val, selectors); err != nil {
 				return err
 			}
+
 		case compiler.OpGetGlobal:
 			globalIndex := compiler.ReadUint16(v.curInsts[ip+1:])
 			v.curFrame.ip += 2
 
 			val := v.globals[globalIndex]
 
-			if err := v.push(val); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = val
+			v.sp++
+
 		case compiler.OpArray:
 			numElements := int(compiler.ReadUint16(v.curInsts[ip+1:]))
 			v.curFrame.ip += 2
@@ -405,9 +525,13 @@ func (v *VM) Run() error {
 
 			var arr objects.Object = &objects.Array{Value: elements}
 
-			if err := v.push(&arr); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &arr
+			v.sp++
+
 		case compiler.OpMap:
 			numElements := int(compiler.ReadUint16(v.curInsts[ip+1:]))
 			v.curFrame.ip += 2
@@ -422,12 +546,17 @@ func (v *VM) Run() error {
 
 			var map_ objects.Object = &objects.Map{Value: kv}
 
-			if err := v.push(&map_); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &map_
+			v.sp++
+
 		case compiler.OpIndex:
-			index := v.pop()
-			left := v.pop()
+			index := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
+			v.sp -= 2
 
 			switch left := (*left).(type) {
 			case *objects.Array:
@@ -436,82 +565,199 @@ func (v *VM) Run() error {
 					return fmt.Errorf("non-integer array index: %s", left.TypeName())
 				}
 
-				if err := v.executeArrayIndex(left, idx.Value); err != nil {
-					return err
+				if idx.Value < 0 || idx.Value >= int64(len(left.Value)) {
+					return fmt.Errorf("index out of bounds: %d", index)
 				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				v.stack[v.sp] = &left.Value[idx.Value]
+				v.sp++
+
 			case *objects.String:
 				idx, ok := (*index).(*objects.Int)
 				if !ok {
 					return fmt.Errorf("non-integer array index: %s", left.TypeName())
 				}
 
-				if err := v.executeStringIndex(left, idx.Value); err != nil {
-					return err
+				str := []rune(left.Value)
+
+				if idx.Value < 0 || idx.Value >= int64(len(str)) {
+					return fmt.Errorf("index out of bounds: %d", index)
 				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				var val objects.Object = &objects.Char{Value: str[idx.Value]}
+
+				v.stack[v.sp] = &val
+				v.sp++
+
 			case *objects.Map:
 				key, ok := (*index).(*objects.String)
 				if !ok {
 					return fmt.Errorf("non-string map key: %s", left.TypeName())
 				}
 
-				if err := v.executeMapIndex(left, key.Value); err != nil {
-					return err
+				var res = objects.UndefinedValue
+				val, ok := left.Value[key.Value]
+				if ok {
+					res = val
 				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				v.stack[v.sp] = &res
+				v.sp++
+
 			default:
 				return fmt.Errorf("type %s does not support indexing", left.TypeName())
 			}
-		case compiler.OpSliceIndex:
-			high := v.pop()
-			low := v.pop()
-			left := v.pop()
 
-			var lowIdx *int64
+		case compiler.OpSliceIndex:
+			high := v.stack[v.sp-1]
+			low := v.stack[v.sp-2]
+			left := v.stack[v.sp-3]
+			v.sp -= 3
+
+			var lowIdx, highIdx int64
+
 			switch low := (*low).(type) {
 			case *objects.Undefined:
+				//lowIdx = 0
 			case *objects.Int:
-				lowIdx = &low.Value
+				lowIdx = low.Value
 			default:
 				return fmt.Errorf("non-integer slice index: %s", low.TypeName())
 			}
 
-			var highIdx *int64
 			switch high := (*high).(type) {
 			case *objects.Undefined:
+				highIdx = -1 // will be replaced by number of elements
 			case *objects.Int:
-				highIdx = &high.Value
+				highIdx = high.Value
 			default:
 				return fmt.Errorf("non-integer slice index: %s", high.TypeName())
 			}
 
 			switch left := (*left).(type) {
 			case *objects.Array:
-				if err := v.executeArraySliceIndex(left, lowIdx, highIdx); err != nil {
-					return err
-				}
-			case *objects.String:
+				numElements := int64(len(left.Value))
 
-				if err := v.executeStringSliceIndex(left, lowIdx, highIdx); err != nil {
-					return err
+				if lowIdx < 0 || lowIdx >= numElements {
+					return fmt.Errorf("index out of bounds: %d", lowIdx)
 				}
+				if highIdx < 0 {
+					highIdx = numElements
+				} else if highIdx < 0 || highIdx > numElements {
+					return fmt.Errorf("index out of bounds: %d", highIdx)
+				}
+
+				if lowIdx > highIdx {
+					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
+				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
+
+				v.stack[v.sp] = &val
+				v.sp++
+
+			case *objects.String:
+				numElements := int64(len(left.Value))
+
+				if lowIdx < 0 || lowIdx >= numElements {
+					return fmt.Errorf("index out of bounds: %d", lowIdx)
+				}
+				if highIdx < 0 {
+					highIdx = numElements
+				} else if highIdx < 0 || highIdx > numElements {
+					return fmt.Errorf("index out of bounds: %d", highIdx)
+				}
+
+				if lowIdx > highIdx {
+					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
+				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				var val objects.Object = &objects.String{Value: left.Value[lowIdx:highIdx]}
+
+				v.stack[v.sp] = &val
+				v.sp++
+
 			default:
 				return fmt.Errorf("cannot slice %s", left.TypeName())
 			}
+
 		case compiler.OpCall:
-			numArgs := compiler.ReadUint8(v.curInsts[ip+1:])
+			numArgs := int(compiler.ReadUint8(v.curInsts[ip+1:]))
 			v.curFrame.ip += 1
 
-			if err := v.executeCall(int(numArgs)); err != nil {
-				return err
+			callee := *v.stack[v.sp-1-numArgs]
+
+			switch callee := callee.(type) {
+			case *objects.Closure:
+				if err := v.callFunction(callee.Fn, callee.Free, numArgs); err != nil {
+					return err
+				}
+			case *objects.CompiledFunction:
+				if err := v.callFunction(callee, nil, numArgs); err != nil {
+					return err
+				}
+			case objects.Callable:
+				var args []objects.Object
+				for _, arg := range v.stack[v.sp-numArgs : v.sp] {
+					args = append(args, *arg)
+				}
+
+				ret, err := callee.Call(args...)
+				v.sp -= numArgs + 1
+
+				// runtime error
+				if err != nil {
+					return err
+				}
+
+				// nil return -> undefined
+				if ret == nil {
+					ret = objects.UndefinedValue
+				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				v.stack[v.sp] = &ret
+				v.sp++
+			default:
+				return fmt.Errorf("calling non-function: %s", callee.TypeName())
 			}
+
 		case compiler.OpReturnValue:
-			numRets := int(compiler.ReadUint8(v.curInsts[ip+1:]))
+			//numRets := int(compiler.ReadUint8(v.curInsts[ip+1:]))
+			_ = int(compiler.ReadUint8(v.curInsts[ip+1:]))
 			v.curFrame.ip += 1
 
-			var rets []*objects.Object
-			for i := 0; i < numRets; i++ {
-				val := v.pop()
-				rets = append(rets, val)
-			}
+			// TODO: multi-value return is not fully implemented yet
+			//var rets []*objects.Object
+			//for i := 0; i < numRets; i++ {
+			//	val := v.pop()
+			//	rets = append(rets, val)
+			//}
+			retVal := v.stack[v.sp-1]
+			//v.sp--
 
 			v.framesIndex--
 			lastFrame := v.frames[v.framesIndex]
@@ -519,13 +765,21 @@ func (v *VM) Run() error {
 			v.curInsts = v.curFrame.fn.Instructions
 			v.curIPLimit = len(v.curInsts) - 1
 
-			v.sp = lastFrame.basePointer - 1
+			//v.sp = lastFrame.basePointer - 1
+			v.sp = lastFrame.basePointer
 
-			for _, retVal := range rets {
-				if err := v.push(retVal); err != nil {
-					return err
-				}
+			//for _, retVal := range rets {
+			//	if err := v.push(retVal); err != nil {
+			//		return err
+			//	}
+			//}
+			if v.sp-1 >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp-1] = retVal
+			//v.sp++
+
 		case compiler.OpReturn:
 			v.framesIndex--
 			lastFrame := v.frames[v.framesIndex]
@@ -535,9 +789,12 @@ func (v *VM) Run() error {
 
 			v.sp = lastFrame.basePointer - 1
 
-			if err := v.push(undefinedPtr); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = undefinedPtr
+			v.sp++
 
 		case compiler.OpDefineLocal:
 			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
@@ -547,7 +804,9 @@ func (v *VM) Run() error {
 
 			// local variables can be mutated by other actions
 			// so always store the copy of popped value
-			val := v.popValue()
+			val := *v.stack[v.sp-1]
+			v.sp--
+
 			v.stack[sp] = &val
 
 		case compiler.OpSetLocal:
@@ -558,7 +817,9 @@ func (v *VM) Run() error {
 
 			// update pointee of v.stack[sp] instead of replacing the pointer itself.
 			// this is needed because there can be free variables referencing the same local variables.
-			val := v.pop()
+			val := v.stack[v.sp-1]
+			v.sp--
+
 			*v.stack[sp] = *val // also use a copy of popped value
 
 		case compiler.OpSetSelLocal:
@@ -569,7 +830,8 @@ func (v *VM) Run() error {
 			// pop selector outcomes (left to right)
 			selectors := make([]interface{}, numSelectors, numSelectors)
 			for i := 0; i < numSelectors; i++ {
-				sel := v.pop()
+				sel := v.stack[v.sp-1]
+				v.sp--
 
 				switch sel := (*sel).(type) {
 				case *objects.String: // map key
@@ -582,29 +844,39 @@ func (v *VM) Run() error {
 			}
 
 			// RHS value
-			val := v.pop() // no need to copy value here; selectorAssign uses copy of value
+			val := v.stack[v.sp-1] // no need to copy value here; selectorAssign uses copy of value
+			v.sp--
 
 			sp := v.curFrame.basePointer + int(localIndex)
 
 			if err := selectorAssign(v.stack[sp], val, selectors); err != nil {
 				return err
 			}
+
 		case compiler.OpGetLocal:
 			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
 			v.curFrame.ip += 1
 
 			val := v.stack[v.curFrame.basePointer+int(localIndex)]
 
-			if err := v.push(val); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = val
+			v.sp++
+
 		case compiler.OpGetBuiltin:
 			builtinIndex := compiler.ReadUint8(v.curInsts[ip+1:])
 			v.curFrame.ip += 1
 
-			if err := v.push(&builtinFuncs[builtinIndex]); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &builtinFuncs[builtinIndex]
+			v.sp++
+
 		case compiler.OpClosure:
 			constIndex := compiler.ReadUint16(v.curInsts[ip+1:])
 			numFree := compiler.ReadUint8(v.curInsts[ip+3:])
@@ -613,15 +885,20 @@ func (v *VM) Run() error {
 			if err := v.pushClosure(int(constIndex), int(numFree)); err != nil {
 				return err
 			}
+
 		case compiler.OpGetFree:
 			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
 			v.curFrame.ip += 1
 
 			val := v.curFrame.freeVars[freeIndex]
 
-			if err := v.push(val); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = val
+			v.sp++
+
 		case compiler.OpSetSelFree:
 			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
 			numSelectors := int(compiler.ReadUint8(v.curInsts[ip+2:]))
@@ -630,7 +907,8 @@ func (v *VM) Run() error {
 			// pop selector outcomes (left to right)
 			selectors := make([]interface{}, numSelectors, numSelectors)
 			for i := 0; i < numSelectors; i++ {
-				sel := v.pop()
+				sel := v.stack[v.sp-1]
+				v.sp--
 
 				switch sel := (*sel).(type) {
 				case *objects.String: // map key
@@ -643,23 +921,28 @@ func (v *VM) Run() error {
 			}
 
 			// RHS value
-			val := v.pop()
+			val := v.stack[v.sp-1]
+			v.sp--
 
 			if err := selectorAssign(v.curFrame.freeVars[freeIndex], val, selectors); err != nil {
 				return err
 			}
+
 		case compiler.OpSetFree:
 			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
 			v.curFrame.ip += 1
 
-			val := v.pop()
+			val := v.stack[v.sp-1]
+			v.sp--
 
 			*v.curFrame.freeVars[freeIndex] = *val
 
 		case compiler.OpIteratorInit:
 			var iterator objects.Object
 
-			dst := v.pop()
+			dst := v.stack[v.sp-1]
+			v.sp--
+
 			switch dst := (*dst).(type) {
 			case *objects.Array:
 				iterator = objects.NewArrayIterator(dst)
@@ -671,36 +954,55 @@ func (v *VM) Run() error {
 				return fmt.Errorf("non-iterable type: %s", dst.TypeName())
 			}
 
-			if err := v.push(&iterator); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &iterator
+			v.sp++
 
 		case compiler.OpIteratorNext:
-			iterator := v.pop()
+			iterator := v.stack[v.sp-1]
+			v.sp--
+
 			b := (*iterator).(objects.Iterator).Next()
-			if b {
-				if err := v.push(truePtr); err != nil {
-					return err
-				}
-			} else {
-				if err := v.push(falsePtr); err != nil {
-					return err
-				}
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			if b {
+				v.stack[v.sp] = truePtr
+			} else {
+				v.stack[v.sp] = falsePtr
+			}
+			v.sp++
+
 		case compiler.OpIteratorKey:
-			iterator := v.pop()
+			iterator := v.stack[v.sp-1]
+			v.sp--
+
 			val := (*iterator).(objects.Iterator).Key()
 
-			if err := v.push(&val); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &val
+			v.sp++
+
 		case compiler.OpIteratorValue:
-			iterator := v.pop()
+			iterator := v.stack[v.sp-1]
+			v.sp--
+
 			val := (*iterator).(objects.Iterator).Value()
 
-			if err := v.push(&val); err != nil {
-				return err
+			if v.sp >= StackSize {
+				return ErrStackOverflow
 			}
+
+			v.stack[v.sp] = &val
+			v.sp++
+
 		default:
 			return fmt.Errorf("unknown opcode: %d", v.curInsts[ip])
 		}
@@ -722,31 +1024,6 @@ func (v *VM) FrameInfo() (frameIndex int, ip int) {
 	return v.framesIndex - 1, v.frames[v.framesIndex-1].ip
 }
 
-func (v *VM) push(o *objects.Object) error {
-	if v.sp >= StackSize {
-		return ErrStackOverflow
-	}
-
-	v.stack[v.sp] = o
-	v.sp++
-
-	return nil
-}
-
-func (v *VM) pop() *objects.Object {
-	o := v.stack[v.sp-1]
-	v.sp--
-
-	return o
-}
-
-func (v *VM) popValue() objects.Object {
-	o := v.stack[v.sp-1]
-	v.sp--
-
-	return *o
-}
-
 func (v *VM) pushClosure(constIndex, numFree int) error {
 	c := v.constants[constIndex]
 
@@ -761,121 +1038,19 @@ func (v *VM) pushClosure(constIndex, numFree int) error {
 	}
 	v.sp -= numFree
 
+	if v.sp >= StackSize {
+		return ErrStackOverflow
+	}
+
 	var cl objects.Object = &objects.Closure{
 		Fn:   fn,
 		Free: free,
 	}
 
-	return v.push(&cl)
-}
+	v.stack[v.sp] = &cl
+	v.sp++
 
-func (v *VM) executeStringIndex(str *objects.String, index int64) error {
-	rs := []rune(str.Value)
-
-	if index < 0 || index >= int64(len(rs)) {
-		return fmt.Errorf("index out of bounds: %d", index)
-	}
-
-	var val objects.Object = &objects.Char{Value: rs[index]}
-
-	return v.push(&val)
-}
-
-func (v *VM) executeArrayIndex(arr *objects.Array, index int64) error {
-	if index < 0 || index >= int64(len(arr.Value)) {
-		return fmt.Errorf("index out of bounds: %d", index)
-	}
-
-	return v.push(&arr.Value[index])
-}
-
-func (v *VM) executeMapIndex(map_ *objects.Map, key string) error {
-	var res = objects.UndefinedValue
-	val, ok := map_.Value[key]
-	if ok {
-		res = val
-	}
-
-	return v.push(&res)
-}
-
-func (v *VM) executeArraySliceIndex(arr *objects.Array, low, high *int64) error {
-	numElements := int64(len(arr.Value))
-
-	var lowIdx, highIdx int64
-
-	if low != nil {
-		lowIdx = *low
-		if lowIdx < 0 || lowIdx >= numElements {
-			return fmt.Errorf("index out of bounds: %d", lowIdx)
-		}
-	}
-	//} else {
-	//	lowIdx = 0
-	//}
-
-	if high != nil {
-		highIdx = *high
-		if highIdx < 0 || highIdx > numElements {
-			return fmt.Errorf("index out of bounds: %d", highIdx)
-		}
-	} else {
-		highIdx = numElements
-	}
-
-	if lowIdx > highIdx {
-		return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
-	}
-
-	var val objects.Object = &objects.Array{Value: arr.Value[lowIdx:highIdx]}
-
-	return v.push(&val)
-}
-
-func (v *VM) executeStringSliceIndex(left *objects.String, low, high *int64) error {
-	var lowIdx, highIdx int64
-
-	if low != nil {
-		lowIdx = *low
-		if lowIdx < 0 || lowIdx >= int64(len(left.Value)) {
-			return fmt.Errorf("index out of bounds: %d", lowIdx)
-		}
-	}
-	//} else {
-	//	lowIdx = 0
-	//}
-
-	if high != nil {
-		highIdx = *high
-		if highIdx < 0 || highIdx > int64(len(left.Value)) {
-			return fmt.Errorf("index out of bounds: %d", highIdx)
-		}
-	} else {
-		highIdx = int64(len(left.Value))
-	}
-
-	if lowIdx > highIdx {
-		return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
-	}
-
-	var val objects.Object = &objects.String{Value: left.Value[lowIdx:highIdx]}
-
-	return v.push(&val)
-}
-
-func (v *VM) executeCall(numArgs int) error {
-	callee := *v.stack[v.sp-1-numArgs]
-
-	switch callee := callee.(type) {
-	case *objects.Closure:
-		return v.callFunction(callee.Fn, callee.Free, numArgs)
-	case *objects.CompiledFunction:
-		return v.callFunction(callee, nil, numArgs)
-	case objects.Callable:
-		return v.callCallable(callee, numArgs)
-	default:
-		return fmt.Errorf("calling non-function: %s", callee.TypeName())
-	}
+	return nil
 }
 
 func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Object, numArgs int) error {
@@ -967,28 +1142,6 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 	//  |--------|
 
 	return nil
-}
-
-func (v *VM) callCallable(callable objects.Callable, numArgs int) error {
-	var args []objects.Object
-	for _, arg := range v.stack[v.sp-numArgs : v.sp] {
-		args = append(args, *arg)
-	}
-
-	res, err := callable.Call(args...)
-	v.sp -= numArgs + 1
-
-	// runtime error
-	if err != nil {
-		return err
-	}
-
-	// nil return -> undefined
-	if res == nil {
-		res = objects.UndefinedValue
-	}
-
-	return v.push(&res)
 }
 
 func selectorAssign(dst, src *objects.Object, selectors []interface{}) error {
