@@ -1,3 +1,13 @@
+/*
+	Scanner reads the Tengo source text and tokenize them.
+
+	Scanner is a modified version of Go's scanner implementation.
+
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+*/
+
 package scanner
 
 import (
@@ -295,10 +305,8 @@ exit:
 	lit := s.src[offs:s.offset]
 
 	// On Windows, a (//-comment) line may end in "\r\n".
-	// Remove the final '\r' before analyzing the text for
-	// line directives (matching the compiler). Remove any
-	// other '\r' afterwards (matching the pre-existing be-
-	// havior of the scanner).
+	// Remove the final '\r' before analyzing the text for line directives (matching the compiler).
+	// Remove any other '\r' afterwards (matching the pre-existing behavior of the scanner).
 	if numCR > 0 && len(lit) >= 2 && lit[1] == '/' && lit[len(lit)-1] == '\r' {
 		lit = lit[:len(lit)-1]
 		numCR--

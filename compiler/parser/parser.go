@@ -1,3 +1,13 @@
+/*
+	Parser parses the Tengo source files.
+
+	Parser is a modified version of Go's parser implementation.
+
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+*/
+
 package parser
 
 import (
@@ -135,7 +145,7 @@ L:
 				x = p.parseSelector(x)
 			default:
 				pos := p.pos
-				p.errorExpected(pos, "selector string")
+				p.errorExpected(pos, "selector")
 				p.advance(stmtStart)
 				return &ast.BadExpr{From: pos, To: p.pos}
 			}
@@ -647,7 +657,7 @@ func (p *Parser) parseIfStmt() ast.Stmt {
 			elseStmt = p.parseBlockStmt()
 			p.expectSemi()
 		default:
-			p.errorExpected(p.pos, "if statement or block")
+			p.errorExpected(p.pos, "if or {")
 			elseStmt = &ast.BadStmt{From: p.pos, To: p.pos}
 		}
 	} else {
