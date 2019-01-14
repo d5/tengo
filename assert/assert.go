@@ -241,6 +241,8 @@ func equalArray(t *testing.T, expected, actual objects.Object) bool {
 }
 
 func equalObjectSlice(t *testing.T, expected, actual []objects.Object) bool {
+	// TODO: this test does not differentiate nil vs empty slice
+
 	if !Equal(t, len(expected), len(actual)) {
 		return false
 	}
