@@ -375,5 +375,3 @@ Development roadmap for Tengo:
 - Performance improvements
 - Syntax highlighter for IDEs
 
-
-![](https://api.tengokawana.com/_?site=tengo-gh)
