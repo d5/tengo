@@ -8,13 +8,13 @@ Tengo is [fast](#benchmark) as it's compiled to bytecode and executed on stack-b
 
 ## Features
 
-- Simple and intuitive syntax
+- Simple and intuitive [syntax](https://github.com/d5/tengo#tengo-syntax-in-5-minutes)
 - Dynamically typed with type coercions
 - First-class functions and Closures
 - Garbage collected _(thanks to Go runtime)_
 - Easily extendible using customizable types
 - Written in pure Go _(no CGO, no external dependencies)_
-- Excutable as a standalone language _(without writing any Go code)_
+- Excutable as a [standalone language](https://github.com/d5/tengo#tengo-as-a-standalone-language) _(without writing any Go code)_
 
 ## Benchmark
 
