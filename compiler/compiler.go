@@ -80,11 +80,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 	case *ast.BinaryExpr:
 		if node.Token == token.LAnd || node.Token == token.LOr {
-			if err := c.compileLogical(node); err != nil {
-				return err
-			}
-
-			return nil
+			return c.compileLogical(node)
 		}
 
 		if node.Token == token.Less {

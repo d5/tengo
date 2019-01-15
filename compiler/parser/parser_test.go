@@ -98,19 +98,16 @@ func expectError(t *testing.T, input string) (ok bool) {
 }
 
 func expectString(t *testing.T, input, expected string) (ok bool) {
-	testFileSet := source.NewFileSet()
-	testFile := testFileSet.AddFile("", -1, len(input))
-
 	defer func() {
 		if !ok {
 			// print trace
 			tr := &tracer{}
-			_, _ = parser.ParseFile(testFile, []byte(input), tr)
+			_, _ = parser.ParseSource([]byte(input), tr)
 			t.Logf("Trace:\n%s", strings.Join(tr.out, ""))
 		}
 	}()
 
-	actual, err := parser.ParseFile(testFile, []byte(input), nil)
+	actual, err := parser.ParseSource([]byte(input), nil)
 	if !assert.NoError(t, err) {
 		return
 	}

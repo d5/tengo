@@ -15,11 +15,6 @@ func (p *ErrorList) Add(pos source.FilePos, msg string) {
 	*p = append(*p, &Error{pos, msg})
 }
 
-// Reset clears the collection.
-func (p *ErrorList) Reset() {
-	*p = (*p)[0:0]
-}
-
 // Len returns the number of elements in the collection.
 func (p ErrorList) Len() int {
 	return len(p)

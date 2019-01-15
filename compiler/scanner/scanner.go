@@ -267,8 +267,7 @@ func (s *Scanner) error(offset int, msg string) {
 func (s *Scanner) scanComment() string {
 	// initial '/' already consumed; s.ch == '/' || s.ch == '*'
 	offs := s.offset - 1 // position of initial '/'
-	next := -1           // position immediately following the comment; < 0 means invalid comment
-	numCR := 0
+	var numCR int
 
 	if s.ch == '/' {
 		//-style comment
@@ -279,11 +278,6 @@ func (s *Scanner) scanComment() string {
 				numCR++
 			}
 			s.next()
-		}
-		// if we are at '\n', the position following the comment is afterwards
-		next = s.offset
-		if s.ch == '\n' {
-			next++
 		}
 		goto exit
 	}
@@ -298,7 +292,6 @@ func (s *Scanner) scanComment() string {
 		s.next()
 		if ch == '*' && s.ch == '/' {
 			s.next()
-			next = s.offset
 			goto exit
 		}
 	}

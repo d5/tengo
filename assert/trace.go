@@ -9,10 +9,10 @@ import (
 )
 
 func errorTrace() []string {
-	pc := uintptr(0)
+	var pc uintptr
 	file := ""
 	line := 0
-	ok := false
+	var ok bool
 	name := ""
 
 	var callers []string

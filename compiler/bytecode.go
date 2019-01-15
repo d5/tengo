@@ -21,11 +21,7 @@ func (b *Bytecode) Decode(r io.Reader) error {
 		return err
 	}
 
-	if err := dec.Decode(&b.Constants); err != nil {
-		return err
-	}
-
-	return nil
+	return dec.Decode(&b.Constants)
 }
 
 // Encode writes Bytecode data to the writer.
@@ -36,11 +32,7 @@ func (b *Bytecode) Encode(w io.Writer) error {
 		return err
 	}
 
-	if err := enc.Encode(b.Constants); err != nil {
-		return err
-	}
-
-	return nil
+	return enc.Encode(b.Constants)
 }
 
 func init() {

@@ -813,6 +813,48 @@ func() {
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 5, 1),
 					compiler.MakeInstruction(compiler.OpReturnValue, 1)))))
+
+	expect(t, `for i:=0; i<10; i++ {}`,
+		bytecode(
+			concat(
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpSetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpGreaterThan),
+				compiler.MakeInstruction(compiler.OpJumpFalsy, 29),
+				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 2),
+				compiler.MakeInstruction(compiler.OpAdd),
+				compiler.MakeInstruction(compiler.OpSetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpJump, 6)),
+			objectsArray(
+				intObject(0),
+				intObject(10),
+				intObject(1))))
+
+	expect(t, `a := 0; a == 0 && a != 1 || a < 1`,
+		bytecode(
+			concat(
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpSetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpEqual),
+				compiler.MakeInstruction(compiler.OpAndJump, 23),
+				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 2),
+				compiler.MakeInstruction(compiler.OpNotEqual),
+				compiler.MakeInstruction(compiler.OpOrJump, 33),
+				compiler.MakeInstruction(compiler.OpConstant, 3),
+				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpGreaterThan),
+				compiler.MakeInstruction(compiler.OpPop)),
+			objectsArray(
+				intObject(0),
+				intObject(0),
+				intObject(1),
+				intObject(1))))
 }
 
 func concat(insts ...[]byte) []byte {

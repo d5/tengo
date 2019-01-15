@@ -26,3 +26,13 @@ func TestScript_Remove(t *testing.T) {
 	_, err = s.Compile()          // should not compile because b is undefined
 	assert.Error(t, err)
 }
+
+func TestScript_Run(t *testing.T) {
+	s := script.New([]byte(`a := b`))
+	err := s.Add("b", 5)
+	assert.NoError(t, err)
+	c, err := s.Run()
+	assert.NoError(t, err)
+	assert.NotNil(t, c)
+	compiledGet(t, c, "a", int64(5))
+}
