@@ -334,6 +334,9 @@ func (p *Parser) parseOperand() ast.Expr {
 		p.next()
 		return x
 
+	case token.Import:
+		return p.parseImportExpr()
+
 	case token.LParen:
 		lparen := p.pos
 		p.next()
@@ -361,6 +364,35 @@ func (p *Parser) parseOperand() ast.Expr {
 	p.errorExpected(pos, "operand")
 	p.advance(stmtStart)
 	return &ast.BadExpr{From: pos, To: p.pos}
+}
+
+func (p *Parser) parseImportExpr() ast.Expr {
+	pos := p.pos
+
+	p.next()
+
+	p.expect(token.LParen)
+
+	if p.token != token.String {
+		p.errorExpected(p.pos, "module name")
+		p.advance(stmtStart)
+		return &ast.BadExpr{From: pos, To: p.pos}
+	}
+
+	// module name
+	moduleName, _ := strconv.Unquote(p.tokenLit)
+
+	expr := &ast.ImportExpr{
+		ModuleName: moduleName,
+		Token:      token.Import,
+		TokenPos:   pos,
+	}
+
+	p.next()
+
+	p.expect(token.RParen)
+
+	return expr
 }
 
 func (p *Parser) parseCharLit() ast.Expr {
@@ -519,9 +551,9 @@ func (p *Parser) parseStmt() (stmt ast.Stmt) {
 
 	switch p.token {
 	case // simple statements
-		token.Func, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False, token.Undefined, token.LParen, // operands
-		token.LBrace, token.LBrack, // composite types
-		token.Add, token.Sub, token.Mul, token.And, token.Xor, token.Not: // unary operators
+		token.Func, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False,
+		token.Undefined, token.Import, token.LParen, token.LBrace, token.LBrack,
+		token.Add, token.Sub, token.Mul, token.And, token.Xor, token.Not:
 		s := p.parseSimpleStmt(false)
 		p.expectSemi()
 		return s

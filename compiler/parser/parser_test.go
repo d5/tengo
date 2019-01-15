@@ -191,6 +191,10 @@ func unaryExpr(x ast.Expr, op token.Token, pos source.Pos) *ast.UnaryExpr {
 	return &ast.UnaryExpr{Expr: x, Token: op, TokenPos: pos}
 }
 
+func importExpr(moduleName string, pos source.Pos) *ast.ImportExpr {
+	return &ast.ImportExpr{ModuleName: moduleName, Token: token.Import, TokenPos: pos}
+}
+
 func exprs(list ...ast.Expr) []ast.Expr {
 	return list
 }
@@ -384,6 +388,10 @@ func equalExpr(t *testing.T, expected, actual ast.Expr) bool {
 	case *ast.SelectorExpr:
 		return equalExpr(t, expected.Expr, actual.(*ast.SelectorExpr).Expr) &&
 			equalExpr(t, expected.Sel, actual.(*ast.SelectorExpr).Sel)
+	case *ast.ImportExpr:
+		return assert.Equal(t, expected.ModuleName, actual.(*ast.ImportExpr).ModuleName) &&
+			assert.Equal(t, int(expected.TokenPos), int(actual.(*ast.ImportExpr).TokenPos)) &&
+			assert.Equal(t, expected.Token, actual.(*ast.ImportExpr).Token)
 	default:
 		panic(fmt.Errorf("unknown type: %T", expected))
 	}
