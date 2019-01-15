@@ -12,6 +12,18 @@ type Variable struct {
 	value *objects.Object
 }
 
+func NewVariable(name string, value interface{}) (*Variable, error) {
+	obj, err := interfaceToObject(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Variable{
+		name:  name,
+		value: &obj,
+	}, nil
+}
+
 // Name returns the name of the variable.
 func (v *Variable) Name() string {
 	return v.name
@@ -35,22 +47,22 @@ func (v *Variable) Int() int {
 
 // Int64 returns int64 value of the variable value.
 // It returns 0 if the value is not convertible to int64.
-func (v *Variable) Int64() int {
+func (v *Variable) Int64() int64 {
 	switch val := (*v.value).(type) {
 	case *objects.Int:
-		return int(val.Value)
+		return val.Value
 	case *objects.Float:
-		return int(val.Value)
+		return int64(val.Value)
 	case *objects.Bool:
 		if val.Value {
 			return 1
 		}
 		return 0
 	case *objects.Char:
-		return int(val.Value)
+		return int64(val.Value)
 	case *objects.String:
 		n, _ := strconv.ParseInt(val.Value, 10, 64)
-		return int(n)
+		return n
 	}
 
 	return 0
