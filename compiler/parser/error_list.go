@@ -7,16 +7,20 @@ import (
 	"github.com/d5/tengo/compiler/source"
 )
 
+// ErrorList is a collection of parser errors.
 type ErrorList []*Error
 
+// Add adds a new parser error to the collection.
 func (p *ErrorList) Add(pos source.FilePos, msg string) {
 	*p = append(*p, &Error{pos, msg})
 }
 
+// Reset clears the collection.
 func (p *ErrorList) Reset() {
 	*p = (*p)[0:0]
 }
 
+// Len returns the number of elements in the collection.
 func (p ErrorList) Len() int {
 	return len(p)
 }
@@ -44,25 +48,9 @@ func (p ErrorList) Less(i, j int) bool {
 	return p[i].Msg < p[j].Msg
 }
 
+// Sort sorts the collection.
 func (p ErrorList) Sort() {
 	sort.Sort(p)
-}
-
-func (p *ErrorList) RemoveMultiples() {
-	sort.Sort(p)
-
-	var last source.FilePos // initial last.Line is != any legal error line
-
-	i := 0
-	for _, e := range *p {
-		if e.Pos.Filename != last.Filename || e.Pos.Line != last.Line {
-			last = e.Pos
-			(*p)[i] = e
-			i++
-		}
-	}
-
-	*p = (*p)[0:i]
 }
 
 func (p ErrorList) Error() string {
@@ -75,6 +63,7 @@ func (p ErrorList) Error() string {
 	return fmt.Sprintf("%s (and %d more errors)", p[0], len(p)-1)
 }
 
+// Err returns an error.
 func (p ErrorList) Err() error {
 	if len(p) == 0 {
 		return nil

@@ -88,11 +88,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		if node.Token == token.Less {
-			if err := c.Compile(node.Rhs); err != nil {
+			if err := c.Compile(node.RHS); err != nil {
 				return err
 			}
 
-			if err := c.Compile(node.Lhs); err != nil {
+			if err := c.Compile(node.LHS); err != nil {
 				return err
 			}
 
@@ -100,10 +100,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 			return nil
 		} else if node.Token == token.LessEq {
-			if err := c.Compile(node.Rhs); err != nil {
+			if err := c.Compile(node.RHS); err != nil {
 				return err
 			}
-			if err := c.Compile(node.Lhs); err != nil {
+			if err := c.Compile(node.LHS); err != nil {
 				return err
 			}
 
@@ -112,10 +112,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return nil
 		}
 
-		if err := c.Compile(node.Lhs); err != nil {
+		if err := c.Compile(node.LHS); err != nil {
 			return err
 		}
-		if err := c.Compile(node.Rhs); err != nil {
+		if err := c.Compile(node.RHS); err != nil {
 			return err
 		}
 
@@ -261,7 +261,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 	case *ast.AssignStmt:
 
-		if err := c.compileAssign(node.Lhs, node.Rhs, node.Token); err != nil {
+		if err := c.compileAssign(node.LHS, node.RHS, node.Token); err != nil {
 			return err
 		}
 	case *ast.Ident:

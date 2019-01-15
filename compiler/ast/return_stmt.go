@@ -6,6 +6,7 @@ import (
 	"github.com/d5/tengo/compiler/source"
 )
 
+// ReturnStmt represents a return statement.
 type ReturnStmt struct {
 	ReturnPos source.Pos
 	Results   []Expr
@@ -13,10 +14,12 @@ type ReturnStmt struct {
 
 func (s *ReturnStmt) stmtNode() {}
 
+// Pos returns the position of first character belonging to the node.
 func (s *ReturnStmt) Pos() source.Pos {
 	return s.ReturnPos
 }
 
+// End returns the position of first character immediately after the node.
 func (s *ReturnStmt) End() source.Pos {
 	if n := len(s.Results); n > 0 {
 		return s.Results[n-1].End()

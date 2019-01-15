@@ -1,5 +1,6 @@
 package compiler
 
+// SymbolTable represents a symbol table.
 type SymbolTable struct {
 	parent        *SymbolTable
 	block         bool
@@ -9,12 +10,14 @@ type SymbolTable struct {
 	freeSymbols   []Symbol
 }
 
+// NewSymbolTable creates a SymbolTable.
 func NewSymbolTable() *SymbolTable {
 	return &SymbolTable{
 		store: make(map[string]Symbol),
 	}
 }
 
+// Define adds a new symbol in the current scope.
 func (t *SymbolTable) Define(name string) Symbol {
 	symbol := Symbol{Name: name, Index: t.nextIndex()}
 	t.numDefinition++
@@ -32,6 +35,7 @@ func (t *SymbolTable) Define(name string) Symbol {
 	return symbol
 }
 
+// DefineBuiltin adds a symbol for builtin function.
 func (t *SymbolTable) DefineBuiltin(index int, name string) Symbol {
 	symbol := Symbol{
 		Name:  name,
@@ -44,6 +48,7 @@ func (t *SymbolTable) DefineBuiltin(index int, name string) Symbol {
 	return symbol
 }
 
+// Resolve resolves a symbol with a given name.
 func (t *SymbolTable) Resolve(name string) (symbol Symbol, depth int, ok bool) {
 	symbol, ok = t.store[name]
 	if !ok && t.parent != nil {
@@ -53,7 +58,7 @@ func (t *SymbolTable) Resolve(name string) (symbol Symbol, depth int, ok bool) {
 		}
 
 		if !t.block {
-			depth += 1
+			depth++
 		}
 
 		// if symbol is defined in parent table and if it's not global/builtin
@@ -68,6 +73,7 @@ func (t *SymbolTable) Resolve(name string) (symbol Symbol, depth int, ok bool) {
 	return
 }
 
+// Fork creates a new symbol table for a new scope.
 func (t *SymbolTable) Fork(block bool) *SymbolTable {
 	return &SymbolTable{
 		store:  make(map[string]Symbol),
@@ -76,6 +82,7 @@ func (t *SymbolTable) Fork(block bool) *SymbolTable {
 	}
 }
 
+// Parent returns the outer scope of the current symbol table.
 func (t *SymbolTable) Parent(skipBlock bool) *SymbolTable {
 	if skipBlock && t.block {
 		return t.parent.Parent(skipBlock)
@@ -84,14 +91,17 @@ func (t *SymbolTable) Parent(skipBlock bool) *SymbolTable {
 	return t.parent
 }
 
+// MaxSymbols returns the total number of symbols defined in the scope.
 func (t *SymbolTable) MaxSymbols() int {
 	return t.maxDefinition
 }
 
+// FreeSymbols returns free symbols for the scope.
 func (t *SymbolTable) FreeSymbols() []Symbol {
 	return t.freeSymbols
 }
 
+// Names returns the name of all the symbols.
 func (t *SymbolTable) Names() []string {
 	var names []string
 	for name := range t.store {

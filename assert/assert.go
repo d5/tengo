@@ -90,7 +90,7 @@ func IsType(t *testing.T, expected, actual interface{}, msg ...interface{}) bool
 	return failExpectedActual(t, reflect.TypeOf(expected), reflect.TypeOf(actual), msg...)
 }
 
-// Equals asserts expected and actual are equal.
+// Equal asserts expected and actual are equal.
 func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool {
 	t.Helper()
 

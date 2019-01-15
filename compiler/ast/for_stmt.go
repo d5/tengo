@@ -2,6 +2,7 @@ package ast
 
 import "github.com/d5/tengo/compiler/source"
 
+// ForStmt represetns a for statement.
 type ForStmt struct {
 	ForPos source.Pos
 	Init   Stmt
@@ -12,10 +13,12 @@ type ForStmt struct {
 
 func (s *ForStmt) stmtNode() {}
 
+// Pos returns the position of first character belonging to the node.
 func (s *ForStmt) Pos() source.Pos {
 	return s.ForPos
 }
 
+// End returns the position of first character immediately after the node.
 func (s *ForStmt) End() source.Pos {
 	return s.Body.End()
 }

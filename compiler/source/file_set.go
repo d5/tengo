@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// FileSet represents a set of source files.
 type FileSet struct {
 	mutex sync.RWMutex // protects the file set
 	base  int          // base offset for the next file
@@ -12,12 +13,14 @@ type FileSet struct {
 	last  *File        // cache of last file looked up
 }
 
+// NewFileSet creates a new file set.
 func NewFileSet() *FileSet {
 	return &FileSet{
 		base: 1, // 0 == NoPos
 	}
 }
 
+// Base returns the current base position of the file set.
 func (s *FileSet) Base() int {
 	s.mutex.RLock()
 	b := s.base
@@ -26,6 +29,7 @@ func (s *FileSet) Base() int {
 	return b
 }
 
+// AddFile adds a new file in the file set.
 func (s *FileSet) AddFile(filename string, base, size int) *File {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -70,7 +74,7 @@ func (s *FileSet) File(p Pos) (f *File) {
 	return
 }
 
-// PositionFor converts a Pos p in the fileset into a FilePos value.
+// Position converts a Pos p in the fileset into a FilePos value.
 func (s *FileSet) Position(p Pos) (pos FilePos) {
 	if p != NoPos {
 		if f := s.file(p); f != nil {

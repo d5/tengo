@@ -6,6 +6,7 @@ import (
 	"github.com/d5/tengo/compiler/source"
 )
 
+// ArrayLit represents an array literal.
 type ArrayLit struct {
 	Elements []Expr
 	LBrack   source.Pos
@@ -14,10 +15,12 @@ type ArrayLit struct {
 
 func (e *ArrayLit) exprNode() {}
 
+// Pos returns the position of first character belonging to the node.
 func (e *ArrayLit) Pos() source.Pos {
 	return e.LBrack
 }
 
+// End returns the position of first character immediately after the node.
 func (e *ArrayLit) End() source.Pos {
 	return e.RBrack + 1
 }

@@ -5,23 +5,26 @@ import (
 	"github.com/d5/tengo/compiler/token"
 )
 
+// BinaryExpr represents a binary operator expression.
 type BinaryExpr struct {
-	Lhs      Expr
-	Rhs      Expr
+	LHS      Expr
+	RHS      Expr
 	Token    token.Token
 	TokenPos source.Pos
 }
 
 func (e *BinaryExpr) exprNode() {}
 
+// Pos returns the position of first character belonging to the node.
 func (e *BinaryExpr) Pos() source.Pos {
-	return e.Lhs.Pos()
+	return e.LHS.Pos()
 }
 
+// End returns the position of first character immediately after the node.
 func (e *BinaryExpr) End() source.Pos {
-	return e.Rhs.End()
+	return e.RHS.End()
 }
 
 func (e *BinaryExpr) String() string {
-	return "(" + e.Lhs.String() + " " + e.Token.String() + " " + e.Rhs.String() + ")"
+	return "(" + e.LHS.String() + " " + e.Token.String() + " " + e.RHS.String() + ")"
 }

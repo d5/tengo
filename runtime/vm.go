@@ -9,9 +9,14 @@ import (
 )
 
 const (
-	StackSize   = 2048
+	// StackSize is the maximum stack size.
+	StackSize = 2048
+
+	// GlobalsSize is the maximum number of global variables.
 	GlobalsSize = 1024
-	MaxFrames   = 1024
+
+	// MaxFrames is the maximum number of function frames.
+	MaxFrames = 1024
 )
 
 var (
@@ -21,6 +26,7 @@ var (
 	builtinFuncs []objects.Object
 )
 
+// VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
 	constants   []objects.Object
 	stack       []*objects.Object
@@ -34,6 +40,7 @@ type VM struct {
 	aborting    bool
 }
 
+// NewVM creates a VM.
 func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object) *VM {
 	if globals == nil {
 		globals = make([]*objects.Object, GlobalsSize)
@@ -62,10 +69,12 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object) *VM {
 	}
 }
 
+// Abort aborts the execution.
 func (v *VM) Abort() {
 	v.aborting = true
 }
 
+// Run starts the execution.
 func (v *VM) Run() error {
 	var ip int
 
@@ -544,13 +553,13 @@ func (v *VM) Run() error {
 			}
 			v.sp -= numElements
 
-			var map_ objects.Object = &objects.Map{Value: kv}
+			var m objects.Object = &objects.Map{Value: kv}
 
 			if v.sp >= StackSize {
 				return ErrStackOverflow
 			}
 
-			v.stack[v.sp] = &map_
+			v.stack[v.sp] = &m
 			v.sp++
 
 		case compiler.OpIndex:
@@ -703,7 +712,7 @@ func (v *VM) Run() error {
 
 		case compiler.OpCall:
 			numArgs := int(compiler.ReadUint8(v.curInsts[ip+1:]))
-			v.curFrame.ip += 1
+			v.curFrame.ip++
 
 			callee := *v.stack[v.sp-1-numArgs]
 
@@ -748,7 +757,7 @@ func (v *VM) Run() error {
 		case compiler.OpReturnValue:
 			//numRets := int(compiler.ReadUint8(v.curInsts[ip+1:]))
 			_ = int(compiler.ReadUint8(v.curInsts[ip+1:]))
-			v.curFrame.ip += 1
+			v.curFrame.ip++
 
 			// TODO: multi-value return is not fully implemented yet
 			//var rets []*objects.Object
@@ -798,7 +807,7 @@ func (v *VM) Run() error {
 
 		case compiler.OpDefineLocal:
 			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip += 1
+			v.curFrame.ip++
 
 			sp := v.curFrame.basePointer + int(localIndex)
 
@@ -811,7 +820,7 @@ func (v *VM) Run() error {
 
 		case compiler.OpSetLocal:
 			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip += 1
+			v.curFrame.ip++
 
 			sp := v.curFrame.basePointer + int(localIndex)
 
@@ -855,7 +864,7 @@ func (v *VM) Run() error {
 
 		case compiler.OpGetLocal:
 			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip += 1
+			v.curFrame.ip++
 
 			val := v.stack[v.curFrame.basePointer+int(localIndex)]
 
@@ -868,7 +877,7 @@ func (v *VM) Run() error {
 
 		case compiler.OpGetBuiltin:
 			builtinIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip += 1
+			v.curFrame.ip++
 
 			if v.sp >= StackSize {
 				return ErrStackOverflow
@@ -888,7 +897,7 @@ func (v *VM) Run() error {
 
 		case compiler.OpGetFree:
 			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip += 1
+			v.curFrame.ip++
 
 			val := v.curFrame.freeVars[freeIndex]
 
@@ -930,7 +939,7 @@ func (v *VM) Run() error {
 
 		case compiler.OpSetFree:
 			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip += 1
+			v.curFrame.ip++
 
 			val := v.stack[v.sp-1]
 			v.sp--
@@ -1016,10 +1025,12 @@ func (v *VM) Run() error {
 	return nil
 }
 
+// Globals returns the global variables.
 func (v *VM) Globals() []*objects.Object {
 	return v.globals
 }
 
+// FrameInfo returns the current function call frame information.
 func (v *VM) FrameInfo() (frameIndex int, ip int) {
 	return v.framesIndex - 1, v.frames[v.framesIndex-1].ip
 }
@@ -1150,17 +1161,17 @@ func selectorAssign(dst, src *objects.Object, selectors []interface{}) error {
 	for idx := 0; idx < numSel; idx++ {
 		switch sel := selectors[idx].(type) {
 		case string:
-			map_, isMap := (*dst).(*objects.Map)
+			m, isMap := (*dst).(*objects.Map)
 			if !isMap {
 				return fmt.Errorf("invalid map object for selector '%s'", sel)
 			}
 
 			if idx == numSel-1 {
-				map_.Set(sel, *src)
+				m.Set(sel, *src)
 				return nil
 			}
 
-			nxt, found := map_.Get(sel)
+			nxt, found := m.Get(sel)
 			if !found {
 				return fmt.Errorf("key not found '%s'", sel)
 			}

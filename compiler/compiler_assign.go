@@ -23,7 +23,7 @@ func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
 	//}
 
 	// resolve and compile left-hand side
-	ident, selectors, err := resolveAssignLhs(lhs[0])
+	ident, selectors, err := resolveAssignLHS(lhs[0])
 	if err != nil {
 		return err
 	}
@@ -124,10 +124,10 @@ func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
 	return nil
 }
 
-func resolveAssignLhs(expr ast.Expr) (name string, selectors []ast.Expr, err error) {
+func resolveAssignLHS(expr ast.Expr) (name string, selectors []ast.Expr, err error) {
 	switch term := expr.(type) {
 	case *ast.SelectorExpr:
-		name, selectors, err = resolveAssignLhs(term.Expr)
+		name, selectors, err = resolveAssignLHS(term.Expr)
 		if err != nil {
 			return
 		}
@@ -136,7 +136,7 @@ func resolveAssignLhs(expr ast.Expr) (name string, selectors []ast.Expr, err err
 
 		return
 	case *ast.IndexExpr:
-		name, selectors, err = resolveAssignLhs(term.Expr)
+		name, selectors, err = resolveAssignLHS(term.Expr)
 		if err != nil {
 			return
 		}

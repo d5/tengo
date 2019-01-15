@@ -7,7 +7,7 @@ import (
 
 func (c *Compiler) compileLogical(node *ast.BinaryExpr) error {
 	// left side term
-	if err := c.Compile(node.Lhs); err != nil {
+	if err := c.Compile(node.LHS); err != nil {
 		return err
 	}
 
@@ -20,7 +20,7 @@ func (c *Compiler) compileLogical(node *ast.BinaryExpr) error {
 	}
 
 	// right side term
-	if err := c.Compile(node.Rhs); err != nil {
+	if err := c.Compile(node.RHS); err != nil {
 		return err
 	}
 

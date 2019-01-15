@@ -1,7 +1,9 @@
 package objects
 
+// BuiltinFunc is a function signature for the builtin functions.
 type BuiltinFunc func(args ...Object) (ret Object, err error)
 
+// Builtins contains all known builtin functions.
 var Builtins = []struct {
 	Name string
 	Func BuiltinFunc

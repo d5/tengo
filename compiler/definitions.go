@@ -1,5 +1,7 @@
 package compiler
 
+// Definition represents an Opcode name and
+// the number of operands.
 type Definition struct {
 	Name     string
 	Operands []int
@@ -58,6 +60,7 @@ var definitions = map[Opcode]*Definition{
 	OpIteratorValue:    {Name: "ITVAL", Operands: []int{}},
 }
 
+// Lookup returns a Definition of a given opcode.
 func Lookup(opcode Opcode) (def *Definition, ok bool) {
 	def, ok = definitions[opcode]
 

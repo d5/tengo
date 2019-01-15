@@ -6,15 +6,18 @@ import (
 	"github.com/d5/tengo/compiler/source"
 )
 
+// File represents a file unit.
 type File struct {
 	InputFile *source.File
 	Stmts     []Stmt
 }
 
+// Pos returns the position of first character belonging to the node.
 func (n *File) Pos() source.Pos {
 	return source.Pos(n.InputFile.Base())
 }
 
+// End returns the position of first character immediately after the node.
 func (n *File) End() source.Pos {
 	return source.Pos(n.InputFile.Base() + n.InputFile.Size())
 }

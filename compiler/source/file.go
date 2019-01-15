@@ -4,6 +4,7 @@ import (
 	"sync"
 )
 
+// File represents a source file.
 type File struct {
 	set   *FileSet
 	name  string // file name as provided to AddFile
@@ -13,18 +14,22 @@ type File struct {
 	lines []int // lines contains the offset of the first character for each line (the first entry is always 0)
 }
 
+// Name returns the file name.
 func (f *File) Name() string {
 	return f.name
 }
 
+// Base returns the base position of the file.
 func (f *File) Base() int {
 	return f.base
 }
 
+// Size returns the size of the file.
 func (f *File) Size() int {
 	return f.size
 }
 
+// LineCount returns the current number of lines.
 func (f *File) LineCount() int {
 	f.mutex.Lock()
 	n := len(f.lines)
@@ -33,6 +38,7 @@ func (f *File) LineCount() int {
 	return n
 }
 
+// AddLine adds a new line.
 func (f *File) AddLine(offset int) {
 	f.mutex.Lock()
 	if i := len(f.lines); (i == 0 || f.lines[i-1] < offset) && offset < f.size {
@@ -41,6 +47,7 @@ func (f *File) AddLine(offset int) {
 	f.mutex.Unlock()
 }
 
+// LineStart returns the position of the first character in the line.
 func (f *File) LineStart(line int) Pos {
 	if line < 1 {
 		panic("illegal line number (line numbering starts at 1)")
@@ -56,6 +63,7 @@ func (f *File) LineStart(line int) Pos {
 	return Pos(f.base + f.lines[line-1])
 }
 
+// FileSetPos returns the position in the file set.
 func (f *File) FileSetPos(offset int) Pos {
 	if offset > f.size {
 		panic("illegal file offset")
@@ -64,6 +72,7 @@ func (f *File) FileSetPos(offset int) Pos {
 	return Pos(f.base + offset)
 }
 
+// Offset translates the file set position into the file offset.
 func (f *File) Offset(p Pos) int {
 	if int(p) < f.base || int(p) > f.base+f.size {
 		panic("illegal Pos value")
@@ -72,10 +81,7 @@ func (f *File) Offset(p Pos) int {
 	return int(p) - f.base
 }
 
-func (f *File) Line(p Pos) int {
-	return f.Position(p).Line
-}
-
+// Position translates the file set position into the file position.
 func (f *File) Position(p Pos) (pos FilePos) {
 	if p != NoPos {
 		if int(p) < f.base || int(p) > f.base+f.size {
