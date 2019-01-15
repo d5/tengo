@@ -55,4 +55,5 @@ const (
 	OpIteratorNext                   // Iterator next
 	OpIteratorKey                    // Iterator key
 	OpIteratorValue                  // Iterator value
+	OpModule                         // Module
 )

@@ -609,7 +609,26 @@ func (v *VM) Run() error {
 			case *objects.Map:
 				key, ok := (*index).(*objects.String)
 				if !ok {
-					return fmt.Errorf("non-string map key: %s", left.TypeName())
+					return fmt.Errorf("non-string key: %s", left.TypeName())
+				}
+
+				var res = objects.UndefinedValue
+				val, ok := left.Value[key.Value]
+				if ok {
+					res = val
+				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				v.stack[v.sp] = &res
+				v.sp++
+
+			case *objects.ModuleMap:
+				key, ok := (*index).(*objects.String)
+				if !ok {
+					return fmt.Errorf("non-string key: %s", left.TypeName())
 				}
 
 				var res = objects.UndefinedValue
@@ -957,6 +976,8 @@ func (v *VM) Run() error {
 				iterator = objects.NewArrayIterator(dst)
 			case *objects.Map:
 				iterator = objects.NewMapIterator(dst)
+			case *objects.ModuleMap:
+				iterator = objects.NewModuleMapIterator(dst)
 			case *objects.String:
 				iterator = objects.NewStringIterator(dst)
 			default:
@@ -1011,6 +1032,14 @@ func (v *VM) Run() error {
 
 			v.stack[v.sp] = &val
 			v.sp++
+
+		case compiler.OpModule:
+			cidx := compiler.ReadUint16(v.curInsts[ip+1:])
+			v.curFrame.ip += 2
+
+			if err := v.importModule(v.constants[cidx].(*objects.CompiledModule)); err != nil {
+				return err
+			}
 
 		default:
 			return fmt.Errorf("unknown opcode: %d", v.curInsts[ip])
@@ -1151,6 +1180,39 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 	//  |--------|
 	//  |  ARG1  | (BP+0) <- BP
 	//  |--------|
+
+	return nil
+}
+
+func (v *VM) importModule(compiledModule *objects.CompiledModule) error {
+	// import module is basically to create a new instance of VM
+	// and run the module code and retrieve all global variables after execution.
+	globals := make([]*objects.Object, len(compiledModule.Globals), len(compiledModule.Globals))
+	for _, global := range compiledModule.Globals {
+		// TODO: Do we want to share global variables across multiple "import" expressions.
+		globals[global.Index] = global.Value
+	}
+	moduleVM := NewVM(&compiler.Bytecode{
+		Instructions: compiledModule.Instructions,
+		Constants:    compiledModule.Constants,
+	}, globals)
+	if err := moduleVM.Run(); err != nil {
+		return err
+	}
+
+	mmValue := make(map[string]objects.Object)
+	for name, global := range compiledModule.Globals {
+		mmValue[name] = *moduleVM.globals[global.Index]
+	}
+
+	var mm objects.Object = &objects.ModuleMap{Value: mmValue}
+
+	if v.sp >= StackSize {
+		return ErrStackOverflow
+	}
+
+	v.stack[v.sp] = &mm
+	v.sp++
 
 	return nil
 }

@@ -1,13 +1,12 @@
 package objects
 
 import (
-	"errors"
 	"strconv"
 )
 
 func builtinString(args ...Object) (Object, error) {
 	if len(args) != 1 {
-		return nil, errors.New("wrong number of arguments")
+		return nil, ErrWrongNumArguments
 	}
 
 	switch arg := args[0].(type) {
@@ -22,7 +21,7 @@ func builtinString(args ...Object) (Object, error) {
 
 func builtinInt(args ...Object) (Object, error) {
 	if len(args) != 1 {
-		return nil, errors.New("wrong number of arguments")
+		return nil, ErrWrongNumArguments
 	}
 
 	switch arg := args[0].(type) {
@@ -49,7 +48,7 @@ func builtinInt(args ...Object) (Object, error) {
 
 func builtinFloat(args ...Object) (Object, error) {
 	if len(args) != 1 {
-		return nil, errors.New("wrong number of arguments")
+		return nil, ErrWrongNumArguments
 	}
 
 	switch arg := args[0].(type) {
@@ -69,7 +68,7 @@ func builtinFloat(args ...Object) (Object, error) {
 
 func builtinBool(args ...Object) (Object, error) {
 	if len(args) != 1 {
-		return nil, errors.New("wrong number of arguments")
+		return nil, ErrWrongNumArguments
 	}
 
 	switch arg := args[0].(type) {
@@ -82,7 +81,7 @@ func builtinBool(args ...Object) (Object, error) {
 
 func builtinChar(args ...Object) (Object, error) {
 	if len(args) != 1 {
-		return nil, errors.New("wrong number of arguments")
+		return nil, ErrWrongNumArguments
 	}
 
 	switch arg := args[0].(type) {

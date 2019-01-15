@@ -58,6 +58,7 @@ var definitions = map[Opcode]*Definition{
 	OpIteratorNext:     {Name: "ITNXT", Operands: []int{}},
 	OpIteratorKey:      {Name: "ITKEY", Operands: []int{}},
 	OpIteratorValue:    {Name: "ITVAL", Operands: []int{}},
+	OpModule:           {Name: "MODULE", Operands: []int{2}},
 }
 
 // Lookup returns a Definition of a given opcode.

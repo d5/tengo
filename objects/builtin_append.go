@@ -7,7 +7,7 @@ import (
 // append(src, items...)
 func builtinAppend(args ...Object) (Object, error) {
 	if len(args) < 2 {
-		return nil, fmt.Errorf("not enough arguments in call to append")
+		return nil, ErrWrongNumArguments
 	}
 
 	switch arg := args[0].(type) {

@@ -412,6 +412,15 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(OpCall, len(node.Args))
+
+	case *ast.ImportExpr:
+		stdMod, ok := compiledStdMods[node.ModuleName]
+		if ok {
+			c.emit(OpModule, c.addConstant(stdMod))
+		} else {
+			// TODO: implement user module loading
+			return fmt.Errorf("user module not supported")
+		}
 	}
 
 	return nil
