@@ -11,9 +11,9 @@ func builtinLen(args ...Object) (Object, error) {
 
 	switch arg := args[0].(type) {
 	case *Array:
-		return &Int{int64(len(arg.Value))}, nil
+		return &Int{Value: int64(len(arg.Value))}, nil
 	case *String:
-		return &Int{int64(len(arg.Value))}, nil
+		return &Int{Value: int64(len(arg.Value))}, nil
 	default:
 		return nil, fmt.Errorf("unsupported type for 'len' function: %s", arg.TypeName())
 	}

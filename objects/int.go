@@ -151,7 +151,7 @@ func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 
 // Copy returns a copy of the type.
 func (o *Int) Copy() Object {
-	return &Int{o.Value}
+	return &Int{Value: o.Value}
 }
 
 // IsFalsy returns true if the value of the type is falsy.
