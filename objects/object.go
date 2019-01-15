@@ -2,6 +2,7 @@ package objects
 
 import "github.com/d5/tengo/compiler/token"
 
+// Object represents an object in the VM.
 type Object interface {
 	// TypeName should return the name of the type.
 	TypeName() string

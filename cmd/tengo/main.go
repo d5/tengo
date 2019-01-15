@@ -248,7 +248,7 @@ func addPrints(file *ast.File) *ast.File {
 					Func: &ast.Ident{
 						Name: "print",
 					},
-					Args: s.Lhs,
+					Args: s.LHS,
 				},
 			})
 

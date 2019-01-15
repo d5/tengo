@@ -2,6 +2,7 @@ package parser
 
 import "github.com/d5/tengo/compiler/source"
 
+// Error represents a parser error.
 type Error struct {
 	Pos source.FilePos
 	Msg string

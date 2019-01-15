@@ -7,6 +7,7 @@ import (
 	"github.com/d5/tengo/compiler/source"
 )
 
+// ParseFile parses a file with a given src.
 func ParseFile(file *source.File, src []byte, trace io.Writer) (res *ast.File, err error) {
 	p := NewParser(file, src, trace)
 

@@ -7,6 +7,7 @@ import (
 	"github.com/d5/tengo/compiler/token"
 )
 
+// Float represents a floating point number value.
 type Float struct {
 	Value float64
 }
@@ -15,10 +16,13 @@ func (o *Float) String() string {
 	return strconv.FormatFloat(o.Value, 'f', -1, 64)
 }
 
+// TypeName returns the name of the type.
 func (o *Float) TypeName() string {
 	return "float"
 }
 
+// BinaryOp returns another object that is the result of
+// a given binary operator and a right-hand side object.
 func (o *Float) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	switch rhs := rhs.(type) {
 	case *Float:
@@ -120,14 +124,18 @@ func (o *Float) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	return nil, ErrInvalidOperator
 }
 
+// Copy returns a copy of the type.
 func (o *Float) Copy() Object {
 	return &Float{Value: o.Value}
 }
 
+// IsFalsy returns true if the value of the type is falsy.
 func (o *Float) IsFalsy() bool {
 	return math.IsNaN(o.Value)
 }
 
+// Equals returns true if the value of the type
+// is equal to the value of another object.
 func (o *Float) Equals(x Object) bool {
 	t, ok := x.(*Float)
 	if !ok {

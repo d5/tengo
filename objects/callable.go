@@ -1,5 +1,6 @@
 package objects
 
+// Callable repesents an object that can be called like a function.
 type Callable interface {
 	// Call should take an arbitrary number of arguments
 	// and returns a return value and/or an error,

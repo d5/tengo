@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// MakeInstruction returns a bytecode for an opcode and the operands.
 func MakeInstruction(opcode Opcode, operands ...int) []byte {
 	def, ok := Lookup(opcode)
 	if !ok {
@@ -35,6 +36,8 @@ func MakeInstruction(opcode Opcode, operands ...int) []byte {
 	return instruction
 }
 
+// FormatInstructions returns string representation of
+// bytecode instructions.
 func FormatInstructions(b []byte, posOffset int) []string {
 	var out []string
 

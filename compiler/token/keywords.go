@@ -9,6 +9,7 @@ func init() {
 	}
 }
 
+// Lookup returns corresponding keyword if ident is a keyword.
 func Lookup(ident string) Token {
 	if tok, isKeyword := keywords[ident]; isKeyword {
 		return tok

@@ -9,21 +9,21 @@ import (
 )
 
 func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
-	numLhs, numRhs := len(lhs), len(rhs)
-	if numLhs < numRhs {
+	numLHS, numRHS := len(lhs), len(rhs)
+	if numLHS < numRHS {
 		// # of LHS must be >= # of RHS
-		return fmt.Errorf("assigntment count error: %d < %d", numLhs, numRhs)
+		return fmt.Errorf("assigntment count error: %d < %d", numLHS, numRHS)
 	}
-	if numLhs > 1 {
+	if numLHS > 1 {
 		// TODO: until we fully implement the tuple assignment
 		return fmt.Errorf("tuple assignment not implemented")
 	}
-	//if numLhs > 1 && op != token.Assign && op != token.Define {
+	//if numLHS > 1 && op != token.Assign && op != token.Define {
 	//	return fmt.Errorf("invalid operator for tuple assignment: %s", op.String())
 	//}
 
 	// resolve and compile left-hand side
-	ident, selectors, err := resolveAssignLhs(lhs[0])
+	ident, selectors, err := resolveAssignLHS(lhs[0])
 	if err != nil {
 		return err
 	}
@@ -124,10 +124,10 @@ func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
 	return nil
 }
 
-func resolveAssignLhs(expr ast.Expr) (name string, selectors []ast.Expr, err error) {
+func resolveAssignLHS(expr ast.Expr) (name string, selectors []ast.Expr, err error) {
 	switch term := expr.(type) {
 	case *ast.SelectorExpr:
-		name, selectors, err = resolveAssignLhs(term.Expr)
+		name, selectors, err = resolveAssignLHS(term.Expr)
 		if err != nil {
 			return
 		}
@@ -136,7 +136,7 @@ func resolveAssignLhs(expr ast.Expr) (name string, selectors []ast.Expr, err err
 
 		return
 	case *ast.IndexExpr:
-		name, selectors, err = resolveAssignLhs(term.Expr)
+		name, selectors, err = resolveAssignLHS(term.Expr)
 		if err != nil {
 			return
 		}

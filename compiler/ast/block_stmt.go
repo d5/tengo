@@ -6,6 +6,7 @@ import (
 	"github.com/d5/tengo/compiler/source"
 )
 
+// BlockStmt represents a block statement.
 type BlockStmt struct {
 	Stmts  []Stmt
 	LBrace source.Pos
@@ -14,10 +15,12 @@ type BlockStmt struct {
 
 func (s *BlockStmt) stmtNode() {}
 
+// Pos returns the position of first character belonging to the node.
 func (s *BlockStmt) Pos() source.Pos {
 	return s.LBrace
 }
 
+// End returns the position of first character immediately after the node.
 func (s *BlockStmt) End() source.Pos {
 	return s.RBrace + 1
 }

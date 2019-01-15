@@ -66,7 +66,7 @@ func isTest(name, prefix string) bool {
 		return true
 	}
 
-	rune_, _ := utf8.DecodeRuneInString(name[len(prefix):])
+	r, _ := utf8.DecodeRuneInString(name[len(prefix):])
 
-	return !unicode.IsLower(rune_)
+	return !unicode.IsLower(r)
 }

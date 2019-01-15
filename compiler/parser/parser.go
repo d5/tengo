@@ -23,6 +23,7 @@ import (
 
 type bailout struct{}
 
+// Parser parses the Tengo source files.
 type Parser struct {
 	file      *source.File
 	errors    ErrorList
@@ -38,6 +39,7 @@ type Parser struct {
 	traceOut  io.Writer
 }
 
+// NewParser creates a Parser.
 func NewParser(file *source.File, src []byte, trace io.Writer) *Parser {
 	p := &Parser{
 		file:     file,
@@ -54,6 +56,7 @@ func NewParser(file *source.File, src []byte, trace io.Writer) *Parser {
 	return p
 }
 
+// ParseFile parses the source and returns an AST file unit.
 func (p *Parser) ParseFile() (*ast.File, error) {
 	if p.trace {
 		defer un(trace(p, "File"))
@@ -99,8 +102,8 @@ func (p *Parser) parseBinaryExpr(prec1 int) ast.Expr {
 
 		y := p.parseBinaryExpr(prec + 1)
 		x = &ast.BinaryExpr{
-			Lhs:      x,
-			Rhs:      y,
+			LHS:      x,
+			RHS:      y,
 			Token:    op,
 			TokenPos: pos,
 		}
@@ -785,8 +788,8 @@ func (p *Parser) parseSimpleStmt(forIn bool) ast.Stmt {
 		y := p.parseExprList()
 
 		return &ast.AssignStmt{
-			Lhs:      x,
-			Rhs:      y,
+			LHS:      x,
+			RHS:      y,
 			Token:    tok,
 			TokenPos: pos,
 		}
@@ -844,8 +847,8 @@ func (p *Parser) parseSimpleStmt(forIn bool) ast.Stmt {
 		y := p.parseExpr()
 
 		return &ast.AssignStmt{
-			Lhs:      []ast.Expr{x[0]},
-			Rhs:      []ast.Expr{y},
+			LHS:      []ast.Expr{x[0]},
+			RHS:      []ast.Expr{y},
 			Token:    tok,
 			TokenPos: pos,
 		}

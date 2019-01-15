@@ -2,8 +2,10 @@ package token
 
 import "strconv"
 
+// Token represents a token.
 type Token int
 
+// List of tokens
 const (
 	Illegal Token = iota
 	EOF
@@ -168,10 +170,10 @@ func (tok Token) String() string {
 	return s
 }
 
-const (
-	LowestPrec = 0 // non-operators
-)
+// LowestPrec represents lowest operator precedence.
+const LowestPrec = 0
 
+// Precedence returns the precedence for the operator token.
 func (tok Token) Precedence() int {
 	switch tok {
 	case LOr:
@@ -188,14 +190,17 @@ func (tok Token) Precedence() int {
 	return LowestPrec
 }
 
+// IsLiteral returns true if the token is a literal.
 func (tok Token) IsLiteral() bool {
 	return _literalBeg < tok && tok < _literalEnd
 }
 
+// IsOperator returns true if the token is an operator.
 func (tok Token) IsOperator() bool {
 	return _operatorBeg < tok && tok < _operatorEnd
 }
 
+// IsKeyword returns true if the token is a keyword.
 func (tok Token) IsKeyword() bool {
 	return _keywordBeg < tok && tok < _keywordEnd
 }

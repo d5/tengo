@@ -2,6 +2,7 @@ package source
 
 import "fmt"
 
+// FilePos represents a position information in the file.
 type FilePos struct {
 	Filename string // filename, if any
 	Offset   int    // offset, starting at 0
@@ -9,6 +10,7 @@ type FilePos struct {
 	Column   int    // column number, starting at 1 (byte count)
 }
 
+// IsValid returns true if the position is valid.
 func (p FilePos) IsValid() bool {
 	return p.Line > 0
 }

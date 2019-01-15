@@ -22,6 +22,7 @@ import (
 // byte order mark
 const bom = 0xFEFF
 
+// Scanner reads the Tengo source text.
 type Scanner struct {
 	file         *source.File // source file handle
 	src          []byte       // source
@@ -35,6 +36,7 @@ type Scanner struct {
 	mode         Mode
 }
 
+// NewScanner creates a Scanner.
 func NewScanner(file *source.File, src []byte, errorHandler ErrorHandler, mode Mode) *Scanner {
 	if file.Size() != len(src) {
 		panic(fmt.Sprintf("file size (%d) does not match src len (%d)", file.Size(), len(src)))
@@ -56,10 +58,12 @@ func NewScanner(file *source.File, src []byte, errorHandler ErrorHandler, mode M
 	return s
 }
 
+// ErrorCount returns the number of errors.
 func (s *Scanner) ErrorCount() int {
 	return s.errorCount
 }
 
+// Scan returns a token, token literal and its position.
 func (s *Scanner) Scan() (tok token.Token, literal string, pos source.Pos) {
 	s.skipWhitespace()
 
@@ -593,6 +597,7 @@ func (s *Scanner) scanRawString() string {
 	return string(lit)
 }
 
+// StripCR removes carriage return characters.
 func StripCR(b []byte, comment bool) []byte {
 	c := make([]byte, len(b))
 

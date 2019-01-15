@@ -140,7 +140,7 @@ func exprStmt(x ast.Expr) *ast.ExprStmt {
 }
 
 func assignStmt(lhs, rhs []ast.Expr, token token.Token, pos source.Pos) *ast.AssignStmt {
-	return &ast.AssignStmt{Lhs: lhs, Rhs: rhs, Token: token, TokenPos: pos}
+	return &ast.AssignStmt{LHS: lhs, RHS: rhs, Token: token, TokenPos: pos}
 }
 
 func emptyStmt(implicit bool, pos source.Pos) *ast.EmptyStmt {
@@ -184,7 +184,7 @@ func identList(opening, closing source.Pos, list ...*ast.Ident) *ast.IdentList {
 }
 
 func binaryExpr(x, y ast.Expr, op token.Token, pos source.Pos) *ast.BinaryExpr {
-	return &ast.BinaryExpr{Lhs: x, Rhs: y, Token: op, TokenPos: pos}
+	return &ast.BinaryExpr{LHS: x, RHS: y, Token: op, TokenPos: pos}
 }
 
 func unaryExpr(x ast.Expr, op token.Token, pos source.Pos) *ast.UnaryExpr {
@@ -273,8 +273,8 @@ func equalStmt(t *testing.T, expected, actual ast.Stmt) bool {
 			assert.Equal(t, expected.RBrace, actual.(*ast.BlockStmt).RBrace) &&
 			equalStmts(t, expected.Stmts, actual.(*ast.BlockStmt).Stmts)
 	case *ast.AssignStmt:
-		return equalExprs(t, expected.Lhs, actual.(*ast.AssignStmt).Lhs) &&
-			equalExprs(t, expected.Rhs, actual.(*ast.AssignStmt).Rhs) &&
+		return equalExprs(t, expected.LHS, actual.(*ast.AssignStmt).LHS) &&
+			equalExprs(t, expected.RHS, actual.(*ast.AssignStmt).RHS) &&
 			assert.Equal(t, int(expected.Token), int(actual.(*ast.AssignStmt).Token)) &&
 			assert.Equal(t, int(expected.TokenPos), int(actual.(*ast.AssignStmt).TokenPos))
 	case *ast.IfStmt:
@@ -350,8 +350,8 @@ func equalExpr(t *testing.T, expected, actual ast.Expr) bool {
 			assert.Equal(t, expected.RBrace, actual.(*ast.MapLit).RBrace) &&
 			equalMapElements(t, expected.Elements, actual.(*ast.MapLit).Elements)
 	case *ast.BinaryExpr:
-		return equalExpr(t, expected.Lhs, actual.(*ast.BinaryExpr).Lhs) &&
-			equalExpr(t, expected.Rhs, actual.(*ast.BinaryExpr).Rhs) &&
+		return equalExpr(t, expected.LHS, actual.(*ast.BinaryExpr).LHS) &&
+			equalExpr(t, expected.RHS, actual.(*ast.BinaryExpr).RHS) &&
 			assert.Equal(t, expected.Token, actual.(*ast.BinaryExpr).Token) &&
 			assert.Equal(t, expected.TokenPos, actual.(*ast.BinaryExpr).TokenPos)
 	case *ast.UnaryExpr:

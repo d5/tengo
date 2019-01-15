@@ -6,12 +6,14 @@ import (
 	"github.com/d5/tengo/compiler/source"
 )
 
+// IdentList represetns a list of identifiers.
 type IdentList struct {
 	LParen source.Pos
 	List   []*Ident
 	RParen source.Pos
 }
 
+// Pos returns the position of first character belonging to the node.
 func (n *IdentList) Pos() source.Pos {
 	if n.LParen.IsValid() {
 		return n.LParen
@@ -24,6 +26,7 @@ func (n *IdentList) Pos() source.Pos {
 	return source.NoPos
 }
 
+// End returns the position of first character immediately after the node.
 func (n *IdentList) End() source.Pos {
 	if n.RParen.IsValid() {
 		return n.RParen + 1
@@ -36,6 +39,7 @@ func (n *IdentList) End() source.Pos {
 	return source.NoPos
 }
 
+// NumFields returns the number of fields.
 func (n *IdentList) NumFields() int {
 	if n == nil {
 		return 0
