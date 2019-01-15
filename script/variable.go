@@ -12,6 +12,7 @@ type Variable struct {
 	value *objects.Object
 }
 
+// NewVariable creates a Variable.
 func NewVariable(name string, value interface{}) (*Variable, error) {
 	obj, err := interfaceToObject(value)
 	if err != nil {
