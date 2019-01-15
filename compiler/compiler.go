@@ -10,6 +10,7 @@ import (
 	"github.com/d5/tengo/objects"
 )
 
+// Compiler compiles the AST into a bytecode.
 type Compiler struct {
 	constants   []objects.Object
 	symbolTable *SymbolTable
@@ -21,6 +22,7 @@ type Compiler struct {
 	indent      int
 }
 
+// NewCompiler creates a Compiler.
 func NewCompiler(symbolTable *SymbolTable, trace io.Writer) *Compiler {
 	mainScope := CompilationScope{
 		instructions: make([]byte, 0),
@@ -43,6 +45,7 @@ func NewCompiler(symbolTable *SymbolTable, trace io.Writer) *Compiler {
 	}
 }
 
+// Compile compiles the AST node.
 func (c *Compiler) Compile(node ast.Node) error {
 	if c.trace != nil {
 		if node != nil {
@@ -414,6 +417,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 	return nil
 }
 
+// Bytecode returns a compiled bytecode.
 func (c *Compiler) Bytecode() *Bytecode {
 	return &Bytecode{
 		Instructions: c.currentInstructions(),

@@ -13,6 +13,7 @@ import (
 	"github.com/d5/tengo/objects"
 )
 
+// NoError asserts err is not an error.
 func NoError(t *testing.T, err error, msg ...interface{}) bool {
 	t.Helper()
 
@@ -23,6 +24,7 @@ func NoError(t *testing.T, err error, msg ...interface{}) bool {
 	return failExpectedActual(t, "no error", err, msg...)
 }
 
+// Error asserts err is an error.
 func Error(t *testing.T, err error, msg ...interface{}) bool {
 	t.Helper()
 
@@ -33,6 +35,7 @@ func Error(t *testing.T, err error, msg ...interface{}) bool {
 	return failExpectedActual(t, "error", err, msg...)
 }
 
+// Nil asserts v is nil.
 func Nil(t *testing.T, v interface{}, msg ...interface{}) bool {
 	t.Helper()
 
@@ -43,6 +46,7 @@ func Nil(t *testing.T, v interface{}, msg ...interface{}) bool {
 	return failExpectedActual(t, "nil", v, msg...)
 }
 
+// True asserts v is true.
 func True(t *testing.T, v bool, msg ...interface{}) bool {
 	t.Helper()
 
@@ -53,6 +57,7 @@ func True(t *testing.T, v bool, msg ...interface{}) bool {
 	return failExpectedActual(t, "true", v, msg...)
 }
 
+// False asserts vis false.
 func False(t *testing.T, v bool, msg ...interface{}) bool {
 	t.Helper()
 
@@ -63,6 +68,7 @@ func False(t *testing.T, v bool, msg ...interface{}) bool {
 	return failExpectedActual(t, "false", v, msg...)
 }
 
+// NotNil asserts v is not nil.
 func NotNil(t *testing.T, v interface{}, msg ...interface{}) bool {
 	t.Helper()
 
@@ -73,6 +79,7 @@ func NotNil(t *testing.T, v interface{}, msg ...interface{}) bool {
 	return failExpectedActual(t, "not nil", v, msg...)
 }
 
+// IsType asserts expected and actual are of the same type.
 func IsType(t *testing.T, expected, actual interface{}, msg ...interface{}) bool {
 	t.Helper()
 
@@ -83,6 +90,7 @@ func IsType(t *testing.T, expected, actual interface{}, msg ...interface{}) bool
 	return failExpectedActual(t, reflect.TypeOf(expected), reflect.TypeOf(actual), msg...)
 }
 
+// Equals asserts expected and actual are equal.
 func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool {
 	t.Helper()
 
@@ -172,6 +180,7 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 	return true
 }
 
+// Fail marks the function as having failed but continues execution.
 func Fail(t *testing.T, msg ...interface{}) bool {
 	t.Helper()
 

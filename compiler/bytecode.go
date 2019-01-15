@@ -7,11 +7,13 @@ import (
 	"github.com/d5/tengo/objects"
 )
 
+// Bytecode is a compiled instructions and constants.
 type Bytecode struct {
 	Instructions []byte
 	Constants    []objects.Object
 }
 
+// Decode reads Bytecode data from the reader.
 func (b *Bytecode) Decode(r io.Reader) error {
 	dec := gob.NewDecoder(r)
 
@@ -26,6 +28,7 @@ func (b *Bytecode) Decode(r io.Reader) error {
 	return nil
 }
 
+// Encode writes Bytecode data to the writer.
 func (b *Bytecode) Encode(w io.Writer) error {
 	enc := gob.NewEncoder(w)
 
