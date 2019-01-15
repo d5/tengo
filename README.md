@@ -370,7 +370,7 @@ Development roadmap for Tengo:
 - Module system _(or packages)_
 - Standard libraries
 - Better documentations
-- More language constructs such as error handling, object methods, switch-case statements
+- More language constructs such as error handling, destructuring assignment, object methods, switch-case statements
 - Native executables compilation
 - Performance improvements
 - Syntax highlighter for IDEs
