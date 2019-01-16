@@ -13,7 +13,7 @@ func (o *ReturnValue) TypeName() string {
 }
 
 func (o *ReturnValue) String() string {
-	return "<return>"
+	return "<return-value>"
 }
 
 // BinaryOp returns another object that is the result of
