@@ -65,6 +65,8 @@ func objectToInterface(o objects.Object) interface{} {
 
 func interfaceToObject(v interface{}) (objects.Object, error) {
 	switch v := v.(type) {
+	case nil:
+		return undefined, nil
 	case string:
 		return &objects.String{Value: v}, nil
 	case int64:

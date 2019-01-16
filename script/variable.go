@@ -156,7 +156,7 @@ func (v *Variable) Object() objects.Object {
 
 // IsUndefined returns true if the underlying value is undefined.
 func (v *Variable) IsUndefined() bool {
-	_, isUndefined := (*v.value).(objects.Undefined)
+	_, isUndefined := (*v.value).(*objects.Undefined)
 
 	return isUndefined
 }
