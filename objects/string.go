@@ -23,19 +23,13 @@ func (o *String) String() string {
 // BinaryOp returns another object that is the result of
 // a given binary operator and a right-hand side object.
 func (o *String) BinaryOp(op token.Token, rhs Object) (Object, error) {
-	switch rhs := rhs.(type) {
-	case *String:
-		switch op {
-		case token.Add:
-			if rhs.Value == "" {
-				return o, nil
-			}
+	switch op {
+	case token.Add:
+		switch rhs := rhs.(type) {
+		case *String:
 			return &String{Value: o.Value + rhs.Value}, nil
-		}
-	case *Char:
-		switch op {
-		case token.Add:
-			return &String{Value: o.Value + string(rhs.Value)}, nil
+		default:
+			return &String{Value: o.Value + rhs.String()}, nil
 		}
 	}
 
