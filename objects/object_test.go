@@ -74,6 +74,12 @@ func TestObject_IsFalsy(t *testing.T) {
 	assert.True(t, o.IsFalsy())
 	o = &objects.Map{Value: map[string]objects.Object{"a": nil}} // nil is not valid but still count as 1 element
 	assert.False(t, o.IsFalsy())
+	o = &objects.StringIterator{}
+	assert.True(t, o.IsFalsy())
+	o = &objects.ArrayIterator{}
+	assert.True(t, o.IsFalsy())
+	o = &objects.MapIterator{}
+	assert.True(t, o.IsFalsy())
 	o = &objects.Break{}
 	assert.False(t, o.IsFalsy())
 	o = &objects.Continue{}
@@ -114,12 +120,24 @@ func TestObject_String(t *testing.T) {
 	assert.Equal(t, "[]", o.String())
 	o = &objects.Map{Value: nil}
 	assert.Equal(t, "{}", o.String())
-	o = &objects.Map{Value: nil}
-	assert.Equal(t, "{}", o.String())
 	o = &objects.Error{Value: nil}
 	assert.Equal(t, "error", o.String())
 	o = &objects.Error{Value: &objects.String{Value: "error 1"}}
 	assert.Equal(t, `error: "error 1"`, o.String())
+	o = &objects.StringIterator{}
+	assert.Equal(t, "<string-iterator>", o.String())
+	o = &objects.ArrayIterator{}
+	assert.Equal(t, "<array-iterator>", o.String())
+	o = &objects.MapIterator{}
+	assert.Equal(t, "<map-iterator>", o.String())
+	o = &objects.Break{}
+	assert.Equal(t, "<break>", o.String())
+	o = &objects.Continue{}
+	assert.Equal(t, "<continue>", o.String())
+	o = &objects.ReturnValue{}
+	assert.Equal(t, "<return-value>", o.String())
+	o = &objects.Undefined{}
+	assert.Equal(t, "<undefined>", o.String())
 }
 
 func TestObject_BinaryOp(t *testing.T) {
