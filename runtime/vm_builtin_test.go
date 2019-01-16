@@ -76,4 +76,7 @@ func TestBuiltinFunction(t *testing.T) {
 
 	expect(t, `out = is_error(error(1))`, true)
 	expect(t, `out = is_error(1)`, false)
+
+	expect(t, `out = is_undefined(undefined)`, true)
+	expect(t, `out = is_undefined(error(1))`, false)
 }
