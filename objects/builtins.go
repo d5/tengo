@@ -48,4 +48,8 @@ var Builtins = []struct {
 		Name: "is_error",
 		Func: builtinIsError,
 	},
+	{
+		Name: "is_undefined",
+		Func: builtinIsUndefined,
+	},
 }
