@@ -6,7 +6,9 @@ import (
 	"github.com/d5/tengo/objects"
 )
 
-func funcAFRF(fn func(float64) float64) *objects.UserFunction {
+// FuncAFRF transform a function of 'func(float64) float64' signature
+// into a user function object.
+func FuncAFRF(fn func(float64) float64) *objects.UserFunction {
 	return &objects.UserFunction{
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 1 {
@@ -25,7 +27,9 @@ func funcAFRF(fn func(float64) float64) *objects.UserFunction {
 	}
 }
 
-func funcARF(fn func() float64) *objects.UserFunction {
+// FuncARF transform a function of 'func() float64' signature
+// into a user function object.
+func FuncARF(fn func() float64) *objects.UserFunction {
 	return &objects.UserFunction{
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 0 {
@@ -37,7 +41,9 @@ func funcARF(fn func() float64) *objects.UserFunction {
 	}
 }
 
-func funcAIRF(fn func(int) float64) *objects.UserFunction {
+// FuncAIRF transform a function of 'func(int) float64' signature
+// into a user function object.
+func FuncAIRF(fn func(int) float64) *objects.UserFunction {
 	return &objects.UserFunction{
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 1 {
@@ -56,7 +62,9 @@ func funcAIRF(fn func(int) float64) *objects.UserFunction {
 	}
 }
 
-func funcAFRI(fn func(float64) int) *objects.UserFunction {
+// FuncAFRI transform a function of 'func(float64) int' signature
+// into a user function object.
+func FuncAFRI(fn func(float64) int) *objects.UserFunction {
 	return &objects.UserFunction{
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 1 {
@@ -75,7 +83,9 @@ func funcAFRI(fn func(float64) int) *objects.UserFunction {
 	}
 }
 
-func funcAFFRF(fn func(float64, float64) float64) *objects.UserFunction {
+// FuncAFFRF transform a function of 'func(float64, float64) float64' signature
+// into a user function object.
+func FuncAFFRF(fn func(float64, float64) float64) *objects.UserFunction {
 	return &objects.UserFunction{
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 2 {
@@ -106,7 +116,9 @@ func funcAFFRF(fn func(float64, float64) float64) *objects.UserFunction {
 	}
 }
 
-func funcAIFRF(fn func(int, float64) float64) *objects.UserFunction {
+// FuncAIFRF transform a function of 'func(int, float64) float64' signature
+// into a user function object.
+func FuncAIFRF(fn func(int, float64) float64) *objects.UserFunction {
 	return &objects.UserFunction{
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 2 {
@@ -138,7 +150,9 @@ func funcAIFRF(fn func(int, float64) float64) *objects.UserFunction {
 	}
 }
 
-func funcAFIRF(fn func(float64, int) float64) *objects.UserFunction {
+// FuncAFIRF transform a function of 'func(float64, int) float64' signature
+// into a user function object.
+func FuncAFIRF(fn func(float64, int) float64) *objects.UserFunction {
 	return &objects.UserFunction{
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 2 {
@@ -170,7 +184,9 @@ func funcAFIRF(fn func(float64, int) float64) *objects.UserFunction {
 	}
 }
 
-func funcAFIRB(fn func(float64, int) bool) *objects.UserFunction {
+// FuncAFIRB transform a function of 'func(float64, int) bool' signature
+// into a user function object.
+func FuncAFIRB(fn func(float64, int) bool) *objects.UserFunction {
 	return &objects.UserFunction{
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 2 {
@@ -202,7 +218,9 @@ func funcAFIRB(fn func(float64, int) bool) *objects.UserFunction {
 	}
 }
 
-func funcAFRB(fn func(float64) bool) *objects.UserFunction {
+// FuncAFRB transform a function of 'func(float64) bool' signature
+// into a user function object.
+func FuncAFRB(fn func(float64) bool) *objects.UserFunction {
 	return &objects.UserFunction{
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 1 {
