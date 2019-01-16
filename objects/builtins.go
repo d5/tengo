@@ -44,4 +44,12 @@ var Builtins = []struct {
 		Name: "char",
 		Func: builtinChar,
 	},
+	{
+		Name: "is_error",
+		Func: builtinIsError,
+	},
+	{
+		Name: "is_undefined",
+		Func: builtinIsUndefined,
+	},
 }
