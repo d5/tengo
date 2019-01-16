@@ -19,6 +19,7 @@ type VariableTest struct {
 	BoolValue   bool
 	StringValue string
 	Object      objects.Object
+	IsUndefined bool
 }
 
 func TestVariable(t *testing.T) {
@@ -52,6 +53,14 @@ func TestVariable(t *testing.T) {
 			StringValue: "true",
 			Object:      &objects.Bool{Value: true},
 		},
+		{
+			Name:        "d",
+			Value:       nil,
+			ValueType:   "undefined",
+			StringValue: "<undefined>",
+			Object:      objects.UndefinedValue,
+			IsUndefined: true,
+		},
 	}
 
 	for _, tc := range vars {
@@ -66,6 +75,6 @@ func TestVariable(t *testing.T) {
 		assert.Equal(t, tc.BoolValue, v.Bool())
 		assert.Equal(t, tc.StringValue, v.String())
 		assert.Equal(t, tc.Object, v.Object())
+		assert.Equal(t, tc.IsUndefined, v.IsUndefined())
 	}
-
 }

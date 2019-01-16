@@ -82,6 +82,10 @@ func runVMError(t *testing.T, file *ast.File) (ok bool) {
 	return
 }
 
+func errorObject(v interface{}) *objects.Error {
+	return &objects.Error{Value: toObject(v)}
+}
+
 func toObject(v interface{}) objects.Object {
 	switch v := v.(type) {
 	case objects.Object:
@@ -212,7 +216,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object) (res map
 					globalsStr = append(globalsStr, fmt.Sprintf("     %s", l))
 				}
 			} else {
-				globalsStr = append(globalsStr, fmt.Sprintf("[% 3d] %s (%s|%p)", gidx, *g, reflect.TypeOf(*g).Elem().Name(), g))
+				globalsStr = append(globalsStr, fmt.Sprintf("[% 3d] %s (%s|%p)", gidx, (*g).String(), reflect.TypeOf(*g).Elem().Name(), g))
 			}
 		}
 		trace = append(trace, fmt.Sprintf("\n[Globals]\n\n%s", strings.Join(globalsStr, "\n")))
@@ -257,6 +261,8 @@ func objectZeroCopy(o objects.Object) objects.Object {
 		return &objects.Map{}
 	case *objects.Undefined:
 		return &objects.Undefined{}
+	case *objects.Error:
+		return &objects.Error{}
 	case nil:
 		panic("nil")
 	default:

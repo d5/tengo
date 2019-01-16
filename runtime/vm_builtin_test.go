@@ -73,4 +73,10 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = bool({a: 1})`, true)     // non-empty maps: true
 	expect(t, `out = bool({})`, false)        // empty maps: false
 	expect(t, `out = bool(undefined)`, false) // undefined: false
+
+	expect(t, `out = is_error(error(1))`, true)
+	expect(t, `out = is_error(1)`, false)
+
+	expect(t, `out = is_undefined(undefined)`, true)
+	expect(t, `out = is_undefined(error(1))`, false)
 }

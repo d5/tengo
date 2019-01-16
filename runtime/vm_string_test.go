@@ -41,4 +41,6 @@ func TestString(t *testing.T) {
 	expectError(t, fmt.Sprintf("%s[%d:]", strStr, -1))
 	expectError(t, fmt.Sprintf("%s[:%d]", strStr, strLen+1))
 	expectError(t, fmt.Sprintf("%s[%d:%d]", strStr, 2, 1))
+
+	expectError(t, `"foo" - "bar"`)
 }

@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/d5/tengo/compiler"
@@ -562,6 +563,21 @@ func (v *VM) Run() error {
 			v.stack[v.sp] = &m
 			v.sp++
 
+		case compiler.OpError:
+			value := v.stack[v.sp-1]
+			v.sp--
+
+			var err objects.Object = &objects.Error{
+				Value: *value,
+			}
+
+			if v.sp >= StackSize {
+				return ErrStackOverflow
+			}
+
+			v.stack[v.sp] = &err
+			v.sp++
+
 		case compiler.OpIndex:
 			index := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
@@ -642,6 +658,19 @@ func (v *VM) Run() error {
 				}
 
 				v.stack[v.sp] = &res
+				v.sp++
+
+			case *objects.Error: // err.value
+				key, ok := (*index).(*objects.String)
+				if !ok || key.Value != "value" {
+					return errors.New("invalid selector on error")
+				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				v.stack[v.sp] = &left.Value
 				v.sp++
 
 			default:

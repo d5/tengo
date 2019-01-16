@@ -2,7 +2,7 @@ package objects
 
 import "github.com/d5/tengo/compiler/token"
 
-// ModuleMapIterator represents an iterator for the map.
+// MapIterator represents an iterator for the map.
 type MapIterator struct {
 	v map[string]Object
 	k []string

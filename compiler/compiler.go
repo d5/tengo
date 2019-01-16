@@ -417,6 +417,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 			// TODO: implement user module loading
 			return fmt.Errorf("user module not supported")
 		}
+	case *ast.ErrorExpr:
+		if err := c.Compile(node.Expr); err != nil {
+			return err
+		}
+
+		c.emit(OpError)
 	}
 
 	return nil

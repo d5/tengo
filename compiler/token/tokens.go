@@ -73,6 +73,7 @@ const (
 	Else
 	For
 	Func
+	Error
 	If
 	Return
 	Switch
@@ -147,6 +148,7 @@ var tokens = [...]string{
 	Else:         "else",
 	For:          "for",
 	Func:         "func",
+	Error:        "error",
 	If:           "if",
 	Return:       "return",
 	Switch:       "switch",

@@ -248,6 +248,10 @@ func sliceExpr(x, low, high ast.Expr, lbrack, rbrack source.Pos) *ast.SliceExpr 
 	return &ast.SliceExpr{Expr: x, Low: low, High: high, LBrack: lbrack, RBrack: rbrack}
 }
 
+func errorExpr(pos source.Pos, x ast.Expr, lparen, rparen source.Pos) *ast.ErrorExpr {
+	return &ast.ErrorExpr{Expr: x, ErrorPos: pos, LParen: lparen, RParen: rparen}
+}
+
 func selectorExpr(x, sel ast.Expr) *ast.SelectorExpr {
 	return &ast.SelectorExpr{Expr: x, Sel: sel}
 }
@@ -389,6 +393,11 @@ func equalExpr(t *testing.T, expected, actual ast.Expr) bool {
 		return assert.Equal(t, expected.ModuleName, actual.(*ast.ImportExpr).ModuleName) &&
 			assert.Equal(t, int(expected.TokenPos), int(actual.(*ast.ImportExpr).TokenPos)) &&
 			assert.Equal(t, expected.Token, actual.(*ast.ImportExpr).Token)
+	case *ast.ErrorExpr:
+		return equalExpr(t, expected.Expr, actual.(*ast.ErrorExpr).Expr) &&
+			assert.Equal(t, int(expected.ErrorPos), int(actual.(*ast.ErrorExpr).ErrorPos)) &&
+			assert.Equal(t, int(expected.LParen), int(actual.(*ast.ErrorExpr).LParen)) &&
+			assert.Equal(t, int(expected.RParen), int(actual.(*ast.ErrorExpr).RParen))
 	default:
 		panic(fmt.Errorf("unknown type: %T", expected))
 	}

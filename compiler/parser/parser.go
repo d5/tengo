@@ -358,6 +358,9 @@ func (p *Parser) parseOperand() ast.Expr {
 
 	case token.Func: // function literal
 		return p.parseFuncLit()
+
+	case token.Error: // error expression
+		return p.parseErrorExpr()
 	}
 
 	pos := p.pos
@@ -459,7 +462,25 @@ func (p *Parser) parseArrayLit() ast.Expr {
 		LBrack:   lbrack,
 		RBrack:   rbrack,
 	}
+}
 
+func (p *Parser) parseErrorExpr() ast.Expr {
+	pos := p.pos
+
+	p.next()
+
+	lparen := p.expect(token.LParen)
+	value := p.parseExpr()
+	rparen := p.expect(token.RParen)
+
+	expr := &ast.ErrorExpr{
+		ErrorPos: pos,
+		Expr:     value,
+		LParen:   lparen,
+		RParen:   rparen,
+	}
+
+	return expr
 }
 
 func (p *Parser) parseFuncType() *ast.FuncType {
@@ -551,7 +572,7 @@ func (p *Parser) parseStmt() (stmt ast.Stmt) {
 
 	switch p.token {
 	case // simple statements
-		token.Func, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False,
+		token.Func, token.Error, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False,
 		token.Undefined, token.Import, token.LParen, token.LBrace, token.LBrack,
 		token.Add, token.Sub, token.Mul, token.And, token.Xor, token.Not:
 		s := p.parseSimpleStmt(false)

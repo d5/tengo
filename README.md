@@ -173,7 +173,19 @@ for i, x in [1, 2, 3] {		// array: index and element
 for k, v in {k1: 1, k2: 2} {	// map: key and value
     // ...
 }
+```
+
+An error object is created using `error` function-like keyword. An error can have any types of value and the underlying value of the error can be accessed using `.value` selector.
+ 
+```golang
+err1 := error("oops")   // error with string value
+err2 := error(1+2+3)    // error with int value
+if is_error(err1) {     // 'is_error' builtin function
+    err_val := err1.value   // get underlying value 
+}  
 ``` 
+> [Run in Playground](https://tengolang.com/?s=5eaba4289c9d284d97704dd09cb15f4f03ad05c1)
+
 
 ## Embedding Tengo in Go
 
