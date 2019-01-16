@@ -408,6 +408,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(OpCall, len(node.Args))
+
+	case *ast.ErrorExpr:
+		if err := c.Compile(node.Expr); err != nil {
+			return err
+		}
+
+		c.emit(OpError)
 	}
 
 	return nil

@@ -32,8 +32,9 @@ const (
 	OpOrJump                         // Logical OR jump
 	OpJump                           // Jump
 	OpNull                           // Push null
-	OpArray                          // Array literal
-	OpMap                            // Map literal
+	OpArray                          // Array object
+	OpMap                            // Map object
+	OpError                          // Error object
 	OpIndex                          // Index operation
 	OpSliceIndex                     // Slice operation
 	OpCall                           // Call function

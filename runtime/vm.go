@@ -562,6 +562,21 @@ func (v *VM) Run() error {
 			v.stack[v.sp] = &m
 			v.sp++
 
+		case compiler.OpError:
+			value := v.stack[v.sp-1]
+			v.sp--
+
+			var err objects.Object = &objects.Error{
+				Value: *value,
+			}
+
+			if v.sp >= StackSize {
+				return ErrStackOverflow
+			}
+
+			v.stack[v.sp] = &err
+			v.sp++
+
 		case compiler.OpIndex:
 			index := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]

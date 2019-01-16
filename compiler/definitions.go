@@ -40,6 +40,7 @@ var definitions = map[Opcode]*Definition{
 	OpSetSelGlobal:     {Name: "SETSG", Operands: []int{2, 1}},
 	OpArray:            {Name: "ARR", Operands: []int{2}},
 	OpMap:              {Name: "MAP", Operands: []int{2}},
+	OpError:            {Name: "ERROR", Operands: []int{}},
 	OpIndex:            {Name: "INDEX", Operands: []int{}},
 	OpSliceIndex:       {Name: "SLICE", Operands: []int{}},
 	OpCall:             {Name: "CALL", Operands: []int{1}},

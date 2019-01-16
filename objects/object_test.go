@@ -44,6 +44,8 @@ func TestObject_TypeName(t *testing.T) {
 	assert.Equal(t, "return-value", o.TypeName())
 	o = &objects.Undefined{}
 	assert.Equal(t, "undefined", o.TypeName())
+	o = &objects.Error{}
+	assert.Equal(t, "error", o.TypeName())
 }
 
 func TestObject_IsFalsy(t *testing.T) {
@@ -86,6 +88,8 @@ func TestObject_IsFalsy(t *testing.T) {
 	assert.False(t, o.IsFalsy())
 	o = &objects.Undefined{}
 	assert.True(t, o.IsFalsy())
+	o = &objects.Error{}
+	assert.True(t, o.IsFalsy())
 }
 
 func TestObject_String(t *testing.T) {
@@ -110,6 +114,12 @@ func TestObject_String(t *testing.T) {
 	assert.Equal(t, "[]", o.String())
 	o = &objects.Map{Value: nil}
 	assert.Equal(t, "{}", o.String())
+	o = &objects.Map{Value: nil}
+	assert.Equal(t, "{}", o.String())
+	o = &objects.Error{Value: nil}
+	assert.Equal(t, "error", o.String())
+	o = &objects.Error{Value: &objects.String{Value: "error 1"}}
+	assert.Equal(t, `error: "error 1"`, o.String())
 }
 
 func TestObject_BinaryOp(t *testing.T) {
@@ -151,6 +161,9 @@ func TestObject_BinaryOp(t *testing.T) {
 	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
 	assert.Error(t, err)
 	o = &objects.Undefined{}
+	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
+	assert.Error(t, err)
+	o = &objects.Error{}
 	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
 	assert.Error(t, err)
 }

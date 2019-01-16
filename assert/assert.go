@@ -173,6 +173,8 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		return equalClosure(t, expected, actual.(*objects.Closure))
 	case *objects.Undefined:
 		return true
+	case *objects.Error:
+		return Equal(t, expected.Value, actual.(*objects.Error).Value)
 	default:
 		panic(fmt.Errorf("type not implemented: %T", expected))
 	}
