@@ -833,6 +833,26 @@ func() {
 				intObject(10),
 				intObject(1))))
 
+	expect(t, `m := {}; for k, v in m {}`,
+		bytecode(
+			concat(
+				compiler.MakeInstruction(compiler.OpMap, 0),
+				compiler.MakeInstruction(compiler.OpSetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpIteratorInit),
+				compiler.MakeInstruction(compiler.OpSetGlobal, 1),
+				compiler.MakeInstruction(compiler.OpGetGlobal, 1),
+				compiler.MakeInstruction(compiler.OpIteratorNext),
+				compiler.MakeInstruction(compiler.OpJumpFalsy, 37),
+				compiler.MakeInstruction(compiler.OpGetGlobal, 1),
+				compiler.MakeInstruction(compiler.OpIteratorKey),
+				compiler.MakeInstruction(compiler.OpSetGlobal, 2),
+				compiler.MakeInstruction(compiler.OpGetGlobal, 1),
+				compiler.MakeInstruction(compiler.OpIteratorValue),
+				compiler.MakeInstruction(compiler.OpSetGlobal, 3),
+				compiler.MakeInstruction(compiler.OpJump, 13)),
+			objectsArray()))
+
 	expect(t, `a := 0; a == 0 && a != 1 || a < 1`,
 		bytecode(
 			concat(
