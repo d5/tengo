@@ -186,6 +186,19 @@ if is_error(err1) {     // 'is_error' builtin function
 ``` 
 > [Run in Playground](https://tengolang.com/?s=5eaba4289c9d284d97704dd09cb15f4f03ad05c1)
 
+You can load other scripts as import modules using `import` expression.  
+
+```golang
+mod1 := import("./mod1") // assuming mod1.tengo file exists in the current directory 
+                         // same as 'import("./mod1.tengo")' or 'import("mod1")'
+mod1.func1(a)            // module function 
+a += mod1.foo            // module variable
+//mod1.foo = 5           // error: module variables are read-only
+```
+> [Run in Playground](https://tengolang.com/?s=9e79cb21f3e1e2748229b1889308af374dcbac4c)
+
+Basically `import` expression returns all the global variables defined in the module as a Map-like value. One can access the functions or variables defined in the module using `.` selector or `["key"]` indexer, but, module variables are immutable.
+
 
 ## Embedding Tengo in Go
 
@@ -380,10 +393,9 @@ tengo
 
 Development roadmap for Tengo:
 
-- Module system _(or packages)_
-- Standard libraries
+- Standard libraries _(modules)_
 - Better documentations
-- More language constructs such as error handling, destructuring assignment, object methods, switch-case statements
+- More language constructs such as destructuring assignment, `this` binding for object methods, switch-case statements
 - Native executables compilation
 - Performance improvements
 - Syntax highlighter for IDEs
