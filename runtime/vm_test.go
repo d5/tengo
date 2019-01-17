@@ -39,6 +39,10 @@ func expectWithUserModules(t *testing.T, input string, expected interface{}, use
 }
 
 func expectError(t *testing.T, input string) {
+	expectErrorWithUserModules(t, input, nil)
+}
+
+func expectErrorWithUserModules(t *testing.T, input string, userModules map[string]string) {
 	// parse
 	program := parse(t, input)
 	if program == nil {
@@ -46,7 +50,7 @@ func expectError(t *testing.T, input string) {
 	}
 
 	// compiler/VM
-	runVMError(t, program)
+	runVMError(t, program, userModules)
 }
 
 func runVM(t *testing.T, file *ast.File, expected interface{}, userModules map[string]string) (ok bool) {
@@ -72,8 +76,8 @@ func runVM(t *testing.T, file *ast.File, expected interface{}, userModules map[s
 }
 
 // TODO: should differentiate compile-time error, runtime error, and, error object returned
-func runVMError(t *testing.T, file *ast.File) (ok bool) {
-	_, trace, err := traceCompileRun(file, nil, nil)
+func runVMError(t *testing.T, file *ast.File, userModules map[string]string) (ok bool) {
+	_, trace, err := traceCompileRun(file, nil, userModules)
 
 	defer func() {
 		if !ok {

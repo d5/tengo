@@ -1213,6 +1213,7 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 	return nil
 }
 
+// TODO: should reuse *objects.ModuleMap for the same imports?
 func (v *VM) importModule(compiledModule *objects.CompiledModule) error {
 	// import module is basically to create a new instance of VM
 	// and run the module code and retrieve all global variables after execution.

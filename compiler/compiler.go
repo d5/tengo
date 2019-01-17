@@ -14,6 +14,7 @@ import (
 // Compiler compiles the AST into a bytecode.
 type Compiler struct {
 	parent          *Compiler
+	moduleName      string
 	constants       []objects.Object
 	symbolTable     *SymbolTable
 	scopes          []CompilationScope
@@ -445,7 +446,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			// so no need to compile anything
 			c.emit(OpConstant, c.addConstant(stdMod))
 		} else {
-			userMod, err := c.compileUserModule(node.ModuleName)
+			userMod, err := c.compileModule(node.ModuleName)
 			if err != nil {
 				return err
 			}
@@ -477,8 +478,9 @@ func (c *Compiler) SetModuleLoader(moduleLoader ModuleLoader) {
 	c.moduleLoader = moduleLoader
 }
 
-func (c *Compiler) fork(symbolTable *SymbolTable) *Compiler {
+func (c *Compiler) fork(moduleName string, symbolTable *SymbolTable) *Compiler {
 	child := NewCompiler(symbolTable, c.trace)
+	child.moduleName = moduleName       // name of the module to compile
 	child.parent = c                    // parent to set to current compiler
 	child.moduleLoader = c.moduleLoader // share module loader
 

@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -13,7 +14,7 @@ var (
 	fileSet = source.NewFileSet()
 )
 
-func (c *Compiler) compileUserModule(moduleName string) (*objects.CompiledModule, error) {
+func (c *Compiler) compileModule(moduleName string) (*objects.CompiledModule, error) {
 	compiledModule, exists := c.loadCompiledModule(moduleName)
 	if exists {
 		return compiledModule, nil
@@ -27,12 +28,20 @@ func (c *Compiler) compileUserModule(moduleName string) (*objects.CompiledModule
 			moduleName += ".tengo"
 		}
 
+		if err := c.checkCyclicImports(moduleName); err != nil {
+			return nil, err
+		}
+
 		var err error
 		moduleSrc, err = ioutil.ReadFile(moduleName)
 		if err != nil {
 			return nil, err
 		}
 	} else {
+		if err := c.checkCyclicImports(moduleName); err != nil {
+			return nil, err
+		}
+
 		var err error
 		moduleSrc, err = c.moduleLoader(moduleName)
 		if err != nil {
@@ -40,7 +49,7 @@ func (c *Compiler) compileUserModule(moduleName string) (*objects.CompiledModule
 		}
 	}
 
-	compiledModule, err := c.compileModule(moduleName, moduleSrc)
+	compiledModule, err := c.doCompileModule(moduleName, moduleSrc)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +59,18 @@ func (c *Compiler) compileUserModule(moduleName string) (*objects.CompiledModule
 	return compiledModule, nil
 }
 
-func (c *Compiler) compileModule(fileName string, src []byte) (*objects.CompiledModule, error) {
-	p := parser.NewParser(fileSet.AddFile(fileName, -1, len(src)), src, nil)
+func (c *Compiler) checkCyclicImports(moduleName string) error {
+	if c.moduleName == moduleName {
+		return fmt.Errorf("cyclic module import: %s", moduleName)
+	} else if c.parent != nil {
+		return c.parent.checkCyclicImports(moduleName)
+	}
+
+	return nil
+}
+
+func (c *Compiler) doCompileModule(moduleName string, src []byte) (*objects.CompiledModule, error) {
+	p := parser.NewParser(fileSet.AddFile(moduleName, -1, len(src)), src, nil)
 	file, err := p.ParseFile()
 	if err != nil {
 		return nil, err
@@ -60,7 +79,7 @@ func (c *Compiler) compileModule(fileName string, src []byte) (*objects.Compiled
 	symbolTable := NewSymbolTable()
 	globals := make(map[string]int)
 
-	moduleCompiler := c.fork(symbolTable)
+	moduleCompiler := c.fork(moduleName, symbolTable)
 	if err := moduleCompiler.Compile(file); err != nil {
 		return nil, err
 	}
