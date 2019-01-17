@@ -2,7 +2,7 @@ package ast
 
 import "github.com/d5/tengo/compiler/source"
 
-// BoolLit represetns a boolean literal.
+// BoolLit represents a boolean literal.
 type BoolLit struct {
 	Value    bool
 	ValuePos source.Pos

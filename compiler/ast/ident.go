@@ -2,7 +2,7 @@ package ast
 
 import "github.com/d5/tengo/compiler/source"
 
-// Ident represetns an identifier.
+// Ident represents an identifier.
 type Ident struct {
 	Name    string
 	NamePos source.Pos

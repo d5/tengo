@@ -6,7 +6,7 @@ import (
 
 func builtinLen(args ...Object) (Object, error) {
 	if len(args) != 1 {
-		return nil, fmt.Errorf("wrong number of arguments (got=%d, want=1)", len(args))
+		return nil, ErrWrongNumArguments
 	}
 
 	switch arg := args[0].(type) {

@@ -42,5 +42,22 @@ func TestString(t *testing.T) {
 	expectError(t, fmt.Sprintf("%s[:%d]", strStr, strLen+1))
 	expectError(t, fmt.Sprintf("%s[%d:%d]", strStr, 2, 1))
 
+	// string concatenation with other types
+	expect(t, `out = "foo" + 1`, "foo1")
+	// Float.String() returns the smallest number of digits
+	// necessary such that ParseFloat will return f exactly.
+	expect(t, `out = "foo" + 1.0`, "foo1") // <- note '1' instead of '1.0'
+	expect(t, `out = "foo" + 1.5`, "foo1.5")
+	expect(t, `out = "foo" + true`, "footrue")
+	expect(t, `out = "foo" + 'X'`, "fooX")
+	expect(t, `out = "foo" + error(5)`, "fooerror: 5")
+	expect(t, `out = "foo" + undefined`, "foo<undefined>")
+	expect(t, `out = "foo" + [1,2,3]`, "foo[1, 2, 3]")
+	//expect(t, `out = "foo" + {a: 1, b: 2}`, "foo{a: 1, b: 2}") // TODO: commented because order of key is not consistent
+	// also works with "+=" operator
+	expect(t, `out = "foo"; out += 1.5`, "foo1.5")
+	// string concats works only when string is LHS
+	expectError(t, `1 + "foo"`)
+
 	expectError(t, `"foo" - "bar"`)
 }

@@ -26,10 +26,10 @@ func (e *MapLit) End() source.Pos {
 }
 
 func (e *MapLit) String() string {
-	var elts []string
+	var elements []string
 	for _, m := range e.Elements {
-		elts = append(elts, m.String())
+		elements = append(elements, m.String())
 	}
 
-	return "{" + strings.Join(elts, ", ") + "}"
+	return "{" + strings.Join(elements, ", ") + "}"
 }

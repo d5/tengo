@@ -6,7 +6,7 @@ import (
 	"github.com/d5/tengo/compiler/source"
 )
 
-// IdentList represetns a list of identifiers.
+// IdentList represents a list of identifiers.
 type IdentList struct {
 	LParen source.Pos
 	List   []*Ident

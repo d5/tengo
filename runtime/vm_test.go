@@ -24,6 +24,10 @@ type MAP = map[string]interface{}
 type ARR = []interface{}
 
 func expect(t *testing.T, input string, expected interface{}) {
+	expectWithUserModules(t, input, expected, nil)
+}
+
+func expectWithUserModules(t *testing.T, input string, expected interface{}, userModules map[string]string) {
 	// parse
 	file := parse(t, input)
 	if file == nil {
@@ -31,10 +35,14 @@ func expect(t *testing.T, input string, expected interface{}) {
 	}
 
 	// compiler/VM
-	runVM(t, file, expected)
+	runVM(t, file, expected, userModules)
 }
 
 func expectError(t *testing.T, input string) {
+	expectErrorWithUserModules(t, input, nil)
+}
+
+func expectErrorWithUserModules(t *testing.T, input string, userModules map[string]string) {
 	// parse
 	program := parse(t, input)
 	if program == nil {
@@ -42,15 +50,15 @@ func expectError(t *testing.T, input string) {
 	}
 
 	// compiler/VM
-	runVMError(t, program)
+	runVMError(t, program, userModules)
 }
 
-func runVM(t *testing.T, file *ast.File, expected interface{}) (ok bool) {
+func runVM(t *testing.T, file *ast.File, expected interface{}, userModules map[string]string) (ok bool) {
 	expectedObj := toObject(expected)
 
 	res, trace, err := traceCompileRun(file, map[string]objects.Object{
 		testOut: objectZeroCopy(expectedObj),
-	})
+	}, userModules)
 
 	defer func() {
 		if !ok {
@@ -68,8 +76,8 @@ func runVM(t *testing.T, file *ast.File, expected interface{}) (ok bool) {
 }
 
 // TODO: should differentiate compile-time error, runtime error, and, error object returned
-func runVMError(t *testing.T, file *ast.File) (ok bool) {
-	_, trace, err := traceCompileRun(file, nil)
+func runVMError(t *testing.T, file *ast.File, userModules map[string]string) (ok bool) {
+	_, trace, err := traceCompileRun(file, nil, userModules)
 
 	defer func() {
 		if !ok {
@@ -132,7 +140,7 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func traceCompileRun(file *ast.File, symbols map[string]objects.Object) (res map[string]objects.Object, trace []string, err error) {
+func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModules map[string]string) (res map[string]objects.Object, trace []string, err error) {
 	var v *runtime.VM
 
 	defer func() {
@@ -169,6 +177,13 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object) (res map
 
 	tr := &tracer{}
 	c := compiler.NewCompiler(symTable, tr)
+	c.SetModuleLoader(func(moduleName string) ([]byte, error) {
+		if src, ok := userModules[moduleName]; ok {
+			return []byte(src), nil
+		}
+
+		return nil, fmt.Errorf("module '%s' not found", moduleName)
+	})
 	err = c.Compile(file)
 	trace = append(trace, fmt.Sprintf("\n[Compiler Trace]\n\n%s", strings.Join(tr.Out, "")))
 	if err != nil {

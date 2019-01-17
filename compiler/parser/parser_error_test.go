@@ -7,7 +7,7 @@ import (
 	"github.com/d5/tengo/compiler/token"
 )
 
-func TestImport(t *testing.T) {
+func TestError(t *testing.T) {
 	expect(t, `error(1234)`, func(p pfn) []ast.Stmt {
 		return stmts(
 			exprStmt(
