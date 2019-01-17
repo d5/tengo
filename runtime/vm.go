@@ -1216,22 +1216,17 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 func (v *VM) importModule(compiledModule *objects.CompiledModule) error {
 	// import module is basically to create a new instance of VM
 	// and run the module code and retrieve all global variables after execution.
-	globals := make([]*objects.Object, len(compiledModule.Globals), len(compiledModule.Globals))
-	for _, global := range compiledModule.Globals {
-		// TODO: Do we want to share global variables across multiple "import" expressions.
-		globals[global.Index] = global.Value
-	}
 	moduleVM := NewVM(&compiler.Bytecode{
 		Instructions: compiledModule.Instructions,
-		Constants:    compiledModule.Constants,
-	}, globals)
+		Constants:    v.constants,
+	}, nil)
 	if err := moduleVM.Run(); err != nil {
 		return err
 	}
 
 	mmValue := make(map[string]objects.Object)
-	for name, global := range compiledModule.Globals {
-		mmValue[name] = *moduleVM.globals[global.Index]
+	for name, index := range compiledModule.Globals {
+		mmValue[name] = *moduleVM.globals[index]
 	}
 
 	var mm objects.Object = &objects.ModuleMap{Value: mmValue}

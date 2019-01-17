@@ -4,26 +4,19 @@ import (
 	"github.com/d5/tengo/compiler/token"
 )
 
-// CompiledModuleGlobal represents a global variable in the compiled module.
-type CompiledModuleGlobal struct {
-	Index int
-	Value *Object
-}
-
-// CompiledModule represents a compiled function.
+// CompiledModule represents a compiled module.
 type CompiledModule struct {
-	Instructions []byte
-	Constants    []Object
-	Globals      map[string]CompiledModuleGlobal
+	Instructions []byte         // compiled instructions
+	Globals      map[string]int // global variable name-to-index map
 }
 
 // TypeName returns the name of the type.
 func (o *CompiledModule) TypeName() string {
-	return "compiled-function"
+	return "compiled-module"
 }
 
 func (o *CompiledModule) String() string {
-	return "<compiled-function>"
+	return "<compiled-module>"
 }
 
 // BinaryOp returns another object that is the result of
@@ -34,18 +27,13 @@ func (o *CompiledModule) BinaryOp(op token.Token, rhs Object) (Object, error) {
 
 // Copy returns a copy of the type.
 func (o *CompiledModule) Copy() Object {
-	var constants []Object
-	for _, c := range o.Constants {
-		constants = append(constants, c.Copy())
-	}
-	globals := make(map[string]CompiledModuleGlobal, len(o.Globals))
-	for name, obj := range o.Globals {
-		globals[name] = obj
+	globals := make(map[string]int, len(o.Globals))
+	for name, index := range o.Globals {
+		globals[name] = index
 	}
 
 	return &CompiledModule{
 		Instructions: append([]byte{}, o.Instructions...),
-		Constants:    constants,
 		Globals:      globals,
 	}
 }

@@ -6,20 +6,24 @@ import (
 	"reflect"
 
 	"github.com/d5/tengo/compiler/ast"
+	"github.com/d5/tengo/compiler/stdmods"
 	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
 )
 
 // Compiler compiles the AST into a bytecode.
 type Compiler struct {
-	constants   []objects.Object
-	symbolTable *SymbolTable
-	scopes      []CompilationScope
-	scopeIndex  int
-	loops       []*Loop
-	loopIndex   int
-	trace       io.Writer
-	indent      int
+	parent          *Compiler
+	constants       []objects.Object
+	symbolTable     *SymbolTable
+	scopes          []CompilationScope
+	scopeIndex      int
+	moduleLoader    ModuleLoader
+	compiledModules map[string]*objects.CompiledModule
+	loops           []*Loop
+	loopIndex       int
+	trace           io.Writer
+	indent          int
 }
 
 // NewCompiler creates a Compiler.
@@ -37,11 +41,12 @@ func NewCompiler(symbolTable *SymbolTable, trace io.Writer) *Compiler {
 	}
 
 	return &Compiler{
-		symbolTable: symbolTable,
-		scopes:      []CompilationScope{mainScope},
-		scopeIndex:  0,
-		loopIndex:   -1,
-		trace:       trace,
+		symbolTable:     symbolTable,
+		scopes:          []CompilationScope{mainScope},
+		scopeIndex:      0,
+		loopIndex:       -1,
+		trace:           trace,
+		compiledModules: make(map[string]*objects.CompiledModule),
 	}
 }
 
@@ -62,11 +67,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		}
+
 	case *ast.ExprStmt:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
 		}
 		c.emit(OpPop)
+
 	case *ast.IncDecStmt:
 		op := token.AddAssign
 		if node.Token == token.Dec {
@@ -74,10 +81,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		return c.compileAssign([]ast.Expr{node.Expr}, []ast.Expr{&ast.IntLit{Value: 1}}, op)
+
 	case *ast.ParenExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
 		}
+
 	case *ast.BinaryExpr:
 		if node.Token == token.LAnd || node.Token == token.LOr {
 			return c.compileLogical(node)
@@ -149,22 +158,29 @@ func (c *Compiler) Compile(node ast.Node) error {
 		default:
 			return fmt.Errorf("unknown operator: %s", node.Token.String())
 		}
+
 	case *ast.IntLit:
 		c.emit(OpConstant, c.addConstant(&objects.Int{Value: node.Value}))
+
 	case *ast.FloatLit:
 		c.emit(OpConstant, c.addConstant(&objects.Float{Value: node.Value}))
+
 	case *ast.BoolLit:
 		if node.Value {
 			c.emit(OpTrue)
 		} else {
 			c.emit(OpFalse)
 		}
+
 	case *ast.StringLit:
 		c.emit(OpConstant, c.addConstant(&objects.String{Value: node.Value}))
+
 	case *ast.CharLit:
 		c.emit(OpConstant, c.addConstant(&objects.Char{Value: node.Value}))
+
 	case *ast.UndefinedLit:
 		c.emit(OpNull)
+
 	case *ast.UnaryExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
@@ -182,6 +198,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		default:
 			return fmt.Errorf("unknown operator: %s", node.Token.String())
 		}
+
 	case *ast.IfStmt:
 		// open new symbol table for the statement
 		c.symbolTable = c.symbolTable.Fork(true)
@@ -229,8 +246,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 	case *ast.ForStmt:
 		return c.compileForStmt(node)
+
 	case *ast.ForInStmt:
 		return c.compileForInStmt(node)
+
 	case *ast.BranchStmt:
 		if node.Token == token.Break {
 			curLoop := c.currentLoop()
@@ -249,17 +268,19 @@ func (c *Compiler) Compile(node ast.Node) error {
 		} else {
 			return fmt.Errorf("unknown branch statement: %s", node.Token.String())
 		}
+
 	case *ast.BlockStmt:
 		for _, stmt := range node.Stmts {
 			if err := c.Compile(stmt); err != nil {
 				return err
 			}
 		}
-	case *ast.AssignStmt:
 
+	case *ast.AssignStmt:
 		if err := c.compileAssign(node.LHS, node.RHS, node.Token); err != nil {
 			return err
 		}
+
 	case *ast.Ident:
 		symbol, _, ok := c.symbolTable.Resolve(node.Name)
 		if !ok {
@@ -276,6 +297,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		case ScopeFree:
 			c.emit(OpGetFree, symbol.Index)
 		}
+
 	case *ast.ArrayLit:
 		for _, elem := range node.Elements {
 			if err := c.Compile(elem); err != nil {
@@ -284,6 +306,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(OpArray, len(node.Elements))
+
 	case *ast.MapLit:
 		for _, elt := range node.Elements {
 			// key
@@ -296,6 +319,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(OpMap, len(node.Elements)*2)
+
 	case *ast.SelectorExpr: // selector on RHS side
 		if err := c.Compile(node.Expr); err != nil {
 			return err
@@ -306,6 +330,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(OpIndex)
+
 	case *ast.IndexExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
@@ -316,6 +341,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(OpIndex)
+
 	case *ast.SliceExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
@@ -338,6 +364,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(OpSliceIndex)
+
 	case *ast.FuncLit:
 		c.enterScope()
 
@@ -378,6 +405,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		} else {
 			c.emit(OpConstant, c.addConstant(compiledFunction))
 		}
+
 	case *ast.ReturnStmt:
 		if c.symbolTable.Parent(true) == nil {
 			// outside the function
@@ -396,6 +424,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		default:
 			return fmt.Errorf("multi-value return not implemented")
 		}
+
 	case *ast.CallExpr:
 		if err := c.Compile(node.Func); err != nil {
 			return err
@@ -410,13 +439,20 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.emit(OpCall, len(node.Args))
 
 	case *ast.ImportExpr:
-		stdMod, ok := compiledStdMods[node.ModuleName]
+		stdMod, ok := stdmods.Modules[node.ModuleName]
 		if ok {
-			c.emit(OpModule, c.addConstant(stdMod))
+			// standard modules contain only globals with no code.
+			// so no need to compile anything
+			c.emit(OpConstant, c.addConstant(stdMod))
 		} else {
-			// TODO: implement user module loading
-			return fmt.Errorf("user module not supported")
+			userMod, err := c.compileUserModule(node.ModuleName)
+			if err != nil {
+				return err
+			}
+
+			c.emit(OpModule, c.addConstant(userMod))
 		}
+
 	case *ast.ErrorExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
@@ -436,7 +472,25 @@ func (c *Compiler) Bytecode() *Bytecode {
 	}
 }
 
+// SetModuleLoader sets or replaces the current module loader.
+func (c *Compiler) SetModuleLoader(moduleLoader ModuleLoader) {
+	c.moduleLoader = moduleLoader
+}
+
+func (c *Compiler) fork(symbolTable *SymbolTable) *Compiler {
+	child := NewCompiler(symbolTable, c.trace)
+	child.parent = c                    // parent to set to current compiler
+	child.moduleLoader = c.moduleLoader // share module loader
+
+	return child
+}
+
 func (c *Compiler) addConstant(o objects.Object) int {
+	if c.parent != nil {
+		// module compilers will use their parent's constants array
+		return c.parent.addConstant(o)
+	}
+
 	c.constants = append(c.constants, o)
 
 	if c.trace != nil {

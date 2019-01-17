@@ -875,6 +875,8 @@ func() {
 				intObject(0),
 				intObject(1),
 				intObject(1))))
+
+	expectError(t, `import("user1")`) // unknown module name
 }
 
 func concat(insts ...[]byte) []byte {
@@ -909,6 +911,22 @@ func expect(t *testing.T, input string, expected *compiler.Bytecode) (ok bool) {
 	}
 
 	ok = equalBytecode(t, expected, actual)
+
+	return
+}
+
+func expectError(t *testing.T, input string) (ok bool) {
+	_, trace, err := traceCompile(input, nil)
+
+	defer func() {
+		if !ok {
+			for _, tr := range trace {
+				t.Log(tr)
+			}
+		}
+	}()
+
+	ok = assert.Error(t, err)
 
 	return
 }
