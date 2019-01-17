@@ -245,9 +245,9 @@ func main() {
 }
 ```
 
-In the example above, a variable `b` is defined by the user before compiliation using `Script.Add()` function. Then a compiled bytecode `c` is used to execute the bytecode and get the value of global variables. In thie example, the value of global variable `a` is read using `Compiled.Get()` function.
+In the example above, a variable `b` is defined by the user before compiliation using `Script.Add()` function. Then a compiled bytecode `c` is used to execute the bytecode and get the value of global variables. In this example, the value of global variable `a` is read using `Compiled.Get()` function.
 
-If you need the custom data types (outside Tengo's primitive types), you can define your own `struct` that implements `objects.Object` interface _(and optinoally `objects.Callable` if you want to make function-like invokable objects)_.
+If you need the custom data types (outside Tengo's primitive types), you can define your own `struct` that implements `objects.Object` interface _(and optionally `objects.Callable` if you want to make function-like invokable objects)_.
 
 ```golang
 import (

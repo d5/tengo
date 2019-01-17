@@ -2,7 +2,7 @@ package ast
 
 import "github.com/d5/tengo/compiler/source"
 
-// IntLit represetns an integer literal.
+// IntLit represents an integer literal.
 type IntLit struct {
 	Value    int64
 	ValuePos source.Pos

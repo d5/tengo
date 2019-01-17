@@ -879,9 +879,9 @@ func() {
 	expectError(t, `import("user1")`) // unknown module name
 }
 
-func concat(insts ...[]byte) []byte {
+func concat(instructions ...[]byte) []byte {
 	concat := make([]byte, 0)
-	for _, i := range insts {
+	for _, i := range instructions {
 		concat = append(concat, i...)
 	}
 

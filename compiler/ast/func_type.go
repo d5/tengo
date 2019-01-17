@@ -2,7 +2,7 @@ package ast
 
 import "github.com/d5/tengo/compiler/source"
 
-// FuncType represetns a function type definition.
+// FuncType represents a function type definition.
 type FuncType struct {
 	FuncPos source.Pos
 	Params  *IdentList

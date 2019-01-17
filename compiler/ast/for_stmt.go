@@ -2,7 +2,7 @@ package ast
 
 import "github.com/d5/tengo/compiler/source"
 
-// ForStmt represetns a for statement.
+// ForStmt represents a for statement.
 type ForStmt struct {
 	ForPos source.Pos
 	Init   Stmt

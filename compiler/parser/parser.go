@@ -445,9 +445,9 @@ func (p *Parser) parseArrayLit() ast.Expr {
 	lbrack := p.expect(token.LBrack)
 	p.exprLevel++
 
-	var elts []ast.Expr
+	var elements []ast.Expr
 	for p.token != token.RBrack && p.token != token.EOF {
-		elts = append(elts, p.parseExpr())
+		elements = append(elements, p.parseExpr())
 
 		if !p.expectComma(token.RBrack, "array element") {
 			break
@@ -458,7 +458,7 @@ func (p *Parser) parseArrayLit() ast.Expr {
 	rbrack := p.expect(token.RBrack)
 
 	return &ast.ArrayLit{
-		Elements: elts,
+		Elements: elements,
 		LBrack:   lbrack,
 		RBrack:   rbrack,
 	}
@@ -958,9 +958,9 @@ func (p *Parser) parseMapLit() *ast.MapLit {
 	lbrace := p.expect(token.LBrace)
 	p.exprLevel++
 
-	var elts []*ast.MapElementLit
+	var elements []*ast.MapElementLit
 	for p.token != token.RBrace && p.token != token.EOF {
-		elts = append(elts, p.parseMapElementLit())
+		elements = append(elements, p.parseMapElementLit())
 
 		if !p.expectComma(token.RBrace, "map element") {
 			break
@@ -973,7 +973,7 @@ func (p *Parser) parseMapLit() *ast.MapLit {
 	return &ast.MapLit{
 		LBrace:   lbrace,
 		RBrace:   rbrace,
-		Elements: elts,
+		Elements: elements,
 	}
 }
 
