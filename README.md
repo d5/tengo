@@ -82,7 +82,7 @@ a == "foo" 		// still "foo"
 > [Run in Playground](https://tengolang.com/?s=1d39bc2af5c51417df82b32db47a0e6a156d48ec)
 
 
-Type is not explicitly specified, but, you can use type coercion functions to convert between types.
+Type is not directly specified, but, you can use type-coercion functions to convert between types.
 
 ```golang
 s1 := string(1984)  // "1984"
@@ -93,7 +93,7 @@ c5 := char("X")     // 'X'
 ```
 > [Run in Playground](https://tengolang.com/?s=8d57905b82959eb244e9bbd2111e12ee04a33045)
 
-You can use dot selector (`.`) and indexer (`[]`) operator to read or write elemens of arrays or maps.
+You can use the dot selector (`.`) and indexer (`[]`) operator to read or write elemens of arrays, strings, or maps.
 
 ```golang
 ["one", "two", "three"][1]	// == "two"
@@ -122,14 +122,14 @@ d := "hello world"[2:10]	// == "llo worl"
 > [Run in Playground](https://tengolang.com/?s=214ab490bb24549578770984985f6b161aed915d)
 
 
-In Tengo, functions are first-class citizen and be treated like any other variables. Tengo also supports closures, functions that captures variables in outer scopes. In the following example, the function that's being returned from `adder` function is capturing `base` variable.
+In Tengo, functions are first-class citizen, and, it also supports closures, functions that captures variables in outer scopes. In the following example, the function returned from `adder` is capturing `base` variable.
 
 ```golang
 adder := func(base) {
     return func(x) { return base + x }	// capturing 'base'
 }
 add5 := adder(5)
-nine := add5(4)		// nine
+nine := add5(4)		// == 9
 ```
 > [Run in Playground](https://tengolang.com/?s=fba79990473d5b38cc944dfa225d38580ddaf422)
 
@@ -186,7 +186,7 @@ if is_error(err1) {     // 'is_error' builtin function
 ``` 
 > [Run in Playground](https://tengolang.com/?s=5eaba4289c9d284d97704dd09cb15f4f03ad05c1)
 
-You can load other scripts as import modules using `import` expression.  
+You can load other scripts as modules using `import` expression.
 
 Main script:
 ```golang
