@@ -188,6 +188,7 @@ if is_error(err1) {     // 'is_error' builtin function
 
 You can load other scripts as import modules using `import` expression.  
 
+Main script:
 ```golang
 mod1 := import("./mod1") // assuming mod1.tengo file exists in the current directory 
                          // same as 'import("./mod1.tengo")' or 'import("mod1")'
@@ -195,7 +196,13 @@ mod1.func1(a)            // module function
 a += mod1.foo            // module variable
 //mod1.foo = 5           // error: module variables are read-only
 ```
-> [Run in Playground](https://tengolang.com/?s=9e79cb21f3e1e2748229b1889308af374dcbac4c)
+
+`mod1.tengo` file:
+
+```golang
+func1 := func(x) { print(x) }
+foo := 2
+```
 
 Basically `import` expression returns all the global variables defined in the module as a Map-like value. One can access the functions or variables defined in the module using `.` selector or `["key"]` indexer, but, module variables are immutable.
 
