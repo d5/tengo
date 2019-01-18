@@ -38,7 +38,7 @@ func builtinInt(args ...Object) (Object, error) {
 	}
 
 	if argsLen == 2 {
-		return args[1]
+		return args[1], nil
 	}
 
 	return UndefinedValue, nil
@@ -60,7 +60,7 @@ func builtinFloat(args ...Object) (Object, error) {
 	}
 
 	if argsLen == 2 {
-		return args[1]
+		return args[1], nil
 	}
 
 	return UndefinedValue, nil
@@ -99,7 +99,7 @@ func builtinChar(args ...Object) (Object, error) {
 	}
 
 	if argsLen == 2 {
-		return args[1]
+		return args[1], nil
 	}
 
 	return UndefinedValue, nil
@@ -122,7 +122,7 @@ func builtinBytes(args ...Object) (Object, error) {
 	}
 
 	if argsLen == 2 {
-		return args[1]
+		return args[1], nil
 	}
 
 	return UndefinedValue, nil
