@@ -45,6 +45,21 @@ if write_file("./temp", "foobar") {
 os.remove("./temp")
 `, "foobar")
 
+	// exec.command
+	expect(t, `
+exec := import("exec")
+
+echo := func(args) {
+	cmd := exec.command("echo", args)
+	if is_error(cmd) { return cmd.value }
+	output := cmd.output()
+	if is_error(output) { return output.value }
+	return output
+}
+
+out = echo(["foo", "bar"])
+`, []byte("foo bar\n"))
+
 	// user modules
 	expectWithUserModules(t, `out = import("mod1").bar()`, 5.0, map[string]string{
 		"mod1": `bar := func() { return 5.0 }`,

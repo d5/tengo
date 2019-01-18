@@ -95,6 +95,25 @@ func FuncARSE(fn func() (string, error)) *objects.UserFunction {
 	}
 }
 
+// FuncARYE transform a function of 'func() ([]byte, error)' signature
+// into a user function object.
+func FuncARYE(fn func() ([]byte, error)) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 0 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			res, err := fn()
+			if err != nil {
+				return wrapError(err), nil
+			}
+
+			return &objects.Bytes{Value: res}, nil
+		},
+	}
+}
+
 // FuncARF transform a function of 'func() float64' signature
 // into a user function object.
 func FuncARF(fn func() float64) *objects.UserFunction {

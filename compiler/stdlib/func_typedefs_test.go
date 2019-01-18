@@ -286,6 +286,75 @@ func TestFuncAFIRB(t *testing.T) {
 	assert.Equal(t, objects.ErrWrongNumArguments, err)
 }
 
+func TestFuncAIRSsE(t *testing.T) {
+	uf := stdlib.FuncAIRSsE(func(a int) ([]string, error) {
+		return []string{"foo", "bar"}, nil
+	})
+	ret, err := uf.Call(&objects.Int{Value: 10})
+	assert.NoError(t, err)
+	assert.Equal(t, array(&objects.String{Value: "foo"}, &objects.String{Value: "bar"}), ret)
+	uf = stdlib.FuncAIRSsE(func(a int) ([]string, error) {
+		return nil, errors.New("some error")
+	})
+	ret, err = uf.Call(&objects.Int{Value: 10})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Error{Value: &objects.String{Value: "some error"}}, ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncARB(t *testing.T) {
+	uf := stdlib.FuncARB(func() bool { return true })
+	ret, err := uf.Call()
+	assert.NoError(t, err)
+	assert.Equal(t, objects.TrueValue, ret)
+	ret, err = uf.Call(objects.TrueValue)
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncARYE(t *testing.T) {
+	uf := stdlib.FuncARYE(func() ([]byte, error) {
+		return []byte("foo bar"), nil
+	})
+	ret, err := uf.Call()
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Bytes{Value: []byte("foo bar")}, ret)
+	uf = stdlib.FuncARYE(func() ([]byte, error) {
+		return nil, errors.New("some error")
+	})
+	ret, err = uf.Call()
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Error{Value: &objects.String{Value: "some error"}}, ret)
+	ret, err = uf.Call(objects.TrueValue)
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncASRIE(t *testing.T) {
+	uf := stdlib.FuncASRIE(func(a string) (int, error) { return 5, nil })
+	ret, err := uf.Call(&objects.String{Value: "foo"})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Int{Value: 5}, ret)
+	uf = stdlib.FuncASRIE(func(a string) (int, error) { return 0, errors.New("some error") })
+	ret, err = uf.Call(&objects.String{Value: "foo"})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Error{Value: &objects.String{Value: "some error"}}, ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncAYRIE(t *testing.T) {
+	uf := stdlib.FuncAYRIE(func(a []byte) (int, error) { return 5, nil })
+	ret, err := uf.Call(&objects.Bytes{Value: []byte("foo")})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Int{Value: 5}, ret)
+	uf = stdlib.FuncAYRIE(func(a []byte) (int, error) { return 0, errors.New("some error") })
+	ret, err = uf.Call(&objects.Bytes{Value: []byte("foo")})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Error{Value: &objects.String{Value: "some error"}}, ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
 func array(elements ...objects.Object) *objects.Array {
 	return &objects.Array{Value: elements}
 }
