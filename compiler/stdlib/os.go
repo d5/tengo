@@ -33,6 +33,9 @@ var osModule = map[string]objects.Object{
 	"path_separator":      &objects.Char{Value: os.PathSeparator},
 	"path_list_separator": &objects.Char{Value: os.PathListSeparator},
 	"dev_null":            &objects.String{Value: os.DevNull},
+	"seek_set":            &objects.Int{Value: int64(os.SEEK_SET)},
+	"seek_cur":            &objects.Int{Value: int64(os.SEEK_CUR)},
+	"seek_end":            &objects.Int{Value: int64(os.SEEK_END)},
 	// args() => array(string)
 	"args": &objects.UserFunction{Value: osArgs},
 	// chdir(dir string) => error
@@ -109,6 +112,10 @@ var osModule = map[string]objects.Object{
 	"open": &objects.UserFunction{Value: osOpen},
 	// open_file(name string, flag int, perm int) => imap(file)/error
 	"open_file": &objects.UserFunction{Value: osOpenFile},
+	// find_process(pid int) => imap(process)/error
+	"find_process": &objects.UserFunction{Value: osFindProcess},
+	// start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
+	"start_process": &objects.UserFunction{Value: osStartProcess},
 
 	// TODO: implemented more functions
 	//"stdin":         nil,

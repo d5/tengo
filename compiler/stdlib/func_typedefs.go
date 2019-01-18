@@ -34,6 +34,20 @@ func FuncARI(fn func() int) *objects.UserFunction {
 	}
 }
 
+// FuncARB transform a function of 'func() bool' signature
+// into a user function object.
+func FuncARB(fn func() bool) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 0 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			return &objects.Bool{Value: fn()}, nil
+		},
+	}
+}
+
 // FuncARE transform a function of 'func() error' signature
 // into a user function object.
 func FuncARE(fn func() error) *objects.UserFunction {
