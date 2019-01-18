@@ -1,7 +1,7 @@
 package objects
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/d5/tengo/compiler/token"
 )
@@ -17,7 +17,7 @@ func (o *String) TypeName() string {
 }
 
 func (o *String) String() string {
-	return fmt.Sprintf("%q", o.Value)
+	return strconv.Quote(o.Value)
 }
 
 // BinaryOp returns another object that is the result of
