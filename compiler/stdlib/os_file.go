@@ -17,7 +17,7 @@ func osFileImmutableMap(file *os.File) *objects.ImmutableMap {
 			"close": FuncARE(file.Close),
 			// name() => string
 			"name": FuncARS(file.Name),
-			// readdirnames(n int) => array/error
+			// readdirnames(n int) => array(string)/error
 			"readdirnames": FuncAIRSsE(file.Readdirnames),
 			// sync() => error
 			"sync": FuncARE(file.Sync),
@@ -27,6 +27,7 @@ func osFileImmutableMap(file *os.File) *objects.ImmutableMap {
 			"write_string": FuncASRIE(file.WriteString),
 			// read(bytes) => int/error
 			"read": FuncAYRIE(file.Read),
+			// chmod(mode int) => error
 			"chmod": &objects.UserFunction{
 				Value: func(args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 1 {
@@ -41,6 +42,7 @@ func osFileImmutableMap(file *os.File) *objects.ImmutableMap {
 					return wrapError(file.Chmod(os.FileMode(i1))), nil
 				},
 			},
+			// seek(offset int, whence int) => int/error
 			"seek": &objects.UserFunction{
 				Value: func(args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 2 {
@@ -64,6 +66,7 @@ func osFileImmutableMap(file *os.File) *objects.ImmutableMap {
 					return &objects.Int{Value: res}, nil
 				},
 			},
+			// TODO: implement more functions
 			//"fd": nil,
 			//"read_at": nil,
 			//"readdir": nil,

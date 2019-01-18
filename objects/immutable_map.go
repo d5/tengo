@@ -7,7 +7,7 @@ import (
 	"github.com/d5/tengo/compiler/token"
 )
 
-// ImmutableMap represents a module map object.
+// ImmutableMap represents an immutable map object.
 type ImmutableMap struct {
 	Value map[string]Object
 }

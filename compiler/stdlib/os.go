@@ -33,46 +33,84 @@ var osModule = map[string]objects.Object{
 	"path_separator":      &objects.Char{Value: os.PathSeparator},
 	"path_list_separator": &objects.Char{Value: os.PathListSeparator},
 	"dev_null":            &objects.String{Value: os.DevNull},
-	"args":                &objects.UserFunction{Value: osArgs},
-	"chdir":               FuncASRE(os.Chdir),
-	"chmod":               osFuncASFmRE(os.Chmod),
-	"chown":               FuncASIIRE(os.Chown),
-	"clearenv":            FuncAR(os.Clearenv),
-	"environ":             FuncARSs(os.Environ),
-	"executable":          &objects.UserFunction{Value: osExecutable},
-	"exit":                FuncAIR(os.Exit),
-	"expand_env":          FuncASRS(os.ExpandEnv),
-	"getegid":             FuncARI(os.Getegid),
-	"getenv":              FuncASRS(os.Getenv),
-	"geteuid":             FuncARI(os.Geteuid),
-	"getgid":              FuncARI(os.Getgid),
-	"getgroups":           FuncARIsE(os.Getgroups),
-	"getpagesize":         FuncARI(os.Getpagesize),
-	"getpid":              FuncARI(os.Getpid),
-	"getppid":             FuncARI(os.Getppid),
-	"getuid":              FuncARI(os.Getuid),
-	"getwd":               FuncARSE(os.Getwd),
-	"hostname":            FuncARSE(os.Hostname),
-	"lchown":              FuncASIIRE(os.Lchown),
-	"link":                FuncASSRE(os.Link),
-	"lookup_env":          &objects.UserFunction{Value: osLookupEnv},
-	"mkdir":               osFuncASFmRE(os.Mkdir),
-	"mkdir_all":           osFuncASFmRE(os.MkdirAll),
-	"readlink":            FuncASRSE(os.Readlink),
-	"remove":              FuncASRE(os.Remove),
-	"remove_all":          FuncASRE(os.RemoveAll),
-	"rename":              FuncASSRE(os.Rename),
-	"setenv":              FuncASSRE(os.Setenv),
-	"symlink":             FuncASSRE(os.Symlink),
-	"temp_dir":            FuncARS(os.TempDir),
-	"truncate":            FuncASI64RE(os.Truncate),
-	"unsetenv":            FuncASRE(os.Unsetenv),
-	"user_cache_dir":      FuncARSE(os.UserCacheDir),
-	"create":              &objects.UserFunction{Value: osCreate},
-	"open":                &objects.UserFunction{Value: osOpen},
-	"open_file":           &objects.UserFunction{Value: osOpenFile},
+	// args() => array(string)
+	"args": &objects.UserFunction{Value: osArgs},
+	// chdir(dir string) => error
+	"chdir": FuncASRE(os.Chdir),
+	// chmod(name string, mode int) => error
+	"chmod": osFuncASFmRE(os.Chmod),
+	// chown(name string, uid int, gid int) => error
+	"chown": FuncASIIRE(os.Chown),
+	// clearenv()
+	"clearenv": FuncAR(os.Clearenv),
+	// environ() => array(string)
+	"environ": FuncARSs(os.Environ),
+	// executable() => string/error
+	"executable": &objects.UserFunction{Value: osExecutable},
+	// exit(code int)
+	"exit": FuncAIR(os.Exit),
+	// expand_env(s string) => string
+	"expand_env": FuncASRS(os.ExpandEnv),
+	// getegid() => int
+	"getegid": FuncARI(os.Getegid),
+	// getenv(s string) => string
+	"getenv": FuncASRS(os.Getenv),
+	// geteuid() => int
+	"geteuid": FuncARI(os.Geteuid),
+	// getgid() => int
+	"getgid": FuncARI(os.Getgid),
+	// getgroups() => array(string)/error
+	"getgroups": FuncARIsE(os.Getgroups),
+	// getpagesize() => int
+	"getpagesize": FuncARI(os.Getpagesize),
+	// getpid() => int
+	"getpid": FuncARI(os.Getpid),
+	// getppid() => int
+	"getppid": FuncARI(os.Getppid),
+	// getuid() => int
+	"getuid": FuncARI(os.Getuid),
+	// getwd() => string/error
+	"getwd": FuncARSE(os.Getwd),
+	// hostname() => string/error
+	"hostname": FuncARSE(os.Hostname),
+	// lchown(name string, uid int, gid int) => error
+	"lchown": FuncASIIRE(os.Lchown),
+	// link(oldname string, newname string) => error
+	"link": FuncASSRE(os.Link),
+	// lookup_env(key string) => string/false
+	"lookup_env": &objects.UserFunction{Value: osLookupEnv},
+	// mkdir(name string, perm int) => error
+	"mkdir": osFuncASFmRE(os.Mkdir),
+	// mkdir_all(name string, perm int) => error
+	"mkdir_all": osFuncASFmRE(os.MkdirAll),
+	// readlink(name string) => string/error
+	"readlink": FuncASRSE(os.Readlink),
+	// remove(name string) => error
+	"remove": FuncASRE(os.Remove),
+	// remove_all(name string) => error
+	"remove_all": FuncASRE(os.RemoveAll),
+	// rename(oldpath string, newpath string) => error
+	"rename": FuncASSRE(os.Rename),
+	// setenv(key string, value string) => error
+	"setenv": FuncASSRE(os.Setenv),
+	// symlink(oldname string newname string) => error
+	"symlink": FuncASSRE(os.Symlink),
+	// temp_dir() => string
+	"temp_dir": FuncARS(os.TempDir),
+	// truncate(name string, size int) => error
+	"truncate": FuncASI64RE(os.Truncate),
+	// unsetenv(key string) => error
+	"unsetenv": FuncASRE(os.Unsetenv),
+	// user_cache_dir() => string/error
+	"user_cache_dir": FuncARSE(os.UserCacheDir),
+	// create(name string) => imap(file)/error
+	"create": &objects.UserFunction{Value: osCreate},
+	// open(name string) => imap(file)/error
+	"open": &objects.UserFunction{Value: osOpen},
+	// open_file(name string, flag int, perm int) => imap(file)/error
+	"open_file": &objects.UserFunction{Value: osOpenFile},
 
-	// TODO: not implemented yet
+	// TODO: implemented more functions
 	//"stdin":         nil,
 	//"stdout":        nil,
 	//"stderr":        nil,
