@@ -176,9 +176,12 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 		sym := symTable.Define(name)
 		globals[sym.Index] = &value
 	}
+	for idx, fn := range objects.Builtins {
+		symTable.DefineBuiltin(idx, fn.Name)
+	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(symTable, tr)
+	c := compiler.NewCompiler(symTable, nil, tr)
 	c.SetModuleLoader(func(moduleName string) ([]byte, error) {
 		if src, ok := userModules[moduleName]; ok {
 			return []byte(src), nil

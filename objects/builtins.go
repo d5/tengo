@@ -1,10 +1,13 @@
 package objects
 
-// Builtins contains all known builtin functions.
-var Builtins = []struct {
+// NamedBuiltinFunc is a named builtin function.
+type NamedBuiltinFunc struct {
 	Name string
 	Func CallableFunc
-}{
+}
+
+// Builtins contains all default builtin functions.
+var Builtins = []NamedBuiltinFunc{
 	{
 		Name: "print",
 		Func: builtinPrint,

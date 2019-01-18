@@ -20,6 +20,7 @@ type Compiler struct {
 	scopes          []CompilationScope
 	scopeIndex      int
 	moduleLoader    ModuleLoader
+	stdModules      map[string]*objects.ImmutableMap
 	compiledModules map[string]*objects.CompiledModule
 	loops           []*Loop
 	loopIndex       int
@@ -28,17 +29,28 @@ type Compiler struct {
 }
 
 // NewCompiler creates a Compiler.
-func NewCompiler(symbolTable *SymbolTable, trace io.Writer) *Compiler {
+// User can optionally provide the symbol table if one wants to add or remove
+// some global- or builtin- scope symbols. If not (nil), Compile will create
+// a new symbol table and use the default builtin functions. Likewise, standard
+// modules can be explicitly provided if user wants to add or remove some modules.
+// By default, Compile will use all the standard modules otherwise.
+func NewCompiler(symbolTable *SymbolTable, stdModules map[string]*objects.ImmutableMap, trace io.Writer) *Compiler {
 	mainScope := CompilationScope{
 		instructions: make([]byte, 0),
 	}
 
+	// symbol table
 	if symbolTable == nil {
 		symbolTable = NewSymbolTable()
+
+		for idx, fn := range objects.Builtins {
+			symbolTable.DefineBuiltin(idx, fn.Name)
+		}
 	}
 
-	for idx, fn := range objects.Builtins {
-		symbolTable.DefineBuiltin(idx, fn.Name)
+	// standard modules
+	if stdModules == nil {
+		stdModules = stdlib.Modules
 	}
 
 	return &Compiler{
@@ -47,6 +59,7 @@ func NewCompiler(symbolTable *SymbolTable, trace io.Writer) *Compiler {
 		scopeIndex:      0,
 		loopIndex:       -1,
 		trace:           trace,
+		stdModules:      stdModules,
 		compiledModules: make(map[string]*objects.CompiledModule),
 	}
 }
@@ -440,7 +453,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.emit(OpCall, len(node.Args))
 
 	case *ast.ImportExpr:
-		stdMod, ok := stdlib.Modules[node.ModuleName]
+		stdMod, ok := c.stdModules[node.ModuleName]
 		if ok {
 			// standard modules contain only globals with no code.
 			// so no need to compile anything
@@ -474,12 +487,14 @@ func (c *Compiler) Bytecode() *Bytecode {
 }
 
 // SetModuleLoader sets or replaces the current module loader.
+// Note that the module loader is used for user modules,
+// not for the standard modules.
 func (c *Compiler) SetModuleLoader(moduleLoader ModuleLoader) {
 	c.moduleLoader = moduleLoader
 }
 
 func (c *Compiler) fork(moduleName string, symbolTable *SymbolTable) *Compiler {
-	child := NewCompiler(symbolTable, c.trace)
+	child := NewCompiler(symbolTable, c.stdModules, c.trace)
 	child.moduleName = moduleName       // name of the module to compile
 	child.parent = c                    // parent to set to current compiler
 	child.moduleLoader = c.moduleLoader // share module loader
