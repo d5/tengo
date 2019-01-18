@@ -2,43 +2,9 @@ package script
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/d5/tengo/objects"
 )
-
-func objectToString(o objects.Object) string {
-	switch val := o.(type) {
-	case *objects.Array:
-		var s []string
-		for _, e := range val.Value {
-			s = append(s, objectToString(e))
-		}
-		return "[" + strings.Join(s, ", ") + "]"
-	case *objects.Map:
-		var s []string
-		for k, v := range val.Value {
-			s = append(s, k+": "+objectToString(v))
-		}
-		return "{" + strings.Join(s, ", ") + "}"
-	case *objects.Int:
-		return strconv.FormatInt(val.Value, 10)
-	case *objects.Float:
-		return strconv.FormatFloat(val.Value, 'f', -1, 64)
-	case *objects.Bool:
-		if val.Value {
-			return "true"
-		}
-		return "false"
-	case *objects.Char:
-		return string(val.Value)
-	case *objects.String:
-		return val.Value
-	}
-
-	return o.String()
-}
 
 func objectToInterface(o objects.Object) interface{} {
 	switch val := o.(type) {
@@ -55,6 +21,8 @@ func objectToInterface(o objects.Object) interface{} {
 	case *objects.Char:
 		return val.Value
 	case *objects.String:
+		return val.Value
+	case *objects.Bytes:
 		return val.Value
 	case *objects.Undefined:
 		return nil
@@ -81,6 +49,10 @@ func interfaceToObject(v interface{}) (objects.Object, error) {
 		return &objects.Char{Value: rune(v)}, nil
 	case float64:
 		return &objects.Float{Value: v}, nil
+	case []byte:
+		return &objects.Bytes{Value: v}, nil
+	case error:
+		return &objects.Error{Value: &objects.String{Value: v.Error()}}, nil
 	case map[string]objects.Object:
 		return &objects.Map{Value: v}, nil
 	case map[string]interface{}:

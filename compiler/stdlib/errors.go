@@ -1,4 +1,4 @@
-package stdmods
+package stdlib
 
 import "github.com/d5/tengo/objects"
 

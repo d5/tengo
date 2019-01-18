@@ -30,7 +30,7 @@ func (o *Bool) BinaryOp(op token.Token, rhs Object) (Object, error) {
 
 // Copy returns a copy of the type.
 func (o *Bool) Copy() Object {
-	v := Bool(*o)
+	v := Bool{Value: o.Value}
 	return &v
 }
 

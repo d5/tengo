@@ -3,11 +3,47 @@ package runtime_test
 import "testing"
 
 func TestModule(t *testing.T) {
-	// stdmods
+	// stdlib
 	expect(t, `math := import("math"); out = math.abs(1)`, 1.0)
 	expect(t, `math := import("math"); out = math.abs(-1)`, 1.0)
 	expect(t, `math := import("math"); out = math.abs(1.0)`, 1.0)
 	expect(t, `math := import("math"); out = math.abs(-1.0)`, 1.0)
+
+	// os.File
+	expect(t, `
+os := import("os")
+
+write_file := func(filename, data) {
+	file := os.create(filename)
+	if !file { return file }
+
+	if res := file.write(bytes(data)); is_error(res) {
+		return res
+	}
+
+	return file.close()
+}
+
+read_file := func(filename) {
+	file := os.open(filename)
+	if !file { return file }
+
+	data := bytes(100)
+	cnt := file.read(data)
+	if  is_error(cnt) {
+		return cnt
+	}
+
+	file.close()
+	return data[:cnt]
+}
+
+if write_file("./temp", "foobar") {
+	out = string(read_file("./temp"))
+}
+
+os.remove("./temp")
+`, "foobar")
 
 	// user modules
 	expectWithUserModules(t, `out = import("mod1").bar()`, 5.0, map[string]string{

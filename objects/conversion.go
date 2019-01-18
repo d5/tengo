@@ -118,13 +118,21 @@ func ToRune(o Object) (v rune, ok bool) {
 	case *Char:
 		v = rune(o.Value)
 		ok = true
+	}
+
+	//ok = false
+	return
+}
+
+// ToByteSlice will try to convert object o to []byte value.
+func ToByteSlice(o Object) (v []byte, ok bool) {
+	switch o := o.(type) {
+	case *Bytes:
+		v = o.Value
+		ok = true
 	case *String:
-		rs := []rune(o.Value)
-		switch len(rs) {
-		case 1:
-			v = rs[0]
-			ok = true
-		}
+		v = []byte(o.Value)
+		ok = true
 	}
 
 	//ok = false

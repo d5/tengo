@@ -112,6 +112,8 @@ func toObject(v interface{}) objects.Object {
 		return &objects.Char{Value: rune(v)}
 	case float64:
 		return &objects.Float{Value: v}
+	case []byte:
+		return &objects.Bytes{Value: v}
 	case MAP:
 		objs := make(map[string]objects.Object)
 		for k, v := range v {
@@ -278,6 +280,8 @@ func objectZeroCopy(o objects.Object) objects.Object {
 		return &objects.Undefined{}
 	case *objects.Error:
 		return &objects.Error{}
+	case *objects.Bytes:
+		return &objects.Bytes{}
 	case nil:
 		panic("nil")
 	default:

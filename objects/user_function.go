@@ -40,7 +40,7 @@ func (o *UserFunction) Equals(x Object) bool {
 	return false
 }
 
-// Call executes a builtin function.
+// Call invokes a user function.
 func (o *UserFunction) Call(args ...Object) (Object, error) {
 	return o.Value(args...)
 }

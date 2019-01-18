@@ -84,3 +84,21 @@ func builtinChar(args ...Object) (Object, error) {
 
 	return UndefinedValue, nil
 }
+
+func builtinBytes(args ...Object) (Object, error) {
+	if len(args) != 1 {
+		return nil, ErrWrongNumArguments
+	}
+
+	// bytes(N) => create a new bytes with given size N
+	if n, ok := args[0].(*Int); ok {
+		return &Bytes{Value: make([]byte, int(n.Value))}, nil
+	}
+
+	v, ok := ToByteSlice(args[0])
+	if ok {
+		return &Bytes{Value: v}, nil
+	}
+
+	return UndefinedValue, nil
+}

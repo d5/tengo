@@ -2,6 +2,12 @@ package objects
 
 import "errors"
 
+// ErrNotCallable represents an error for calling on non-function objects.
+var ErrNotCallable = errors.New("not a callable object")
+
+// ErrNotIndexable represents an error for indexing on non-indexable objects.
+var ErrNotIndexable = errors.New("non-indexable object")
+
 // ErrInvalidOperator represents an error for invalid operator usage.
 var ErrInvalidOperator = errors.New("invalid operator")
 

@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	"github.com/d5/tengo/compiler/ast"
-	"github.com/d5/tengo/compiler/stdmods"
+	"github.com/d5/tengo/compiler/stdlib"
 	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
 )
@@ -440,7 +440,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.emit(OpCall, len(node.Args))
 
 	case *ast.ImportExpr:
-		stdMod, ok := stdmods.Modules[node.ModuleName]
+		stdMod, ok := stdlib.Modules[node.ModuleName]
 		if ok {
 			// standard modules contain only globals with no code.
 			// so no need to compile anything

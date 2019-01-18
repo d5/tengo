@@ -1,4 +1,4 @@
-package stdmods
+package stdlib
 
 import (
 	"github.com/d5/tengo/objects"
@@ -30,6 +30,20 @@ func FuncARI(fn func() int) *objects.UserFunction {
 			}
 
 			return &objects.Int{Value: int64(fn())}, nil
+		},
+	}
+}
+
+// FuncARE transform a function of 'func() error' signature
+// into a user function object.
+func FuncARE(fn func() error) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 0 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			return wrapError(fn()), nil
 		},
 	}
 }
@@ -427,6 +441,30 @@ func FuncASI64RE(fn func(string, int64) error) *objects.UserFunction {
 	}
 }
 
+// FuncAIIRE transform a function of 'func(int, int) error' signature
+// into a user function object.
+func FuncAIIRE(fn func(int, int) error) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 2 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			i1, ok := objects.ToInt(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			i2, ok := objects.ToInt(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return wrapError(fn(i1, i2)), nil
+		},
+	}
+}
+
 // FuncASIIRE transform a function of 'func(string, int, int) error' signature
 // into a user function object.
 func FuncASIIRE(fn func(string, int, int) error) *objects.UserFunction {
@@ -452,6 +490,83 @@ func FuncASIIRE(fn func(string, int, int) error) *objects.UserFunction {
 			}
 
 			return wrapError(fn(s1, i2, i3)), nil
+		},
+	}
+}
+
+// FuncAYRIE transform a function of 'func([]byte) (int, error)' signature
+// into a user function object.
+func FuncAYRIE(fn func([]byte) (int, error)) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			y1, ok := objects.ToByteSlice(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			res, err := fn(y1)
+			if err != nil {
+				return wrapError(err), nil
+			}
+
+			return &objects.Int{Value: int64(res)}, nil
+		},
+	}
+}
+
+// FuncASRIE transform a function of 'func(string) (int, error)' signature
+// into a user function object.
+func FuncASRIE(fn func(string) (int, error)) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			res, err := fn(s1)
+			if err != nil {
+				return wrapError(err), nil
+			}
+
+			return &objects.Int{Value: int64(res)}, nil
+		},
+	}
+}
+
+// FuncAIRSsE transform a function of 'func(int) ([]string, error)' signature
+// into a user function object.
+func FuncAIRSsE(fn func(int) ([]string, error)) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			i1, ok := objects.ToInt(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			res, err := fn(i1)
+			if err != nil {
+				return wrapError(err), nil
+			}
+
+			arr := &objects.Array{}
+			for _, osArg := range res {
+				arr.Value = append(arr.Value, &objects.String{Value: osArg})
+			}
+
+			return arr, nil
 		},
 	}
 }

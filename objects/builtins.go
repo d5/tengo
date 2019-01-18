@@ -42,6 +42,10 @@ var Builtins = []struct {
 		Func: builtinChar,
 	},
 	{
+		Name: "bytes",
+		Func: builtinBytes,
+	},
+	{
 		Name: "is_int",
 		Func: builtinIsInt,
 	},
@@ -60,6 +64,10 @@ var Builtins = []struct {
 	{
 		Name: "is_char",
 		Func: builtinIsChar,
+	},
+	{
+		Name: "is_bytes",
+		Func: builtinIsBytes,
 	},
 	{
 		Name: "is_error",
