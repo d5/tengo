@@ -20,6 +20,53 @@ func FuncAR(fn func()) *objects.UserFunction {
 	}
 }
 
+// FuncARI transform a function of 'func() int' signature
+// into a user function object.
+func FuncARI(fn func() int) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 0 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			return &objects.Int{Value: int64(fn())}, nil
+		},
+	}
+}
+
+// FuncARS transform a function of 'func() string' signature
+// into a user function object.
+func FuncARS(fn func() string) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 0 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			return &objects.String{Value: fn()}, nil
+		},
+	}
+}
+
+// FuncARSE transform a function of 'func() (string, error)' signature
+// into a user function object.
+func FuncARSE(fn func() (string, error)) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 0 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			res, err := fn()
+			if err != nil {
+				return wrapError(err), nil
+			}
+
+			return &objects.String{Value: res}, nil
+		},
+	}
+}
+
 // FuncARF transform a function of 'func() float64' signature
 // into a user function object.
 func FuncARF(fn func() float64) *objects.UserFunction {
@@ -53,6 +100,30 @@ func FuncARSs(fn func() []string) *objects.UserFunction {
 	}
 }
 
+// FuncARIsE transform a function of 'func() ([]int, error)' signature
+// into a user function object.
+func FuncARIsE(fn func() ([]int, error)) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 0 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			res, err := fn()
+			if err != nil {
+				return wrapError(err), nil
+			}
+
+			arr := &objects.Array{}
+			for _, v := range res {
+				arr.Value = append(arr.Value, &objects.Int{Value: int64(v)})
+			}
+
+			return arr, nil
+		},
+	}
+}
+
 // FuncAFRF transform a function of 'func(float64) float64' signature
 // into a user function object.
 func FuncAFRF(fn func(float64) float64) *objects.UserFunction {
@@ -68,6 +139,27 @@ func FuncAFRF(fn func(float64) float64) *objects.UserFunction {
 			}
 
 			return &objects.Float{Value: fn(f1)}, nil
+		},
+	}
+}
+
+// FuncAIR transform a function of 'func(int)' signature
+// into a user function object.
+func FuncAIR(fn func(int)) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			i1, ok := objects.ToInt(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			fn(i1)
+
+			return objects.UndefinedValue, nil
 		},
 	}
 }
@@ -225,6 +317,49 @@ func FuncAFRB(fn func(float64) bool) *objects.UserFunction {
 	}
 }
 
+// FuncASRS transform a function of 'func(string) string' signature into a user function object.
+// User function will return 'true' if underlying native function returns nil.
+func FuncASRS(fn func(string) string) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return &objects.String{Value: fn(s1)}, nil
+		},
+	}
+}
+
+// FuncASRSE transform a function of 'func(string) (string, error)' signature into a user function object.
+// User function will return 'true' if underlying native function returns nil.
+func FuncASRSE(fn func(string) (string, error)) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			res, err := fn(s1)
+			if err != nil {
+				return wrapError(err), nil
+			}
+
+			return &objects.String{Value: res}, nil
+		},
+	}
+}
+
 // FuncASRE transform a function of 'func(string) error' signature into a user function object.
 // User function will return 'true' if underlying native function returns nil.
 func FuncASRE(fn func(string) error) *objects.UserFunction {
@@ -240,6 +375,83 @@ func FuncASRE(fn func(string) error) *objects.UserFunction {
 			}
 
 			return wrapError(fn(s1)), nil
+		},
+	}
+}
+
+// FuncASSRE transform a function of 'func(string, string) error' signature into a user function object.
+// User function will return 'true' if underlying native function returns nil.
+func FuncASSRE(fn func(string, string) error) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 2 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			s2, ok := objects.ToString(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return wrapError(fn(s1, s2)), nil
+		},
+	}
+}
+
+// FuncASI64RE transform a function of 'func(string, int64) error' signature
+// into a user function object.
+func FuncASI64RE(fn func(string, int64) error) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 2 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			i2, ok := objects.ToInt64(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return wrapError(fn(s1, i2)), nil
+		},
+	}
+}
+
+// FuncASIIRE transform a function of 'func(string, int, int) error' signature
+// into a user function object.
+func FuncASIIRE(fn func(string, int, int) error) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 3 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			i2, ok := objects.ToInt(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			i3, ok := objects.ToInt(args[2])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return wrapError(fn(s1, i2, i3)), nil
 		},
 	}
 }

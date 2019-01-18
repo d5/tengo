@@ -42,6 +42,26 @@ var Builtins = []struct {
 		Func: builtinChar,
 	},
 	{
+		Name: "is_int",
+		Func: builtinIsInt,
+	},
+	{
+		Name: "is_float",
+		Func: builtinIsFloat,
+	},
+	{
+		Name: "is_string",
+		Func: builtinIsString,
+	},
+	{
+		Name: "is_bool",
+		Func: builtinIsBool,
+	},
+	{
+		Name: "is_char",
+		Func: builtinIsChar,
+	},
+	{
 		Name: "is_error",
 		Func: builtinIsError,
 	},

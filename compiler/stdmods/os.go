@@ -36,19 +36,56 @@ var osModule = map[string]objects.Object{
 	"path_list_separator": &objects.Char{Value: os.PathListSeparator},
 	"dev_null":            &objects.String{Value: os.DevNull},
 
-	"args":     &objects.UserFunction{Value: osArgs},
-	"chdir":    FuncASRE(os.Chdir),
-	"chmod":    &objects.UserFunction{Value: osChmod},
-	"chown":    &objects.UserFunction{Value: osChown},
-	"clearenv": FuncAR(os.Clearenv),
-	"environ":  FuncARSs(os.Environ),
+	"args":           &objects.UserFunction{Value: osArgs},
+	"chdir":          FuncASRE(os.Chdir),
+	"chmod":          osFuncASFmRE(os.Chmod),
+	"chown":          FuncASIIRE(os.Chown),
+	"clearenv":       FuncAR(os.Clearenv),
+	"environ":        FuncARSs(os.Environ),
+	"executable":     &objects.UserFunction{Value: osExecutable},
+	"exit":           FuncAIR(os.Exit),
+	"expand_env":     FuncASRS(os.ExpandEnv),
+	"getegid":        FuncARI(os.Getegid),
+	"getenv":         FuncASRS(os.Getenv),
+	"geteuid":        FuncARI(os.Geteuid),
+	"getgid":         FuncARI(os.Getgid),
+	"getgroups":      FuncARIsE(os.Getgroups),
+	"getpagesize":    FuncARI(os.Getpagesize),
+	"getpid":         FuncARI(os.Getpid),
+	"getppid":        FuncARI(os.Getppid),
+	"getuid":         FuncARI(os.Getuid),
+	"getwd":          FuncARSE(os.Getwd),
+	"hostname":       FuncARSE(os.Hostname),
+	"lchown":         FuncASIIRE(os.Lchown),
+	"link":           FuncASSRE(os.Link),
+	"lookup_env":     &objects.UserFunction{Value: osLookupEnv},
+	"mkdir":          osFuncASFmRE(os.Mkdir),
+	"mkdir_all":      osFuncASFmRE(os.MkdirAll),
+	"readlink":       FuncASRSE(os.Readlink),
+	"remove":         FuncASRE(os.Remove),
+	"remove_all":     FuncASRE(os.RemoveAll),
+	"rename":         FuncASSRE(os.Rename),
+	"setenv":         FuncASSRE(os.Setenv),
+	"symlink":        FuncASSRE(os.Symlink),
+	"temp_dir":       FuncARS(os.TempDir),
+	"truncate":       FuncASI64RE(os.Truncate),
+	"unsetenv":       FuncASRE(os.Unsetenv),
+	"user_cache_dir": FuncARSE(os.UserCacheDir),
 
-	// TODO: system errors
-	//"err_invalid":         &objects.Error{Value: os.ErrInvalid.Error()},
-	// TODO: STDIN, STDOUT, STDERR
-	// "stdin": nil,
-	// "stdout": nil,
-	// "stderr": nil,
+	// TODO: not implemented yet
+	//"stdin":         nil,
+	//"stdout":        nil,
+	//"stderr":        nil,
+	//"chtimes":       nil,
+	//"expand":        nil,
+	//"is_exists":     nil,
+	//"is_not_exist":  nil,
+	//"is_path_separator": nil,
+	//"is_permission": nil,
+	//"is_timeout": nil,
+	//"new_syscall_error": nil,
+	//"pipe": nil,
+	//"same_file": nil,
 }
 
 func osArgs(args ...objects.Object) (objects.Object, error) {
@@ -64,25 +101,42 @@ func osArgs(args ...objects.Object) (objects.Object, error) {
 	return arr, nil
 }
 
-func osChmod(args ...objects.Object) (objects.Object, error) {
-	if len(args) != 2 {
-		return nil, objects.ErrWrongNumArguments
-	}
+func osFuncASFmRE(fn func(string, os.FileMode) error) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 2 {
+				return nil, objects.ErrWrongNumArguments
+			}
 
-	s1, ok := objects.ToString(args[0])
-	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
-	}
-	i2, ok := objects.ToInt(args[1])
-	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
-	}
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+			i2, ok := objects.ToInt(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
 
-	return wrapError(os.Chmod(s1, os.FileMode(i2))), nil
+			return wrapError(fn(s1, os.FileMode(i2))), nil
+		},
+	}
 }
 
-func osChown(args ...objects.Object) (objects.Object, error) {
-	if len(args) != 3 {
+func osExecutable(args ...objects.Object) (objects.Object, error) {
+	if len(args) != 0 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	res, err := os.Executable()
+	if err != nil {
+		return wrapError(err), nil
+	}
+
+	return &objects.String{Value: res}, nil
+}
+
+func osLookupEnv(args ...objects.Object) (objects.Object, error) {
+	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
 
@@ -90,14 +144,11 @@ func osChown(args ...objects.Object) (objects.Object, error) {
 	if !ok {
 		return nil, objects.ErrInvalidTypeConversion
 	}
-	i2, ok := objects.ToInt(args[1])
+
+	res, ok := os.LookupEnv(s1)
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
-	}
-	i3, ok := objects.ToInt(args[2])
-	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return objects.FalseValue, nil
 	}
 
-	return wrapError(os.Chown(s1, i2, i3)), nil
+	return &objects.String{Value: res}, nil
 }
