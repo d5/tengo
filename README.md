@@ -212,6 +212,13 @@ foo := 2
 
 Basically `import` expression returns all the global variables defined in the module as a Map-like value. One can access the functions or variables defined in the module using `.` selector or `["key"]` indexer, but, module variables are immutable.
 
+Also you can use `import` to load the [standard libraries](https://github.com/d5/tengo/wiki/Standard-Libraries).
+
+```golang
+math := import("math")
+a := math.abs(-19.84) // == 19.84
+```
+
 
 ## Embedding Tengo in Go
 
