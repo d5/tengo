@@ -1,6 +1,8 @@
 package script
 
 import (
+	"errors"
+
 	"github.com/d5/tengo/objects"
 )
 
@@ -122,6 +124,17 @@ func (v *Variable) Bytes() []byte {
 	c, _ := objects.ToByteSlice(*v.value)
 
 	return c
+}
+
+// Error returns an error if the underlying value is error object.
+// If not, this returns nil.
+func (v *Variable) Error() error {
+	err, ok := (*v.value).(*objects.Error)
+	if ok {
+		return errors.New(err.String())
+	}
+
+	return nil
 }
 
 // Object returns an underlying Object of the variable value.
