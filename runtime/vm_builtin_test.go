@@ -74,6 +74,16 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = bool({})`, false)        // empty maps: false
 	expect(t, `out = bool(undefined)`, false) // undefined: false
 
+	expect(t, `out = bytes(1)`, []byte{0})
+	expect(t, `out = bytes(1.8)`, undefined())
+	expect(t, `out = bytes("-522")`, []byte{'-', '5', '2', '2'})
+	expect(t, `out = bytes(true)`, undefined())
+	expect(t, `out = bytes(false)`, undefined())
+	expect(t, `out = bytes('8')`, undefined())
+	expect(t, `out = bytes([1])`, undefined())
+	expect(t, `out = bytes({a: 1})`, undefined())
+	expect(t, `out = bytes(undefined)`, undefined())
+
 	expect(t, `out = is_error(error(1))`, true)
 	expect(t, `out = is_error(1)`, false)
 
