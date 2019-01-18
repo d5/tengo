@@ -112,6 +112,8 @@ func toObject(v interface{}) objects.Object {
 		return &objects.Char{Value: rune(v)}
 	case float64:
 		return &objects.Float{Value: v}
+	case []byte:
+		return &objects.Bytes{Value: v}
 	case MAP:
 		objs := make(map[string]objects.Object)
 		for k, v := range v {
@@ -174,9 +176,12 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 		sym := symTable.Define(name)
 		globals[sym.Index] = &value
 	}
+	for idx, fn := range objects.Builtins {
+		symTable.DefineBuiltin(idx, fn.Name)
+	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(symTable, tr)
+	c := compiler.NewCompiler(symTable, nil, tr)
 	c.SetModuleLoader(func(moduleName string) ([]byte, error) {
 		if src, ok := userModules[moduleName]; ok {
 			return []byte(src), nil
@@ -278,6 +283,8 @@ func objectZeroCopy(o objects.Object) objects.Object {
 		return &objects.Undefined{}
 	case *objects.Error:
 		return &objects.Error{}
+	case *objects.Bytes:
+		return &objects.Bytes{}
 	case nil:
 		panic("nil")
 	default:

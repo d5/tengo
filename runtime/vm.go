@@ -622,6 +622,25 @@ func (v *VM) Run() error {
 				v.stack[v.sp] = &val
 				v.sp++
 
+			case *objects.Bytes:
+				idx, ok := (*index).(*objects.Int)
+				if !ok {
+					return fmt.Errorf("non-integer array index: %s", left.TypeName())
+				}
+
+				if idx.Value < 0 || idx.Value >= int64(len(left.Value)) {
+					return fmt.Errorf("index out of bounds: %d", index)
+				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				var val objects.Object = &objects.Int{Value: int64(left.Value[idx.Value])}
+
+				v.stack[v.sp] = &val
+				v.sp++
+
 			case *objects.Map:
 				key, ok := (*index).(*objects.String)
 				if !ok {
@@ -641,7 +660,7 @@ func (v *VM) Run() error {
 				v.stack[v.sp] = &res
 				v.sp++
 
-			case *objects.ModuleMap:
+			case *objects.ImmutableMap:
 				key, ok := (*index).(*objects.String)
 				if !ok {
 					return fmt.Errorf("non-string key: %s", left.TypeName())
@@ -750,6 +769,31 @@ func (v *VM) Run() error {
 				}
 
 				var val objects.Object = &objects.String{Value: left.Value[lowIdx:highIdx]}
+
+				v.stack[v.sp] = &val
+				v.sp++
+
+			case *objects.Bytes:
+				numElements := int64(len(left.Value))
+
+				if lowIdx < 0 || lowIdx >= numElements {
+					return fmt.Errorf("index out of bounds: %d", lowIdx)
+				}
+				if highIdx < 0 {
+					highIdx = numElements
+				} else if highIdx < 0 || highIdx > numElements {
+					return fmt.Errorf("index out of bounds: %d", highIdx)
+				}
+
+				if lowIdx > highIdx {
+					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
+				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				var val objects.Object = &objects.Bytes{Value: left.Value[lowIdx:highIdx]}
 
 				v.stack[v.sp] = &val
 				v.sp++
@@ -1005,7 +1049,7 @@ func (v *VM) Run() error {
 				iterator = objects.NewArrayIterator(dst)
 			case *objects.Map:
 				iterator = objects.NewMapIterator(dst)
-			case *objects.ModuleMap:
+			case *objects.ImmutableMap:
 				iterator = objects.NewModuleMapIterator(dst)
 			case *objects.String:
 				iterator = objects.NewStringIterator(dst)
@@ -1213,7 +1257,7 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 	return nil
 }
 
-// TODO: should reuse *objects.ModuleMap for the same imports?
+// TODO: should reuse *objects.ImmutableMap for the same imports?
 func (v *VM) importModule(compiledModule *objects.CompiledModule) error {
 	// import module is basically to create a new instance of VM
 	// and run the module code and retrieve all global variables after execution.
@@ -1230,7 +1274,7 @@ func (v *VM) importModule(compiledModule *objects.CompiledModule) error {
 		mmValue[name] = *moduleVM.globals[index]
 	}
 
-	var mm objects.Object = &objects.ModuleMap{Value: mmValue}
+	var mm objects.Object = &objects.ImmutableMap{Value: mmValue}
 
 	if v.sp >= StackSize {
 		return ErrStackOverflow

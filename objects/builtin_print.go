@@ -6,7 +6,11 @@ import (
 
 func builtinPrint(args ...Object) (Object, error) {
 	for _, arg := range args {
-		fmt.Println(arg.String())
+		if str, ok := arg.(*String); ok {
+			fmt.Println(str.Value)
+		} else {
+			fmt.Println(arg.String())
+		}
 	}
 
 	return nil, nil

@@ -63,7 +63,7 @@ func (s *Script) Compile() (*Compiled, error) {
 		return nil, fmt.Errorf("parse error: %s", err.Error())
 	}
 
-	c := compiler.NewCompiler(symbolTable, nil)
+	c := compiler.NewCompiler(symbolTable, nil, nil)
 	if err := c.Compile(file); err != nil {
 		return nil, err
 	}
@@ -94,6 +94,10 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, globals []*ob
 	}
 
 	symbolTable = compiler.NewSymbolTable()
+	for idx, fn := range objects.Builtins {
+		symbolTable.DefineBuiltin(idx, fn.Name)
+	}
+
 	globals = make([]*objects.Object, len(names), len(names))
 
 	for idx, name := range names {

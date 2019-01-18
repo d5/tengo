@@ -165,6 +165,10 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		return Equal(t, expected.Value, actual.(objects.ReturnValue).Value)
 	case *objects.Array:
 		return equalArray(t, expected, actual.(*objects.Array))
+	case *objects.Bytes:
+		if bytes.Compare(expected.Value, actual.(*objects.Bytes).Value) != 0 {
+			return failExpectedActual(t, expected.Value, actual.(*objects.Bytes).Value, msg...)
+		}
 	case *objects.Map:
 		return equalMap(t, expected, actual.(*objects.Map))
 	case *objects.CompiledFunction:
@@ -175,6 +179,10 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		return true
 	case *objects.Error:
 		return Equal(t, expected.Value, actual.(*objects.Error).Value)
+	case error:
+		if expected != actual.(error) {
+			return failExpectedActual(t, expected, actual, msg...)
+		}
 	default:
 		panic(fmt.Errorf("type not implemented: %T", expected))
 	}

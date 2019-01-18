@@ -972,9 +972,12 @@ func traceCompile(input string, symbols map[string]objects.Object) (res *compile
 	for name := range symbols {
 		symTable.Define(name)
 	}
+	for idx, fn := range objects.Builtins {
+		symTable.DefineBuiltin(idx, fn.Name)
+	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(symTable, tr)
+	c := compiler.NewCompiler(symTable, nil, tr)
 	parsed, err := p.ParseFile()
 	if err != nil {
 		return

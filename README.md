@@ -97,6 +97,8 @@ c5 := char("X")     // 'X'
 ```
 > [Run in Playground](https://tengolang.com/?s=8d57905b82959eb244e9bbd2111e12ee04a33045)
 
+_See [Variable Types](https://github.com/d5/tengo/wiki/Variable-Types) for more details on the variable types._
+
 You can use the dot selector (`.`) and indexer (`[]`) operator to read or write elemens of arrays, strings, or maps.
 
 ```golang
@@ -115,7 +117,7 @@ m.x = 5				// add 'x' to map 'm'
 ```
 > [Run in Playground](https://tengolang.com/?s=d510c75ed8f06ef1e22c1aaf8a7d4565c793514c)
 
-For sequence types (string or array), you can use slice operator (`[:]`) too.
+For sequence types (string, bytes, array), you can use slice operator (`[:]`) too.
 
 ```golang
 a := [1, 2, 3, 4, 5][1:3]	// == [2, 3]
@@ -209,6 +211,13 @@ foo := 2
 ```
 
 Basically `import` expression returns all the global variables defined in the module as a Map-like value. One can access the functions or variables defined in the module using `.` selector or `["key"]` indexer, but, module variables are immutable.
+
+Also you can use `import` to load the [standard libraries](https://github.com/d5/tengo/wiki/Standard-Libraries).
+
+```golang
+math := import("math")
+a := math.abs(-19.84) // == 19.84
+```
 
 
 ## Embedding Tengo in Go

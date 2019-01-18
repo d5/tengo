@@ -193,7 +193,7 @@ func compileFile(file *ast.File) (time.Duration, *compiler.Bytecode, error) {
 
 	start := time.Now()
 
-	c := compiler.NewCompiler(symTable, nil)
+	c := compiler.NewCompiler(symTable, nil, nil)
 	if err := c.Compile(file); err != nil {
 		return time.Since(start), nil, err
 	}
