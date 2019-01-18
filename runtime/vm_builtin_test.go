@@ -29,7 +29,8 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = int(undefined)`, undefined())
 	expect(t, `out = int("-522", 1)`, -522)
 	expect(t, `out = int(undefined, 1)`, 1)
-	expect(t, `out = int(undefined, 1.8)`, undefined())
+	expect(t, `out = int(undefined, 1.8)`, 1.8)
+	expect(t, `out = int(undefined, string(1))`, "1")
 	expect(t, `out = int(undefined, undefined)`, undefined())
 
 	expect(t, `out = string(1)`, "1")
@@ -54,9 +55,10 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = float({a: 1, b: "foo"})`, undefined())
 	expect(t, `out = float(undefined)`, undefined())
 	expect(t, `out = float("-52.2", 1.8)`, -52.2)
-	expect(t, `out = float(undefined, 1)`, 1.0)
+	expect(t, `out = float(undefined, 1)`, 1)
 	expect(t, `out = float(undefined, 1.8)`, 1.8)
-	expect(t, `out = float(undefined, "-52.2")`, undefined())
+	expect(t, `out = float(undefined, "-52.2")`, "-52.2")
+	expect(t, `out = float(undefined, char(56))`, '8')
 	expect(t, `out = float(undefined, undefined)`, undefined())
 
 	expect(t, `out = char(56)`, '8')
@@ -70,8 +72,9 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = char(undefined)`, undefined())
 	expect(t, `out = char(56, 'a')`, '8')
 	expect(t, `out = char(undefined, '8')`, '8')
-	expect(t, `out = char(undefined, 56)`, undefined())
-	expect(t, `out = char(undefined, "-52.2")`, undefined())
+	expect(t, `out = char(undefined, 56)`, 56)
+	expect(t, `out = char(undefined, "-52.2")`, "-52.2")
+	expect(t, `out = char(undefined, undefined)`, undefined())
 
 	expect(t, `out = bool(1)`, true)          // non-zero integer: true
 	expect(t, `out = bool(0)`, false)         // zero: true
@@ -99,9 +102,10 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = bytes({a: 1})`, undefined())
 	expect(t, `out = bytes(undefined)`, undefined())
 	expect(t, `out = bytes("-522", ['8'])`, []byte{'-', '5', '2', '2'})
-	expect(t, `out = bytes(undefined, "-522")`, []byte{'-', '5', '2', '2'})
-	expect(t, `out = bytes(undefined, 1)`, []byte{0})
-	expect(t, `out = bytes(undefined, 1.8)`, undefined())
+	expect(t, `out = bytes(undefined, "-522")`, "-522")
+	expect(t, `out = bytes(undefined, 1)`, 1)
+	expect(t, `out = bytes(undefined, 1.8)`, 1.8)
+	expect(t, `out = bytes(undefined, int("-522"))`, -522)
 	expect(t, `out = bytes(undefined, undefined)`, undefined())
 
 	expect(t, `out = is_error(error(1))`, true)

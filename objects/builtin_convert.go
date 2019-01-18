@@ -16,9 +16,7 @@ func builtinString(args ...Object) (Object, error) {
 	}
 
 	if argsLen == 2 {
-		if _, ok := args[1].(*String); ok {
-			return args[1], nil
-		}
+		return args[1], nil
 	}
 
 	return UndefinedValue, nil
@@ -40,9 +38,7 @@ func builtinInt(args ...Object) (Object, error) {
 	}
 
 	if argsLen == 2 {
-		if _, ok := args[1].(*Int); ok {
-			return args[1], nil
-		}
+		return args[1]
 	}
 
 	return UndefinedValue, nil
@@ -64,12 +60,7 @@ func builtinFloat(args ...Object) (Object, error) {
 	}
 
 	if argsLen == 2 {
-		if _, ok := args[1].(*Float); ok {
-			return args[1], nil
-		} else if _, ok := args[1].(*Int); ok {
-			v, _ := ToFloat64(args[1])
-			return &Float{Value: v}, nil
-		}
+		return args[1]
 	}
 
 	return UndefinedValue, nil
@@ -108,9 +99,7 @@ func builtinChar(args ...Object) (Object, error) {
 	}
 
 	if argsLen == 2 {
-		if _, ok := args[1].(*Char); ok {
-			return args[1], nil
-		}
+		return args[1]
 	}
 
 	return UndefinedValue, nil
@@ -133,15 +122,7 @@ func builtinBytes(args ...Object) (Object, error) {
 	}
 
 	if argsLen == 2 {
-		// bytes(N) => create a new bytes with given size N
-		if n, ok := args[1].(*Int); ok {
-			return &Bytes{Value: make([]byte, int(n.Value))}, nil
-		}
-	
-		v, ok = ToByteSlice(args[1])
-		if ok {
-			return &Bytes{Value: v}, nil
-		}
+		return args[1]
 	}
 
 	return UndefinedValue, nil
