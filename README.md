@@ -419,6 +419,7 @@ Things are experimental, and, the focus is on the **core language features**, **
 This will be the first _versioned_ release, and, the main goal for v1 is to make Tengo as a _fast_ embeddable script language for Go, which means Tengo will be comparable to other Go-based script languages such as [Starlark](https://github.com/google/starlark-go), [Lua](https://github.com/Shopify/go-lua) [VM](https://github.com/yuin/gopher-lua)s, and [other](https://github.com/robertkrimen/otto) [interpreter](https://github.com/mattn/anko)s.
 
 - Interoperability with Go code
+- Sandbox environment
 - More language features such as bound methods and switch-case statements
 
 ### v2. Tengo as a Standalone Language
