@@ -33,6 +33,7 @@ Tengo is [fast](#benchmark) as it's compiled to bytecode and executed on stack-b
 | [go-lua](https://github.com/Shopify/go-lua) | `5,236ms` | `5ms` | Lua VM on Go |
 | [GopherLua](https://github.com/yuin/gopher-lua) | `5,558ms` | `5ms` | Lua VM on Go |
 | Python | `3,132ms` | `28ms` | Python (native) |
+| [starlark-go](https://github.com/google/starlark-go) | `16,789ms` | `5ms` | Python-like Interpreter on Go |
 | [otto](https://github.com/robertkrimen/otto) | `85,765ms` | `22ms` | JS Interpreter on Go |
 | [Anko](https://github.com/mattn/anko) | `99,235ms` | `24ms` | Interpreter on Go |
 
