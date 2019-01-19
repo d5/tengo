@@ -21,7 +21,7 @@ Tengo is [fast](#benchmark) as it's compiled to bytecode and executed on stack-b
 - Garbage collected _(thanks to Go runtime)_
 - Easily extendible using customizable types
 - Written in pure Go _(no CGO, no external dependencies)_
-- Excutable as a [standalone language](https://github.com/d5/tengo#tengo-as-a-standalone-language) _(without writing any Go code)_
+- Executable as a [standalone language](https://github.com/d5/tengo#tengo-as-a-standalone-language) _(without writing any Go code)_
 
 ## Benchmark
 
@@ -99,7 +99,7 @@ c5 := char("X")     // 'X'
 
 _See [Variable Types](https://github.com/d5/tengo/wiki/Variable-Types) for more details on the variable types._
 
-You can use the dot selector (`.`) and indexer (`[]`) operator to read or write elemens of arrays, strings, or maps.
+You can use the dot selector (`.`) and indexer (`[]`) operator to read or write elements of arrays, strings, or maps.
 
 ```golang
 ["one", "two", "three"][1]	// == "two"
@@ -210,9 +210,9 @@ func1 := func(x) { print(x) }
 foo := 2
 ```
 
-Basically `import` expression returns all the global variables defined in the module as a Map-like value. One can access the functions or variables defined in the module using `.` selector or `["key"]` indexer, but, module variables are immutable.
+Basically, `import` expression returns all the global variables defined in the module as a Map-like value. One can access the functions or variables defined in the module using `.` selector or `["key"]` indexer, but, module variables are immutable.
 
-Also you can use `import` to load the [standard libraries](https://github.com/d5/tengo/wiki/Standard-Libraries).
+Also, you can use `import` to load the [standard libraries](https://github.com/d5/tengo/wiki/Standard-Libraries).
 
 ```golang
 math := import("math")
@@ -278,7 +278,7 @@ func main() {
 }
 ```
 
-In the example above, a variable `b` is defined by the user before compiliation using `Script.Add()` function. Then a compiled bytecode `c` is used to execute the bytecode and get the value of global variables. In this example, the value of global variable `a` is read using `Compiled.Get()` function.
+In the example above, a variable `b` is defined by the user before compilation using `Script.Add()` function. Then a compiled bytecode `c` is used to execute the bytecode and get the value of global variables. In this example, the value of global variable `a` is read using `Compiled.Get()` function.
 
 If you need the custom data types (outside Tengo's primitive types), you can define your own `struct` that implements `objects.Object` interface _(and optionally `objects.Callable` if you want to make function-like invokable objects)_.
 
@@ -371,12 +371,11 @@ func main() {
 
 ```
 
-As an alternative to using **Script**, you can directly create and interact with the parser, compiler and VMs directly. There's no good documentations yet, but, check out Script code if you are interested.
+As an alternative to using **Script**, you can directly create and interact with the parser, compiler, and, VMs directly. There's no good documentation yet, but, check out Script code if you are interested.
 
+## Tengo CLI Tool
 
-## Tengo as a Standalone Language
-
-Although Tengo is designed as an embedded script language for Go, it can be compiled and executed as native binary without any Go code using `tengo` tool.
+Although Tengo is designed as an embedded script language for Go, it can be compiled and executed as native binary using `tengo` tool.
 
 ### Installing Tengo Tool
 
@@ -411,12 +410,21 @@ tengo
 
 ## Roadmap
 
-Development roadmap for Tengo:
+### v0. _(Current)_
 
-- Standard libraries _(modules)_
-- Better documentations
-- More language constructs such as destructuring assignment, `this` binding for object methods, switch-case statements
+Things are experimental, and, the focus is on the **core language features**, **stability**, **basic interoperability**, and the **performance optimization**.
+
+### v1. Tengo as a Script Language
+
+This will be the first _versioned_ release, and, the main goal for v1 is to make Tengo as a _fast_ embeddable script language for Go, which means Tengo will be comparable to other Go-based script languages such as [Starlark](https://github.com/google/starlark-go), [Lua](https://github.com/Shopify/go-lua) [VM](https://github.com/yuin/gopher-lua)s, and [other](https://github.com/robertkrimen/otto) [interpreter](https://github.com/mattn/anko)s.
+
+- Interoperability with Go code
+- Sandbox environment
+- More language features such as bound methods and switch-case statements
+
+### v2. Tengo as a Standalone Language
+
+- Language-level concurrency support
+- Tengo Standard Libraries
 - Native executables compilation
-- Performance improvements
-- Syntax highlighter for IDEs
-
+- More language features
