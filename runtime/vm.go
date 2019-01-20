@@ -39,6 +39,7 @@ type VM struct {
 	curFrame    *Frame
 	curInsts    []byte
 	curIPLimit  int
+	ip          int
 	aborting    int64
 }
 
@@ -68,6 +69,7 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object) *VM {
 		curFrame:    &(frames[0]),
 		curInsts:    frames[0].fn.Instructions,
 		curIPLimit:  len(frames[0].fn.Instructions) - 1,
+		ip:          -1,
 	}
 }
 
@@ -78,17 +80,13 @@ func (v *VM) Abort() {
 
 // Run starts the execution.
 func (v *VM) Run() error {
-	var ip int
+	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
+		v.ip++
 
-	for v.curFrame.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
-		v.curFrame.ip++
-
-		ip = v.curFrame.ip
-
-		switch compiler.Opcode(v.curInsts[ip]) {
+		switch compiler.Opcode(v.curInsts[v.ip]) {
 		case compiler.OpConstant:
-			cidx := compiler.ReadUint16(v.curInsts[ip+1:])
-			v.curFrame.ip += 2
+			cidx := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			v.ip += 2
 
 			if v.sp >= StackSize {
 				return ErrStackOverflow
@@ -438,54 +436,54 @@ func (v *VM) Run() error {
 			}
 
 		case compiler.OpJumpFalsy:
-			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
-			v.curFrame.ip += 2
+			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			v.ip += 2
 
 			condition := v.stack[v.sp-1]
 			v.sp--
 
 			if (*condition).IsFalsy() {
-				v.curFrame.ip = pos - 1
+				v.ip = pos - 1
 			}
 
 		case compiler.OpAndJump:
-			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
-			v.curFrame.ip += 2
+			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			v.ip += 2
 
 			condition := *v.stack[v.sp-1]
 			if condition.IsFalsy() {
-				v.curFrame.ip = pos - 1
+				v.ip = pos - 1
 			} else {
 				v.sp--
 			}
 
 		case compiler.OpOrJump:
-			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
-			v.curFrame.ip += 2
+			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			v.ip += 2
 
 			condition := *v.stack[v.sp-1]
 			if !condition.IsFalsy() {
-				v.curFrame.ip = pos - 1
+				v.ip = pos - 1
 			} else {
 				v.sp--
 			}
 
 		case compiler.OpJump:
-			pos := int(compiler.ReadUint16(v.curInsts[ip+1:]))
-			v.curFrame.ip = pos - 1
+			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			v.ip = pos - 1
 
 		case compiler.OpSetGlobal:
-			globalIndex := compiler.ReadUint16(v.curInsts[ip+1:])
-			v.curFrame.ip += 2
+			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			v.ip += 2
 
 			v.sp--
 
 			v.globals[globalIndex] = v.stack[v.sp]
 
 		case compiler.OpSetSelGlobal:
-			globalIndex := compiler.ReadUint16(v.curInsts[ip+1:])
-			numSelectors := int(compiler.ReadUint8(v.curInsts[ip+3:]))
-			v.curFrame.ip += 3
+			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			numSelectors := int(v.curInsts[v.ip+3])
+			v.ip += 3
 
 			// pop selector outcomes (left to right)
 			selectors := make([]interface{}, numSelectors, numSelectors)
@@ -512,8 +510,8 @@ func (v *VM) Run() error {
 			}
 
 		case compiler.OpGetGlobal:
-			globalIndex := compiler.ReadUint16(v.curInsts[ip+1:])
-			v.curFrame.ip += 2
+			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			v.ip += 2
 
 			val := v.globals[globalIndex]
 
@@ -525,8 +523,8 @@ func (v *VM) Run() error {
 			v.sp++
 
 		case compiler.OpArray:
-			numElements := int(compiler.ReadUint16(v.curInsts[ip+1:]))
-			v.curFrame.ip += 2
+			numElements := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			v.ip += 2
 
 			var elements []objects.Object
 			for i := v.sp - numElements; i < v.sp; i++ {
@@ -544,8 +542,8 @@ func (v *VM) Run() error {
 			v.sp++
 
 		case compiler.OpMap:
-			numElements := int(compiler.ReadUint16(v.curInsts[ip+1:]))
-			v.curFrame.ip += 2
+			numElements := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			v.ip += 2
 
 			kv := make(map[string]objects.Object)
 			for i := v.sp - numElements; i < v.sp; i += 2 {
@@ -804,8 +802,8 @@ func (v *VM) Run() error {
 			}
 
 		case compiler.OpCall:
-			numArgs := int(compiler.ReadUint8(v.curInsts[ip+1:]))
-			v.curFrame.ip++
+			numArgs := int(v.curInsts[v.ip+1])
+			v.ip++
 
 			callee := *v.stack[v.sp-1-numArgs]
 
@@ -848,9 +846,9 @@ func (v *VM) Run() error {
 			}
 
 		case compiler.OpReturnValue:
-			//numRets := int(compiler.ReadUint8(v.curInsts[ip+1:]))
-			_ = int(compiler.ReadUint8(v.curInsts[ip+1:]))
-			v.curFrame.ip++
+			//numRets := int(compiler.ReadUint8(v.curInsts[v.ip+1:]))
+			//_ = int64(compiler.ReadUint8(v.curInsts[v.ip+1:]))
+			v.ip++
 
 			// TODO: multi-value return is not fully implemented yet
 			//var rets []*objects.Object
@@ -866,6 +864,7 @@ func (v *VM) Run() error {
 			v.curFrame = &v.frames[v.framesIndex-1]
 			v.curInsts = v.curFrame.fn.Instructions
 			v.curIPLimit = len(v.curInsts) - 1
+			v.ip = v.curFrame.ip
 
 			//v.sp = lastFrame.basePointer - 1
 			v.sp = lastFrame.basePointer
@@ -888,6 +887,7 @@ func (v *VM) Run() error {
 			v.curFrame = &v.frames[v.framesIndex-1]
 			v.curInsts = v.curFrame.fn.Instructions
 			v.curIPLimit = len(v.curInsts) - 1
+			v.ip = v.curFrame.ip
 
 			v.sp = lastFrame.basePointer - 1
 
@@ -899,10 +899,10 @@ func (v *VM) Run() error {
 			v.sp++
 
 		case compiler.OpDefineLocal:
-			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip++
+			localIndex := int(v.curInsts[v.ip+1])
+			v.ip++
 
-			sp := v.curFrame.basePointer + int(localIndex)
+			sp := v.curFrame.basePointer + localIndex
 
 			// local variables can be mutated by other actions
 			// so always store the copy of popped value
@@ -912,10 +912,10 @@ func (v *VM) Run() error {
 			v.stack[sp] = &val
 
 		case compiler.OpSetLocal:
-			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip++
+			localIndex := int(v.curInsts[v.ip+1])
+			v.ip++
 
-			sp := v.curFrame.basePointer + int(localIndex)
+			sp := v.curFrame.basePointer + localIndex
 
 			// update pointee of v.stack[sp] instead of replacing the pointer itself.
 			// this is needed because there can be free variables referencing the same local variables.
@@ -925,10 +925,10 @@ func (v *VM) Run() error {
 			*v.stack[sp] = *val // also use a copy of popped value
 
 		case compiler.OpSetSelLocal:
-			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			numSelectors := int(compiler.ReadUint8(v.curInsts[ip+2:]))
-			v.curFrame.ip += 2
+			localIndex := int(v.curInsts[v.ip+1])
+			numSelectors := int(v.curInsts[v.ip+2])
 
+			v.ip += 2
 			// pop selector outcomes (left to right)
 			selectors := make([]interface{}, numSelectors, numSelectors)
 			for i := 0; i < numSelectors; i++ {
@@ -949,17 +949,17 @@ func (v *VM) Run() error {
 			val := v.stack[v.sp-1] // no need to copy value here; selectorAssign uses copy of value
 			v.sp--
 
-			sp := v.curFrame.basePointer + int(localIndex)
+			sp := v.curFrame.basePointer + localIndex
 
 			if err := selectorAssign(v.stack[sp], val, selectors); err != nil {
 				return err
 			}
 
 		case compiler.OpGetLocal:
-			localIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip++
+			localIndex := int(v.curInsts[v.ip+1])
+			v.ip++
 
-			val := v.stack[v.curFrame.basePointer+int(localIndex)]
+			val := v.stack[v.curFrame.basePointer+localIndex]
 
 			if v.sp >= StackSize {
 				return ErrStackOverflow
@@ -969,8 +969,8 @@ func (v *VM) Run() error {
 			v.sp++
 
 		case compiler.OpGetBuiltin:
-			builtinIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip++
+			builtinIndex := int(v.curInsts[v.ip+1])
+			v.ip++
 
 			if v.sp >= StackSize {
 				return ErrStackOverflow
@@ -980,17 +980,17 @@ func (v *VM) Run() error {
 			v.sp++
 
 		case compiler.OpClosure:
-			constIndex := compiler.ReadUint16(v.curInsts[ip+1:])
-			numFree := compiler.ReadUint8(v.curInsts[ip+3:])
-			v.curFrame.ip += 3
+			constIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			numFree := int(v.curInsts[v.ip+3])
+			v.ip += 3
 
-			if err := v.pushClosure(int(constIndex), int(numFree)); err != nil {
+			if err := v.pushClosure(constIndex, numFree); err != nil {
 				return err
 			}
 
 		case compiler.OpGetFree:
-			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip++
+			freeIndex := int(v.curInsts[v.ip+1])
+			v.ip++
 
 			val := v.curFrame.freeVars[freeIndex]
 
@@ -1002,9 +1002,9 @@ func (v *VM) Run() error {
 			v.sp++
 
 		case compiler.OpSetSelFree:
-			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			numSelectors := int(compiler.ReadUint8(v.curInsts[ip+2:]))
-			v.curFrame.ip += 2
+			freeIndex := int(v.curInsts[v.ip+1])
+			numSelectors := int(v.curInsts[v.ip+2])
+			v.ip += 2
 
 			// pop selector outcomes (left to right)
 			selectors := make([]interface{}, numSelectors, numSelectors)
@@ -1031,8 +1031,8 @@ func (v *VM) Run() error {
 			}
 
 		case compiler.OpSetFree:
-			freeIndex := compiler.ReadUint8(v.curInsts[ip+1:])
-			v.curFrame.ip++
+			freeIndex := int(v.curInsts[v.ip+1])
+			v.ip++
 
 			val := v.stack[v.sp-1]
 			v.sp--
@@ -1108,15 +1108,15 @@ func (v *VM) Run() error {
 			v.sp++
 
 		case compiler.OpModule:
-			cidx := compiler.ReadUint16(v.curInsts[ip+1:])
-			v.curFrame.ip += 2
+			cidx := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
+			v.ip += 2
 
 			if err := v.importModule(v.constants[cidx].(*objects.CompiledModule)); err != nil {
 				return err
 			}
 
 		default:
-			return fmt.Errorf("unknown opcode: %d", v.curInsts[ip])
+			return fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])
 		}
 	}
 
@@ -1134,7 +1134,7 @@ func (v *VM) Globals() []*objects.Object {
 }
 
 // FrameInfo returns the current function call frame information.
-func (v *VM) FrameInfo() (frameIndex int, ip int) {
+func (v *VM) FrameInfo() (frameIndex, ip int) {
 	return v.framesIndex - 1, v.frames[v.framesIndex-1].ip
 }
 
@@ -1175,10 +1175,10 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 
 	// check if this is a tail-call (recursive call right before return)
 	if fn == v.curFrame.fn { // recursion
-		nextOp := compiler.Opcode(v.curInsts[v.curFrame.ip+1])
+		nextOp := compiler.Opcode(v.curInsts[v.ip+1])
 		if nextOp == compiler.OpReturnValue || // tail call
 			(nextOp == compiler.OpPop &&
-				compiler.OpReturn == compiler.Opcode(v.curInsts[v.curFrame.ip+2])) {
+				compiler.OpReturn == compiler.Opcode(v.curInsts[v.ip+2])) {
 
 			//  stack before tail-call
 			//
@@ -1204,7 +1204,8 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 				v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
 			}
 			v.sp -= numArgs + 1
-			v.curFrame.ip = -1 // reset IP to beginning of the frame
+			v.ip = -1
+			//v.curFrame.ip = -1 // reset IP to beginning of the frame
 
 			//  stack after tail-call
 			//
@@ -1230,12 +1231,17 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 		}
 	}
 
+	// store current ip before call
+	v.curFrame.ip = v.ip
+
+	// update call frame
 	v.curFrame = &(v.frames[v.framesIndex])
 	v.curFrame.fn = fn
 	v.curFrame.freeVars = freeVars
-	v.curFrame.ip = -1
+	//v.curFrame.ip = -1
 	v.curFrame.basePointer = v.sp - numArgs
 	v.curInsts = fn.Instructions
+	v.ip = -1
 	v.curIPLimit = len(v.curInsts) - 1
 	v.framesIndex++
 

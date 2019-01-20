@@ -28,17 +28,19 @@ Tengo is [fast](#benchmark) as it's compiled to bytecode and executed on stack-b
 
 | | fib(35) | fibt(35) |  Type  |
 | :--- |    ---: |     ---: |  :---: |
-| Go | `59ms` | `4ms` | Go (native) |
-| [**Tengo**](https://github.com/d5/tengo) | `4,809ms` | `5ms` | VM on Go |
-| Lua | `1,752ms` | `3ms` | Lua (native) |
-| [go-lua](https://github.com/Shopify/go-lua) | `5,236ms` | `5ms` | Lua VM on Go |
-| [GopherLua](https://github.com/yuin/gopher-lua) | `5,558ms` | `5ms` | Lua VM on Go |
-| Python | `3,132ms` | `28ms` | Python (native) |
-| [starlark-go](https://github.com/google/starlark-go) | `16,789ms` | `5ms` | Python-like Interpreter on Go |
-| [otto](https://github.com/robertkrimen/otto) | `85,765ms` | `22ms` | JS Interpreter on Go |
-| [Anko](https://github.com/mattn/anko) | `99,235ms` | `24ms` | Interpreter on Go |
+| Go | `67ms` | `4ms` | Go (native) |
+| [**Tengo**](https://github.com/d5/tengo) | `4,390ms` | `5ms` | VM on Go |
+| Lua | `1,804ms` | `3ms` | Lua (native) |
+| [go-lua](https://github.com/Shopify/go-lua) | `5,114ms` | `4ms` | Lua VM on Go |
+| [GopherLua](https://github.com/yuin/gopher-lua) | `5,679ms` | `5ms` | Lua VM on Go |
+| Python | `2,853ms` | `25ms` | Python (native) |
+| [starlark-go](https://github.com/google/starlark-go) | `16,725ms` | `5ms` | Python-like Interpreter on Go |
+| [otto](https://github.com/robertkrimen/otto) | `88,148ms` | `21ms` | JS Interpreter on Go |
+| [Anko](https://github.com/mattn/anko) | `107,968ms` | `22ms` | Interpreter on Go |
 
-[fib(35)](https://github.com/d5/tengobench/blob/master/code/fib.tengo) is a function to compute 35th Fibonacci number, and, [fibt(35)](https://github.com/d5/tengobench/blob/master/code/fibtc.tengo) is the [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of the same function. You can see all the code used for this test in [tengobench](https://github.com/d5/tengobench).
+[fib(35)](https://github.com/d5/tengobench/blob/master/code/fib.tengo) is a function to compute 35th Fibonacci number, and, [fibt(35)](https://github.com/d5/tengobench/blob/master/code/fibtc.tengo) is the [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of the same function.
+ 
+_Please note that **Go** case does not read the source code from a local file, while all other cases do. All shell commands and the source code used in this benchmarking is available [here](https://github.com/d5/tengobench)._
 
 ## Tengo Syntax in 5 Minutes
 
