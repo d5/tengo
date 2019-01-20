@@ -1,6 +1,7 @@
 package script
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/d5/tengo/compiler"
@@ -83,6 +84,18 @@ func (s *Script) Run() (compiled *Compiled, err error) {
 	}
 
 	err = compiled.Run()
+
+	return
+}
+
+// RunContext is like Run but includes a context.
+func (s *Script) RunContext(ctx context.Context) (compiled *Compiled, err error) {
+	compiled, err = s.Compile()
+	if err != nil {
+		return
+	}
+
+	err = compiled.RunContext(ctx)
 
 	return
 }
