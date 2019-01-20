@@ -3,6 +3,7 @@ package runtime
 import (
 	"errors"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/token"
@@ -38,7 +39,7 @@ type VM struct {
 	curFrame    *Frame
 	curInsts    []byte
 	curIPLimit  int
-	aborting    bool
+	aborting    int64
 }
 
 // NewVM creates a VM.
@@ -72,14 +73,14 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object) *VM {
 
 // Abort aborts the execution.
 func (v *VM) Abort() {
-	v.aborting = true
+	atomic.StoreInt64(&v.aborting, 1)
 }
 
 // Run starts the execution.
 func (v *VM) Run() error {
 	var ip int
 
-	for v.curFrame.ip < v.curIPLimit && !v.aborting {
+	for v.curFrame.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
 		v.curFrame.ip++
 
 		ip = v.curFrame.ip
@@ -1120,7 +1121,7 @@ func (v *VM) Run() error {
 	}
 
 	// check if stack still has some objects left
-	if v.sp > 0 && !v.aborting {
+	if v.sp > 0 && atomic.LoadInt64(&v.aborting) == 0 {
 		return fmt.Errorf("non empty stack after execution")
 	}
 
