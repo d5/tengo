@@ -28,15 +28,16 @@ Tengo is [fast](#benchmark) as it's compiled to bytecode and executed on stack-b
 
 | | fib(35) | fibt(35) |  Type  |
 | :--- |    ---: |     ---: |  :---: |
-| Go | `66ms` | `3ms` | Go (native) |
-| [**Tengo**](https://github.com/d5/tengo) | `4,401ms` | `5ms` | VM on Go |
-| Lua | `1,747ms` | `3ms` | Lua (native) |
-| [go-lua](https://github.com/Shopify/go-lua) | `5,060ms` | `5ms` | Lua VM on Go |
-| [GopherLua](https://github.com/yuin/gopher-lua) | `5,655ms` | `5ms` | Lua VM on Go |
-| Python | `2,855ms` | `27ms` | Python (native) |
-| [starlark-go](https://github.com/google/starlark-go) | `16,772ms` | `5ms` | Python-like Interpreter on Go |
-| [otto](https://github.com/robertkrimen/otto) | `87,945ms` | `13ms` | JS Interpreter on Go |
-| [Anko](https://github.com/mattn/anko) | `108,386ms` | `19ms` | Interpreter on Go |
+| Go | `65ms` | `3ms` | Go (native) |
+| [**Tengo**](https://github.com/d5/tengo) | `4,379ms` | `5ms` | VM on Go |
+| Lua | `1,755ms` | `3ms` | Lua (native) |
+| [go-lua](https://github.com/Shopify/go-lua) | `5,214ms` | `5ms` | Lua VM on Go |
+| [GopherLua](https://github.com/yuin/gopher-lua) | `5,491ms` | `5ms` | Lua VM on Go |
+| Python | `2,879ms` | `26ms` | Python (native) |
+| [gpython](https://github.com/go-python/gpython) | `18,662ms` | `5ms` | Python Interpreter on Go |
+| [starlark-go](https://github.com/google/starlark-go) | `16,853ms` | `5ms` | Python-like Interpreter on Go |
+| [otto](https://github.com/robertkrimen/otto) | `88,561ms` | `14ms` | JS Interpreter on Go |
+| [Anko](https://github.com/mattn/anko) | `107,720ms` | `16ms` | Interpreter on Go |
 
 [fib(35)](https://github.com/d5/tengobench/blob/master/code/fib.tengo) is a function to compute 35th Fibonacci number, and, [fibt(35)](https://github.com/d5/tengobench/blob/master/code/fibtc.tengo) is the [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of the same function.
  
