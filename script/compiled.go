@@ -1,6 +1,8 @@
 package script
 
 import (
+	"context"
+
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/runtime"
@@ -18,6 +20,25 @@ type Compiled struct {
 // Run executes the compiled script in the virtual machine.
 func (c *Compiled) Run() error {
 	return c.machine.Run()
+}
+
+// RunContext is like Run but includes a context.
+func (c *Compiled) RunContext(ctx context.Context) (err error) {
+	ch := make(chan error, 1)
+
+	go func() {
+		ch <- c.machine.Run()
+	}()
+
+	select {
+	case <-ctx.Done():
+		c.machine.Abort()
+		<-ch
+		err = ctx.Err()
+	case err = <-ch:
+	}
+
+	return
 }
 
 // IsDefined returns true if the variable name is defined (has value) before or after the execution.

@@ -1,7 +1,9 @@
 package script_test
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/script"
@@ -43,6 +45,31 @@ func TestCompiled_IsDefined(t *testing.T) {
 	compiledRun(t, c)
 	compiledIsDefined(t, c, "a", true)
 	compiledIsDefined(t, c, "b", false)
+}
+
+func TestCompiled_RunContext(t *testing.T) {
+	// machine completes normally
+	c := compile(t, `a := 5`, nil)
+	err := c.RunContext(context.Background())
+	assert.NoError(t, err)
+	compiledGet(t, c, "a", int64(5))
+
+	// cancelled
+	c = compile(t, `for true {}`, nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(1 * time.Millisecond)
+		cancel()
+	}()
+	err = c.RunContext(ctx)
+	assert.Equal(t, context.Canceled, err)
+
+	// timeout
+	c = compile(t, `for true {}`, nil)
+	ctx, cancel = context.WithTimeout(context.Background(), 1*time.Millisecond)
+	defer cancel()
+	err = c.RunContext(ctx)
+	assert.Equal(t, context.DeadlineExceeded, err)
 }
 
 func compile(t *testing.T, input string, vars M) *script.Compiled {
