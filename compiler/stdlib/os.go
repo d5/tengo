@@ -27,7 +27,6 @@ var osModule = map[string]objects.Object{
 	"mode_setgui":         &objects.Int{Value: int64(os.ModeSetgid)},
 	"mode_char_device":    &objects.Int{Value: int64(os.ModeCharDevice)},
 	"mode_sticky":         &objects.Int{Value: int64(os.ModeSticky)},
-	"mode_irregular":      &objects.Int{Value: int64(os.ModeIrregular)},
 	"mode_type":           &objects.Int{Value: int64(os.ModeType)},
 	"mode_perm":           &objects.Int{Value: int64(os.ModePerm)},
 	"path_separator":      &objects.Char{Value: os.PathSeparator},
