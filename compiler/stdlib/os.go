@@ -27,7 +27,6 @@ var osModule = map[string]objects.Object{
 	"mode_setgui":         &objects.Int{Value: int64(os.ModeSetgid)},
 	"mode_char_device":    &objects.Int{Value: int64(os.ModeCharDevice)},
 	"mode_sticky":         &objects.Int{Value: int64(os.ModeSticky)},
-	"mode_irregular":      &objects.Int{Value: int64(os.ModeIrregular)},
 	"mode_type":           &objects.Int{Value: int64(os.ModeType)},
 	"mode_perm":           &objects.Int{Value: int64(os.ModePerm)},
 	"path_separator":      &objects.Char{Value: os.PathSeparator},
@@ -48,8 +47,6 @@ var osModule = map[string]objects.Object{
 	"clearenv": FuncAR(os.Clearenv),
 	// environ() => array(string)
 	"environ": FuncARSs(os.Environ),
-	// executable() => string/error
-	"executable": &objects.UserFunction{Value: osExecutable},
 	// exit(code int)
 	"exit": FuncAIR(os.Exit),
 	// expand_env(s string) => string
@@ -104,8 +101,6 @@ var osModule = map[string]objects.Object{
 	"truncate": FuncASI64RE(os.Truncate),
 	// unsetenv(key string) => error
 	"unsetenv": FuncASRE(os.Unsetenv),
-	// user_cache_dir() => string/error
-	"user_cache_dir": FuncARSE(os.UserCacheDir),
 	// create(name string) => imap(file)/error
 	"create": &objects.UserFunction{Value: osCreate},
 	// open(name string) => imap(file)/error
@@ -116,21 +111,6 @@ var osModule = map[string]objects.Object{
 	"find_process": &objects.UserFunction{Value: osFindProcess},
 	// start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
 	"start_process": &objects.UserFunction{Value: osStartProcess},
-
-	// TODO: implemented more functions
-	//"stdin":         nil,
-	//"stdout":        nil,
-	//"stderr":        nil,
-	//"chtimes":       nil,
-	//"expand":        nil,
-	//"is_exists":     nil,
-	//"is_not_exist":  nil,
-	//"is_path_separator": nil,
-	//"is_permission": nil,
-	//"is_timeout": nil,
-	//"new_syscall_error": nil,
-	//"pipe": nil,
-	//"same_file": nil,
 }
 
 func osArgs(args ...objects.Object) (objects.Object, error) {
