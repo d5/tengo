@@ -27,7 +27,7 @@ func New(input []byte) *Script {
 
 // Add adds a new variable or updates an existing variable to the script.
 func (s *Script) Add(name string, value interface{}) error {
-	obj, err := interfaceToObject(value)
+	obj, err := objects.FromInterface(value)
 	if err != nil {
 		return err
 	}
