@@ -1,6 +1,7 @@
 package stdlib
 
 import (
+	"io"
 	"os"
 
 	"github.com/d5/tengo/objects"
@@ -32,9 +33,9 @@ var osModule = map[string]objects.Object{
 	"path_separator":      &objects.Char{Value: os.PathSeparator},
 	"path_list_separator": &objects.Char{Value: os.PathListSeparator},
 	"dev_null":            &objects.String{Value: os.DevNull},
-	"seek_set":            &objects.Int{Value: int64(os.SEEK_SET)},
-	"seek_cur":            &objects.Int{Value: int64(os.SEEK_CUR)},
-	"seek_end":            &objects.Int{Value: int64(os.SEEK_END)},
+	"seek_set":            &objects.Int{Value: int64(io.SeekStart)},
+	"seek_cur":            &objects.Int{Value: int64(io.SeekCurrent)},
+	"seek_end":            &objects.Int{Value: int64(io.SeekEnd)},
 	// args() => array(string)
 	"args": &objects.UserFunction{Value: osArgs},
 	// chdir(dir string) => error
