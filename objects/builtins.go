@@ -80,4 +80,8 @@ var Builtins = []NamedBuiltinFunc{
 		Name: "is_undefined",
 		Func: builtinIsUndefined,
 	},
+	{
+		Name: "to_json",
+		Func: builtinToJSON,
+	},
 }
