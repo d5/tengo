@@ -140,6 +140,38 @@ func ToByteSlice(o Object) (v []byte, ok bool) {
 	return
 }
 
+// objectToInterface attempts to convert an object o to an interface{} value
+func objectToInterface(o Object) (res interface{}) {
+	switch o := o.(type) {
+	case *Int:
+		res = o.Value
+	case *String:
+		res = o.Value
+	case *Float:
+		res = o.Value
+	case *Bool:
+		res = o.Value
+	case *Char:
+		res = o.Value
+	case *Bytes:
+		res = o.Value
+	case *Array:
+		res = make([]interface{}, len(o.Value))
+		for i, val := range o.Value {
+			res.([]interface{})[i] = objectToInterface(val)
+		}
+	case *Map:
+		res = make(map[string]interface{})
+		for key, v := range o.Value {
+			res.(map[string]interface{})[key] = objectToInterface(v)
+		}
+	case Object:
+		return o
+	}
+
+	return
+}
+
 // FromInterface will attempt to convert an interface{} v to a Tengo Object
 func FromInterface(v interface{}) (Object, error) {
 	switch v := v.(type) {
