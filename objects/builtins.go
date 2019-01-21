@@ -84,4 +84,8 @@ var Builtins = []NamedBuiltinFunc{
 		Name: "to_json",
 		Func: builtinToJSON,
 	},
+	{
+		Name: "from_json",
+		Func: builtinFromJSON,
+	},
 }

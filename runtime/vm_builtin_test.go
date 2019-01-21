@@ -128,4 +128,16 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = to_json({foo: {map1: {string: "bar"}, map2: {int: "1"}}})`, []byte("{\"foo\":{\"map1\":{\"string\":\"bar\"},\"map2\":{\"int\":\"1\"}}}"))
 	expect(t, `out = to_json([["bar", 1], ["bar", 1]])`, []byte("[[\"bar\",1],[\"bar\",1]]"))
 
+	// from_json
+	expect(t, `out = from_json("{\"foo\":5}").foo`, 5.0)
+	expect(t, `out = from_json("{\"foo\":\"bar\"}").foo`, "bar")
+	expect(t, `out = from_json("{\"foo\":1.8}").foo`, 1.8)
+	expect(t, `out = from_json("{\"foo\":true}").foo`, true)
+	expect(t, `out = from_json("{\"foo\":[\"bar\",1,1.8,56,true]}").foo`, ARR{"bar", 1.0, 1.8, 56.0, true})
+	expect(t, `out = from_json("{\"foo\":[[\"bar\",1],[\"bar\",1]]}").foo[0]`, ARR{"bar", 1.0})
+	expect(t, `out = from_json("{\"foo\":{\"bool\":true,\"char\":56,\"float\":1.8,\"int\":1,\"string\":\"bar\"}}").foo.bool`, true)
+	expect(t, `out = from_json("{\"foo\":{\"map1\":{\"string\":\"bar\"},\"map2\":{\"int\":\"1\"}}}").foo.map1.string`, "bar")
+
+	expect(t, `out = from_json("5")`, 5.0)
+	expect(t, `out = from_json("[\"bar\",1,1.8,56,true]")`, ARR{"bar", 1.0, 1.8, 56.0, true})
 }
