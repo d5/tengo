@@ -47,11 +47,20 @@ func (o *ImmutableMap) IsFalsy() bool {
 	return len(o.Value) == 0
 }
 
-// Get returns the value for the given key.
-func (o *ImmutableMap) Get(key string) (Object, bool) {
-	val, ok := o.Value[key]
+// IndexGet returns the value for the given key.
+func (o *ImmutableMap) IndexGet(index Object) (res Object, err error) {
+	strIdx, ok := ToString(index)
+	if !ok {
+		err = ErrInvalidTypeConversion
+		return
+	}
 
-	return val, ok
+	val, ok := o.Value[strIdx]
+	if !ok {
+		val = UndefinedValue
+	}
+
+	return val, nil
 }
 
 // Equals returns true if the value of the type

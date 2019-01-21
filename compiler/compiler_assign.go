@@ -135,6 +135,7 @@ func resolveAssignLHS(expr ast.Expr) (name string, selectors []ast.Expr, err err
 		selectors = append(selectors, term.Sel)
 
 		return
+
 	case *ast.IndexExpr:
 		name, selectors, err = resolveAssignLHS(term.Expr)
 		if err != nil {

@@ -47,18 +47,6 @@ func (o *Map) IsFalsy() bool {
 	return len(o.Value) == 0
 }
 
-// Get returns the value for the given key.
-func (o *Map) Get(key string) (Object, bool) {
-	val, ok := o.Value[key]
-
-	return val, ok
-}
-
-// Set sets the value for the given key.
-func (o *Map) Set(key string, value Object) {
-	o.Value[key] = value
-}
-
 // Equals returns true if the value of the type
 // is equal to the value of another object.
 func (o *Map) Equals(x Object) bool {
@@ -79,4 +67,33 @@ func (o *Map) Equals(x Object) bool {
 	}
 
 	return true
+}
+
+// IndexGet returns the value for the given key.
+func (o *Map) IndexGet(index Object) (res Object, err error) {
+	strIdx, ok := index.(*String)
+	if !ok {
+		err = ErrInvalidIndexType
+		return
+	}
+
+	val, ok := o.Value[strIdx.Value]
+	if !ok {
+		val = UndefinedValue
+	}
+
+	return val, nil
+}
+
+// IndexSet sets the value for the given key.
+func (o *Map) IndexSet(index, value Object) (err error) {
+	strIdx, ok := ToString(index)
+	if !ok {
+		err = ErrInvalidTypeConversion
+		return
+	}
+
+	o.Value[strIdx] = value
+
+	return nil
 }
