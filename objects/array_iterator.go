@@ -9,14 +9,6 @@ type ArrayIterator struct {
 	l int
 }
 
-// NewArrayIterator creates an ArrayIterator.
-func NewArrayIterator(v *Array) Iterator {
-	return &ArrayIterator{
-		v: v.Value,
-		l: len(v.Value),
-	}
-}
-
 // TypeName returns the name of the type.
 func (i *ArrayIterator) TypeName() string {
 	return "array-iterator"

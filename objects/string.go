@@ -81,3 +81,15 @@ func (o *String) IndexGet(index Object) (res Object, err error) {
 
 	return
 }
+
+// Iterate creates a string iterator.
+func (o *String) Iterate() Iterator {
+	if o.runeStr == nil {
+		o.runeStr = []rune(o.Value)
+	}
+
+	return &StringIterator{
+		v: o.runeStr,
+		l: len(o.runeStr),
+	}
+}

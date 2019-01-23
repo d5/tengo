@@ -97,3 +97,17 @@ func (o *Map) IndexSet(index, value Object) (err error) {
 
 	return nil
 }
+
+// Iterate creates a map iterator.
+func (o *Map) Iterate() Iterator {
+	var keys []string
+	for k := range o.Value {
+		keys = append(keys, k)
+	}
+
+	return &MapIterator{
+		v: o.Value,
+		k: keys,
+		l: len(keys),
+	}
+}
