@@ -921,18 +921,12 @@ func (v *VM) Run() error {
 			dst := v.stack[v.sp-1]
 			v.sp--
 
-			switch dst := (*dst).(type) {
-			case *objects.Array:
-				iterator = objects.NewArrayIterator(dst)
-			case *objects.Map:
-				iterator = objects.NewMapIterator(dst)
-			case *objects.ImmutableMap:
-				iterator = objects.NewModuleMapIterator(dst)
-			case *objects.String:
-				iterator = objects.NewStringIterator(dst)
-			default:
-				return fmt.Errorf("non-iterable type: %s", dst.TypeName())
+			iterable, ok := (*dst).(objects.Iterable)
+			if !ok {
+				return fmt.Errorf("non-iterable type: %s", (*dst).TypeName())
 			}
+
+			iterator = iterable.Iterate()
 
 			if v.sp >= StackSize {
 				return ErrStackOverflow
@@ -945,12 +939,13 @@ func (v *VM) Run() error {
 			iterator := v.stack[v.sp-1]
 			v.sp--
 
-			b := (*iterator).(objects.Iterator).Next()
+			hasMore := (*iterator).(objects.Iterator).Next()
+
 			if v.sp >= StackSize {
 				return ErrStackOverflow
 			}
 
-			if b {
+			if hasMore {
 				v.stack[v.sp] = truePtr
 			} else {
 				v.stack[v.sp] = falsePtr

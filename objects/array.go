@@ -115,3 +115,11 @@ func (o *Array) IndexSet(index, value Object) (err error) {
 
 	return nil
 }
+
+// Iterate creates an array iterator.
+func (o *Array) Iterate() Iterator {
+	return &ArrayIterator{
+		v: o.Value,
+		l: len(o.Value),
+	}
+}

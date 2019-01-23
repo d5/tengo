@@ -84,3 +84,17 @@ func (o *ImmutableMap) Equals(x Object) bool {
 
 	return true
 }
+
+// Iterate creates an immutable map iterator.
+func (o *ImmutableMap) Iterate() Iterator {
+	var keys []string
+	for k := range o.Value {
+		keys = append(keys, k)
+	}
+
+	return &ImmutableMapIterator{
+		v: o.Value,
+		k: keys,
+		l: len(keys),
+	}
+}

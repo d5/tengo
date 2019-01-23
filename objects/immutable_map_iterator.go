@@ -10,20 +10,6 @@ type ImmutableMapIterator struct {
 	l int
 }
 
-// NewModuleMapIterator creates a module iterator.
-func NewModuleMapIterator(v *ImmutableMap) Iterator {
-	var keys []string
-	for k := range v.Value {
-		keys = append(keys, k)
-	}
-
-	return &ImmutableMapIterator{
-		v: v.Value,
-		k: keys,
-		l: len(keys),
-	}
-}
-
 // TypeName returns the name of the type.
 func (i *ImmutableMapIterator) TypeName() string {
 	return "module-iterator"

@@ -9,16 +9,6 @@ type StringIterator struct {
 	l int
 }
 
-// NewStringIterator creates a string iterator.
-func NewStringIterator(v *String) Iterator {
-	r := []rune(v.Value)
-
-	return &StringIterator{
-		v: r,
-		l: len(r),
-	}
-}
-
 // TypeName returns the name of the type.
 func (i *StringIterator) TypeName() string {
 	return "string-iterator"

@@ -10,20 +10,6 @@ type MapIterator struct {
 	l int
 }
 
-// NewMapIterator creates a map iterator.
-func NewMapIterator(v *Map) Iterator {
-	var keys []string
-	for k := range v.Value {
-		keys = append(keys, k)
-	}
-
-	return &MapIterator{
-		v: v.Value,
-		k: keys,
-		l: len(keys),
-	}
-}
-
 // TypeName returns the name of the type.
 func (i *MapIterator) TypeName() string {
 	return "map-iterator"
