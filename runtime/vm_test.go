@@ -22,9 +22,21 @@ const (
 
 type MAP = map[string]interface{}
 type ARR = []interface{}
+type SYM = map[string]objects.Object
 
 func expect(t *testing.T, input string, expected interface{}) {
 	expectWithUserModules(t, input, expected, nil)
+}
+
+func expectWithSymbols(t *testing.T, input string, expected interface{}, symbols map[string]objects.Object) {
+	// parse
+	file := parse(t, input)
+	if file == nil {
+		return
+	}
+
+	// compiler/VM
+	runVM(t, file, expected, symbols, nil)
 }
 
 func expectWithUserModules(t *testing.T, input string, expected interface{}, userModules map[string]string) {
@@ -35,7 +47,7 @@ func expectWithUserModules(t *testing.T, input string, expected interface{}, use
 	}
 
 	// compiler/VM
-	runVM(t, file, expected, userModules)
+	runVM(t, file, expected, nil, userModules)
 }
 
 func expectError(t *testing.T, input string) {
@@ -50,15 +62,29 @@ func expectErrorWithUserModules(t *testing.T, input string, userModules map[stri
 	}
 
 	// compiler/VM
-	runVMError(t, program, userModules)
+	runVMError(t, program, nil, userModules)
 }
 
-func runVM(t *testing.T, file *ast.File, expected interface{}, userModules map[string]string) (ok bool) {
+func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objects.Object) {
+	// parse
+	program := parse(t, input)
+	if program == nil {
+		return
+	}
+
+	// compiler/VM
+	runVMError(t, program, symbols, nil)
+}
+
+func runVM(t *testing.T, file *ast.File, expected interface{}, symbols map[string]objects.Object, userModules map[string]string) (ok bool) {
 	expectedObj := toObject(expected)
 
-	res, trace, err := traceCompileRun(file, map[string]objects.Object{
-		testOut: objectZeroCopy(expectedObj),
-	}, userModules)
+	if symbols == nil {
+		symbols = make(map[string]objects.Object)
+	}
+	symbols[testOut] = objectZeroCopy(expectedObj)
+
+	res, trace, err := traceCompileRun(file, symbols, userModules)
 
 	defer func() {
 		if !ok {
@@ -76,8 +102,8 @@ func runVM(t *testing.T, file *ast.File, expected interface{}, userModules map[s
 }
 
 // TODO: should differentiate compile-time error, runtime error, and, error object returned
-func runVMError(t *testing.T, file *ast.File, userModules map[string]string) (ok bool) {
-	_, trace, err := traceCompileRun(file, nil, userModules)
+func runVMError(t *testing.T, file *ast.File, symbols map[string]objects.Object, userModules map[string]string) (ok bool) {
+	_, trace, err := traceCompileRun(file, symbols, userModules)
 
 	defer func() {
 		if !ok {
@@ -174,7 +200,11 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	symTable := compiler.NewSymbolTable()
 	for name, value := range symbols {
 		sym := symTable.Define(name)
-		globals[sym.Index] = &value
+
+		// should not store pointer to 'value' variable
+		// which is re-used in each iteration.
+		valueCopy := value
+		globals[sym.Index] = &valueCopy
 	}
 	for idx, fn := range objects.Builtins {
 		symTable.DefineBuiltin(idx, fn.Name)

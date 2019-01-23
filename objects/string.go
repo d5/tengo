@@ -8,7 +8,8 @@ import (
 
 // String represents a string value.
 type String struct {
-	Value string
+	Value   string
+	runeStr []rune
 }
 
 // TypeName returns the name of the type.
@@ -55,4 +56,28 @@ func (o *String) Equals(x Object) bool {
 	}
 
 	return o.Value == t.Value
+}
+
+// IndexGet returns a character at a given index.
+func (o *String) IndexGet(index Object) (res Object, err error) {
+	intIdx, ok := index.(*Int)
+	if !ok {
+		err = ErrInvalidIndexType
+		return
+	}
+
+	idxVal := int(intIdx.Value)
+
+	if o.runeStr == nil {
+		o.runeStr = []rune(o.Value)
+	}
+
+	if idxVal < 0 || idxVal >= len(o.runeStr) {
+		err = ErrIndexOutOfBounds
+		return
+	}
+
+	res = &Char{Value: o.runeStr[idxVal]}
+
+	return
 }

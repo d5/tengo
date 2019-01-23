@@ -1,7 +1,6 @@
 package objects
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -79,22 +78,40 @@ func (o *Array) Equals(x Object) bool {
 	return true
 }
 
-// Get returns an element at a given index.
-func (o *Array) Get(index int) (Object, error) {
-	if index < 0 || index >= len(o.Value) {
-		return nil, errors.New("array index out of bounds")
+// IndexGet returns an element at a given index.
+func (o *Array) IndexGet(index Object) (res Object, err error) {
+	intIdx, ok := index.(*Int)
+	if !ok {
+		err = ErrInvalidIndexType
+		return
 	}
 
-	return o.Value[index], nil
+	idxVal := int(intIdx.Value)
+
+	if idxVal < 0 || idxVal >= len(o.Value) {
+		err = ErrIndexOutOfBounds
+		return
+	}
+
+	res = o.Value[idxVal]
+
+	return
 }
 
-// Set sets an element at a given index.
-func (o *Array) Set(index int, value Object) error {
-	if index < 0 || index >= len(o.Value) {
-		return errors.New("array index out of bounds")
+// IndexSet sets an element at a given index.
+func (o *Array) IndexSet(index, value Object) (err error) {
+	intIdx, ok := ToInt(index)
+	if !ok {
+		err = ErrInvalidTypeConversion
+		return
 	}
 
-	o.Value[index] = value
+	if intIdx < 0 || intIdx >= len(o.Value) {
+		err = ErrIndexOutOfBounds
+		return
+	}
+
+	o.Value[intIdx] = value
 
 	return nil
 }

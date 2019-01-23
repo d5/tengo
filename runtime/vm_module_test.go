@@ -127,7 +127,9 @@ out = echo(["foo", "bar"])
 	expectErrorWithUserModules(t, `m1 := import("mod1"); m1.a = 5`, map[string]string{
 		"mod1": `a := 3`,
 	})
-	expectErrorWithUserModules(t, `m1 := import("mod1"); m1.a.b = 5`, map[string]string{
+
+	// module is immutable but its variables is not necessarily immutable.
+	expectWithUserModules(t, `m1 := import("mod1"); m1.a.b = 5; out = m1.a.b`, 5, map[string]string{
 		"mod1": `a := {b: 3}`,
 	})
 }

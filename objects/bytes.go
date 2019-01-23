@@ -54,3 +54,23 @@ func (o *Bytes) Equals(x Object) bool {
 
 	return bytes.Compare(o.Value, t.Value) == 0
 }
+
+// IndexGet returns an element (as Int) at a given index.
+func (o *Bytes) IndexGet(index Object) (res Object, err error) {
+	intIdx, ok := index.(*Int)
+	if !ok {
+		err = ErrInvalidIndexType
+		return
+	}
+
+	idxVal := int(intIdx.Value)
+
+	if idxVal < 0 || idxVal >= len(o.Value) {
+		err = ErrIndexOutOfBounds
+		return
+	}
+
+	res = &Int{Value: int64(o.Value[idxVal])}
+
+	return
+}

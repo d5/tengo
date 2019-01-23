@@ -485,27 +485,12 @@ func (v *VM) Run() error {
 			numSelectors := int(v.curInsts[v.ip+3])
 			v.ip += 3
 
-			// pop selector outcomes (left to right)
-			selectors := make([]interface{}, numSelectors, numSelectors)
-			for i := 0; i < numSelectors; i++ {
-				sel := v.stack[v.sp-1]
-				v.sp--
+			// selectors and RHS value
+			selectors := v.stack[v.sp-numSelectors : v.sp]
+			val := v.stack[v.sp-numSelectors-1]
+			v.sp -= numSelectors + 1
 
-				switch sel := (*sel).(type) {
-				case *objects.String: // map key
-					selectors[i] = sel.Value
-				case *objects.Int: // array index
-					selectors[i] = int(sel.Value)
-				default:
-					return fmt.Errorf("invalid selector type: %s", sel.TypeName())
-				}
-			}
-
-			// RHS value
-			val := v.stack[v.sp-1]
-			v.sp--
-
-			if err := selectorAssign(v.globals[globalIndex], val, selectors); err != nil {
+			if err := indexAssign(v.globals[globalIndex], val, selectors); err != nil {
 				return err
 			}
 
@@ -583,99 +568,20 @@ func (v *VM) Run() error {
 			v.sp -= 2
 
 			switch left := (*left).(type) {
-			case *objects.Array:
-				idx, ok := (*index).(*objects.Int)
-				if !ok {
-					return fmt.Errorf("non-integer array index: %s", left.TypeName())
+			case objects.Indexable:
+				val, err := left.IndexGet(*index)
+				if err != nil {
+					return err
 				}
-
-				if idx.Value < 0 || idx.Value >= int64(len(left.Value)) {
-					return fmt.Errorf("index out of bounds: %d", index)
-				}
-
-				if v.sp >= StackSize {
-					return ErrStackOverflow
-				}
-
-				v.stack[v.sp] = &left.Value[idx.Value]
-				v.sp++
-
-			case *objects.String:
-				idx, ok := (*index).(*objects.Int)
-				if !ok {
-					return fmt.Errorf("non-integer array index: %s", left.TypeName())
-				}
-
-				str := []rune(left.Value)
-
-				if idx.Value < 0 || idx.Value >= int64(len(str)) {
-					return fmt.Errorf("index out of bounds: %d", index)
+				if val == nil {
+					val = objects.UndefinedValue
 				}
 
 				if v.sp >= StackSize {
 					return ErrStackOverflow
 				}
-
-				var val objects.Object = &objects.Char{Value: str[idx.Value]}
 
 				v.stack[v.sp] = &val
-				v.sp++
-
-			case *objects.Bytes:
-				idx, ok := (*index).(*objects.Int)
-				if !ok {
-					return fmt.Errorf("non-integer array index: %s", left.TypeName())
-				}
-
-				if idx.Value < 0 || idx.Value >= int64(len(left.Value)) {
-					return fmt.Errorf("index out of bounds: %d", index)
-				}
-
-				if v.sp >= StackSize {
-					return ErrStackOverflow
-				}
-
-				var val objects.Object = &objects.Int{Value: int64(left.Value[idx.Value])}
-
-				v.stack[v.sp] = &val
-				v.sp++
-
-			case *objects.Map:
-				key, ok := (*index).(*objects.String)
-				if !ok {
-					return fmt.Errorf("non-string key: %s", left.TypeName())
-				}
-
-				var res = objects.UndefinedValue
-				val, ok := left.Value[key.Value]
-				if ok {
-					res = val
-				}
-
-				if v.sp >= StackSize {
-					return ErrStackOverflow
-				}
-
-				v.stack[v.sp] = &res
-				v.sp++
-
-			case *objects.ImmutableMap:
-				key, ok := (*index).(*objects.String)
-				if !ok {
-					return fmt.Errorf("non-string key: %s", left.TypeName())
-				}
-
-				var res = objects.UndefinedValue
-				val, ok := left.Value[key.Value]
-				if ok {
-					res = val
-				}
-
-				if v.sp >= StackSize {
-					return ErrStackOverflow
-				}
-
-				v.stack[v.sp] = &res
 				v.sp++
 
 			case *objects.Error: // err.value
@@ -692,7 +598,7 @@ func (v *VM) Run() error {
 				v.sp++
 
 			default:
-				return fmt.Errorf("type %s does not support indexing", left.TypeName())
+				return objects.ErrNotIndexable
 			}
 
 		case compiler.OpSliceIndex:
@@ -927,31 +833,16 @@ func (v *VM) Run() error {
 		case compiler.OpSetSelLocal:
 			localIndex := int(v.curInsts[v.ip+1])
 			numSelectors := int(v.curInsts[v.ip+2])
-
 			v.ip += 2
-			// pop selector outcomes (left to right)
-			selectors := make([]interface{}, numSelectors, numSelectors)
-			for i := 0; i < numSelectors; i++ {
-				sel := v.stack[v.sp-1]
-				v.sp--
 
-				switch sel := (*sel).(type) {
-				case *objects.String: // map key
-					selectors[i] = sel.Value
-				case *objects.Int: // array index
-					selectors[i] = int(sel.Value)
-				default:
-					return fmt.Errorf("invalid selector type: %s", sel.TypeName())
-				}
-			}
-
-			// RHS value
-			val := v.stack[v.sp-1] // no need to copy value here; selectorAssign uses copy of value
-			v.sp--
+			// selectors and RHS value
+			selectors := v.stack[v.sp-numSelectors : v.sp]
+			val := v.stack[v.sp-numSelectors-1]
+			v.sp -= numSelectors + 1
 
 			sp := v.curFrame.basePointer + localIndex
 
-			if err := selectorAssign(v.stack[sp], val, selectors); err != nil {
+			if err := indexAssign(v.stack[sp], val, selectors); err != nil {
 				return err
 			}
 
@@ -1006,27 +897,12 @@ func (v *VM) Run() error {
 			numSelectors := int(v.curInsts[v.ip+2])
 			v.ip += 2
 
-			// pop selector outcomes (left to right)
-			selectors := make([]interface{}, numSelectors, numSelectors)
-			for i := 0; i < numSelectors; i++ {
-				sel := v.stack[v.sp-1]
-				v.sp--
+			// selectors and RHS value
+			selectors := v.stack[v.sp-numSelectors : v.sp]
+			val := v.stack[v.sp-numSelectors-1]
+			v.sp -= numSelectors + 1
 
-				switch sel := (*sel).(type) {
-				case *objects.String: // map key
-					selectors[i] = sel.Value
-				case *objects.Int: // array index
-					selectors[i] = int(sel.Value)
-				default:
-					return fmt.Errorf("invalid selector type: %s", sel.TypeName())
-				}
-			}
-
-			// RHS value
-			val := v.stack[v.sp-1]
-			v.sp--
-
-			if err := selectorAssign(v.curFrame.freeVars[freeIndex], val, selectors); err != nil {
+			if err := indexAssign(v.curFrame.freeVars[freeIndex], val, selectors); err != nil {
 				return err
 			}
 
@@ -1204,8 +1080,7 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 				v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
 			}
 			v.sp -= numArgs + 1
-			v.ip = -1
-			//v.curFrame.ip = -1 // reset IP to beginning of the frame
+			v.ip = -1 // reset IP to beginning of the frame
 
 			//  stack after tail-call
 			//
@@ -1238,7 +1113,6 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 	v.curFrame = &(v.frames[v.framesIndex])
 	v.curFrame.fn = fn
 	v.curFrame.freeVars = freeVars
-	//v.curFrame.ip = -1
 	v.curFrame.basePointer = v.sp - numArgs
 	v.curInsts = fn.Instructions
 	v.ip = -1
@@ -1293,50 +1167,29 @@ func (v *VM) importModule(compiledModule *objects.CompiledModule) error {
 	return nil
 }
 
-func selectorAssign(dst, src *objects.Object, selectors []interface{}) error {
+func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 	numSel := len(selectors)
 
-	for idx := 0; idx < numSel; idx++ {
-		switch sel := selectors[idx].(type) {
-		case string:
-			m, isMap := (*dst).(*objects.Map)
-			if !isMap {
-				return fmt.Errorf("invalid map object for selector '%s'", sel)
-			}
-
-			if idx == numSel-1 {
-				m.Set(sel, *src)
-				return nil
-			}
-
-			nxt, found := m.Get(sel)
-			if !found {
-				return fmt.Errorf("key not found '%s'", sel)
-			}
-
-			dst = &nxt
-		case int:
-			arr, isArray := (*dst).(*objects.Array)
-			if !isArray {
-				return fmt.Errorf("invalid array object for select '[%d]'", sel)
-			}
-
-			if idx == numSel-1 {
-				return arr.Set(sel, *src)
-			}
-
-			nxt, err := arr.Get(sel)
-			if err != nil {
-				return err
-			}
-
-			dst = &nxt
-		default:
-			panic(fmt.Errorf("invalid selector term: %T", sel))
+	for sidx := numSel - 1; sidx > 0; sidx-- {
+		indexable, ok := (*dst).(objects.Indexable)
+		if !ok {
+			return objects.ErrNotIndexable
 		}
+
+		next, err := indexable.IndexGet(*selectors[sidx])
+		if err != nil {
+			return err
+		}
+
+		dst = &next
 	}
 
-	return nil
+	indexAssignable, ok := (*dst).(objects.IndexAssignable)
+	if !ok {
+		return objects.ErrNotIndexAssignable
+	}
+
+	return indexAssignable.IndexSet(*selectors[0], *src)
 }
 
 func init() {
