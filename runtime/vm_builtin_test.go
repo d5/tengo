@@ -113,4 +113,31 @@ func TestBuiltinFunction(t *testing.T) {
 
 	expect(t, `out = is_undefined(undefined)`, true)
 	expect(t, `out = is_undefined(error(1))`, false)
+
+	// to_json
+	expect(t, `out = to_json(5)`, []byte("5"))
+	expect(t, `out = to_json({foo: 5})`, []byte("{\"foo\":5}"))
+	expect(t, `out = to_json({foo: "bar"})`, []byte("{\"foo\":\"bar\"}"))
+	expect(t, `out = to_json({foo: 1.8})`, []byte("{\"foo\":1.8}"))
+	expect(t, `out = to_json({foo: true})`, []byte("{\"foo\":true}"))
+	expect(t, `out = to_json({foo: '8'})`, []byte("{\"foo\":56}"))
+	expect(t, `out = to_json({foo: bytes("foo")})`, []byte("{\"foo\":\"Zm9v\"}")) // json encoding returns []byte as base64 encoded string
+	expect(t, `out = to_json({foo: ["bar", 1, 1.8, '8', true]})`, []byte("{\"foo\":[\"bar\",1,1.8,56,true]}"))
+	expect(t, `out = to_json({foo: [["bar", 1], ["bar", 1]]})`, []byte("{\"foo\":[[\"bar\",1],[\"bar\",1]]}"))
+	expect(t, `out = to_json({foo: {string: "bar", int: 1, float: 1.8, char: '8', bool: true}})`, []byte("{\"foo\":{\"bool\":true,\"char\":56,\"float\":1.8,\"int\":1,\"string\":\"bar\"}}"))
+	expect(t, `out = to_json({foo: {map1: {string: "bar"}, map2: {int: "1"}}})`, []byte("{\"foo\":{\"map1\":{\"string\":\"bar\"},\"map2\":{\"int\":\"1\"}}}"))
+	expect(t, `out = to_json([["bar", 1], ["bar", 1]])`, []byte("[[\"bar\",1],[\"bar\",1]]"))
+
+	// from_json
+	expect(t, `out = from_json("{\"foo\":5}").foo`, 5.0)
+	expect(t, `out = from_json("{\"foo\":\"bar\"}").foo`, "bar")
+	expect(t, `out = from_json("{\"foo\":1.8}").foo`, 1.8)
+	expect(t, `out = from_json("{\"foo\":true}").foo`, true)
+	expect(t, `out = from_json("{\"foo\":[\"bar\",1,1.8,56,true]}").foo`, ARR{"bar", 1.0, 1.8, 56.0, true})
+	expect(t, `out = from_json("{\"foo\":[[\"bar\",1],[\"bar\",1]]}").foo[0]`, ARR{"bar", 1.0})
+	expect(t, `out = from_json("{\"foo\":{\"bool\":true,\"char\":56,\"float\":1.8,\"int\":1,\"string\":\"bar\"}}").foo.bool`, true)
+	expect(t, `out = from_json("{\"foo\":{\"map1\":{\"string\":\"bar\"},\"map2\":{\"int\":\"1\"}}}").foo.map1.string`, "bar")
+
+	expect(t, `out = from_json("5")`, 5.0)
+	expect(t, `out = from_json("[\"bar\",1,1.8,56,true]")`, ARR{"bar", 1.0, 1.8, 56.0, true})
 }

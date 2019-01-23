@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -137,4 +138,91 @@ func ToByteSlice(o Object) (v []byte, ok bool) {
 
 	//ok = false
 	return
+}
+
+// objectToInterface attempts to convert an object o to an interface{} value
+func objectToInterface(o Object) (res interface{}) {
+	switch o := o.(type) {
+	case *Int:
+		res = o.Value
+	case *String:
+		res = o.Value
+	case *Float:
+		res = o.Value
+	case *Bool:
+		res = o.Value
+	case *Char:
+		res = o.Value
+	case *Bytes:
+		res = o.Value
+	case *Array:
+		res = make([]interface{}, len(o.Value))
+		for i, val := range o.Value {
+			res.([]interface{})[i] = objectToInterface(val)
+		}
+	case *Map:
+		res = make(map[string]interface{})
+		for key, v := range o.Value {
+			res.(map[string]interface{})[key] = objectToInterface(v)
+		}
+	case Object:
+		return o
+	}
+
+	return
+}
+
+// FromInterface will attempt to convert an interface{} v to a Tengo Object
+func FromInterface(v interface{}) (Object, error) {
+	switch v := v.(type) {
+	case nil:
+		return &Undefined{}, nil
+	case string:
+		return &String{Value: v}, nil
+	case int64:
+		return &Int{Value: v}, nil
+	case int:
+		return &Int{Value: int64(v)}, nil
+	case bool:
+		return &Bool{Value: v}, nil
+	case rune:
+		return &Char{Value: v}, nil
+	case byte:
+		return &Char{Value: rune(v)}, nil
+	case float64:
+		return &Float{Value: v}, nil
+	case []byte:
+		return &Bytes{Value: v}, nil
+	case error:
+		return &Error{Value: &String{Value: v.Error()}}, nil
+	case map[string]Object:
+		return &Map{Value: v}, nil
+	case map[string]interface{}:
+		kv := make(map[string]Object)
+		for vk, vv := range v {
+			vo, err := FromInterface(vv)
+			if err != nil {
+				return nil, err
+			}
+			kv[vk] = vo
+		}
+		return &Map{Value: kv}, nil
+	case []Object:
+		return &Array{Value: v}, nil
+	case []interface{}:
+		arr := make([]Object, len(v), len(v))
+		for i, e := range v {
+			vo, err := FromInterface(e)
+			if err != nil {
+				return nil, err
+			}
+
+			arr[i] = vo
+		}
+		return &Array{Value: arr}, nil
+	case Object:
+		return v, nil
+	}
+
+	return nil, fmt.Errorf("unsupported value type: %T", v)
 }
