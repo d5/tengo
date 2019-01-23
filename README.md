@@ -28,16 +28,16 @@ Tengo is [fast](#benchmark) as it's compiled to bytecode and executed on stack-b
 
 | | fib(35) | fibt(35) |  Type  |
 | :--- |    ---: |     ---: |  :---: |
-| Go | `65ms` | `3ms` | Go (native) |
-| [**Tengo**](https://github.com/d5/tengo) | `4,379ms` | `5ms` | VM on Go |
-| Lua | `1,755ms` | `3ms` | Lua (native) |
-| [go-lua](https://github.com/Shopify/go-lua) | `5,214ms` | `5ms` | Lua VM on Go |
-| [GopherLua](https://github.com/yuin/gopher-lua) | `5,491ms` | `5ms` | Lua VM on Go |
-| Python | `2,879ms` | `26ms` | Python (native) |
-| [starlark-go](https://github.com/google/starlark-go) | `16,853ms` | `5ms` | Python-like Interpreter on Go |
-| [gpython](https://github.com/go-python/gpython) | `18,662ms` | `5ms` | Python Interpreter on Go |
-| [otto](https://github.com/robertkrimen/otto) | `88,561ms` | `14ms` | JS Interpreter on Go |
-| [Anko](https://github.com/mattn/anko) | `107,720ms` | `16ms` | Interpreter on Go |
+| Go | `58ms` | `3ms` | Go (native) |
+| [**Tengo**](https://github.com/d5/tengo) | `4,245ms` | `5ms` | VM on Go |
+| Lua | `1,739ms` | `3ms` | Lua (native) |
+| [go-lua](https://github.com/Shopify/go-lua) | `5,368ms` | `5ms` | Lua VM on Go |
+| [GopherLua](https://github.com/yuin/gopher-lua) | `5,408ms` | `5ms` | Lua VM on Go |
+| Python | `3,176ms` | `27ms` | Python (native) |
+| [starlark-go](https://github.com/google/starlark-go) | `15,400ms` | `5ms` | Python-like Interpreter on Go |
+| [gpython](https://github.com/go-python/gpython) | `17,724ms` | `6ms` | Python Interpreter on Go |
+| [otto](https://github.com/robertkrimen/otto) | `82,050ms` | `22ms` | JS Interpreter on Go |
+| [Anko](https://github.com/mattn/anko) | `98,739ms` | `31ms` | Interpreter on Go |
 
 [fib(35)](https://github.com/d5/tengobench/blob/master/code/fib.tengo) is a function to compute 35th Fibonacci number, and, [fibt(35)](https://github.com/d5/tengobench/blob/master/code/fibtc.tengo) is the [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of the same function.
  
@@ -285,96 +285,7 @@ func main() {
 
 In the example above, a variable `b` is defined by the user before compilation using `Script.Add()` function. Then a compiled bytecode `c` is used to execute the bytecode and get the value of global variables. In this example, the value of global variable `a` is read using `Compiled.Get()` function.
 
-If you need the custom data types (outside Tengo's primitive types), you can define your own `struct` that implements `objects.Object` interface _(and optionally `objects.Callable` if you want to make function-like invokable objects)_.
-
-```golang
-import (
-	"errors"
-	"fmt"
-
-	"github.com/d5/tengo/compiler/token"
-	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/script"
-)
-
-type Counter struct {
-	value int64
-}
-
-func (o *Counter) TypeName() string {
-	return "counter"
-}
-
-func (o *Counter) String() string {
-	return fmt.Sprintf("Counter(%d)", o.value)
-}
-
-func (o *Counter) BinaryOp(op token.Token, rhs objects.Object) (objects.Object, error) {
-	switch rhs := rhs.(type) {
-	case *Counter:
-		switch op {
-		case token.Add:
-			return &Counter{value: o.value + rhs.value}, nil
-		case token.Sub:
-			return &Counter{value: o.value - rhs.value}, nil
-		}
-	case *objects.Int:
-		switch op {
-		case token.Add:
-			return &Counter{value: o.value + rhs.Value}, nil
-		case token.Sub:
-			return &Counter{value: o.value - rhs.Value}, nil
-		}
-	}
-
-	return nil, errors.New("invalid operator")
-}
-
-func (o *Counter) IsFalsy() bool {
-	return o.value == 0
-}
-
-func (o *Counter) Equals(t objects.Object) bool {
-	if tc, ok := t.(*Counter); ok {
-		return o.value == tc.value
-	}
-
-	return false
-}
-
-func (o *Counter) Copy() objects.Object {
-	return &Counter{value: o.value}
-}
-
-func (o *Counter) Call(args ...objects.Object) (objects.Object, error) {
-	return &objects.Int{Value: o.value}, nil
-}
-
-var code = []byte(`
-arr := [1, 2, 3, 4]
-for x in arr {
-	c1 += x
-}
-out := c1()`)
-
-func main() {
-	s := script.New(code)
-
-	// define variable 'c1'
-	_ = s.Add("c1", &Counter{value: 5})
-
-	// compile the source
-	c, err := s.Run()
-	if err != nil {
-		panic(err)
-	}
-
-	// retrieve value of 'out'
-	out := c.Get("out")
-	fmt.Println(out.Int()) // prints "15" ( = 5 + (1 + 2 + 3 + 4) )
-}
-
-```
+One can easily use the custom data types by implementing `objects.Object` interface. See [Interoperability](https://github.com/d5/tengo/wiki/Interoperability) for more details.
 
 As an alternative to using **Script**, you can directly create and interact with the parser, compiler, and, VMs directly. There's no good documentation yet, but, check out Script code if you are interested.
 
