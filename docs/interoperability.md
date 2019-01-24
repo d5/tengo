@@ -1,13 +1,23 @@
-# Interoperability
+# Interoperability  
 
 ## Table of Contents 
 
-- [Scripts](#scripts)
+- [Using Scripts](#using-scripts)
+  - [Type Conversion Table](#type-conversion-table)
 - [Compiler and VM](#compiler-and-vm)
+- [User Types](#user-types)
 - [Sandbox Environments](#sandbox-environments)
-- [Type Conversion](#type-conversion)
 
-To execute Tengo code in your Go codebase, you should use **Script**. In the simple use cases, all you need is to do is to create a new Script instance and call its `Script.Run()` function.
+## Using Scripts
+
+Embedding and executing the Tengo code in Go is very easy. At a high level, this process is like:
+
+- create a [Script](https://godoc.org/github.com/d5/tengo/script#Script) instance with your code,
+- _optionally_ add some [Script Variables](https://godoc.org/github.com/d5/tengo/script#Variable) to Script,
+- compile or directly run the script,
+- retrieve _output_ values from the [Compiled](https://godoc.org/github.com/d5/tengo/script#Compiled) instance.
+
+The following is an example where a Tengo script is compiled and run with no input/output variables.
 
 ```golang
 import "github.com/d5/tengo/script"
@@ -30,7 +40,7 @@ func main() {
 }
 ```
 
-If you want to compile the source script once and execute it multiple times, you can use `Script.Compile()` function that returns **Compiled** instance.
+Here's another example where an input variable is added to the script, and, an output variable is accessed through [Variable.Int](https://godoc.org/github.com/d5/tengo/script#Variable.Int) function:
 
 ```golang
 import (
@@ -63,28 +73,44 @@ func main() {
 }
 ```
 
-In the example above, a variable `b` is defined by the user before compilation using `Script.Add()` function. Then a compiled bytecode `c` is used to execute the bytecode and get the value of global variables. In this example, the value of global variable `a` is read using `Compiled.Get()` function.
+A variable `b` is defined by the user before compilation using [Script.Add](https://godoc.org/github.com/d5/tengo/script#Script.Add) function. Then a compiled bytecode `c` is used to execute the bytecode and get the value of global variables. In this example, the value of global variable `a` is read using [Compiled.Get](https://godoc.org/github.com/d5/tengo/script#Compiled.Get) function. See [documentation](https://godoc.org/github.com/d5/tengo/script#Variable) for the full list of variable value functions.
 
-One can easily use the custom data types by implementing `objects.Object` interface. See [Interoperability](https://github.com/d5/tengo/wiki/Interoperability) for more details.
+### Type Conversion Table
 
-As an alternative to using **Script**, you can directly create and interact with the parser, compiler, and, VMs directly. There's no good documentation yet, but, check out Script code if you are interested.
+When adding a Variable _([Script.Add](https://godoc.org/github.com/d5/tengo/script#Script.Add))_, Script converts Go values into Tengo values based on the following conversion table.
 
- 
+| Go Type | Tengo Type | Note |
+| :--- | :--- | :--- |
+|`nil`|`Undefined`||
+|`string`|`String`||
+|`int64`|`Int`||
+|`int`|`Int`||
+|`bool`|`Bool`||
+|`rune`|`Char`||
+|`byte`|`Char`||
+|`float64`|`Float`||
+|`[]byte`|`Bytes`||
+|`error`|`Error{String}`|use `error.Error()` as String value|
+|`map[string]Object`|`Map`||
+|`map[string]interface{}`|`Map`|individual elements converted to Tengo objects|
+|`[]Object`|`Array`||
+|`[]interface{}`|`Array`|individual elements converted to Tengo objects|
+|`Object`|`Object`|_(no type conversion performed)_|
 
 
+## User Types
 
-## Scripts
-
-...
+One can easily add and use customized value types in Tengo code by implementing [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface. Tengo runtime will treat the user types exactly in the same way it does to the runtime types with no performance overhead. See [Tengo Objects](https://github.com/d5/tengo/blob/master/docs/objects.md) for more details.
 
 ## Compiler and VM
 
-...
+Although it's not recommended, you can directly create and run the Tengo [Parser](https://godoc.org/github.com/d5/tengo/compiler/parser#Parser), [Compiler](https://godoc.org/github.com/d5/tengo/compiler#Compiler), and [VM](https://godoc.org/github.com/d5/tengo/runtime#VM) for yourself instead of using Scripts and Script Variables. It's a bit more involved as you have to manage the symbol tables and global variables between them, but, basically that's what Script and Script Variable is doing internally.
+
+_TODO: add more information here_
 
 ## Sandbox Environments
 
-...
+In an environment where a _(potentially)_ unsafe script code needs to be executed,   
 
-## Type Conversion
+_TODO: add more information here_
 
-...
