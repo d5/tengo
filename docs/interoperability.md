@@ -4,9 +4,9 @@
 
 - [Using Scripts](#using-scripts)
   - [Type Conversion Table](#type-conversion-table)
-- [Compiler and VM](#compiler-and-vm)
 - [User Types](#user-types)
 - [Sandbox Environments](#sandbox-environments)
+- [Compiler and VM](#compiler-and-vm)
 
 ## Using Scripts
 
@@ -102,15 +102,52 @@ When adding a Variable _([Script.Add](https://godoc.org/github.com/d5/tengo/scri
 
 One can easily add and use customized value types in Tengo code by implementing [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface. Tengo runtime will treat the user types exactly in the same way it does to the runtime types with no performance overhead. See [Tengo Objects](https://github.com/d5/tengo/blob/master/docs/objects.md) for more details.
 
+## Sandbox Environments
+
+To securely compile and execute _potentially_ unsafe script code, you can use the following Script functions.
+
+#### Script.DisableBuiltinFunction(name string)
+
+DisableBuiltinFunction disables and removes a builtin function from the compiler. Compiler will reports a compile-time error if the given name is referenced.
+
+```golang
+s := script.New([]byte(`print([1, 2, 3])`))
+
+s.DisableBuiltinFunction("print") 
+
+_, err := s.Run() // compile error 
+```
+
+#### Script.DisableStdModule(name string)
+
+DisableStdModule disables a [standard library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) module. Compile will report a compile-time error if the code tries to import the module with the given name.
+
+```golang
+s := script.New([]byte(`import("exec")`))
+
+s.DisableStdModule("exec") 
+
+_, err := s.Run() // compile error 
+```
+
+#### Script.SetUserModuleLoader(loader compiler.ModuleLoader)
+
+SetUserModuleLoader replaces the default user-module loader of the compiler, which tries to read the source from a local file.  
+
+```golang
+s := script.New([]byte(`math := import("mod1"); a := math.foo()`))
+ 
+s.SetUserModuleLoader(func(moduleName string) ([]byte, error) {
+    if moduleName == "mod1" {
+        return []byte(`foo := func() { return 5 }`), nil
+    }
+
+    return nil, errors.New("module not found")
+})
+```
+
 ## Compiler and VM
 
 Although it's not recommended, you can directly create and run the Tengo [Parser](https://godoc.org/github.com/d5/tengo/compiler/parser#Parser), [Compiler](https://godoc.org/github.com/d5/tengo/compiler#Compiler), and [VM](https://godoc.org/github.com/d5/tengo/runtime#VM) for yourself instead of using Scripts and Script Variables. It's a bit more involved as you have to manage the symbol tables and global variables between them, but, basically that's what Script and Script Variable is doing internally.
 
 _TODO: add more information here_
-
-## Sandbox Environments
-
-In an environment where a _(potentially)_ unsafe script code needs to be executed,   
-
-_TODO: add more information here_
-
