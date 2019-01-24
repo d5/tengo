@@ -15,11 +15,11 @@
 ## Type Conversion/Coercion Table
 |src\dst  |Int      |String        |Float    |Bool      |Char   |Bytes  |Array  |Map    |IMap|Error  |Undefined|
 | :---:   | :---:   | :---:        | :---:   | :---:    | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|Int      |   -     |_strconv_     |int(v)   |!IsFalsy()| rune(v)|**X**|**X**|**X**|**X**|**X**|**X**|
+|Int      |   -     |_strconv_     |float64(v)|!IsFalsy()| rune(v)|**X**|**X**|**X**|**X**|**X**|**X**|
 |String   |_strconv_|   -          |_strconv_|!IsFalsy()|**X**|[]byte(s)|**X**|**X**|**X**|**X**|**X**|
-|Float    |int(f)   |_strconv_     | -       |!IsFalsy()|**X**|**X**|**X**|**X**|**X**|**X**|**X**|
+|Float    |int64(f) |_strconv_     | -       |!IsFalsy()|**X**|**X**|**X**|**X**|**X**|**X**|**X**|
 |Bool     |1 / 0    |"true" / "false"|**X**    |   -   |**X**|**X**|**X**|**X**|**X**|**X**|**X**|
-|Char     |int(c)   |string(c)     |**X**    |!IsFalsy()|   -   |**X**|**X**|**X**|**X**|**X**|**X**|
+|Char     |int64(c) |string(c)     |**X**    |!IsFalsy()|   -   |**X**|**X**|**X**|**X**|**X**|**X**|
 |Bytes    |**X**    |string(y)|**X**    |!IsFalsy()|**X**|   -   |**X**|**X**|**X**|**X**|**X**|
 |Array    |**X**    |"[...]"       |**X**    |!IsFalsy()|**X**|**X**|   -   |**X**|**X**|**X**|**X**|
 |Map      |**X**    |"{...}"       |**X**    |!IsFalsy()|**X**|**X**|**X**|   -   |**X**|**X**|**X**|
@@ -27,11 +27,9 @@
 |Error    |**X**    |"error: ..."  |**X**    |false|**X**|**X**|**X**|**X**|**X**|   -   |**X**|
 |Undefined|**X**    |**X**|**X**    |false|**X**|**X**|**X**|**X**|**X**|**X**|   -    |
 
-_**X**: No conversion; Typed value functions for `script.Variable` will return zero values._
-
-_strconv: converted using Go's conversion functions from `strconv` package._
-
-_IsFalsy(): use [Object.IsFalsy()](#objectisfalsy) function_
+_* **X**: No conversion; Typed value functions for `script.Variable` will return zero values._  
+_* strconv: converted using Go's conversion functions from `strconv` package._  
+_* IsFalsy(): use [Object.IsFalsy()](#objectisfalsy) function_
 
 ## Object.IsFalsy()
 
