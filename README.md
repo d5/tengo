@@ -8,11 +8,11 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/d5/tengo)](https://goreportcard.com/report/github.com/d5/tengo)
 [![Build Status](https://travis-ci.org/d5/tengo.svg?branch=master)](https://travis-ci.org/d5/tengo)
 
-Tengo is a small, dynamic, [securely embeddable](https://github.com/d5/tengo/blob/master/docs/interoperability.md) script language for Go. 
+**Tengo is a small, dynamic, fast, secure script language for Go.** 
 
-Tengo is **[fast](#benchmark)** because it's compiled/executed as bytecode on stack-based VM that's written in native Go.
+Tengo is **[fast](#benchmark)** and secure because it's compiled/executed as bytecode on stack-based VM that's written in native Go.
 
-> Try [Tengo in Playground](https://tengolang.com/) 
+> Try Tengo in the [Playground](https://tengolang.com/). 
 
 ## Features
 
@@ -20,8 +20,8 @@ Tengo is **[fast](#benchmark)** because it's compiled/executed as bytecode on st
 - Dynamically-typed with type coercions
 - First-class functions and closures
 - Garbage-collected
-- [Extensible](https://github.com/d5/tengo/blob/master/docs/objects.md)
-- Written in Go _(no external deps or CGO)_
+- [Embeddable](https://github.com/d5/tengo/blob/master/docs/interoperability.md) and [Extensible](https://github.com/d5/tengo/blob/master/docs/objects.md)
+- Written in native Go _(no external deps or cgo)_
 - Executable as a [standalone](https://github.com/d5/tengo/blob/master/docs/tengo-cli.md) language / REPL
 
 ## Benchmark
@@ -60,13 +60,13 @@ _* See [here](https://github.com/d5/tengobench) for commands/codes used_
 
 Things are experimental, and, the focus is on the **core language features**, **stability**, **basic interoperability**, and the **performance optimization**.
 
-### v1. Tengo as a Script Language
+### [v1. Tengo as a Script Language](https://github.com/d5/tengo/labels/v1.0)
 
 This will be the first _versioned_ release, and, the main goal for v1 is to make Tengo as a _fast_ embeddable script language for Go, which means Tengo will be comparable to other Go-based script languages such as [Starlark](https://github.com/google/starlark-go), [Lua](https://github.com/Shopify/go-lua) [VM](https://github.com/yuin/gopher-lua)s, and [other](https://github.com/robertkrimen/otto) [interpreter](https://github.com/mattn/anko)s.
 
 - Interoperability with Go code
 - Sandbox environment
-- More language features such as bound methods and switch-case statements
+- More language features
 
 ### v2. Tengo as a Standalone Language
 
