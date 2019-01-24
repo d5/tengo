@@ -12,16 +12,33 @@
 
 Tengo is **[fast](#benchmark)** and secure because it's compiled/executed as bytecode on stack-based VM that's written in native Go.
 
-> Try Tengo in the [Playground](https://tengolang.com/). 
+```golang
+/* The Tengo Language */
+
+each := func(seq, fn) {
+    for x in seq { fn(x) }
+}
+
+sum := func(init, seq) {
+    each(seq, func(x) { init += x })
+    return init
+}
+
+n := sum(0, [1, 2, 3])   // == 6
+s := sum("", [1, 2, 3])  // == "123"
+```
+
+> Run this code in the [Playground](https://tengolang.com/?s=d01cf9ed81daba939e26618530eb171f7397d9c9)
 
 ## Features
 
-- Similar [syntax](https://github.com/d5/tengo/blob/master/docs/tutorial.md) to Go but much simpler
-- Dynamically-typed with type coercions
-- First-class functions and closures
-- Garbage-collected
-- [Embeddable](https://github.com/d5/tengo/blob/master/docs/interoperability.md) and [Extensible](https://github.com/d5/tengo/blob/master/docs/objects.md)
-- Written in native Go _(no external deps or cgo)_
+- Simple and highly readable [Syntax](https://github.com/d5/tengo/blob/master/docs/tutorial.md)
+  - Dynamic typing with type coercion
+  - Higher-order functions and closures
+  - Immutable values _(v1)_
+  - Garbage collection
+- [Securely Embeddable](https://github.com/d5/tengo/blob/master/docs/interoperability.md) and [Extensible](https://github.com/d5/tengo/blob/master/docs/objects.md)
+- Compiler/runtime written in native Go _(no external deps or cgo)_
 - Executable as a [standalone](https://github.com/d5/tengo/blob/master/docs/tengo-cli.md) language / REPL
 
 ## Benchmark
