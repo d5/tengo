@@ -35,7 +35,7 @@ s := sum("", [1, 2, 3])  // == "123"
 - Simple and highly readable [Syntax](https://github.com/d5/tengo/blob/master/docs/tutorial.md)
   - Dynamic typing with type coercion
   - Higher-order functions and closures
-  - Immutable values _(v1)_
+  - Immutable values
   - Garbage collection
 - [Securely Embeddable](https://github.com/d5/tengo/blob/master/docs/interoperability.md) and [Extensible](https://github.com/d5/tengo/blob/master/docs/objects.md)
 - Compiler/runtime written in native Go _(no external deps or cgo)_
