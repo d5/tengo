@@ -13,6 +13,14 @@ var Builtins = []NamedBuiltinFunc{
 		Func: builtinPrint,
 	},
 	{
+		Name: "printf",
+		Func: builtinPrintf,
+	},
+	{
+		Name: "sprintf",
+		Func: builtinSprintf,
+	},
+	{
 		Name: "len",
 		Func: builtinLen,
 	},
