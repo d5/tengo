@@ -50,6 +50,5 @@ func init() {
 	gob.Register(&objects.Bytes{})
 	gob.Register(&objects.StringIterator{})
 	gob.Register(&objects.MapIterator{})
-	gob.Register(&objects.ImmutableMapIterator{})
 	gob.Register(&objects.ArrayIterator{})
 }

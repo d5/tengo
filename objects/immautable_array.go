@@ -7,17 +7,17 @@ import (
 	"github.com/d5/tengo/compiler/token"
 )
 
-// Array represents an array of objects.
-type Array struct {
+// ImmutableArray represents an immutable array of objects.
+type ImmutableArray struct {
 	Value []Object
 }
 
 // TypeName returns the name of the type.
-func (o *Array) TypeName() string {
-	return "array"
+func (o *ImmutableArray) TypeName() string {
+	return "immutable-array"
 }
 
-func (o *Array) String() string {
+func (o *ImmutableArray) String() string {
 	var elements []string
 	for _, e := range o.Value {
 		elements = append(elements, e.String())
@@ -28,13 +28,10 @@ func (o *Array) String() string {
 
 // BinaryOp returns another object that is the result of
 // a given binary operator and a right-hand side object.
-func (o *Array) BinaryOp(op token.Token, rhs Object) (Object, error) {
-	if rhs, ok := rhs.(*Array); ok {
+func (o *ImmutableArray) BinaryOp(op token.Token, rhs Object) (Object, error) {
+	if rhs, ok := rhs.(*ImmutableArray); ok {
 		switch op {
 		case token.Add:
-			if len(rhs.Value) == 0 {
-				return o, nil
-			}
 			return &Array{Value: append(o.Value, rhs.Value...)}, nil
 		}
 	}
@@ -43,7 +40,7 @@ func (o *Array) BinaryOp(op token.Token, rhs Object) (Object, error) {
 }
 
 // Copy returns a copy of the type.
-func (o *Array) Copy() Object {
+func (o *ImmutableArray) Copy() Object {
 	var c []Object
 	for _, elem := range o.Value {
 		c = append(c, elem.Copy())
@@ -53,13 +50,13 @@ func (o *Array) Copy() Object {
 }
 
 // IsFalsy returns true if the value of the type is falsy.
-func (o *Array) IsFalsy() bool {
+func (o *ImmutableArray) IsFalsy() bool {
 	return len(o.Value) == 0
 }
 
 // Equals returns true if the value of the type
 // is equal to the value of another object.
-func (o *Array) Equals(x Object) bool {
+func (o *ImmutableArray) Equals(x Object) bool {
 	var xVal []Object
 	switch x := x.(type) {
 	case *Array:
@@ -84,7 +81,7 @@ func (o *Array) Equals(x Object) bool {
 }
 
 // IndexGet returns an element at a given index.
-func (o *Array) IndexGet(index Object) (res Object, err error) {
+func (o *ImmutableArray) IndexGet(index Object) (res Object, err error) {
 	intIdx, ok := index.(*Int)
 	if !ok {
 		err = ErrInvalidIndexType
@@ -103,26 +100,8 @@ func (o *Array) IndexGet(index Object) (res Object, err error) {
 	return
 }
 
-// IndexSet sets an element at a given index.
-func (o *Array) IndexSet(index, value Object) (err error) {
-	intIdx, ok := ToInt(index)
-	if !ok {
-		err = ErrInvalidTypeConversion
-		return
-	}
-
-	if intIdx < 0 || intIdx >= len(o.Value) {
-		err = ErrIndexOutOfBounds
-		return
-	}
-
-	o.Value[intIdx] = value
-
-	return nil
-}
-
 // Iterate creates an array iterator.
-func (o *Array) Iterate() Iterator {
+func (o *ImmutableArray) Iterate() Iterator {
 	return &ArrayIterator{
 		v: o.Value,
 		l: len(o.Value),

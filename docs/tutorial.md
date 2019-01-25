@@ -152,19 +152,36 @@ for k, v in {k1: 1, k2: 2} {	// map: key and value
 
 ## Immutable Values
 
-A value can be marked as immutable using `immutable` expression.
+Basically, all values of the primitive types (Int, Float, String, Bytes, Char, Bool) are immutable.
 
 ```golang
-a := immutable([1, 2, 3]) // 'a' is immutable
-b = a[1]                  // b == 2
-a[0] = 5                  // runtime error
+s := "12345"
+s[1] = 'b'   // error: String is immutable
+s = "foo"    // ok: this is not mutating the value 
+             //  but updating reference 's' with another String value
+```
 
-c := immutable({d: [1, 2, 3]})
-c.d[1] = 10               // runtime error as 'c.d' is also immutable
+The composite types (Array, Map) are mutable by default, but, you can make them immutable using `immutable` expression.
 
-e := {f: a}               // 'a' is immutable but 'e' is not
-e.g = 20                  // valid; e == {f: a, g: 20}
-e.a[1] = 5                // runtime error as 'e.a' is immutable
+```golang
+a := [1, 2, 3]
+a[1] = "foo"    // ok: array is mutable
+
+b := immutable([1, 2, 3])
+b[1] = "foo"    // error: 'b' references to an immutable array.
+b = "foo"       // ok: this is not mutating the value of array
+                //  but updating reference 'b' with different value
+``` 
+
+Not that, if you copy (using `copy` builtin function) an immutable value, it will return a "mutable" copy. Also, immutability is not applied to the individual elements of the array or map value, unless they are explicitly made immutable.
+
+```golang
+a := immutable({b: 4, c: [1, 2, 3]})
+a.b = 5     // error
+a.c[1] = 5  // ok: because 'a.c' is not immutable
+
+a = immutable({b: 4, c: immutable([1, 2, 3])}) 
+a.c[1] = 5  // error
 ```
 
 ## Errors
