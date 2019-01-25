@@ -140,4 +140,13 @@ func TestBuiltinFunction(t *testing.T) {
 
 	expect(t, `out = from_json("5")`, 5.0)
 	expect(t, `out = from_json("[\"bar\",1,1.8,56,true]")`, ARR{"bar", 1.0, 1.8, 56.0, true})
+
+	// sprintf
+	expect(t, `out = sprintf("")`, "")
+	expect(t, `out = sprintf("foo")`, "foo")
+	expect(t, `out = sprintf("foo %d %v %s", 1, 2, "bar")`, "foo 1 2 bar")
+	expect(t, `out = sprintf("foo %v", [1, "bar", true])`, "foo [1 bar true]")
+	expect(t, `out = sprintf("foo %v %d", [1, "bar", true], 19)`, "foo [1 bar true] 19")
+	expectError(t, `sprintf(1)`)   // format has to be String
+	expectError(t, `sprintf('c')`) // format has to be String
 }

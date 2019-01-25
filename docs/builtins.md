@@ -7,6 +7,29 @@ Prints a string representation of the given variable to the standard output.
 ```golang
 v := [1, 2, 3]
 print(v)  // "[1, 2, 3]"
+
+print(1, 2, 3)
+// "1"
+// "2"
+// "3"
+```
+
+## printf
+
+Prints a formatted string to the standard output. It does not append the newline character at the end. The first argument must a String object. It's same as Go's `fmt.Printf`.
+
+```golang
+a := [1, 2, 3]
+printf("foo %v", a)  // "foo [1, 2, 3]"
+```
+
+## sprintf
+
+Returns a formatted string. The first argument must be a String object. It's the same as Go's `fmt.Sprintf`.
+
+```golang
+a := [1, 2, 3]
+b := sprintp("foo %v", a)  // b == "foo [1, 2, 3]" 
 ```
 
 ## len
