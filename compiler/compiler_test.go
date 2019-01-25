@@ -697,7 +697,7 @@ func TestCompiler_Compile(t *testing.T) {
 	expect(t, `len([]);`,
 		bytecode(
 			concat(
-				compiler.MakeInstruction(compiler.OpGetBuiltin, 1),
+				compiler.MakeInstruction(compiler.OpGetBuiltin, 3),
 				compiler.MakeInstruction(compiler.OpArray, 0),
 				compiler.MakeInstruction(compiler.OpCall, 1),
 				compiler.MakeInstruction(compiler.OpPop)),
@@ -710,7 +710,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				compiledFunction(0, 0,
-					compiler.MakeInstruction(compiler.OpGetBuiltin, 1),
+					compiler.MakeInstruction(compiler.OpGetBuiltin, 3),
 					compiler.MakeInstruction(compiler.OpArray, 0),
 					compiler.MakeInstruction(compiler.OpCall, 1),
 					compiler.MakeInstruction(compiler.OpReturnValue, 1)))))
