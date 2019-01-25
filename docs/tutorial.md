@@ -150,9 +150,26 @@ for k, v in {k1: 1, k2: 2} {	// map: key and value
 }
 ```
 
+## Immutable Values
+
+A value can be marked as immutable using `immutable` expression.
+
+```golang
+a := immutable([1, 2, 3]) // 'a' is immutable
+b = a[1]                  // b == 2
+a[0] = 5                  // runtime error
+
+c := immutable({d: [1, 2, 3]})
+c.d[1] = 10               // runtime error as 'c.d' is also immutable
+
+e := {f: a}               // 'a' is immutable but 'e' is not
+e.g = 20                  // valid; e == {f: a, g: 20}
+e.a[1] = 5                // runtime error as 'e.a' is immutable
+```
+
 ## Errors
 
-An error object is created using `error` function-like keyword. An error can have any types of value and the underlying value of the error can be accessed using `.value` selector.
+An error object is created using `error` expression. An error can contain value of any types, and, the underlying value can be read using `.value` selector.
  
 ```golang
 err1 := error("oops")   // error with string value

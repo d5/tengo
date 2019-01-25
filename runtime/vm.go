@@ -562,6 +562,9 @@ func (v *VM) Run() error {
 			v.stack[v.sp] = &err
 			v.sp++
 
+		case compiler.OpImmutable:
+			// TODO: implement here
+
 		case compiler.OpIndex:
 			index := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
