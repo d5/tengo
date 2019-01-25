@@ -9,3 +9,6 @@ test: vet lint
 
 fmt:
 	go fmt ./...
+
+build:
+	go build -o ./bin/tengo github.com/d5/tengo
