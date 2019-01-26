@@ -63,6 +63,26 @@ v := [1]
 v = append(v, 2, 3) // v == [1, 2, 3]
 ```
 
+## to_json
+
+Returns the JSON encoding of an object.
+
+```golang
+print(to_json([1, 2, 3]))  // [1, 2, 3]
+print(to_json(4))          // 4
+print(to_json("five"))     // "five"
+```
+
+## from_json
+
+Parses the JSON-encoded data and returns an object.
+
+```golang
+arr := from_json(`[1, 2, 3]`)
+four := from_json(`4`)
+five := from_json(`"five"`)
+```
+
 ## string
 
 Tries to convert an object to string object. See [this](https://github.com/d5/tengo/wiki/Variable-Types) for more details on type conversion.
