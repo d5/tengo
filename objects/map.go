@@ -50,17 +50,22 @@ func (o *Map) IsFalsy() bool {
 // Equals returns true if the value of the type
 // is equal to the value of another object.
 func (o *Map) Equals(x Object) bool {
-	t, ok := x.(*Map)
-	if !ok {
+	var xVal map[string]Object
+	switch x := x.(type) {
+	case *Map:
+		xVal = x.Value
+	case *ImmutableMap:
+		xVal = x.Value
+	default:
 		return false
 	}
 
-	if len(o.Value) != len(t.Value) {
+	if len(o.Value) != len(xVal) {
 		return false
 	}
 
 	for k, v := range o.Value {
-		tv := t.Value[k]
+		tv := xVal[k]
 		if !v.Equals(tv) {
 			return false
 		}

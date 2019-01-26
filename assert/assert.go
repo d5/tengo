@@ -164,13 +164,17 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 	case *objects.ReturnValue:
 		return Equal(t, expected.Value, actual.(objects.ReturnValue).Value)
 	case *objects.Array:
-		return equalArray(t, expected, actual.(*objects.Array))
+		return equalObjectSlice(t, expected.Value, actual.(*objects.Array).Value)
+	case *objects.ImmutableArray:
+		return equalObjectSlice(t, expected.Value, actual.(*objects.ImmutableArray).Value)
 	case *objects.Bytes:
 		if bytes.Compare(expected.Value, actual.(*objects.Bytes).Value) != 0 {
 			return failExpectedActual(t, expected.Value, actual.(*objects.Bytes).Value, msg...)
 		}
 	case *objects.Map:
-		return equalMap(t, expected, actual.(*objects.Map))
+		return equalObjectMap(t, expected.Value, actual.(*objects.Map).Value)
+	case *objects.ImmutableMap:
+		return equalObjectMap(t, expected.Value, actual.(*objects.ImmutableMap).Value)
 	case *objects.CompiledFunction:
 		return equalCompiledFunction(t, expected, actual.(*objects.CompiledFunction))
 	case *objects.Closure:
@@ -252,13 +256,6 @@ func equalSymbol(a, b compiler.Symbol) bool {
 		a.Scope == b.Scope
 }
 
-func equalArray(t *testing.T, expected, actual objects.Object) bool {
-	expectedT := expected.(*objects.Array).Value
-	actualT := actual.(*objects.Array).Value
-
-	return equalObjectSlice(t, expectedT, actualT)
-}
-
 func equalObjectSlice(t *testing.T, expected, actual []objects.Object) bool {
 	// TODO: this test does not differentiate nil vs empty slice
 
@@ -275,16 +272,13 @@ func equalObjectSlice(t *testing.T, expected, actual []objects.Object) bool {
 	return true
 }
 
-func equalMap(t *testing.T, expected, actual objects.Object) bool {
-	expectedT := expected.(*objects.Map).Value
-	actualT := actual.(*objects.Map).Value
-
-	if !Equal(t, len(expectedT), len(actualT)) {
+func equalObjectMap(t *testing.T, expected, actual map[string]objects.Object) bool {
+	if !Equal(t, len(expected), len(actual)) {
 		return false
 	}
 
-	for key, expectedVal := range expectedT {
-		actualVal := actualT[key]
+	for key, expectedVal := range expected {
+		actualVal := actual[key]
 
 		if !Equal(t, expectedVal, actualVal) {
 			return false

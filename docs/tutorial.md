@@ -150,9 +150,43 @@ for k, v in {k1: 1, k2: 2} {	// map: key and value
 }
 ```
 
+## Immutable Values
+
+Basically, all values of the primitive types (Int, Float, String, Bytes, Char, Bool) are immutable.
+
+```golang
+s := "12345"
+s[1] = 'b'   // error: String is immutable
+s = "foo"    // ok: this is not mutating the value 
+             //  but updating reference 's' with another String value
+```
+
+The composite types (Array, Map) are mutable by default, but, you can make them immutable using `immutable` expression.
+
+```golang
+a := [1, 2, 3]
+a[1] = "foo"    // ok: array is mutable
+
+b := immutable([1, 2, 3])
+b[1] = "foo"    // error: 'b' references to an immutable array.
+b = "foo"       // ok: this is not mutating the value of array
+                //  but updating reference 'b' with different value
+``` 
+
+Not that, if you copy (using `copy` builtin function) an immutable value, it will return a "mutable" copy. Also, immutability is not applied to the individual elements of the array or map value, unless they are explicitly made immutable.
+
+```golang
+a := immutable({b: 4, c: [1, 2, 3]})
+a.b = 5     // error
+a.c[1] = 5  // ok: because 'a.c' is not immutable
+
+a = immutable({b: 4, c: immutable([1, 2, 3])}) 
+a.c[1] = 5  // error
+```
+
 ## Errors
 
-An error object is created using `error` function-like keyword. An error can have any types of value and the underlying value of the error can be accessed using `.value` selector.
+An error object is created using `error` expression. An error can contain value of any types, and, the underlying value can be read using `.value` selector.
  
 ```golang
 err1 := error("oops")   // error with string value

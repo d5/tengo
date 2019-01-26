@@ -473,6 +473,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(OpError)
+
+	case *ast.ImmutableExpr:
+		if err := c.Compile(node.Expr); err != nil {
+			return err
+		}
+
+		c.emit(OpImmutable)
 	}
 
 	return nil

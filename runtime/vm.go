@@ -299,7 +299,7 @@ func (v *VM) Run() error {
 				return ErrStackOverflow
 			}
 
-			if (*right).Equals(*left) {
+			if (*left).Equals(*right) {
 				v.stack[v.sp] = truePtr
 			} else {
 				v.stack[v.sp] = falsePtr
@@ -315,7 +315,7 @@ func (v *VM) Run() error {
 				return ErrStackOverflow
 			}
 
-			if (*right).Equals(*left) {
+			if (*left).Equals(*right) {
 				v.stack[v.sp] = falsePtr
 			} else {
 				v.stack[v.sp] = truePtr
@@ -549,18 +549,28 @@ func (v *VM) Run() error {
 
 		case compiler.OpError:
 			value := v.stack[v.sp-1]
-			v.sp--
 
 			var err objects.Object = &objects.Error{
 				Value: *value,
 			}
 
-			if v.sp >= StackSize {
-				return ErrStackOverflow
-			}
+			v.stack[v.sp-1] = &err
 
-			v.stack[v.sp] = &err
-			v.sp++
+		case compiler.OpImmutable:
+			value := v.stack[v.sp-1]
+
+			switch value := (*value).(type) {
+			case *objects.Array:
+				var immutableArray objects.Object = &objects.ImmutableArray{
+					Value: value.Value,
+				}
+				v.stack[v.sp-1] = &immutableArray
+			case *objects.Map:
+				var immutableMap objects.Object = &objects.ImmutableMap{
+					Value: value.Value,
+				}
+				v.stack[v.sp-1] = &immutableMap
+			}
 
 		case compiler.OpIndex:
 			index := v.stack[v.sp-1]
@@ -629,6 +639,31 @@ func (v *VM) Run() error {
 
 			switch left := (*left).(type) {
 			case *objects.Array:
+				numElements := int64(len(left.Value))
+
+				if lowIdx < 0 || lowIdx >= numElements {
+					return fmt.Errorf("index out of bounds: %d", lowIdx)
+				}
+				if highIdx < 0 {
+					highIdx = numElements
+				} else if highIdx < 0 || highIdx > numElements {
+					return fmt.Errorf("index out of bounds: %d", highIdx)
+				}
+
+				if lowIdx > highIdx {
+					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
+				}
+
+				if v.sp >= StackSize {
+					return ErrStackOverflow
+				}
+
+				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
+
+				v.stack[v.sp] = &val
+				v.sp++
+
+			case *objects.ImmutableArray:
 				numElements := int64(len(left.Value))
 
 				if lowIdx < 0 || lowIdx >= numElements {

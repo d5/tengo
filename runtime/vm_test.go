@@ -20,6 +20,8 @@ const (
 	testOut = "out"
 )
 
+type IARR []interface{}
+type IMAP map[string]interface{}
 type MAP = map[string]interface{}
 type ARR = []interface{}
 type SYM = map[string]objects.Object
@@ -154,6 +156,20 @@ func toObject(v interface{}) objects.Object {
 		}
 
 		return &objects.Array{Value: objs}
+	case IMAP:
+		objs := make(map[string]objects.Object)
+		for k, v := range v {
+			objs[k] = toObject(v)
+		}
+
+		return &objects.ImmutableMap{Value: objs}
+	case IARR:
+		var objs []objects.Object
+		for _, e := range v {
+			objs = append(objs, toObject(e))
+		}
+
+		return &objects.ImmutableArray{Value: objs}
 	}
 
 	panic(fmt.Errorf("unknown type: %T", v))
@@ -315,6 +331,10 @@ func objectZeroCopy(o objects.Object) objects.Object {
 		return &objects.Error{}
 	case *objects.Bytes:
 		return &objects.Bytes{}
+	case *objects.ImmutableArray:
+		return &objects.ImmutableArray{}
+	case *objects.ImmutableMap:
+		return &objects.ImmutableMap{}
 	case nil:
 		panic("nil")
 	default:

@@ -39,7 +39,7 @@ func (o *ImmutableMap) Copy() Object {
 		c[k] = v.Copy()
 	}
 
-	return &ImmutableMap{Value: c}
+	return &Map{Value: c}
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -66,17 +66,22 @@ func (o *ImmutableMap) IndexGet(index Object) (res Object, err error) {
 // Equals returns true if the value of the type
 // is equal to the value of another object.
 func (o *ImmutableMap) Equals(x Object) bool {
-	t, ok := x.(*ImmutableMap)
-	if !ok {
+	var xVal map[string]Object
+	switch x := x.(type) {
+	case *Map:
+		xVal = x.Value
+	case *ImmutableMap:
+		xVal = x.Value
+	default:
 		return false
 	}
 
-	if len(o.Value) != len(t.Value) {
+	if len(o.Value) != len(xVal) {
 		return false
 	}
 
 	for k, v := range o.Value {
-		tv := t.Value[k]
+		tv := xVal[k]
 		if !v.Equals(tv) {
 			return false
 		}
@@ -92,7 +97,7 @@ func (o *ImmutableMap) Iterate() Iterator {
 		keys = append(keys, k)
 	}
 
-	return &ImmutableMapIterator{
+	return &MapIterator{
 		v: o.Value,
 		k: keys,
 		l: len(keys),
