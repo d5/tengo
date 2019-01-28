@@ -89,7 +89,7 @@ func builtinIsUndefined(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 
-	if _, ok := args[0].(*Undefined); ok {
+	if args[0] == UndefinedValue {
 		return TrueValue, nil
 	}
 

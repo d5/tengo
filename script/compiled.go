@@ -8,8 +8,6 @@ import (
 	"github.com/d5/tengo/runtime"
 )
 
-var undefined objects.Object = &objects.Undefined{}
-
 // Compiled is a compiled instance of the user script.
 // Use Script.Compile() to create Compiled object.
 type Compiled struct {
@@ -53,20 +51,18 @@ func (c *Compiled) IsDefined(name string) bool {
 		return false
 	}
 
-	_, isUndefined := (*v).(*objects.Undefined)
-
-	return !isUndefined
+	return *v != objects.UndefinedValue
 }
 
 // Get returns a variable identified by the name.
 func (c *Compiled) Get(name string) *Variable {
-	value := &undefined
+	value := &objects.UndefinedValue
 
 	symbol, _, ok := c.symbolTable.Resolve(name)
 	if ok && symbol.Scope == compiler.ScopeGlobal {
 		value = c.machine.Globals()[symbol.Index]
 		if value == nil {
-			value = &undefined
+			value = &objects.UndefinedValue
 		}
 	}
 
@@ -84,7 +80,7 @@ func (c *Compiled) GetAll() []*Variable {
 		if ok && symbol.Scope == compiler.ScopeGlobal {
 			value := c.machine.Globals()[symbol.Index]
 			if value == nil {
-				value = &undefined
+				value = &objects.UndefinedValue
 			}
 
 			vars = append(vars, &Variable{

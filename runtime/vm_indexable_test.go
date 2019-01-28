@@ -159,7 +159,7 @@ func TestIndexable(t *testing.T) {
 	dict := func() *StringDict { return &StringDict{Value: map[string]string{"a": "foo", "b": "bar"}} }
 	expectWithSymbols(t, `out = dict["a"]`, "foo", SYM{"dict": dict()})
 	expectWithSymbols(t, `out = dict["B"]`, "bar", SYM{"dict": dict()})
-	expectWithSymbols(t, `out = dict["x"]`, undefined(), SYM{"dict": dict()})
+	expectWithSymbols(t, `out = dict["x"]`, objects.UndefinedValue, SYM{"dict": dict()})
 	expectErrorWithSymbols(t, `out = dict[0]`, SYM{"dict": dict()})
 
 	strCir := func() *StringCircle { return &StringCircle{Value: []string{"one", "two", "three"}} }
@@ -173,7 +173,7 @@ func TestIndexable(t *testing.T) {
 	strArr := func() *StringArray { return &StringArray{Value: []string{"one", "two", "three"}} }
 	expectWithSymbols(t, `out = arr["one"]`, 0, SYM{"arr": strArr()})
 	expectWithSymbols(t, `out = arr["three"]`, 2, SYM{"arr": strArr()})
-	expectWithSymbols(t, `out = arr["four"]`, undefined(), SYM{"arr": strArr()})
+	expectWithSymbols(t, `out = arr["four"]`, objects.UndefinedValue, SYM{"arr": strArr()})
 	expectWithSymbols(t, `out = arr[0]`, "one", SYM{"arr": strArr()})
 	expectWithSymbols(t, `out = arr[1]`, "two", SYM{"arr": strArr()})
 	expectErrorWithSymbols(t, `out = arr[-1]`, SYM{"arr": strArr()})

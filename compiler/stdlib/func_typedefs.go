@@ -43,7 +43,11 @@ func FuncARB(fn func() bool) *objects.UserFunction {
 				return nil, objects.ErrWrongNumArguments
 			}
 
-			return &objects.Bool{Value: fn()}, nil
+			if fn() {
+				return objects.TrueValue, nil
+			}
+
+			return objects.FalseValue, nil
 		},
 	}
 }
@@ -340,7 +344,11 @@ func FuncAFIRB(fn func(float64, int) bool) *objects.UserFunction {
 				return nil, objects.ErrInvalidTypeConversion
 			}
 
-			return &objects.Bool{Value: fn(f1, i2)}, nil
+			if fn(f1, i2) {
+				return objects.TrueValue, nil
+			}
+
+			return objects.FalseValue, nil
 		},
 	}
 }
@@ -359,7 +367,11 @@ func FuncAFRB(fn func(float64) bool) *objects.UserFunction {
 				return nil, objects.ErrInvalidTypeConversion
 			}
 
-			return &objects.Bool{Value: fn(f1)}, nil
+			if fn(f1) {
+				return objects.TrueValue, nil
+			}
+
+			return objects.FalseValue, nil
 		},
 	}
 }

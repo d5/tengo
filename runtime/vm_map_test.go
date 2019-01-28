@@ -2,6 +2,8 @@ package runtime_test
 
 import (
 	"testing"
+
+	"github.com/d5/tengo/objects"
 )
 
 func TestMap(t *testing.T) {
@@ -17,9 +19,9 @@ out = {
 	})
 
 	expect(t, `out = {foo: 5}["foo"]`, 5)
-	expect(t, `out = {foo: 5}["bar"]`, undefined())
+	expect(t, `out = {foo: 5}["bar"]`, objects.UndefinedValue)
 	expect(t, `key := "foo"; out = {foo: 5}[key]`, 5)
-	expect(t, `out = {}["foo"]`, undefined())
+	expect(t, `out = {}["foo"]`, objects.UndefinedValue)
 
 	expect(t, `
 m := {

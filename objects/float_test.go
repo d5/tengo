@@ -41,28 +41,28 @@ func TestFloat_BinaryOp(t *testing.T) {
 	// float < float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &objects.Float{Value: l}, token.Less, &objects.Float{Value: r}, &objects.Bool{Value: l < r})
+			testBinaryOp(t, &objects.Float{Value: l}, token.Less, &objects.Float{Value: r}, boolValue(l < r))
 		}
 	}
 
 	// float > float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &objects.Float{Value: l}, token.Greater, &objects.Float{Value: r}, &objects.Bool{Value: l > r})
+			testBinaryOp(t, &objects.Float{Value: l}, token.Greater, &objects.Float{Value: r}, boolValue(l > r))
 		}
 	}
 
 	// float <= float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &objects.Float{Value: l}, token.LessEq, &objects.Float{Value: r}, &objects.Bool{Value: l <= r})
+			testBinaryOp(t, &objects.Float{Value: l}, token.LessEq, &objects.Float{Value: r}, boolValue(l <= r))
 		}
 	}
 
 	// float >= float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &objects.Float{Value: l}, token.GreaterEq, &objects.Float{Value: r}, &objects.Bool{Value: l >= r})
+			testBinaryOp(t, &objects.Float{Value: l}, token.GreaterEq, &objects.Float{Value: r}, boolValue(l >= r))
 		}
 	}
 
@@ -99,28 +99,28 @@ func TestFloat_BinaryOp(t *testing.T) {
 	// float < int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &objects.Float{Value: l}, token.Less, &objects.Int{Value: r}, &objects.Bool{Value: l < float64(r)})
+			testBinaryOp(t, &objects.Float{Value: l}, token.Less, &objects.Int{Value: r}, boolValue(l < float64(r)))
 		}
 	}
 
 	// float > int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &objects.Float{Value: l}, token.Greater, &objects.Int{Value: r}, &objects.Bool{Value: l > float64(r)})
+			testBinaryOp(t, &objects.Float{Value: l}, token.Greater, &objects.Int{Value: r}, boolValue(l > float64(r)))
 		}
 	}
 
 	// float <= int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &objects.Float{Value: l}, token.LessEq, &objects.Int{Value: r}, &objects.Bool{Value: l <= float64(r)})
+			testBinaryOp(t, &objects.Float{Value: l}, token.LessEq, &objects.Int{Value: r}, boolValue(l <= float64(r)))
 		}
 	}
 
 	// float >= int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &objects.Float{Value: l}, token.GreaterEq, &objects.Int{Value: r}, &objects.Bool{Value: l >= float64(r)})
+			testBinaryOp(t, &objects.Float{Value: l}, token.GreaterEq, &objects.Int{Value: r}, boolValue(l >= float64(r)))
 		}
 	}
 }

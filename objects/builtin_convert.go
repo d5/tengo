@@ -77,7 +77,11 @@ func builtinBool(args ...Object) (Object, error) {
 
 	v, ok := ToBool(args[0])
 	if ok {
-		return &Bool{Value: v}, nil
+		if v {
+			return TrueValue, nil
+		}
+
+		return FalseValue, nil
 	}
 
 	return UndefinedValue, nil

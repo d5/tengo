@@ -123,7 +123,7 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		}
 	case []byte:
 		if bytes.Compare(expected, actual.([]byte)) != 0 {
-			return failExpectedActual(t, expected, actual, msg...)
+			return failExpectedActual(t, string(expected), string(actual.([]byte)), msg...)
 		}
 	case []int:
 		if !equalIntSlice(expected, actual.([]int)) {
@@ -160,7 +160,9 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 	case *objects.Char:
 		return Equal(t, expected.Value, actual.(*objects.Char).Value)
 	case *objects.Bool:
-		return Equal(t, expected.Value, actual.(*objects.Bool).Value)
+		if expected != actual {
+			return failExpectedActual(t, expected, actual, msg...)
+		}
 	case *objects.ReturnValue:
 		return Equal(t, expected.Value, actual.(objects.ReturnValue).Value)
 	case *objects.Array:
@@ -169,7 +171,7 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		return equalObjectSlice(t, expected.Value, actual.(*objects.ImmutableArray).Value)
 	case *objects.Bytes:
 		if bytes.Compare(expected.Value, actual.(*objects.Bytes).Value) != 0 {
-			return failExpectedActual(t, expected.Value, actual.(*objects.Bytes).Value, msg...)
+			return failExpectedActual(t, string(expected.Value), string(actual.(*objects.Bytes).Value), msg...)
 		}
 	case *objects.Map:
 		return equalObjectMap(t, expected.Value, actual.(*objects.Map).Value)
@@ -180,7 +182,9 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 	case *objects.Closure:
 		return equalClosure(t, expected, actual.(*objects.Closure))
 	case *objects.Undefined:
-		return true
+		if expected != actual {
+			return failExpectedActual(t, expected, actual, msg...)
+		}
 	case *objects.Error:
 		return Equal(t, expected.Value, actual.(*objects.Error).Value)
 	case error:

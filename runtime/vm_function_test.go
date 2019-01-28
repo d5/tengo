@@ -2,13 +2,15 @@ package runtime_test
 
 import (
 	"testing"
+
+	"github.com/d5/tengo/objects"
 )
 
 func TestFunction(t *testing.T) {
 	// function with no "return" statement returns "invalid" value.
-	expect(t, `f1 := func() {}; out = f1();`, undefined())
-	expect(t, `f1 := func() {}; f2 := func() { return f1(); }; f1(); out = f2();`, undefined())
-	expect(t, `f := func(x) { x; }; out = f(5);`, undefined())
+	expect(t, `f1 := func() {}; out = f1();`, objects.UndefinedValue)
+	expect(t, `f1 := func() {}; f2 := func() { return f1(); }; f1(); out = f2();`, objects.UndefinedValue)
+	expect(t, `f := func(x) { x; }; out = f(5);`, objects.UndefinedValue)
 
 	expect(t, `f := func(x) { return x; }; out = f(5);`, 5)
 	expect(t, `f := func(x) { return x * 2; }; out = f(5);`, 10)

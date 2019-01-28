@@ -54,7 +54,7 @@ func TestVariable(t *testing.T) {
 			FloatValue:  0,
 			BoolValue:   true,
 			StringValue: "true",
-			Object:      &objects.Bool{Value: true},
+			Object:      objects.TrueValue,
 		},
 		{
 			Name:        "d",

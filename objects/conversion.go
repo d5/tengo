@@ -7,7 +7,7 @@ import (
 
 // ToString will try to convert object o to string value.
 func ToString(o Object) (v string, ok bool) {
-	if _, isUndefined := o.(*Undefined); isUndefined {
+	if o == UndefinedValue {
 		//ok = false
 		return
 	}
@@ -36,7 +36,7 @@ func ToInt(o Object) (v int, ok bool) {
 		v = int(o.Value)
 		ok = true
 	case *Bool:
-		if o.Value {
+		if o == TrueValue {
 			v = 1
 		}
 		ok = true
@@ -65,7 +65,7 @@ func ToInt64(o Object) (v int64, ok bool) {
 		v = int64(o.Value)
 		ok = true
 	case *Bool:
-		if o.Value {
+		if o == TrueValue {
 			v = 1
 		}
 		ok = true
@@ -150,7 +150,7 @@ func objectToInterface(o Object) (res interface{}) {
 	case *Float:
 		res = o.Value
 	case *Bool:
-		res = o.Value
+		res = o == TrueValue
 	case *Char:
 		res = o.Value
 	case *Bytes:
@@ -176,7 +176,7 @@ func objectToInterface(o Object) (res interface{}) {
 func FromInterface(v interface{}) (Object, error) {
 	switch v := v.(type) {
 	case nil:
-		return &Undefined{}, nil
+		return UndefinedValue, nil
 	case string:
 		return &String{Value: v}, nil
 	case int64:
@@ -184,7 +184,10 @@ func FromInterface(v interface{}) (Object, error) {
 	case int:
 		return &Int{Value: int64(v)}, nil
 	case bool:
-		return &Bool{Value: v}, nil
+		if v {
+			return TrueValue, nil
+		}
+		return FalseValue, nil
 	case rune:
 		return &Char{Value: v}, nil
 	case byte:
