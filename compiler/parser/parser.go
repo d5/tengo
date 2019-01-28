@@ -82,7 +82,14 @@ func (p *Parser) parseExpr() ast.Expr {
 		defer un(trace(p, "Expression"))
 	}
 
-	return p.parseBinaryExpr(token.LowestPrec + 1)
+	expr := p.parseBinaryExpr(token.LowestPrec + 1)
+
+	// ternary conditional expression
+	if p.token == token.Question {
+		return p.parseCondExpr(expr)
+	}
+
+	return expr
 }
 
 func (p *Parser) parseBinaryExpr(prec1 int) ast.Expr {
@@ -101,12 +108,31 @@ func (p *Parser) parseBinaryExpr(prec1 int) ast.Expr {
 		pos := p.expect(op)
 
 		y := p.parseBinaryExpr(prec + 1)
+
 		x = &ast.BinaryExpr{
 			LHS:      x,
 			RHS:      y,
 			Token:    op,
 			TokenPos: pos,
 		}
+	}
+}
+
+func (p *Parser) parseCondExpr(cond ast.Expr) ast.Expr {
+	questionPos := p.expect(token.Question)
+
+	trueExpr := p.parseExpr()
+
+	colonPos := p.expect(token.Colon)
+
+	falseExpr := p.parseExpr()
+
+	return &ast.CondExpr{
+		Cond:        cond,
+		True:        trueExpr,
+		False:       falseExpr,
+		QuestionPos: questionPos,
+		ColonPos:    colonPos,
 	}
 }
 

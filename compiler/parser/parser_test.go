@@ -184,6 +184,10 @@ func binaryExpr(x, y ast.Expr, op token.Token, pos source.Pos) *ast.BinaryExpr {
 	return &ast.BinaryExpr{LHS: x, RHS: y, Token: op, TokenPos: pos}
 }
 
+func condExpr(cond, trueExpr, falseExpr ast.Expr, questionPos, colonPos source.Pos) *ast.CondExpr {
+	return &ast.CondExpr{Cond: cond, True: trueExpr, False: falseExpr, QuestionPos: questionPos, ColonPos: colonPos}
+}
+
 func unaryExpr(x ast.Expr, op token.Token, pos source.Pos) *ast.UnaryExpr {
 	return &ast.UnaryExpr{Expr: x, Token: op, TokenPos: pos}
 }
@@ -398,6 +402,12 @@ func equalExpr(t *testing.T, expected, actual ast.Expr) bool {
 			assert.Equal(t, int(expected.ErrorPos), int(actual.(*ast.ErrorExpr).ErrorPos)) &&
 			assert.Equal(t, int(expected.LParen), int(actual.(*ast.ErrorExpr).LParen)) &&
 			assert.Equal(t, int(expected.RParen), int(actual.(*ast.ErrorExpr).RParen))
+	case *ast.CondExpr:
+		return equalExpr(t, expected.Cond, actual.(*ast.CondExpr).Cond) &&
+			equalExpr(t, expected.True, actual.(*ast.CondExpr).True) &&
+			equalExpr(t, expected.False, actual.(*ast.CondExpr).False) &&
+			assert.Equal(t, expected.QuestionPos, actual.(*ast.CondExpr).QuestionPos) &&
+			assert.Equal(t, expected.ColonPos, actual.(*ast.CondExpr).ColonPos)
 	default:
 		panic(fmt.Errorf("unknown type: %T", expected))
 	}

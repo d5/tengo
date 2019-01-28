@@ -94,6 +94,21 @@ d := "hello world"[2:10]	// == "llo worl"
 ```
 > [Run in Playground](https://tengolang.com/?s=214ab490bb24549578770984985f6b161aed915d)
 
+## Conditional Expression
+
+Tengo supports the ternary conditional expression (`cond ? expr1 : expr2`):
+
+```golang
+a := true ? 1 : -1    // a == 1
+
+min := func(a, b) {
+    return a < b ? a : b
+}
+b := min(5, 10)       // b == 5
+```
+
+> [Run in Playground](https://tengolang.com/?s=24724cc03e8ef2e56b7851017f8c2a577897961e)
+
 ## Functions
 
 In Tengo, functions are first-class citizen, and, it also supports closures, functions that captures variables in outer scopes. In the following example, the function returned from `adder` is capturing `base` variable.
