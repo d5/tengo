@@ -91,6 +91,17 @@ Tries to convert an object to string object. See [this](https://github.com/d5/te
 x := string(123) //  v == "123"
 ```
 
+## type_name
+
+Returns the type_name of an object.
+
+```golang
+type_name(1) // int
+type_name("str") // string
+type_name([1, 2, 3]) // array
+```
+
+
 Optionally it can take the second argument, which will be returned if the first argument cannot be converted to string. Note that the second argument does not have to be string.
 
 ```golang

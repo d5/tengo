@@ -149,4 +149,17 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = sprintf("foo %v %d", [1, "bar", true], 19)`, "foo [1 bar true] 19")
 	expectError(t, `sprintf(1)`)   // format has to be String
 	expectError(t, `sprintf('c')`) // format has to be String
+
+	// type_name
+	expect(t, `out = type_name(1)`, "int")
+	expect(t, `out = type_name(1.1)`, "float")
+	expect(t, `out = type_name("a")`, "string")
+	expect(t, `out = type_name([1,2,3])`, "array")
+	expect(t, `out = type_name({k:1})`, "map")
+	expect(t, `out = type_name('a')`, "char")
+	expect(t, `out = type_name(true)`, "bool")
+	expect(t, `out = type_name(false)`, "bool")
+	expect(t, `out = type_name(bytes( 1))`, "bytes")
+	expect(t, `out = type_name(undefined)`, "undefined")
+	expect(t, `out = type_name(error("err"))`, "error")
 }
