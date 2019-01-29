@@ -159,5 +159,25 @@ func TestTextRE(t *testing.T) {
 		module(t, "text").call("re_split", d.pattern, d.text, d.count).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
 		module(t, "text").call("re_compile", d.pattern).call("split", d.text, d.count).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
 	}
+}
 
+func TestText(t *testing.T) {
+	module(t, "text").call("compare", "", "").expect(0)
+	module(t, "text").call("compare", "", "a").expect(-1)
+	module(t, "text").call("compare", "a", "").expect(1)
+	module(t, "text").call("compare", "a", "a").expect(0)
+	module(t, "text").call("compare", "a", "b").expect(-1)
+	module(t, "text").call("compare", "b", "a").expect(1)
+	module(t, "text").call("compare", "abcde", "abcde").expect(0)
+	module(t, "text").call("compare", "abcde", "abcdf").expect(-1)
+	module(t, "text").call("compare", "abcdf", "abcde").expect(1)
+
+	module(t, "text").call("contains", "", "").expect(true)
+	module(t, "text").call("contains", "", "a").expect(false)
+	module(t, "text").call("contains", "a", "").expect(true)
+	module(t, "text").call("contains", "a", "a").expect(true)
+	module(t, "text").call("contains", "abcde", "a").expect(true)
+	module(t, "text").call("contains", "abcde", "abcde").expect(true)
+	module(t, "text").call("contains", "abc", "abcde").expect(false)
+	module(t, "text").call("contains", "ab cd", "bc").expect(false)
 }

@@ -2,6 +2,7 @@ package stdlib
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/d5/tengo/objects"
 )
@@ -232,6 +233,98 @@ var textModule = map[string]objects.Object{
 			return
 		},
 	},
+
+	// compare(a, b) => int
+	"compare": FuncASSRI(strings.Compare),
+	// contains(s, substr) => bool
+	"contains": FuncASSRB(strings.Contains),
+	// contains_any(s, chars) => bool
+	"contains_any": FuncASSRB(strings.ContainsAny),
+	// count(s, substr) => int
+	"count": FuncASSRI(strings.Count),
+	// "equal_fold(s, t) => bool
+	"equal_fold": FuncASSRB(strings.EqualFold),
+	// fields(s) => array(string)
+	"fields": FuncASRSs(strings.Fields),
+	// has_prefix(s, prefix) => bool
+	"has_prefix": FuncASSRB(strings.HasPrefix),
+	// has_suffix(s, suffix) => bool
+	"has_suffix": FuncASSRB(strings.HasSuffix),
+	// index(s, substr) => int
+	"index": FuncASSRI(strings.Index),
+	// index_any(s, chars) => int
+	"index_any": FuncASSRI(strings.IndexAny),
+	// join(arr, sep) => string
+	"join": FuncASsSRS(strings.Join),
+	// last_index(s, substr) => int
+	"last_index": FuncASSRI(strings.LastIndex),
+	// last_index_any(s, chars) => int
+	"last_index_any": FuncASSRI(strings.LastIndexAny),
+	// repeat(s, count) => string
+	"repeat": FuncASIRS(strings.Repeat),
+	// replace(s, old, new, n) => string
+	"replace": &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 4 {
+				err = objects.ErrWrongNumArguments
+				return
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			s2, ok := objects.ToString(args[1])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			s3, ok := objects.ToString(args[2])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			i4, ok := objects.ToInt(args[3])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			ret = &objects.String{Value: strings.Replace(s1, s2, s3, i4)}
+
+			return
+		},
+	},
+	// split(s, sep) => []string
+	"split": FuncASSRSs(strings.Split),
+	// split_after(s, sep) => []string
+	"split_after": FuncASSRSs(strings.SplitAfter),
+	// split_after_n(s, sep, n) => []string
+	"split_after_n": FuncASSIRSs(strings.SplitAfterN),
+	// split_n(s, sep, n) => []string
+	"split_n": FuncASSIRSs(strings.SplitN),
+	// title(s) => string
+	"title": FuncASRS(strings.Title),
+	// to_lower(s) => string
+	"to_lower": FuncASRS(strings.ToLower),
+	// to_title(s) => string
+	"to_title": FuncASRS(strings.ToTitle),
+	// to_upper(s) => string
+	"to_upper": FuncASRS(strings.ToUpper),
+	// trim_left(s, cutset) => string
+	"trim_left": FuncASSRS(strings.TrimLeft),
+	// trim_prefix(s, prefix) => string
+	"trim_prefix": FuncASSRS(strings.TrimPrefix),
+	// trim_right(s, cutset) => string
+	"trim_right": FuncASSRS(strings.TrimRight),
+	// trim_space(s) => string
+	"trim_space": FuncASRS(strings.TrimSpace),
+	// trim_suffix(s, suffix) => string
+	"trim_suffix": FuncASSRS(strings.TrimSuffix),
 }
 
 func stringsRegexpImmutableMap(re *regexp.Regexp) *objects.ImmutableMap {

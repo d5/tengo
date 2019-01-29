@@ -2,6 +2,8 @@ package stdlib_test
 
 import (
 	"errors"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/d5/tengo/assert"
@@ -115,6 +117,15 @@ func TestFuncASRS(t *testing.T) {
 	assert.Equal(t, objects.ErrWrongNumArguments, err)
 }
 
+func TestFuncASRSs(t *testing.T) {
+	uf := stdlib.FuncASRSs(func(a string) []string { return []string{a} })
+	ret, err := uf.Call(&objects.String{Value: "foo"})
+	assert.NoError(t, err)
+	assert.Equal(t, array(&objects.String{Value: "foo"}), ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
 func TestFuncASI64RE(t *testing.T) {
 	uf := stdlib.FuncASI64RE(func(a string, b int64) error { return nil })
 	ret, err := uf.Call(&objects.String{Value: "foo"}, &objects.Int{Value: 5})
@@ -168,7 +179,24 @@ func TestFuncASRSE(t *testing.T) {
 }
 
 func TestFuncASSRE(t *testing.T) {
+	uf := stdlib.FuncASSRE(func(a, b string) error { return nil })
+	ret, err := uf.Call(&objects.String{Value: "foo"}, &objects.String{Value: "bar"})
+	assert.NoError(t, err)
+	uf = stdlib.FuncASSRE(func(a, b string) error { return errors.New("some error") })
+	ret, err = uf.Call(&objects.String{Value: "foo"}, &objects.String{Value: "bar"})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Error{Value: &objects.String{Value: "some error"}}, ret)
+	ret, err = uf.Call(&objects.String{Value: "foo"})
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
 
+func TestFuncASsRS(t *testing.T) {
+	uf := stdlib.FuncASsSRS(func(a []string, b string) string { return strings.Join(a, b) })
+	ret, err := uf.Call(array(&objects.String{Value: "foo"}, &objects.String{Value: "bar"}), &objects.String{Value: " "})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.String{Value: "foo bar"}, ret)
+	ret, err = uf.Call(&objects.String{Value: "foo"})
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
 }
 
 func TestFuncARF(t *testing.T) {
@@ -247,6 +275,17 @@ func TestFuncAFFRF(t *testing.T) {
 	assert.Equal(t, objects.ErrWrongNumArguments, err)
 }
 
+func TestFuncASIRS(t *testing.T) {
+	uf := stdlib.FuncASIRS(func(a string, b int) string { return strings.Repeat(a, b) })
+	ret, err := uf.Call(&objects.String{Value: "ab"}, &objects.Int{Value: 2})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.String{Value: "abab"}, ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+	ret, err = uf.Call(objects.TrueValue)
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
 func TestFuncAIFRF(t *testing.T) {
 	uf := stdlib.FuncAIFRF(func(a int, b float64) float64 {
 		return float64(a) + b
@@ -303,6 +342,24 @@ func TestFuncAIRSsE(t *testing.T) {
 	assert.Equal(t, objects.ErrWrongNumArguments, err)
 }
 
+func TestFuncASSRSs(t *testing.T) {
+	uf := stdlib.FuncASSRSs(func(a, b string) []string { return []string{a, b} })
+	ret, err := uf.Call(&objects.String{Value: "foo"}, &objects.String{Value: "bar"})
+	assert.NoError(t, err)
+	assert.Equal(t, array(&objects.String{Value: "foo"}, &objects.String{Value: "bar"}), ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncASSIRSs(t *testing.T) {
+	uf := stdlib.FuncASSIRSs(func(a, b string, c int) []string { return []string{a, b, strconv.Itoa(c)} })
+	ret, err := uf.Call(&objects.String{Value: "foo"}, &objects.String{Value: "bar"}, &objects.Int{Value: 5})
+	assert.NoError(t, err)
+	assert.Equal(t, array(&objects.String{Value: "foo"}, &objects.String{Value: "bar"}, &objects.String{Value: "5"}), ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
 func TestFuncARB(t *testing.T) {
 	uf := stdlib.FuncARB(func() bool { return true })
 	ret, err := uf.Call()
@@ -352,6 +409,33 @@ func TestFuncAYRIE(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, &objects.Error{Value: &objects.String{Value: "some error"}}, ret)
 	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncASSRI(t *testing.T) {
+	uf := stdlib.FuncASSRI(func(a, b string) int { return len(a) + len(b) })
+	ret, err := uf.Call(&objects.String{Value: "foo"}, &objects.String{Value: "bar"})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Int{Value: 6}, ret)
+	ret, err = uf.Call(&objects.String{Value: "foo"})
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncASSRS(t *testing.T) {
+	uf := stdlib.FuncASSRS(func(a, b string) string { return a + b })
+	ret, err := uf.Call(&objects.String{Value: "foo"}, &objects.String{Value: "bar"})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.String{Value: "foobar"}, ret)
+	ret, err = uf.Call(&objects.String{Value: "foo"})
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncASSRB(t *testing.T) {
+	uf := stdlib.FuncASSRB(func(a, b string) bool { return len(a) > len(b) })
+	ret, err := uf.Call(&objects.String{Value: "123"}, &objects.String{Value: "12"})
+	assert.NoError(t, err)
+	assert.Equal(t, objects.TrueValue, ret)
+	ret, err = uf.Call(&objects.String{Value: "foo"})
 	assert.Equal(t, objects.ErrWrongNumArguments, err)
 }
 

@@ -60,7 +60,6 @@ func TestVariable(t *testing.T) {
 			Name:        "d",
 			Value:       nil,
 			ValueType:   "undefined",
-			StringValue: "",
 			Object:      objects.UndefinedValue,
 			IsUndefined: true,
 		},

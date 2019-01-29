@@ -395,6 +395,31 @@ func FuncASRS(fn func(string) string) *objects.UserFunction {
 	}
 }
 
+// FuncASRSs transform a function of 'func(string) []string' signature into a user function object.
+func FuncASRSs(fn func(string) []string) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			res := fn(s1)
+
+			arr := &objects.Array{}
+			for _, osArg := range res {
+				arr.Value = append(arr.Value, &objects.String{Value: osArg})
+			}
+
+			return arr, nil
+		},
+	}
+}
+
 // FuncASRSE transform a function of 'func(string) (string, error)' signature into a user function object.
 // User function will return 'true' if underlying native function returns nil.
 func FuncASRSE(fn func(string) (string, error)) *objects.UserFunction {
@@ -462,6 +487,171 @@ func FuncASSRE(fn func(string, string) error) *objects.UserFunction {
 	}
 }
 
+// FuncASSRSs transform a function of 'func(string, string) []string' signature into a user function object.
+func FuncASSRSs(fn func(string, string) []string) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 2 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			s2, ok := objects.ToString(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			arr := &objects.Array{}
+			for _, res := range fn(s1, s2) {
+				arr.Value = append(arr.Value, &objects.String{Value: res})
+			}
+
+			return arr, nil
+		},
+	}
+}
+
+// FuncASSIRSs transform a function of 'func(string, string, int) []string' signature into a user function object.
+func FuncASSIRSs(fn func(string, string, int) []string) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 3 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			s2, ok := objects.ToString(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			i3, ok := objects.ToInt(args[2])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			arr := &objects.Array{}
+			for _, res := range fn(s1, s2, i3) {
+				arr.Value = append(arr.Value, &objects.String{Value: res})
+			}
+
+			return arr, nil
+		},
+	}
+}
+
+// FuncASSRI transform a function of 'func(string, string) int' signature into a user function object.
+func FuncASSRI(fn func(string, string) int) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 2 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			s2, ok := objects.ToString(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return &objects.Int{Value: int64(fn(s1, s2))}, nil
+		},
+	}
+}
+
+// FuncASSRS transform a function of 'func(string, string) string' signature into a user function object.
+func FuncASSRS(fn func(string, string) string) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 2 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			s2, ok := objects.ToString(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return &objects.String{Value: fn(s1, s2)}, nil
+		},
+	}
+}
+
+// FuncASSRB transform a function of 'func(string, string) bool' signature into a user function object.
+func FuncASSRB(fn func(string, string) bool) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 2 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			s2, ok := objects.ToString(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			if fn(s1, s2) {
+				return objects.TrueValue, nil
+			}
+
+			return objects.FalseValue, nil
+		},
+	}
+}
+
+// FuncASsSRS transform a function of 'func([]string, string) string' signature into a user function object.
+func FuncASsSRS(fn func([]string, string) string) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (objects.Object, error) {
+			if len(args) != 2 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			var ss1 []string
+			arr, ok := args[0].(*objects.Array)
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+			for _, a := range arr.Value {
+				as, ok := objects.ToString(a)
+				if !ok {
+					return nil, objects.ErrInvalidTypeConversion
+				}
+				ss1 = append(ss1, as)
+			}
+
+			s2, ok := objects.ToString(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return &objects.String{Value: fn(ss1, s2)}, nil
+		},
+	}
+}
+
 // FuncASI64RE transform a function of 'func(string, int64) error' signature
 // into a user function object.
 func FuncASI64RE(fn func(string, int64) error) *objects.UserFunction {
@@ -506,6 +696,30 @@ func FuncAIIRE(fn func(int, int) error) *objects.UserFunction {
 			}
 
 			return wrapError(fn(i1, i2)), nil
+		},
+	}
+}
+
+// FuncASIRS transform a function of 'func(string, int) string' signature
+// into a user function object.
+func FuncASIRS(fn func(string, int) string) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 2 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			s1, ok := objects.ToString(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			i2, ok := objects.ToInt(args[1])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return &objects.String{Value: fn(s1, i2)}, nil
 		},
 	}
 }
@@ -607,8 +821,8 @@ func FuncAIRSsE(fn func(int) ([]string, error)) *objects.UserFunction {
 			}
 
 			arr := &objects.Array{}
-			for _, osArg := range res {
-				arr.Value = append(arr.Value, &objects.String{Value: osArg})
+			for _, r := range res {
+				arr.Value = append(arr.Value, &objects.String{Value: r})
 			}
 
 			return arr, nil
