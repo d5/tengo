@@ -7,4 +7,5 @@ var Modules = map[string]*objects.ImmutableMap{
 	"math": {Value: mathModule},
 	"os":   {Value: osModule},
 	"exec": {Value: execModule},
+	"text": {Value: textModule},
 }

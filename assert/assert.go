@@ -15,8 +15,6 @@ import (
 
 // NoError asserts err is not an error.
 func NoError(t *testing.T, err error, msg ...interface{}) bool {
-	t.Helper()
-
 	if err == nil {
 		return true
 	}
@@ -26,8 +24,6 @@ func NoError(t *testing.T, err error, msg ...interface{}) bool {
 
 // Error asserts err is an error.
 func Error(t *testing.T, err error, msg ...interface{}) bool {
-	t.Helper()
-
 	if err != nil {
 		return true
 	}
@@ -37,8 +33,6 @@ func Error(t *testing.T, err error, msg ...interface{}) bool {
 
 // Nil asserts v is nil.
 func Nil(t *testing.T, v interface{}, msg ...interface{}) bool {
-	t.Helper()
-
 	if v == nil {
 		return true
 	}
@@ -48,8 +42,6 @@ func Nil(t *testing.T, v interface{}, msg ...interface{}) bool {
 
 // True asserts v is true.
 func True(t *testing.T, v bool, msg ...interface{}) bool {
-	t.Helper()
-
 	if v {
 		return true
 	}
@@ -59,8 +51,6 @@ func True(t *testing.T, v bool, msg ...interface{}) bool {
 
 // False asserts vis false.
 func False(t *testing.T, v bool, msg ...interface{}) bool {
-	t.Helper()
-
 	if !v {
 		return true
 	}
@@ -70,8 +60,6 @@ func False(t *testing.T, v bool, msg ...interface{}) bool {
 
 // NotNil asserts v is not nil.
 func NotNil(t *testing.T, v interface{}, msg ...interface{}) bool {
-	t.Helper()
-
 	if v != nil {
 		return true
 	}
@@ -81,8 +69,6 @@ func NotNil(t *testing.T, v interface{}, msg ...interface{}) bool {
 
 // IsType asserts expected and actual are of the same type.
 func IsType(t *testing.T, expected, actual interface{}, msg ...interface{}) bool {
-	t.Helper()
-
 	if reflect.TypeOf(expected) == reflect.TypeOf(actual) {
 		return true
 	}
@@ -92,15 +78,13 @@ func IsType(t *testing.T, expected, actual interface{}, msg ...interface{}) bool
 
 // Equal asserts expected and actual are equal.
 func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool {
-	t.Helper()
-
 	if expected == nil {
 		return Nil(t, actual, "expected nil, but got not nil")
 	}
 	if !NotNil(t, actual, "expected not nil, but got nil") {
 		return false
 	}
-	if !IsType(t, expected, actual) {
+	if !IsType(t, expected, actual, msg...) {
 		return false
 	}
 
@@ -150,43 +134,43 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 			return failExpectedActual(t, expected, actual, msg...)
 		}
 	case []objects.Object:
-		return equalObjectSlice(t, expected, actual.([]objects.Object))
+		return equalObjectSlice(t, expected, actual.([]objects.Object), msg...)
 	case *objects.Int:
-		return Equal(t, expected.Value, actual.(*objects.Int).Value)
+		return Equal(t, expected.Value, actual.(*objects.Int).Value, msg...)
 	case *objects.Float:
-		return Equal(t, expected.Value, actual.(*objects.Float).Value)
+		return Equal(t, expected.Value, actual.(*objects.Float).Value, msg...)
 	case *objects.String:
-		return Equal(t, expected.Value, actual.(*objects.String).Value)
+		return Equal(t, expected.Value, actual.(*objects.String).Value, msg...)
 	case *objects.Char:
-		return Equal(t, expected.Value, actual.(*objects.Char).Value)
+		return Equal(t, expected.Value, actual.(*objects.Char).Value, msg...)
 	case *objects.Bool:
 		if expected != actual {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
 	case *objects.ReturnValue:
-		return Equal(t, expected.Value, actual.(objects.ReturnValue).Value)
+		return Equal(t, expected.Value, actual.(objects.ReturnValue).Value, msg...)
 	case *objects.Array:
-		return equalObjectSlice(t, expected.Value, actual.(*objects.Array).Value)
+		return equalObjectSlice(t, expected.Value, actual.(*objects.Array).Value, msg...)
 	case *objects.ImmutableArray:
-		return equalObjectSlice(t, expected.Value, actual.(*objects.ImmutableArray).Value)
+		return equalObjectSlice(t, expected.Value, actual.(*objects.ImmutableArray).Value, msg...)
 	case *objects.Bytes:
 		if bytes.Compare(expected.Value, actual.(*objects.Bytes).Value) != 0 {
 			return failExpectedActual(t, string(expected.Value), string(actual.(*objects.Bytes).Value), msg...)
 		}
 	case *objects.Map:
-		return equalObjectMap(t, expected.Value, actual.(*objects.Map).Value)
+		return equalObjectMap(t, expected.Value, actual.(*objects.Map).Value, msg...)
 	case *objects.ImmutableMap:
-		return equalObjectMap(t, expected.Value, actual.(*objects.ImmutableMap).Value)
+		return equalObjectMap(t, expected.Value, actual.(*objects.ImmutableMap).Value, msg...)
 	case *objects.CompiledFunction:
-		return equalCompiledFunction(t, expected, actual.(*objects.CompiledFunction))
+		return equalCompiledFunction(t, expected, actual.(*objects.CompiledFunction), msg...)
 	case *objects.Closure:
-		return equalClosure(t, expected, actual.(*objects.Closure))
+		return equalClosure(t, expected, actual.(*objects.Closure), msg...)
 	case *objects.Undefined:
 		if expected != actual {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
 	case *objects.Error:
-		return Equal(t, expected.Value, actual.(*objects.Error).Value)
+		return Equal(t, expected.Value, actual.(*objects.Error).Value, msg...)
 	case error:
 		if expected != actual.(error) {
 			return failExpectedActual(t, expected, actual, msg...)
@@ -200,8 +184,6 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 
 // Fail marks the function as having failed but continues execution.
 func Fail(t *testing.T, msg ...interface{}) bool {
-	t.Helper()
-
 	t.Logf("\nError trace:\n\t%s\n%s", strings.Join(errorTrace(), "\n\t"), message(msg...))
 
 	t.Fail()
@@ -210,8 +192,6 @@ func Fail(t *testing.T, msg ...interface{}) bool {
 }
 
 func failExpectedActual(t *testing.T, expected, actual interface{}, msg ...interface{}) bool {
-	t.Helper()
-
 	var addMsg string
 	if len(msg) > 0 {
 		addMsg = "\nMessage:  " + message(msg...)
@@ -260,15 +240,15 @@ func equalSymbol(a, b compiler.Symbol) bool {
 		a.Scope == b.Scope
 }
 
-func equalObjectSlice(t *testing.T, expected, actual []objects.Object) bool {
+func equalObjectSlice(t *testing.T, expected, actual []objects.Object, msg ...interface{}) bool {
 	// TODO: this test does not differentiate nil vs empty slice
 
-	if !Equal(t, len(expected), len(actual)) {
+	if !Equal(t, len(expected), len(actual), msg...) {
 		return false
 	}
 
 	for i := 0; i < len(expected); i++ {
-		if !Equal(t, expected[i], actual[i]) {
+		if !Equal(t, expected[i], actual[i], msg...) {
 			return false
 		}
 	}
@@ -276,15 +256,15 @@ func equalObjectSlice(t *testing.T, expected, actual []objects.Object) bool {
 	return true
 }
 
-func equalObjectMap(t *testing.T, expected, actual map[string]objects.Object) bool {
-	if !Equal(t, len(expected), len(actual)) {
+func equalObjectMap(t *testing.T, expected, actual map[string]objects.Object, msg ...interface{}) bool {
+	if !Equal(t, len(expected), len(actual), msg...) {
 		return false
 	}
 
 	for key, expectedVal := range expected {
 		actualVal := actual[key]
 
-		if !Equal(t, expectedVal, actualVal) {
+		if !Equal(t, expectedVal, actualVal, msg...) {
 			return false
 		}
 	}
@@ -292,27 +272,27 @@ func equalObjectMap(t *testing.T, expected, actual map[string]objects.Object) bo
 	return true
 }
 
-func equalCompiledFunction(t *testing.T, expected, actual objects.Object) bool {
+func equalCompiledFunction(t *testing.T, expected, actual objects.Object, msg ...interface{}) bool {
 	expectedT := expected.(*objects.CompiledFunction)
 	actualT := actual.(*objects.CompiledFunction)
 
-	return Equal(t, expectedT.Instructions, actualT.Instructions)
+	return Equal(t, expectedT.Instructions, actualT.Instructions, msg...)
 }
 
-func equalClosure(t *testing.T, expected, actual objects.Object) bool {
+func equalClosure(t *testing.T, expected, actual objects.Object, msg ...interface{}) bool {
 	expectedT := expected.(*objects.Closure)
 	actualT := actual.(*objects.Closure)
 
-	if !Equal(t, expectedT.Fn, actualT.Fn) {
+	if !Equal(t, expectedT.Fn, actualT.Fn, msg...) {
 		return false
 	}
 
-	if !Equal(t, len(expectedT.Free), len(actualT.Free)) {
+	if !Equal(t, len(expectedT.Free), len(actualT.Free), msg...) {
 		return false
 	}
 
 	for i := 0; i < len(expectedT.Free); i++ {
-		if !Equal(t, *expectedT.Free[i], *actualT.Free[i]) {
+		if !Equal(t, *expectedT.Free[i], *actualT.Free[i], msg...) {
 			return false
 		}
 	}
