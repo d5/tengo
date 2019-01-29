@@ -829,3 +829,22 @@ func FuncAIRSsE(fn func(int) ([]string, error)) *objects.UserFunction {
 		},
 	}
 }
+
+// FuncAIRS transform a function of 'func(int) string' signature
+// into a user function object.
+func FuncAIRS(fn func(int) string) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			i1, ok := objects.ToInt(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return &objects.String{Value: fn(i1)}, nil
+		},
+	}
+}

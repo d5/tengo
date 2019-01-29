@@ -180,4 +180,21 @@ func TestText(t *testing.T) {
 	module(t, "text").call("contains", "abcde", "abcde").expect(true)
 	module(t, "text").call("contains", "abc", "abcde").expect(false)
 	module(t, "text").call("contains", "ab cd", "bc").expect(false)
+
+	module(t, "text").call("replace", "", "", "", -1).expect("")
+	module(t, "text").call("replace", "abcd", "a", "x", -1).expect("xbcd")
+	module(t, "text").call("replace", "aaaa", "a", "x", -1).expect("xxxx")
+	module(t, "text").call("replace", "aaaa", "a", "x", 0).expect("aaaa")
+	module(t, "text").call("replace", "aaaa", "a", "x", 2).expect("xxaa")
+	module(t, "text").call("replace", "abcd", "bc", "x", -1).expect("axd")
+
+	module(t, "text").call("format_bool", true).expect("true")
+	module(t, "text").call("format_bool", false).expect("false")
+	module(t, "text").call("format_float", -19.84, 'f', -1, 64).expect("-19.84")
+	module(t, "text").call("format_int", -1984, 10).expect("-1984")
+	module(t, "text").call("format_int", 1984, 8).expect("3700")
+	module(t, "text").call("parse_bool", "true").expect(true)
+	module(t, "text").call("parse_bool", "0").expect(false)
+	module(t, "text").call("parse_float", "-19.84", 64).expect(-19.84)
+	module(t, "text").call("parse_int", "-1984", 10, 64).expect(-1984)
 }

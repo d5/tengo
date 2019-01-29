@@ -2,6 +2,7 @@ package stdlib
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/d5/tengo/objects"
@@ -325,6 +326,196 @@ var textModule = map[string]objects.Object{
 	"trim_space": FuncASRS(strings.TrimSpace),
 	// trim_suffix(s, suffix) => string
 	"trim_suffix": FuncASSRS(strings.TrimSuffix),
+	// atoi(str) => int/error
+	"atoi": FuncASRIE(strconv.Atoi),
+	// format_bool(b) => string
+	"format_bool": &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 1 {
+				err = objects.ErrWrongNumArguments
+				return
+			}
+
+			b1, ok := args[0].(*objects.Bool)
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			if b1 == objects.TrueValue {
+				ret = &objects.String{Value: "true"}
+			} else {
+				ret = &objects.String{Value: "false"}
+			}
+
+			return
+		},
+	},
+	// format_float(f, fmt, prec, bits) => string
+	"format_float": &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 4 {
+				err = objects.ErrWrongNumArguments
+				return
+			}
+
+			f1, ok := args[0].(*objects.Float)
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			s2, ok := objects.ToString(args[1])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			i3, ok := objects.ToInt(args[2])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			i4, ok := objects.ToInt(args[3])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			ret = &objects.String{Value: strconv.FormatFloat(f1.Value, s2[0], i3, i4)}
+
+			return
+		},
+	},
+	// format_int(i, base) => string
+	"format_int": &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 2 {
+				err = objects.ErrWrongNumArguments
+				return
+			}
+
+			i1, ok := args[0].(*objects.Int)
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			i2, ok := objects.ToInt(args[1])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			ret = &objects.String{Value: strconv.FormatInt(i1.Value, i2)}
+
+			return
+		},
+	},
+	// itoa(i) => string
+	"itoa": FuncAIRS(strconv.Itoa),
+	// parse_bool(str) => bool/error
+	"parse_bool": &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 1 {
+				err = objects.ErrWrongNumArguments
+				return
+			}
+
+			s1, ok := args[0].(*objects.String)
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			parsed, err := strconv.ParseBool(s1.Value)
+			if err != nil {
+				ret = wrapError(err)
+				return
+			}
+
+			if parsed {
+				ret = objects.TrueValue
+			} else {
+				ret = objects.FalseValue
+			}
+
+			return
+		},
+	},
+	// parse_float(str, bits) => float/error
+	"parse_float": &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 2 {
+				err = objects.ErrWrongNumArguments
+				return
+			}
+
+			s1, ok := args[0].(*objects.String)
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			i2, ok := objects.ToInt(args[1])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			parsed, err := strconv.ParseFloat(s1.Value, i2)
+			if err != nil {
+				ret = wrapError(err)
+				return
+			}
+
+			ret = &objects.Float{Value: parsed}
+
+			return
+		},
+	},
+	// parse_int(str, base, bits) => int/error
+	"parse_int": &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 3 {
+				err = objects.ErrWrongNumArguments
+				return
+			}
+
+			s1, ok := args[0].(*objects.String)
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			i2, ok := objects.ToInt(args[1])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			i3, ok := objects.ToInt(args[2])
+			if !ok {
+				err = objects.ErrInvalidTypeConversion
+				return
+			}
+
+			parsed, err := strconv.ParseInt(s1.Value, i2, i3)
+			if err != nil {
+				ret = wrapError(err)
+				return
+			}
+
+			ret = &objects.Int{Value: parsed}
+
+			return
+		},
+	},
+	// quote(str) => string
+	"quote": FuncASRS(strconv.Quote),
+	// unquote(str) => string/error
+	"unquote": FuncASRSE(strconv.Unquote),
 }
 
 func stringsRegexpImmutableMap(re *regexp.Regexp) *objects.ImmutableMap {

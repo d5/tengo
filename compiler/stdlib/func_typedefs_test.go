@@ -439,6 +439,15 @@ func TestFuncASSRB(t *testing.T) {
 	assert.Equal(t, objects.ErrWrongNumArguments, err)
 }
 
+func TestFuncAIRS(t *testing.T) {
+	uf := stdlib.FuncAIRS(func(a int) string { return strconv.Itoa(a) })
+	ret, err := uf.Call(&objects.Int{Value: 55})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.String{Value: "55"}, ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
 func array(elements ...objects.Object) *objects.Array {
 	return &objects.Array{Value: elements}
 }
