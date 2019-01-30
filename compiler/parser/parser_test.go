@@ -144,8 +144,8 @@ func emptyStmt(implicit bool, pos source.Pos) *ast.EmptyStmt {
 	return &ast.EmptyStmt{Implicit: implicit, Semicolon: pos}
 }
 
-func returnStmt(pos source.Pos, results ...ast.Expr) *ast.ReturnStmt {
-	return &ast.ReturnStmt{Results: results, ReturnPos: pos}
+func returnStmt(pos source.Pos, result ast.Expr) *ast.ReturnStmt {
+	return &ast.ReturnStmt{Result: result, ReturnPos: pos}
 }
 
 func forStmt(init ast.Stmt, cond ast.Expr, post ast.Stmt, body *ast.BlockStmt, pos source.Pos) *ast.ForStmt {
@@ -309,7 +309,7 @@ func equalStmt(t *testing.T, expected, actual ast.Stmt) bool {
 			equalStmt(t, expected.Body, actual.(*ast.ForInStmt).Body) &&
 			assert.Equal(t, expected.ForPos, actual.(*ast.ForInStmt).ForPos)
 	case *ast.ReturnStmt:
-		return equalExprs(t, expected.Results, actual.(*ast.ReturnStmt).Results) &&
+		return equalExpr(t, expected.Result, actual.(*ast.ReturnStmt).Result) &&
 			assert.Equal(t, expected.ReturnPos, actual.(*ast.ReturnStmt).ReturnPos)
 	case *ast.BranchStmt:
 		return equalExpr(t, expected.Label, actual.(*ast.BranchStmt).Label) &&

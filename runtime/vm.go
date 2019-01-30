@@ -785,16 +785,6 @@ func (v *VM) Run() error {
 			}
 
 		case compiler.OpReturnValue:
-			//numRets := int(compiler.ReadUint8(v.curInsts[v.ip+1:]))
-			//_ = int64(compiler.ReadUint8(v.curInsts[v.ip+1:]))
-			v.ip++
-
-			// TODO: multi-value return is not fully implemented yet
-			//var rets []*objects.Object
-			//for i := 0; i < numRets; i++ {
-			//	val := v.pop()
-			//	rets = append(rets, val)
-			//}
 			retVal := v.stack[v.sp-1]
 			//v.sp--
 
@@ -808,11 +798,6 @@ func (v *VM) Run() error {
 			//v.sp = lastFrame.basePointer - 1
 			v.sp = lastFrame.basePointer
 
-			//for _, retVal := range rets {
-			//	if err := v.push(retVal); err != nil {
-			//		return err
-			//	}
-			//}
 			if v.sp-1 >= StackSize {
 				return ErrStackOverflow
 			}

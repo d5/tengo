@@ -157,7 +157,7 @@ var OpcodeOperands = [...][]int{
 	OpSliceIndex:       {},
 	OpCall:             {1},
 	OpReturn:           {},
-	OpReturnValue:      {1},
+	OpReturnValue:      {},
 	OpGetLocal:         {1},
 	OpSetLocal:         {1},
 	OpDefineLocal:      {1},

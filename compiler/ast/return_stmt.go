@@ -1,15 +1,13 @@
 package ast
 
 import (
-	"strings"
-
 	"github.com/d5/tengo/compiler/source"
 )
 
 // ReturnStmt represents a return statement.
 type ReturnStmt struct {
 	ReturnPos source.Pos
-	Results   []Expr
+	Result    Expr
 }
 
 func (s *ReturnStmt) stmtNode() {}
@@ -21,21 +19,16 @@ func (s *ReturnStmt) Pos() source.Pos {
 
 // End returns the position of first character immediately after the node.
 func (s *ReturnStmt) End() source.Pos {
-	if n := len(s.Results); n > 0 {
-		return s.Results[n-1].End()
+	if s.Result != nil {
+		return s.Result.End()
 	}
 
 	return s.ReturnPos + 6
 }
 
 func (s *ReturnStmt) String() string {
-	if len(s.Results) > 0 {
-		var res []string
-		for _, e := range s.Results {
-			res = append(res, e.String())
-		}
-
-		return "return " + strings.Join(res, ", ")
+	if s.Result != nil {
+		return "return " + s.Result.String()
 	}
 
 	return "return"

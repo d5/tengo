@@ -69,20 +69,20 @@ func TestBytecode(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpAdd),
 				compiler.MakeInstruction(compiler.OpGetLocal, 0),
 				compiler.MakeInstruction(compiler.OpAdd),
-				compiler.MakeInstruction(compiler.OpReturnValue, 1)),
+				compiler.MakeInstruction(compiler.OpReturnValue)),
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 2),
 				compiler.MakeInstruction(compiler.OpSetLocal, 0),
 				compiler.MakeInstruction(compiler.OpGetFree, 0),
 				compiler.MakeInstruction(compiler.OpGetLocal, 0),
 				compiler.MakeInstruction(compiler.OpClosure, 4, 2),
-				compiler.MakeInstruction(compiler.OpReturnValue, 1)),
+				compiler.MakeInstruction(compiler.OpReturnValue)),
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpSetLocal, 0),
 				compiler.MakeInstruction(compiler.OpGetLocal, 0),
 				compiler.MakeInstruction(compiler.OpClosure, 5, 1),
-				compiler.MakeInstruction(compiler.OpReturnValue, 1)))))
+				compiler.MakeInstruction(compiler.OpReturnValue)))))
 }
 
 func testBytecodeSerialization(t *testing.T, b *compiler.Bytecode) {
