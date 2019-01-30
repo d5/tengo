@@ -239,6 +239,8 @@ func FromInterface(v interface{}) (Object, error) {
 			arr[i] = vo
 		}
 		return &Array{Value: arr}, nil
+	case time.Time:
+		return &Time{Value: v}, nil
 	case Object:
 		return v, nil
 	}

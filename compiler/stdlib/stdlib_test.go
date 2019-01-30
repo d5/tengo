@@ -3,6 +3,7 @@ package stdlib_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler/stdlib"
@@ -119,6 +120,8 @@ func object(v interface{}) objects.Object {
 		}
 
 		return &objects.ImmutableArray{Value: objs}
+	case time.Time:
+		return &objects.Time{Value: v}
 	}
 
 	panic(fmt.Errorf("unknown type: %T", v))
