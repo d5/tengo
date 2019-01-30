@@ -85,4 +85,5 @@ func init() {
 	gob.Register(&objects.MapIterator{})
 	gob.Register(&objects.ArrayIterator{})
 	gob.Register(&objects.Time{})
+	gob.Register(&objects.CompiledModule{})
 }

@@ -22,18 +22,19 @@ import (
 const (
 	sourceFileExt = ".tengo"
 	replPrompt    = ">> "
+	version       = "dev"
 )
 
 var (
-	compile    bool
-	showHelp   bool
-	outputFile = flag.String("o", "", "Output file")
+	compileOutput string
+	showHelp      bool
+	showVersion   bool
 )
 
 func init() {
 	flag.BoolVar(&showHelp, "help", false, "Show help")
-	flag.BoolVar(&compile, "compile", false, "Compile input file")
-	flag.BoolVar(&compile, "c", false, "Compile input file")
+	flag.StringVar(&compileOutput, "o", "", "Compile output file")
+	flag.BoolVar(&showVersion, "version", false, "Show version")
 	flag.Parse()
 }
 
@@ -41,12 +42,15 @@ func main() {
 	if showHelp {
 		doHelp()
 		os.Exit(2)
+	} else if showVersion {
+		fmt.Println(version)
+		return
 	}
 
 	inputFile := flag.Arg(0)
 	if inputFile == "" {
 		// REPL
-		doRepl(os.Stdin, os.Stdout)
+		runREPL(os.Stdin, os.Stdout)
 		return
 	}
 
@@ -56,18 +60,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	if compile {
-		if err := doCompile(inputData, inputFile, *outputFile); err != nil {
+	if compileOutput != "" {
+		if err := compileOnly(inputData, inputFile, compileOutput); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 	} else if filepath.Ext(inputFile) == sourceFileExt {
-		if err := doCompileRun(inputData, inputFile, *outputFile); err != nil {
+		if err := compileAndRun(inputData, inputFile); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 	} else {
-		if err := doRun(inputData, inputFile, *outputFile); err != nil {
+		if err := runCompiled(inputData); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
@@ -81,27 +85,32 @@ func doHelp() {
 	fmt.Println()
 	fmt.Println("Flags:")
 	fmt.Println()
-	fmt.Println("	-c/-compile compile the input and produce bytecode file")
-	fmt.Println("	-o          output")
+	fmt.Println("	-o        compile output file")
+	fmt.Println("	-version  show version")
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println()
 	fmt.Println("	tengo")
-	fmt.Println("	            : Start Tengo REPL")
+	fmt.Println()
+	fmt.Println("	          Start Tengo REPL")
 	fmt.Println()
 	fmt.Println("	tengo myapp.tengo")
-	fmt.Println("	            : Compile and execute source file (myapp.tengo)")
 	fmt.Println()
-	fmt.Println("	tengo -c myapp myapp.tengo")
-	fmt.Println("	            : Compile source file (myapp.tengo) and produce bytecode file (myapp)")
+	fmt.Println("	          Compile and run source file (myapp.tengo)")
+	fmt.Println("	          Source file must have .tengo extension")
+	fmt.Println()
+	fmt.Println("	tengo -o myapp myapp.tengo")
+	fmt.Println()
+	fmt.Println("	          Compile source file (myapp.tengo) into bytecode file (myapp)")
 	fmt.Println()
 	fmt.Println("	tengo myapp")
-	fmt.Println("	            : Execute bytecode file (myapp)")
+	fmt.Println()
+	fmt.Println("	          Run bytecode file (myapp)")
 	fmt.Println()
 	fmt.Println()
 }
 
-func doCompile(data []byte, inputFile, outputFile string) (err error) {
+func compileOnly(data []byte, inputFile, outputFile string) (err error) {
 	bytecode, err := compileSrc(data, filepath.Base(inputFile))
 	if err != nil {
 		return
@@ -133,7 +142,7 @@ func doCompile(data []byte, inputFile, outputFile string) (err error) {
 	return
 }
 
-func doCompileRun(data []byte, inputFile, _ string) (err error) {
+func compileAndRun(data []byte, inputFile string) (err error) {
 	bytecode, err := compileSrc(data, filepath.Base(inputFile))
 	if err != nil {
 		return
@@ -149,7 +158,7 @@ func doCompileRun(data []byte, inputFile, _ string) (err error) {
 	return
 }
 
-func doRun(data []byte, _, _ string) (err error) {
+func runCompiled(data []byte) (err error) {
 	bytecode := &compiler.Bytecode{}
 	err = bytecode.Decode(bytes.NewReader(data))
 	if err != nil {
@@ -166,7 +175,7 @@ func doRun(data []byte, _, _ string) (err error) {
 	return
 }
 
-func doRepl(in io.Reader, out io.Writer) {
+func runREPL(in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
 
 	fileSet := source.NewFileSet()
