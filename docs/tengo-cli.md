@@ -10,6 +10,8 @@ To install `tengo` tool, run:
 go get github.com/d5/tengo/cmd/tengo
 ```
 
+Or, you can download the precompiled binaries from [here](https://github.com/d5/tengo/releases/latest). 
+
 ## Compiling and Executing Tengo Code
 
 You can directly execute the Tengo source code by running `tengo` tool with your Tengo source file (`*.tengo`).
