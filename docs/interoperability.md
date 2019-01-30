@@ -62,7 +62,7 @@ func main() {
 	}
 
 	// run the compiled bytecode
-	// a compiled bytecode 'c' can be executed multiple without re-compiling it
+	// a compiled bytecode 'c' can be executed multiple times without re-compiling it
 	if err := c.Run(); err != nil {
 		panic(err)
 	}
