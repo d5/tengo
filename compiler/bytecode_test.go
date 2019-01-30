@@ -3,6 +3,7 @@ package compiler_test
 import (
 	"bytes"
 	"testing"
+	"time"
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler"
@@ -15,6 +16,7 @@ func TestBytecode(t *testing.T) {
 	testBytecodeSerialization(t, bytecode(
 		concat(), objectsArray(
 			objects.UndefinedValue,
+			&objects.Time{Value: time.Now()},
 			&objects.Array{
 				Value: objectsArray(
 					&objects.Int{Value: 12},

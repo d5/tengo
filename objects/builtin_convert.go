@@ -131,3 +131,25 @@ func builtinBytes(args ...Object) (Object, error) {
 
 	return UndefinedValue, nil
 }
+
+func builtinTime(args ...Object) (Object, error) {
+	argsLen := len(args)
+	if !(argsLen == 1 || argsLen == 2) {
+		return nil, ErrWrongNumArguments
+	}
+
+	if _, ok := args[0].(*Time); ok {
+		return args[0], nil
+	}
+
+	v, ok := ToTime(args[0])
+	if ok {
+		return &Time{Value: v}, nil
+	}
+
+	if argsLen == 2 {
+		return args[1], nil
+	}
+
+	return UndefinedValue, nil
+}

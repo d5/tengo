@@ -3,6 +3,7 @@ package objects
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 // ToString will try to convert object o to string value.
@@ -133,6 +134,21 @@ func ToByteSlice(o Object) (v []byte, ok bool) {
 		ok = true
 	case *String:
 		v = []byte(o.Value)
+		ok = true
+	}
+
+	//ok = false
+	return
+}
+
+// ToTime will try to convert object o to time.Time value.
+func ToTime(o Object) (v time.Time, ok bool) {
+	switch o := o.(type) {
+	case *Time:
+		v = o.Value
+		ok = true
+	case *Int:
+		v = time.Unix(o.Value, 0)
 		ok = true
 	}
 

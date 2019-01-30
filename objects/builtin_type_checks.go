@@ -72,6 +72,66 @@ func builtinIsBytes(args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
+func builtinIsArray(args ...Object) (Object, error) {
+	if len(args) != 1 {
+		return nil, ErrWrongNumArguments
+	}
+
+	if _, ok := args[0].(*Array); ok {
+		return TrueValue, nil
+	}
+
+	return FalseValue, nil
+}
+
+func builtinIsImmutableArray(args ...Object) (Object, error) {
+	if len(args) != 1 {
+		return nil, ErrWrongNumArguments
+	}
+
+	if _, ok := args[0].(*ImmutableArray); ok {
+		return TrueValue, nil
+	}
+
+	return FalseValue, nil
+}
+
+func builtinIsMap(args ...Object) (Object, error) {
+	if len(args) != 1 {
+		return nil, ErrWrongNumArguments
+	}
+
+	if _, ok := args[0].(*Map); ok {
+		return TrueValue, nil
+	}
+
+	return FalseValue, nil
+}
+
+func builtinIsImmutableMap(args ...Object) (Object, error) {
+	if len(args) != 1 {
+		return nil, ErrWrongNumArguments
+	}
+
+	if _, ok := args[0].(*ImmutableMap); ok {
+		return TrueValue, nil
+	}
+
+	return FalseValue, nil
+}
+
+func builtinIsTime(args ...Object) (Object, error) {
+	if len(args) != 1 {
+		return nil, ErrWrongNumArguments
+	}
+
+	if _, ok := args[0].(*Time); ok {
+		return TrueValue, nil
+	}
+
+	return FalseValue, nil
+}
+
 func builtinIsError(args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments

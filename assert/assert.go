@@ -171,6 +171,10 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		}
 	case *objects.Error:
 		return Equal(t, expected.Value, actual.(*objects.Error).Value, msg...)
+	case objects.Object:
+		if !expected.Equals(actual.(objects.Object)) {
+			return failExpectedActual(t, expected, actual, msg...)
+		}
 	case error:
 		if expected != actual.(error) {
 			return failExpectedActual(t, expected, actual, msg...)
