@@ -1,0 +1,15 @@
+builds:
+  - env:
+      - CGO_ENABLED=0
+    main: ./cmd/tengo/main.go
+    goos:
+      - darwin
+      - linux
+      - windows
+archive:
+  files:
+    - none*
+checksum:
+  name_template: 'checksums.txt'
+changelog:
+  sort: asc

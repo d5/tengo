@@ -426,17 +426,14 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return fmt.Errorf("return statement outside function")
 		}
 
-		switch len(node.Results) {
-		case 0:
+		if node.Result == nil {
 			c.emit(OpReturn)
-		case 1:
-			if err := c.Compile(node.Results[0]); err != nil {
+		} else {
+			if err := c.Compile(node.Result); err != nil {
 				return err
 			}
 
-			c.emit(OpReturnValue, 1)
-		default:
-			return fmt.Errorf("multi-value return not implemented")
+			c.emit(OpReturnValue)
 		}
 
 	case *ast.CallExpr:

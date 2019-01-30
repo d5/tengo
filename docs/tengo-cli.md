@@ -10,6 +10,8 @@ To install `tengo` tool, run:
 go get github.com/d5/tengo/cmd/tengo
 ```
 
+Or, you can download the precompiled binaries from [here](https://github.com/d5/tengo/releases/latest). 
+
 ## Compiling and Executing Tengo Code
 
 You can directly execute the Tengo source code by running `tengo` tool with your Tengo source file (`*.tengo`).
@@ -21,8 +23,8 @@ tengo myapp.tengo
 Or, you can compile the code into a binary file and execute it later.
 
 ```bash
-tengo -c -o myapp myapp.tengo   # compile 'myapp.tengo' into binary file 'myapp'
-tengo myapp                     # execute the compiled binary `myapp`	
+tengo -o myapp myapp.tengo   # compile 'myapp.tengo' into binary file 'myapp'
+tengo myapp                  # execute the compiled binary `myapp`	
 ```
 
 ## Tengo REPL

@@ -862,15 +862,15 @@ func (p *Parser) parseReturnStmt() ast.Stmt {
 	pos := p.pos
 	p.expect(token.Return)
 
-	var x []ast.Expr
+	var x ast.Expr
 	if p.token != token.Semicolon && p.token != token.RBrace {
-		x = p.parseExprList()
+		x = p.parseExpr()
 	}
 	p.expectSemi()
 
 	return &ast.ReturnStmt{
 		ReturnPos: pos,
-		Results:   x,
+		Result:    x,
 	}
 }
 
