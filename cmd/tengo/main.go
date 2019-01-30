@@ -22,13 +22,13 @@ import (
 const (
 	sourceFileExt = ".tengo"
 	replPrompt    = ">> "
-	version       = "dev"
 )
 
 var (
 	compileOutput string
 	showHelp      bool
 	showVersion   bool
+	version       = "dev"
 )
 
 func init() {

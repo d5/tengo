@@ -6,6 +6,9 @@ builds:
       - darwin
       - linux
       - windows
+archive:
+  files:
+    - none*
 checksum:
   name_template: 'checksums.txt'
 changelog:
