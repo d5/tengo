@@ -71,10 +71,4 @@ var mathModule = map[string]objects.Object{
 	"y0":        FuncAFRF(math.Y0),
 	"y1":        FuncAFRF(math.Y1),
 	"yn":        FuncAIFRF(math.Yn),
-	// TODO: functions that have multiple returns
-	// Should these be tuple assignment? Or Map return?
-	//"frexp":  nil,
-	//"lgamma": nil,
-	//"modf":   nil,
-	//"sincos": nil,
 }
