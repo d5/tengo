@@ -23,8 +23,8 @@ tengo myapp.tengo
 Or, you can compile the code into a binary file and execute it later.
 
 ```bash
-tengo -c -o myapp myapp.tengo   # compile 'myapp.tengo' into binary file 'myapp'
-tengo myapp                     # execute the compiled binary `myapp`	
+tengo -o myapp myapp.tengo   # compile 'myapp.tengo' into binary file 'myapp'
+tengo myapp                  # execute the compiled binary `myapp`	
 ```
 
 ## Tengo REPL
