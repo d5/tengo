@@ -3,6 +3,7 @@ package stdlib
 import (
 	"io"
 	"os"
+	"os/exec"
 
 	"github.com/d5/tengo/objects"
 )
@@ -36,82 +37,110 @@ var osModule = map[string]objects.Object{
 	"seek_set":            &objects.Int{Value: int64(io.SeekStart)},
 	"seek_cur":            &objects.Int{Value: int64(io.SeekCurrent)},
 	"seek_end":            &objects.Int{Value: int64(io.SeekEnd)},
-	// args() => array(string)
-	"args": &objects.UserFunction{Value: osArgs},
-	// chdir(dir string) => error
-	"chdir": FuncASRE(os.Chdir),
-	// chmod(name string, mode int) => error
-	"chmod": osFuncASFmRE(os.Chmod),
-	// chown(name string, uid int, gid int) => error
-	"chown": FuncASIIRE(os.Chown),
-	// clearenv()
-	"clearenv": FuncAR(os.Clearenv),
-	// environ() => array(string)
-	"environ": FuncARSs(os.Environ),
-	// exit(code int)
-	"exit": FuncAIR(os.Exit),
-	// expand_env(s string) => string
-	"expand_env": FuncASRS(os.ExpandEnv),
-	// getegid() => int
-	"getegid": FuncARI(os.Getegid),
-	// getenv(s string) => string
-	"getenv": FuncASRS(os.Getenv),
-	// geteuid() => int
-	"geteuid": FuncARI(os.Geteuid),
-	// getgid() => int
-	"getgid": FuncARI(os.Getgid),
-	// getgroups() => array(string)/error
-	"getgroups": FuncARIsE(os.Getgroups),
-	// getpagesize() => int
-	"getpagesize": FuncARI(os.Getpagesize),
-	// getpid() => int
-	"getpid": FuncARI(os.Getpid),
-	// getppid() => int
-	"getppid": FuncARI(os.Getppid),
-	// getuid() => int
-	"getuid": FuncARI(os.Getuid),
-	// getwd() => string/error
-	"getwd": FuncARSE(os.Getwd),
-	// hostname() => string/error
-	"hostname": FuncARSE(os.Hostname),
-	// lchown(name string, uid int, gid int) => error
-	"lchown": FuncASIIRE(os.Lchown),
-	// link(oldname string, newname string) => error
-	"link": FuncASSRE(os.Link),
-	// lookup_env(key string) => string/false
-	"lookup_env": &objects.UserFunction{Value: osLookupEnv},
-	// mkdir(name string, perm int) => error
-	"mkdir": osFuncASFmRE(os.Mkdir),
-	// mkdir_all(name string, perm int) => error
-	"mkdir_all": osFuncASFmRE(os.MkdirAll),
-	// readlink(name string) => string/error
-	"readlink": FuncASRSE(os.Readlink),
-	// remove(name string) => error
-	"remove": FuncASRE(os.Remove),
-	// remove_all(name string) => error
-	"remove_all": FuncASRE(os.RemoveAll),
-	// rename(oldpath string, newpath string) => error
-	"rename": FuncASSRE(os.Rename),
-	// setenv(key string, value string) => error
-	"setenv": FuncASSRE(os.Setenv),
-	// symlink(oldname string newname string) => error
-	"symlink": FuncASSRE(os.Symlink),
-	// temp_dir() => string
-	"temp_dir": FuncARS(os.TempDir),
-	// truncate(name string, size int) => error
-	"truncate": FuncASI64RE(os.Truncate),
-	// unsetenv(key string) => error
-	"unsetenv": FuncASRE(os.Unsetenv),
-	// create(name string) => imap(file)/error
-	"create": &objects.UserFunction{Value: osCreate},
-	// open(name string) => imap(file)/error
-	"open": &objects.UserFunction{Value: osOpen},
-	// open_file(name string, flag int, perm int) => imap(file)/error
-	"open_file": &objects.UserFunction{Value: osOpenFile},
-	// find_process(pid int) => imap(process)/error
-	"find_process": &objects.UserFunction{Value: osFindProcess},
-	// start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
-	"start_process": &objects.UserFunction{Value: osStartProcess},
+	"args":                &objects.UserFunction{Value: osArgs},         // args() => array(string)
+	"chdir":               FuncASRE(os.Chdir),                           // chdir(dir string) => error
+	"chmod":               osFuncASFmRE(os.Chmod),                       // chmod(name string, mode int) => error
+	"chown":               FuncASIIRE(os.Chown),                         // chown(name string, uid int, gid int) => error
+	"clearenv":            FuncAR(os.Clearenv),                          // clearenv()
+	"environ":             FuncARSs(os.Environ),                         // environ() => array(string)
+	"exit":                FuncAIR(os.Exit),                             // exit(code int)
+	"expand_env":          FuncASRS(os.ExpandEnv),                       // expand_env(s string) => string
+	"getegid":             FuncARI(os.Getegid),                          // getegid() => int
+	"getenv":              FuncASRS(os.Getenv),                          // getenv(s string) => string
+	"geteuid":             FuncARI(os.Geteuid),                          // geteuid() => int
+	"getgid":              FuncARI(os.Getgid),                           // getgid() => int
+	"getgroups":           FuncARIsE(os.Getgroups),                      // getgroups() => array(string)/error
+	"getpagesize":         FuncARI(os.Getpagesize),                      // getpagesize() => int
+	"getpid":              FuncARI(os.Getpid),                           // getpid() => int
+	"getppid":             FuncARI(os.Getppid),                          // getppid() => int
+	"getuid":              FuncARI(os.Getuid),                           // getuid() => int
+	"getwd":               FuncARSE(os.Getwd),                           // getwd() => string/error
+	"hostname":            FuncARSE(os.Hostname),                        // hostname() => string/error
+	"lchown":              FuncASIIRE(os.Lchown),                        // lchown(name string, uid int, gid int) => error
+	"link":                FuncASSRE(os.Link),                           // link(oldname string, newname string) => error
+	"lookup_env":          &objects.UserFunction{Value: osLookupEnv},    // lookup_env(key string) => string/false
+	"mkdir":               osFuncASFmRE(os.Mkdir),                       // mkdir(name string, perm int) => error
+	"mkdir_all":           osFuncASFmRE(os.MkdirAll),                    // mkdir_all(name string, perm int) => error
+	"readlink":            FuncASRSE(os.Readlink),                       // readlink(name string) => string/error
+	"remove":              FuncASRE(os.Remove),                          // remove(name string) => error
+	"remove_all":          FuncASRE(os.RemoveAll),                       // remove_all(name string) => error
+	"rename":              FuncASSRE(os.Rename),                         // rename(oldpath string, newpath string) => error
+	"setenv":              FuncASSRE(os.Setenv),                         // setenv(key string, value string) => error
+	"symlink":             FuncASSRE(os.Symlink),                        // symlink(oldname string newname string) => error
+	"temp_dir":            FuncARS(os.TempDir),                          // temp_dir() => string
+	"truncate":            FuncASI64RE(os.Truncate),                     // truncate(name string, size int) => error
+	"unsetenv":            FuncASRE(os.Unsetenv),                        // unsetenv(key string) => error
+	"create":              &objects.UserFunction{Value: osCreate},       // create(name string) => imap(file)/error
+	"open":                &objects.UserFunction{Value: osOpen},         // open(name string) => imap(file)/error
+	"open_file":           &objects.UserFunction{Value: osOpenFile},     // open_file(name string, flag int, perm int) => imap(file)/error
+	"find_process":        &objects.UserFunction{Value: osFindProcess},  // find_process(pid int) => imap(process)/error
+	"start_process":       &objects.UserFunction{Value: osStartProcess}, // start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
+	"exec_look_path":      FuncASRSE(exec.LookPath),                     // exec_look_path(file) => string/error
+	"exec":                &objects.UserFunction{Value: osExec},         // exec(name, args...) => command
+}
+
+func osCreate(args ...objects.Object) (objects.Object, error) {
+	if len(args) != 1 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	s1, ok := objects.ToString(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	res, err := os.Create(s1)
+	if err != nil {
+		return wrapError(err), nil
+	}
+
+	return makeOSFile(res), nil
+}
+
+func osOpen(args ...objects.Object) (objects.Object, error) {
+	if len(args) != 1 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	s1, ok := objects.ToString(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	res, err := os.Open(s1)
+	if err != nil {
+		return wrapError(err), nil
+	}
+
+	return makeOSFile(res), nil
+}
+
+func osOpenFile(args ...objects.Object) (objects.Object, error) {
+	if len(args) != 3 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	s1, ok := objects.ToString(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	i2, ok := objects.ToInt(args[1])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	i3, ok := objects.ToInt(args[2])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	res, err := os.OpenFile(s1, i2, os.FileMode(i3))
+	if err != nil {
+		return wrapError(err), nil
+	}
+
+	return makeOSFile(res), nil
 }
 
 func osArgs(args ...objects.Object) (objects.Object, error) {
@@ -148,19 +177,6 @@ func osFuncASFmRE(fn func(string, os.FileMode) error) *objects.UserFunction {
 	}
 }
 
-func osExecutable(args ...objects.Object) (objects.Object, error) {
-	if len(args) != 0 {
-		return nil, objects.ErrWrongNumArguments
-	}
-
-	res, err := os.Executable()
-	if err != nil {
-		return wrapError(err), nil
-	}
-
-	return &objects.String{Value: res}, nil
-}
-
 func osLookupEnv(args ...objects.Object) (objects.Object, error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
@@ -177,4 +193,100 @@ func osLookupEnv(args ...objects.Object) (objects.Object, error) {
 	}
 
 	return &objects.String{Value: res}, nil
+}
+
+func osExec(args ...objects.Object) (objects.Object, error) {
+	if len(args) == 0 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	name, ok := objects.ToString(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	var execArgs []string
+	for _, arg := range args[1:] {
+		execArg, ok := objects.ToString(arg)
+		if !ok {
+			return nil, objects.ErrInvalidTypeConversion
+		}
+
+		execArgs = append(execArgs, execArg)
+	}
+
+	return makeOSExecCommand(exec.Command(name, execArgs...)), nil
+}
+
+func osFindProcess(args ...objects.Object) (objects.Object, error) {
+	if len(args) != 1 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	i1, ok := objects.ToInt(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	proc, err := os.FindProcess(i1)
+	if err != nil {
+		return wrapError(err), nil
+	}
+
+	return makeOSProcess(proc), nil
+}
+
+func osStartProcess(args ...objects.Object) (objects.Object, error) {
+	if len(args) != 4 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	name, ok := objects.ToString(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	argv, err := stringArray(args[1])
+	if err != nil {
+		return nil, err
+	}
+
+	dir, ok := objects.ToString(args[2])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	env, err := stringArray(args[3])
+	if err != nil {
+		return nil, err
+	}
+
+	proc, err := os.StartProcess(name, argv, &os.ProcAttr{
+		Dir: dir,
+		Env: env,
+	})
+	if err != nil {
+		return wrapError(err), nil
+	}
+
+	return makeOSProcess(proc), nil
+}
+
+func stringArray(o objects.Object) ([]string, error) {
+	arr, ok := o.(*objects.Array)
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	var sarr []string
+	for _, elem := range arr.Value {
+		str, ok := elem.(*objects.String)
+		if !ok {
+			return nil, objects.ErrInvalidTypeConversion
+		}
+
+		sarr = append(sarr, str.Value)
+	}
+
+	return sarr, nil
 }

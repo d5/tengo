@@ -15,7 +15,10 @@ func objectToInterface(o objects.Object) interface{} {
 	case *objects.Float:
 		return val.Value
 	case *objects.Bool:
-		return val.Value
+		if val == objects.TrueValue {
+			return true
+		}
+		return false
 	case *objects.Char:
 		return val.Value
 	case *objects.String:

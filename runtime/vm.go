@@ -617,23 +617,21 @@ func (v *VM) Run() error {
 			left := v.stack[v.sp-3]
 			v.sp -= 3
 
-			var lowIdx, highIdx int64
-
-			switch low := (*low).(type) {
-			case *objects.Undefined:
-				//lowIdx = 0
-			case *objects.Int:
-				lowIdx = low.Value
-			default:
-				return fmt.Errorf("non-integer slice index: %s", low.TypeName())
+			var lowIdx int64
+			if *low != objects.UndefinedValue {
+				if low, ok := (*low).(*objects.Int); ok {
+					lowIdx = low.Value
+				} else {
+					return fmt.Errorf("non-integer slice index: %s", low.TypeName())
+				}
 			}
 
-			switch high := (*high).(type) {
-			case *objects.Undefined:
-				highIdx = -1 // will be replaced by number of elements
-			case *objects.Int:
+			var highIdx int64
+			if *high == objects.UndefinedValue {
+				highIdx = -1
+			} else if high, ok := (*high).(*objects.Int); ok {
 				highIdx = high.Value
-			default:
+			} else {
 				return fmt.Errorf("non-integer slice index: %s", high.TypeName())
 			}
 

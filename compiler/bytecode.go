@@ -21,7 +21,16 @@ func (b *Bytecode) Decode(r io.Reader) error {
 		return err
 	}
 
-	return dec.Decode(&b.Constants)
+	if err := dec.Decode(&b.Constants); err != nil {
+		return err
+	}
+
+	// replace Bool and Undefined with known value
+	for i, v := range b.Constants {
+		b.Constants[i] = cleanupObjects(v)
+	}
+
+	return nil
 }
 
 // Encode writes Bytecode data to the writer.
@@ -32,7 +41,30 @@ func (b *Bytecode) Encode(w io.Writer) error {
 		return err
 	}
 
+	// constants
 	return enc.Encode(b.Constants)
+}
+
+func cleanupObjects(o objects.Object) objects.Object {
+	switch o := o.(type) {
+	case *objects.Bool:
+		if o.IsFalsy() {
+			return objects.FalseValue
+		}
+		return objects.TrueValue
+	case *objects.Undefined:
+		return objects.UndefinedValue
+	case *objects.Array:
+		for i, v := range o.Value {
+			o.Value[i] = cleanupObjects(v)
+		}
+	case *objects.Map:
+		for k, v := range o.Value {
+			o.Value[k] = cleanupObjects(v)
+		}
+	}
+
+	return o
 }
 
 func init() {
@@ -52,4 +84,5 @@ func init() {
 	gob.Register(&objects.StringIterator{})
 	gob.Register(&objects.MapIterator{})
 	gob.Register(&objects.ArrayIterator{})
+	gob.Register(&objects.Time{})
 }

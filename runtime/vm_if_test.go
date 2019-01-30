@@ -2,16 +2,18 @@ package runtime_test
 
 import (
 	"testing"
+
+	"github.com/d5/tengo/objects"
 )
 
 func TestIf(t *testing.T) {
 	expect(t, `if (true) { out = 10 }`, 10)
-	expect(t, `if (false) { out = 10 }`, undefined())
+	expect(t, `if (false) { out = 10 }`, objects.UndefinedValue)
 	expect(t, `if (false) { out = 10 } else { out = 20 }`, 20)
 	expect(t, `if (1) { out = 10 }`, 10)
 	expect(t, `if (0) { out = 10 } else { out = 20 }`, 20)
 	expect(t, `if (1 < 2) { out = 10 }`, 10)
-	expect(t, `if (1 > 2) { out = 10 }`, undefined())
+	expect(t, `if (1 > 2) { out = 10 }`, objects.UndefinedValue)
 	expect(t, `if (1 < 2) { out = 10 } else { out = 20 }`, 10)
 	expect(t, `if (1 > 2) { out = 10 } else { out = 20 }`, 20)
 

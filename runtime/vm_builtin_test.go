@@ -2,6 +2,8 @@ package runtime_test
 
 import (
 	"testing"
+
+	"github.com/d5/tengo/objects"
 )
 
 func TestBuiltinFunction(t *testing.T) {
@@ -24,14 +26,14 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = int(true)`, 1)
 	expect(t, `out = int(false)`, 0)
 	expect(t, `out = int('8')`, 56)
-	expect(t, `out = int([1])`, undefined())
-	expect(t, `out = int({a: 1})`, undefined())
-	expect(t, `out = int(undefined)`, undefined())
+	expect(t, `out = int([1])`, objects.UndefinedValue)
+	expect(t, `out = int({a: 1})`, objects.UndefinedValue)
+	expect(t, `out = int(undefined)`, objects.UndefinedValue)
 	expect(t, `out = int("-522", 1)`, -522)
 	expect(t, `out = int(undefined, 1)`, 1)
 	expect(t, `out = int(undefined, 1.8)`, 1.8)
 	expect(t, `out = int(undefined, string(1))`, "1")
-	expect(t, `out = int(undefined, undefined)`, undefined())
+	expect(t, `out = int(undefined, undefined)`, objects.UndefinedValue)
 
 	expect(t, `out = string(1)`, "1")
 	expect(t, `out = string(1.8)`, "1.8")
@@ -41,40 +43,40 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = string('8')`, "8")
 	expect(t, `out = string([1,8.1,true,3])`, "[1, 8.1, true, 3]")
 	expect(t, `out = string({b: "foo"})`, `{b: "foo"}`)
-	expect(t, `out = string(undefined)`, undefined()) // not "undefined"
+	expect(t, `out = string(undefined)`, objects.UndefinedValue) // not "undefined"
 	expect(t, `out = string(1, "-522")`, "1")
 	expect(t, `out = string(undefined, "-522")`, "-522") // not "undefined"
 
 	expect(t, `out = float(1)`, 1.0)
 	expect(t, `out = float(1.8)`, 1.8)
 	expect(t, `out = float("-52.2")`, -52.2)
-	expect(t, `out = float(true)`, undefined())
-	expect(t, `out = float(false)`, undefined())
-	expect(t, `out = float('8')`, undefined())
-	expect(t, `out = float([1,8.1,true,3])`, undefined())
-	expect(t, `out = float({a: 1, b: "foo"})`, undefined())
-	expect(t, `out = float(undefined)`, undefined())
+	expect(t, `out = float(true)`, objects.UndefinedValue)
+	expect(t, `out = float(false)`, objects.UndefinedValue)
+	expect(t, `out = float('8')`, objects.UndefinedValue)
+	expect(t, `out = float([1,8.1,true,3])`, objects.UndefinedValue)
+	expect(t, `out = float({a: 1, b: "foo"})`, objects.UndefinedValue)
+	expect(t, `out = float(undefined)`, objects.UndefinedValue)
 	expect(t, `out = float("-52.2", 1.8)`, -52.2)
 	expect(t, `out = float(undefined, 1)`, 1)
 	expect(t, `out = float(undefined, 1.8)`, 1.8)
 	expect(t, `out = float(undefined, "-52.2")`, "-52.2")
 	expect(t, `out = float(undefined, char(56))`, '8')
-	expect(t, `out = float(undefined, undefined)`, undefined())
+	expect(t, `out = float(undefined, undefined)`, objects.UndefinedValue)
 
 	expect(t, `out = char(56)`, '8')
-	expect(t, `out = char(1.8)`, undefined())
-	expect(t, `out = char("-52.2")`, undefined())
-	expect(t, `out = char(true)`, undefined())
-	expect(t, `out = char(false)`, undefined())
+	expect(t, `out = char(1.8)`, objects.UndefinedValue)
+	expect(t, `out = char("-52.2")`, objects.UndefinedValue)
+	expect(t, `out = char(true)`, objects.UndefinedValue)
+	expect(t, `out = char(false)`, objects.UndefinedValue)
 	expect(t, `out = char('8')`, '8')
-	expect(t, `out = char([1,8.1,true,3])`, undefined())
-	expect(t, `out = char({a: 1, b: "foo"})`, undefined())
-	expect(t, `out = char(undefined)`, undefined())
+	expect(t, `out = char([1,8.1,true,3])`, objects.UndefinedValue)
+	expect(t, `out = char({a: 1, b: "foo"})`, objects.UndefinedValue)
+	expect(t, `out = char(undefined)`, objects.UndefinedValue)
 	expect(t, `out = char(56, 'a')`, '8')
 	expect(t, `out = char(undefined, '8')`, '8')
 	expect(t, `out = char(undefined, 56)`, 56)
 	expect(t, `out = char(undefined, "-52.2")`, "-52.2")
-	expect(t, `out = char(undefined, undefined)`, undefined())
+	expect(t, `out = char(undefined, undefined)`, objects.UndefinedValue)
 
 	expect(t, `out = bool(1)`, true)          // non-zero integer: true
 	expect(t, `out = bool(0)`, false)         // zero: true
@@ -93,20 +95,20 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = bool(undefined)`, false) // undefined: false
 
 	expect(t, `out = bytes(1)`, []byte{0})
-	expect(t, `out = bytes(1.8)`, undefined())
+	expect(t, `out = bytes(1.8)`, objects.UndefinedValue)
 	expect(t, `out = bytes("-522")`, []byte{'-', '5', '2', '2'})
-	expect(t, `out = bytes(true)`, undefined())
-	expect(t, `out = bytes(false)`, undefined())
-	expect(t, `out = bytes('8')`, undefined())
-	expect(t, `out = bytes([1])`, undefined())
-	expect(t, `out = bytes({a: 1})`, undefined())
-	expect(t, `out = bytes(undefined)`, undefined())
+	expect(t, `out = bytes(true)`, objects.UndefinedValue)
+	expect(t, `out = bytes(false)`, objects.UndefinedValue)
+	expect(t, `out = bytes('8')`, objects.UndefinedValue)
+	expect(t, `out = bytes([1])`, objects.UndefinedValue)
+	expect(t, `out = bytes({a: 1})`, objects.UndefinedValue)
+	expect(t, `out = bytes(undefined)`, objects.UndefinedValue)
 	expect(t, `out = bytes("-522", ['8'])`, []byte{'-', '5', '2', '2'})
 	expect(t, `out = bytes(undefined, "-522")`, "-522")
 	expect(t, `out = bytes(undefined, 1)`, 1)
 	expect(t, `out = bytes(undefined, 1.8)`, 1.8)
 	expect(t, `out = bytes(undefined, int("-522"))`, -522)
-	expect(t, `out = bytes(undefined, undefined)`, undefined())
+	expect(t, `out = bytes(undefined, undefined)`, objects.UndefinedValue)
 
 	expect(t, `out = is_error(error(1))`, true)
 	expect(t, `out = is_error(1)`, false)

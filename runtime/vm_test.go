@@ -133,7 +133,10 @@ func toObject(v interface{}) objects.Object {
 	case int: // for convenience
 		return &objects.Int{Value: int64(v)}
 	case bool:
-		return &objects.Bool{Value: v}
+		if v {
+			return objects.TrueValue
+		}
+		return objects.FalseValue
 	case rune:
 		return &objects.Char{Value: v}
 	case byte: // for convenience
@@ -326,7 +329,7 @@ func objectZeroCopy(o objects.Object) objects.Object {
 	case *objects.Map:
 		return &objects.Map{}
 	case *objects.Undefined:
-		return &objects.Undefined{}
+		return objects.UndefinedValue
 	case *objects.Error:
 		return &objects.Error{}
 	case *objects.Bytes:
@@ -340,8 +343,4 @@ func objectZeroCopy(o objects.Object) objects.Object {
 	default:
 		panic(fmt.Errorf("unknown object type: %s", o.TypeName()))
 	}
-}
-
-func undefined() *objects.Undefined {
-	return &objects.Undefined{}
 }

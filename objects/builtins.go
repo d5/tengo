@@ -57,6 +57,10 @@ var Builtins = []NamedBuiltinFunc{
 		Func: builtinBytes,
 	},
 	{
+		Name: "time",
+		Func: builtinTime,
+	},
+	{
 		Name: "is_int",
 		Func: builtinIsInt,
 	},
@@ -79,6 +83,26 @@ var Builtins = []NamedBuiltinFunc{
 	{
 		Name: "is_bytes",
 		Func: builtinIsBytes,
+	},
+	{
+		Name: "is_array",
+		Func: builtinIsArray,
+	},
+	{
+		Name: "is_immutable_array",
+		Func: builtinIsImmutableArray,
+	},
+	{
+		Name: "is_map",
+		Func: builtinIsMap,
+	},
+	{
+		Name: "is_immutable_map",
+		Func: builtinIsImmutableMap,
+	},
+	{
+		Name: "is_time",
+		Func: builtinIsTime,
 	},
 	{
 		Name: "is_error",

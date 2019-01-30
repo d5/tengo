@@ -3,11 +3,12 @@ package objects
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 // ToString will try to convert object o to string value.
 func ToString(o Object) (v string, ok bool) {
-	if _, isUndefined := o.(*Undefined); isUndefined {
+	if o == UndefinedValue {
 		//ok = false
 		return
 	}
@@ -36,7 +37,7 @@ func ToInt(o Object) (v int, ok bool) {
 		v = int(o.Value)
 		ok = true
 	case *Bool:
-		if o.Value {
+		if o == TrueValue {
 			v = 1
 		}
 		ok = true
@@ -65,7 +66,7 @@ func ToInt64(o Object) (v int64, ok bool) {
 		v = int64(o.Value)
 		ok = true
 	case *Bool:
-		if o.Value {
+		if o == TrueValue {
 			v = 1
 		}
 		ok = true
@@ -140,6 +141,21 @@ func ToByteSlice(o Object) (v []byte, ok bool) {
 	return
 }
 
+// ToTime will try to convert object o to time.Time value.
+func ToTime(o Object) (v time.Time, ok bool) {
+	switch o := o.(type) {
+	case *Time:
+		v = o.Value
+		ok = true
+	case *Int:
+		v = time.Unix(o.Value, 0)
+		ok = true
+	}
+
+	//ok = false
+	return
+}
+
 // objectToInterface attempts to convert an object o to an interface{} value
 func objectToInterface(o Object) (res interface{}) {
 	switch o := o.(type) {
@@ -150,7 +166,7 @@ func objectToInterface(o Object) (res interface{}) {
 	case *Float:
 		res = o.Value
 	case *Bool:
-		res = o.Value
+		res = o == TrueValue
 	case *Char:
 		res = o.Value
 	case *Bytes:
@@ -176,7 +192,7 @@ func objectToInterface(o Object) (res interface{}) {
 func FromInterface(v interface{}) (Object, error) {
 	switch v := v.(type) {
 	case nil:
-		return &Undefined{}, nil
+		return UndefinedValue, nil
 	case string:
 		return &String{Value: v}, nil
 	case int64:
@@ -184,7 +200,10 @@ func FromInterface(v interface{}) (Object, error) {
 	case int:
 		return &Int{Value: int64(v)}, nil
 	case bool:
-		return &Bool{Value: v}, nil
+		if v {
+			return TrueValue, nil
+		}
+		return FalseValue, nil
 	case rune:
 		return &Char{Value: v}, nil
 	case byte:
@@ -220,6 +239,8 @@ func FromInterface(v interface{}) (Object, error) {
 			arr[i] = vo
 		}
 		return &Array{Value: arr}, nil
+	case time.Time:
+		return &Time{Value: v}, nil
 	case Object:
 		return v, nil
 	}

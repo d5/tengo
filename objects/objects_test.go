@@ -15,3 +15,11 @@ func testBinaryOp(t *testing.T, lhs objects.Object, op token.Token, rhs objects.
 
 	return assert.NoError(t, err) && assert.Equal(t, expected, actual)
 }
+
+func boolValue(b bool) objects.Object {
+	if b {
+		return objects.TrueValue
+	}
+
+	return objects.FalseValue
+}

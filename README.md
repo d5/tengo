@@ -71,7 +71,7 @@ _* See [here](https://github.com/d5/tengobench) for commands/codes used_
 - [Builtin Functions](https://github.com/d5/tengo/blob/master/docs/builtins.md)
 - [Interoperability](https://github.com/d5/tengo/blob/master/docs/interoperability.md)
 - [Tengo CLI](https://github.com/d5/tengo/blob/master/docs/tengo-cli.md)
-- [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) _(experimental)_
+- [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md)
 
 ## Roadmap
 

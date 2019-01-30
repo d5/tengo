@@ -22,7 +22,7 @@ func (o *Undefined) BinaryOp(op token.Token, rhs Object) (Object, error) {
 
 // Copy returns a copy of the type.
 func (o *Undefined) Copy() Object {
-	return &Undefined{}
+	return o
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -33,7 +33,5 @@ func (o *Undefined) IsFalsy() bool {
 // Equals returns true if the value of the type
 // is equal to the value of another object.
 func (o *Undefined) Equals(x Object) bool {
-	_, ok := x.(*Undefined)
-
-	return ok
+	return o == x
 }

@@ -7,15 +7,17 @@
 - **Char**: character (`rune` in Go)
 - **Bytes**: byte array (`[]byte` in Go)
 - **Array**: objects array (`[]Object` in Go)
+- **ImmutableArray**: immutable object array (`[]Object` in Go)
 - **Map**: objects map with string keys (`map[string]Object` in Go)
 - **ImmutableMap**: immutable object map with string keys (`map[string]Object` in Go)
+- **Time**: time (`time.Time` in Go)
 - **Error**: an error with underlying Object value of any type
 - **Undefined**: undefined
 
 ## Type Conversion/Coercion Table
-|src\dst  |Int      |String        |Float    |Bool      |Char   |Bytes  |Array  |Map    |IMap|Error  |Undefined|
+|src\dst  |Int      |String        |Float    |Bool      |Char   |Bytes  |Array  |Map    |Time   |Error  |Undefined|
 | :---:   | :---:   | :---:        | :---:   | :---:    | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|Int      |   -     |_strconv_     |float64(v)|!IsFalsy()| rune(v)|**X**|**X**|**X**|**X**|**X**|**X**|
+|Int      |   -     |_strconv_     |float64(v)|!IsFalsy()| rune(v)|**X**|**X**|**X**|_time.Unix()_|**X**|**X**|
 |String   |_strconv_|   -          |_strconv_|!IsFalsy()|**X**|[]byte(s)|**X**|**X**|**X**|**X**|**X**|
 |Float    |int64(f) |_strconv_     | -       |!IsFalsy()|**X**|**X**|**X**|**X**|**X**|**X**|**X**|
 |Bool     |1 / 0    |"true" / "false"|**X**    |   -   |**X**|**X**|**X**|**X**|**X**|**X**|**X**|
@@ -23,13 +25,15 @@
 |Bytes    |**X**    |string(y)|**X**    |!IsFalsy()|**X**|   -   |**X**|**X**|**X**|**X**|**X**|
 |Array    |**X**    |"[...]"       |**X**    |!IsFalsy()|**X**|**X**|   -   |**X**|**X**|**X**|**X**|
 |Map      |**X**    |"{...}"       |**X**    |!IsFalsy()|**X**|**X**|**X**|   -   |**X**|**X**|**X**|
-|IMap  |**X**    |"{...}"       |**X**    |!IsFalsy()|**X**|**X**|**X**|**X**|   -   |**X**|**X**|
+|Time     |**X**    |String()      |**X**    |!IsFalsy()|**X**|**X**|**X**|**X**|   -   |**X**|**X**|
 |Error    |**X**    |"error: ..."  |**X**    |false|**X**|**X**|**X**|**X**|**X**|   -   |**X**|
 |Undefined|**X**    |**X**|**X**    |false|**X**|**X**|**X**|**X**|**X**|**X**|   -    |
 
 _* **X**: No conversion; Typed value functions for `script.Variable` will return zero values._  
 _* strconv: converted using Go's conversion functions from `strconv` package._  
-_* IsFalsy(): use [Object.IsFalsy()](#objectisfalsy) function_
+_* IsFalsy(): use [Object.IsFalsy()](#objectisfalsy) function_  
+_* String(): use `Object.String()` function_    
+_* time.Unix(): use `time.Unix(v, 0)` to convert to Time_
 
 ## Object.IsFalsy()
 
@@ -43,7 +47,7 @@ _* IsFalsy(): use [Object.IsFalsy()](#objectisfalsy) function_
 - **Bytes**: `len(bytes) == 0`
 - **Array**: `len(arr) == 0`
 - **Map**: `len(map) == 0`
-- **ImmutableMap**: `len(map) == 0`
+- **Time**: `Time.IsZero()`
 - **Error**: `true` _(Error is always falsy)_
 - **Undefined**: `true` _(Undefined is always falsy)_
 
@@ -56,6 +60,7 @@ _* IsFalsy(): use [Object.IsFalsy()](#objectisfalsy) function_
 - `char(x)`: tries to convert `x` into char; returns `undefined` if failed
 - `bytes(x)`: tries to convert `x` into bytes; returns `undefined` if failed
   - `bytes(N)`: as a special case this will create a Bytes variable with the given size `N` (only if `N` is int)
+- `time(x)`: tries to convert `x` into time; returns `undefined` if failed
 
 ## Type Checking Builtin Functions
 
@@ -65,5 +70,10 @@ _* IsFalsy(): use [Object.IsFalsy()](#objectisfalsy) function_
 - `is_float(x)`: returns `true` if `x` is float; `false` otherwise
 - `is_char(x)`: returns `true` if `x` is char; `false` otherwise
 - `is_bytes(x)`: returns `true` if `x` is bytes; `false` otherwise
+- `is_array(x)`: return `true` if `x` is array; `false` otherwise
+- `is_immutable_array(x)`: return `true` if `x` is immutable array; `false` otherwise
+- `is_map(x)`: return `true` if `x` is map; `false` otherwise
+- `is_immutable_map(x)`: return `true` if `x` is immutable map; `false` otherwise
+- `is_time(x)`: return `true` if `x` is time; `false` otherwise
 - `is_error(x)`: returns `true` if `x` is error; `false` otherwise
 - `is_undefined(x)`: returns `true` if `x` is undefined; `false` otherwise

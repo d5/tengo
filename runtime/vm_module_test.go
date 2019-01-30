@@ -47,17 +47,11 @@ os.remove("./temp")
 
 	// exec.command
 	expect(t, `
-exec := import("exec")
-
-echo := func(args) {
-	cmd := exec.command("echo", args)
-	if is_error(cmd) { return cmd.value }
-	output := cmd.output()
-	if is_error(output) { return output.value }
-	return output
+os := import("os")
+cmd := os.exec("echo", "foo", "bar")
+if !is_error(cmd) { 
+	out = cmd.output()
 }
-
-out = echo(["foo", "bar"])
 `, []byte("foo bar\n"))
 
 	// user modules

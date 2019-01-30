@@ -3,6 +3,7 @@ package compiler_test
 import (
 	"bytes"
 	"testing"
+	"time"
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler"
@@ -14,16 +15,20 @@ func TestBytecode(t *testing.T) {
 
 	testBytecodeSerialization(t, bytecode(
 		concat(), objectsArray(
+			objects.UndefinedValue,
+			&objects.Time{Value: time.Now()},
 			&objects.Array{
 				Value: objectsArray(
 					&objects.Int{Value: 12},
 					&objects.String{Value: "foo"},
-					&objects.Bool{Value: true},
+					objects.TrueValue,
+					objects.FalseValue,
 					&objects.Float{Value: 93.11},
 					&objects.Char{Value: 'x'},
+					objects.UndefinedValue,
 				),
 			},
-			&objects.Bool{Value: false},
+			objects.FalseValue,
 			&objects.Char{Value: 'y'},
 			&objects.Float{Value: 93.11},
 			compiledFunction(1, 0,
@@ -36,11 +41,12 @@ func TestBytecode(t *testing.T) {
 			&objects.Map{
 				Value: map[string]objects.Object{
 					"a": &objects.Float{Value: -93.1},
-					"b": &objects.Bool{Value: false},
+					"b": objects.FalseValue,
+					"c": objects.UndefinedValue,
 				},
 			},
 			&objects.String{Value: "bar"},
-			&objects.Undefined{})))
+			objects.UndefinedValue)))
 
 	testBytecodeSerialization(t, bytecode(
 		concat(

@@ -77,7 +77,11 @@ func builtinBool(args ...Object) (Object, error) {
 
 	v, ok := ToBool(args[0])
 	if ok {
-		return &Bool{Value: v}, nil
+		if v {
+			return TrueValue, nil
+		}
+
+		return FalseValue, nil
 	}
 
 	return UndefinedValue, nil
@@ -119,6 +123,28 @@ func builtinBytes(args ...Object) (Object, error) {
 	v, ok := ToByteSlice(args[0])
 	if ok {
 		return &Bytes{Value: v}, nil
+	}
+
+	if argsLen == 2 {
+		return args[1], nil
+	}
+
+	return UndefinedValue, nil
+}
+
+func builtinTime(args ...Object) (Object, error) {
+	argsLen := len(args)
+	if !(argsLen == 1 || argsLen == 2) {
+		return nil, ErrWrongNumArguments
+	}
+
+	if _, ok := args[0].(*Time); ok {
+		return args[0], nil
+	}
+
+	v, ok := ToTime(args[0])
+	if ok {
+		return &Time{Value: v}, nil
 	}
 
 	if argsLen == 2 {

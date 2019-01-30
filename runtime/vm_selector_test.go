@@ -2,12 +2,14 @@ package runtime_test
 
 import (
 	"testing"
+
+	"github.com/d5/tengo/objects"
 )
 
 func TestSelector(t *testing.T) {
 	expect(t, `a := {k1: 5, k2: "foo"}; out = a.k1`, 5)
 	expect(t, `a := {k1: 5, k2: "foo"}; out = a.k2`, "foo")
-	expect(t, `a := {k1: 5, k2: "foo"}; out = a.k3`, undefined())
+	expect(t, `a := {k1: 5, k2: "foo"}; out = a.k3`, objects.UndefinedValue)
 
 	expect(t, `
 a := {
