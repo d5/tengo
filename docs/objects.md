@@ -60,7 +60,7 @@ Copy() Object
 Copy method should a _new_ copy of the same object. All primitive and composite value types implement this method to return a deep-copy of the value, which is recommended for other user types _(as `copy` builtin function uses this Copy method)_, but, it's not a strict requirement by the runtime.
 
 
-## Callable Interface
+### Callable Interface
 
 If the type implements [Callable](https://godoc.org/github.com/d5/tengo/objects#Callable) interface, its values can be invoked as if they were functions. 
 
