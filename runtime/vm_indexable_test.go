@@ -104,8 +104,53 @@ func (o *StringCircle) IndexSet(index, value objects.Object) error {
 }
 
 type StringArray struct {
-	objectImpl
 	Value []string
+}
+
+func (o *StringArray) String() string {
+	return strings.Join(o.Value, ", ")
+}
+
+func (o *StringArray) BinaryOp(op token.Token, rhs objects.Object) (objects.Object, error) {
+	if rhs, ok := rhs.(*StringArray); ok {
+		switch op {
+		case token.Add:
+			if len(rhs.Value) == 0 {
+				return o, nil
+			}
+			return &StringArray{Value: append(o.Value, rhs.Value...)}, nil
+		}
+	}
+
+	return nil, objects.ErrInvalidOperator
+}
+
+func (o *StringArray) IsFalsy() bool {
+	return len(o.Value) == 0
+}
+
+func (o *StringArray) Equals(x objects.Object) bool {
+	if x, ok := x.(*StringArray); ok {
+		if len(o.Value) != len(x.Value) {
+			return false
+		}
+
+		for i, v := range o.Value {
+			if v != x.Value[i] {
+				return false
+			}
+		}
+
+		return true
+	}
+
+	return false
+}
+
+func (o *StringArray) Copy() objects.Object {
+	return &StringArray{
+		Value: append([]string{}, o.Value...),
+	}
 }
 
 func (o *StringArray) TypeName() string {
@@ -153,6 +198,25 @@ func (o *StringArray) IndexSet(index, value objects.Object) error {
 	}
 
 	return objects.ErrInvalidIndexType
+}
+
+func (o *StringArray) Call(args ...objects.Object) (ret objects.Object, err error) {
+	if len(args) != 1 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	s1, ok := objects.ToString(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	for i, v := range o.Value {
+		if v == s1 {
+			return &objects.Int{Value: int64(i)}, nil
+		}
+	}
+
+	return objects.UndefinedValue, nil
 }
 
 func TestIndexable(t *testing.T) {
