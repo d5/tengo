@@ -102,7 +102,7 @@ When adding a Variable _([Script.Add](https://godoc.org/github.com/d5/tengo/scri
 
 ### User Types
 
-One can easily add and use customized value types in Tengo code by implementing [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface. Tengo runtime will treat the user types exactly in the same way it does to the runtime types with no performance overhead. See [Tengo Objects](https://github.com/d5/tengo/blob/master/docs/objects.md) for more details.
+Users can add and use a custom user type in Tengo code by implementing [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface. Tengo runtime will treat the user types in the same way it does to the runtime types with no performance overhead. See [Object Types](https://github.com/d5/tengo/blob/master/docs/objects.md) for more details.
 
 ### Importing Scripts
 
