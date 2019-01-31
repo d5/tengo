@@ -188,7 +188,7 @@ b = "foo"       // ok: this is not mutating the value of array
                 //  but updating reference 'b' with different value
 ``` 
 
-Not that, if you copy (using `copy` builtin function) an immutable value, it will return a "mutable" copy. Also, immutability is not applied to the individual elements of the array or map value, unless they are explicitly made immutable.
+Note that, if you copy (using `copy` builtin function) an immutable value, it will return a "mutable" copy. Also, immutability is not applied to the individual elements of the array or map value, unless they are explicitly made immutable.
 
 ```golang
 a := immutable({b: 4, c: [1, 2, 3]})
