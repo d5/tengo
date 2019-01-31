@@ -188,7 +188,7 @@ b = "foo"       // ok: this is not mutating the value of array
                 //  but updating reference 'b' with different value
 ``` 
 
-Not that, if you copy (using `copy` builtin function) an immutable value, it will return a "mutable" copy. Also, immutability is not applied to the individual elements of the array or map value, unless they are explicitly made immutable.
+Note that, if you copy (using `copy` builtin function) an immutable value, it will return a "mutable" copy. Also, immutability is not applied to the individual elements of the array or map value, unless they are explicitly made immutable.
 
 ```golang
 a := immutable({b: 4, c: [1, 2, 3]})
@@ -232,7 +232,7 @@ func1 := func(x) { print(x) }
 foo := 2
 ```
 
-Basically, `import` expression returns all the global variables defined in the module as a Map-like value. One can access the functions or variables defined in the module using `.` selector or `["key"]` indexer, but, module variables are immutable.
+Basically, `import` expression returns all the global variables defined in the module as an ImmutableMap value.
 
 Also, you can use `import` to load the [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md).
 
