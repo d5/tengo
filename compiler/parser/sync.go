@@ -8,6 +8,4 @@ var stmtStart = map[token.Token]bool{
 	token.For:      true,
 	token.If:       true,
 	token.Return:   true,
-	token.Switch:   true,
-	token.Var:      true,
 }

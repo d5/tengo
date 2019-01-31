@@ -566,7 +566,7 @@ func (p *Parser) parseStmtList() (list []ast.Stmt) {
 		defer un(trace(p, "StatementList"))
 	}
 
-	for p.token != token.Case && p.token != token.Default && p.token != token.RBrace && p.token != token.EOF {
+	for p.token != token.RBrace && p.token != token.EOF {
 		list = append(list, p.parseStmt())
 	}
 

@@ -110,16 +110,12 @@ func TestScanner_Scan(t *testing.T) {
 		{token.Semicolon, ";"},
 		{token.Colon, ":"},
 		{token.Break, "break"},
-		{token.Case, "case"},
 		{token.Continue, "continue"},
-		{token.Default, "default"},
 		{token.Else, "else"},
 		{token.For, "for"},
 		{token.Func, "func"},
 		{token.If, "if"},
 		{token.Return, "return"},
-		{token.Switch, "switch"},
-		{token.Var, "var"},
 	}
 
 	// combine
