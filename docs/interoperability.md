@@ -4,7 +4,8 @@
 
 - [Using Scripts](#using-scripts)
   - [Type Conversion Table](#type-conversion-table)
-- [User Types](#user-types)
+  - [User Types](#user-types)
+  - [Importing Scripts](#importing-scripts)
 - [Sandbox Environments](#sandbox-environments)
 - [Compiler and VM](#compiler-and-vm)
 
@@ -90,6 +91,7 @@ When adding a Variable _([Script.Add](https://godoc.org/github.com/d5/tengo/scri
 |`byte`|`Char`||
 |`float64`|`Float`||
 |`[]byte`|`Bytes`||
+|`time.Time`|`Time`||
 |`error`|`Error{String}`|use `error.Error()` as String value|
 |`map[string]Object`|`Map`||
 |`map[string]interface{}`|`Map`|individual elements converted to Tengo objects|
@@ -98,9 +100,23 @@ When adding a Variable _([Script.Add](https://godoc.org/github.com/d5/tengo/scri
 |`Object`|`Object`|_(no type conversion performed)_|
 
 
-## User Types
+### User Types
 
 One can easily add and use customized value types in Tengo code by implementing [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface. Tengo runtime will treat the user types exactly in the same way it does to the runtime types with no performance overhead. See [Tengo Objects](https://github.com/d5/tengo/blob/master/docs/objects.md) for more details.
+
+### Importing Scripts
+
+Using `Script.AddModule` function, a compiled script can be used _(imported)_ by another script as a module, in the same way the script can load the standard library or the user modules. 
+
+```golang
+mod1, _ := script.New([]byte(`a := 5`)).Compile()  // mod1 is a "compiled" script
+
+s := script.New([]byte(`print(import("mod1").a)`)) // main script
+_ = s.AddModule("mod1", mod1)                      // add mod1 using name "mod1"
+_, _ = s.Run()                                     // prints "5"
+```
+
+Notice that the compiled script (`mod1` in this example code) does not have to be `Run()` before it's added to another script as module. Actually `Script.AddModule` function runs the given compiled script so it can populate values of the global variables. 
 
 ## Sandbox Environments
 

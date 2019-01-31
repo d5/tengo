@@ -17,6 +17,7 @@ type Script struct {
 	variables         map[string]*Variable
 	removedBuiltins   map[string]bool
 	removedStdModules map[string]bool
+	userModules       map[string]*objects.ImmutableMap
 	userModuleLoader  compiler.ModuleLoader
 	input             []byte
 }
@@ -77,6 +78,31 @@ func (s *Script) DisableStdModule(name string) {
 // SetUserModuleLoader sets the user module loader for the compiler.
 func (s *Script) SetUserModuleLoader(loader compiler.ModuleLoader) {
 	s.userModuleLoader = loader
+}
+
+// AddModule adds the compiled script as an import module. Note that
+// the compiled script must be run at least once before it is added
+// to another script.
+func (s *Script) AddModule(name string, compiled *Compiled) {
+	if s.userModules == nil {
+		s.userModules = make(map[string]*objects.ImmutableMap)
+	}
+
+	mod := &objects.ImmutableMap{
+		Value: make(map[string]objects.Object),
+	}
+
+	for _, symbolName := range compiled.symbolTable.Names() {
+		symbol, _, ok := compiled.symbolTable.Resolve(symbolName)
+		if ok && symbol.Scope == compiler.ScopeGlobal {
+			value := compiled.machine.Globals()[symbol.Index]
+			if value != nil {
+				mod.Value[symbolName] = *value
+			}
+		}
+	}
+
+	s.userModules[name] = mod
 }
 
 // Compile compiles the script with all the defined variables, and, returns Compiled object.
@@ -150,6 +176,9 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, stdModules ma
 		if !s.removedStdModules[name] {
 			stdModules[name] = mod
 		}
+	}
+	for name, mod := range s.userModules {
+		stdModules[name] = mod
 	}
 
 	globals = make([]*objects.Object, len(names), len(names))
