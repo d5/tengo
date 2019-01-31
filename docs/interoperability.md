@@ -106,17 +106,17 @@ One can easily add and use customized value types in Tengo code by implementing 
 
 ### Importing Scripts
 
-Using `Script.AddModule` function, a compiled script can be used _(imported)_ by another script as a module, in the same way the script can load the standard library or the user modules. 
+A script can import and use another script in the same way it can load the standard library or the user module. `Script.AddModule` function adds another script as a named module.
 
 ```golang
-mod1, _ := script.New([]byte(`a := 5`)).Compile()  // mod1 is a "compiled" script
+mod1Script := script.New([]byte(`a := 5`))                  // mod1 script
 
-s := script.New([]byte(`print(import("mod1").a)`)) // main script
-_ = s.AddModule("mod1", mod1)                      // add mod1 using name "mod1"
-_, _ = s.Run()                                     // prints "5"
+mainScript := script.New([]byte(`print(import("mod1").a)`)) // main script
+mainScript.AddModule("mod1", mod1Script)                    // add mod1 using name "mod1"
+mainScript.Run()                                            // prints "5"
 ```
 
-Notice that the compiled script (`mod1` in this example code) does not have to be `Run()` before it's added to another script as module. Actually `Script.AddModule` function runs the given compiled script so it can populate values of the global variables. 
+Note that the script modules added using `Script.AddModule` will be compiled and run right before the main script is compiled.   
 
 ## Sandbox Environments
 

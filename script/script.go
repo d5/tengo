@@ -17,7 +17,7 @@ type Script struct {
 	variables         map[string]*Variable
 	removedBuiltins   map[string]bool
 	removedStdModules map[string]bool
-	userModules       map[string]*objects.ImmutableMap
+	scriptModules     map[string]*Script
 	userModuleLoader  compiler.ModuleLoader
 	input             []byte
 }
@@ -80,34 +80,22 @@ func (s *Script) SetUserModuleLoader(loader compiler.ModuleLoader) {
 	s.userModuleLoader = loader
 }
 
-// AddModule adds the compiled script as an import module. Note that
-// the compiled script must be run at least once before it is added
-// to another script.
-func (s *Script) AddModule(name string, compiled *Compiled) {
-	if s.userModules == nil {
-		s.userModules = make(map[string]*objects.ImmutableMap)
+// AddModule adds another script as a module. Script module will be
+// compiled and run right before the main script s is compiled.
+func (s *Script) AddModule(name string, scriptModule *Script) {
+	if s.scriptModules == nil {
+		s.scriptModules = make(map[string]*Script)
 	}
 
-	mod := &objects.ImmutableMap{
-		Value: make(map[string]objects.Object),
-	}
-
-	for _, symbolName := range compiled.symbolTable.Names() {
-		symbol, _, ok := compiled.symbolTable.Resolve(symbolName)
-		if ok && symbol.Scope == compiler.ScopeGlobal {
-			value := compiled.machine.Globals()[symbol.Index]
-			if value != nil {
-				mod.Value[symbolName] = *value
-			}
-		}
-	}
-
-	s.userModules[name] = mod
+	s.scriptModules[name] = scriptModule
 }
 
 // Compile compiles the script with all the defined variables, and, returns Compiled object.
 func (s *Script) Compile() (*Compiled, error) {
-	symbolTable, stdModules, globals := s.prepCompile()
+	symbolTable, stdModules, globals, err := s.prepCompile()
+	if err != nil {
+		return nil, err
+	}
 
 	fileSet := source.NewFileSet()
 
@@ -158,7 +146,7 @@ func (s *Script) RunContext(ctx context.Context) (compiled *Compiled, err error)
 	return
 }
 
-func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, stdModules map[string]*objects.ImmutableMap, globals []*objects.Object) {
+func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, stdModules map[string]*objects.ImmutableMap, globals []*objects.Object, err error) {
 	var names []string
 	for name := range s.variables {
 		names = append(names, name)
@@ -177,7 +165,36 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, stdModules ma
 			stdModules[name] = mod
 		}
 	}
-	for name, mod := range s.userModules {
+	for name, scriptModule := range s.scriptModules {
+		if scriptModule == nil {
+			err = fmt.Errorf("script module must not be nil: %s", name)
+		}
+
+		var compiledModule *Compiled
+		compiledModule, err = scriptModule.Compile()
+		if err != nil {
+			return
+		}
+
+		err = compiledModule.Run()
+		if err != nil {
+			return
+		}
+
+		mod := &objects.ImmutableMap{
+			Value: make(map[string]objects.Object),
+		}
+
+		for _, symbolName := range compiledModule.symbolTable.Names() {
+			symbol, _, ok := compiledModule.symbolTable.Resolve(symbolName)
+			if ok && symbol.Scope == compiler.ScopeGlobal {
+				value := compiledModule.machine.Globals()[symbol.Index]
+				if value != nil {
+					mod.Value[symbolName] = *value
+				}
+			}
+		}
+
 		stdModules[name] = mod
 	}
 
