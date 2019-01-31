@@ -68,9 +68,7 @@ const (
 	_operatorEnd
 	_keywordBeg
 	Break
-	Case
 	Continue
-	Default
 	Else
 	For
 	Func
@@ -78,8 +76,6 @@ const (
 	Immutable
 	If
 	Return
-	Switch
-	Var
 	True
 	False
 	In
@@ -145,9 +141,7 @@ var tokens = [...]string{
 	Colon:        ":",
 	Question:     "?",
 	Break:        "break",
-	Case:         "case",
 	Continue:     "continue",
-	Default:      "default",
 	Else:         "else",
 	For:          "for",
 	Func:         "func",
@@ -155,8 +149,6 @@ var tokens = [...]string{
 	Immutable:    "immutable",
 	If:           "if",
 	Return:       "return",
-	Switch:       "switch",
-	Var:          "var",
 	True:         "true",
 	False:        "false",
 	In:           "in",
