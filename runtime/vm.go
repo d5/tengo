@@ -80,6 +80,15 @@ func (v *VM) Abort() {
 
 // Run starts the execution.
 func (v *VM) Run() error {
+	// reset VM states
+	v.sp = 0
+	v.curFrame = &(v.frames[0])
+	v.curInsts = v.curFrame.fn.Instructions
+	v.curIPLimit = len(v.curInsts) - 1
+	v.framesIndex = 1
+	v.ip = -1
+	atomic.StoreInt64(&v.aborting, 0)
+
 	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
 		v.ip++
 

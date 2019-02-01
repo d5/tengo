@@ -70,11 +70,22 @@ func main() {
 
 	// retrieve value of 'a'
 	a := c.Get("a")
-	fmt.Println(a.Int())
+	fmt.Println(a.Int())           // prints "30"
+	
+	// re-run after replacing value of 'b'
+	if err := c.Set("b", 20); err != nil {
+		panic(err)
+	}
+	if err := c.Run(); err != nil {
+		panic(err)
+	}
+	fmt.Println(c.Get("a").Int())  // prints "40"
 }
 ```
 
 A variable `b` is defined by the user before compilation using [Script.Add](https://godoc.org/github.com/d5/tengo/script#Script.Add) function. Then a compiled bytecode `c` is used to execute the bytecode and get the value of global variables. In this example, the value of global variable `a` is read using [Compiled.Get](https://godoc.org/github.com/d5/tengo/script#Compiled.Get) function. See [documentation](https://godoc.org/github.com/d5/tengo/script#Variable) for the full list of variable value functions.
+
+Value of the global variables can be replaced using [Compiled.Set](https://godoc.org/github.com/d5/tengo/script#Compiled.Set) function. But it will return an error if you try to set the value of un-defined global variables _(e.g. trying to set the value of `x` in the example)_.  
 
 ### Type Conversion Table
 
