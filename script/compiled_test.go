@@ -47,6 +47,36 @@ func TestCompiled_IsDefined(t *testing.T) {
 	compiledIsDefined(t, c, "b", false)
 }
 
+func TestCompiled_Set(t *testing.T) {
+	c := compile(t, `a := b`, M{"b": "foo"})
+	compiledRun(t, c)
+	compiledGet(t, c, "a", "foo")
+
+	// replace value of 'b'
+	err := c.Set("b", "bar")
+	assert.NoError(t, err)
+	compiledRun(t, c)
+	compiledGet(t, c, "a", "bar")
+
+	// try to replace undefined variable
+	err = c.Set("c", 1984)
+	assert.Error(t, err) // 'c' is not defined
+
+	// case #2
+	c = compile(t, `
+a := func() { 
+	return func() {
+		return b + 5
+	}() 
+}()`, M{"b": 5})
+	compiledRun(t, c)
+	compiledGet(t, c, "a", int64(10))
+	err = c.Set("b", 10)
+	assert.NoError(t, err)
+	compiledRun(t, c)
+	compiledGet(t, c, "a", int64(15))
+}
+
 func TestCompiled_RunContext(t *testing.T) {
 	// machine completes normally
 	c := compile(t, `a := 5`, nil)

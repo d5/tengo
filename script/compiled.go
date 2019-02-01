@@ -2,6 +2,7 @@ package script
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/objects"
@@ -91,4 +92,22 @@ func (c *Compiled) GetAll() []*Variable {
 	}
 
 	return vars
+}
+
+// Set replaces the value of a global variable identified by the name.
+// An error will be returned if the name was not defined during compilation.
+func (c *Compiled) Set(name string, value interface{}) error {
+	obj, err := objects.FromInterface(value)
+	if err != nil {
+		return err
+	}
+
+	symbol, _, ok := c.symbolTable.Resolve(name)
+	if !ok || symbol.Scope != compiler.ScopeGlobal {
+		return fmt.Errorf("'%s' is not defined", name)
+	}
+
+	c.machine.Globals()[symbol.Index] = &obj
+
+	return nil
 }
