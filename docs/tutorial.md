@@ -62,7 +62,7 @@ c5 := char("X")     // 'X'
 ```
 > [Run in Playground](https://tengolang.com/?s=8d57905b82959eb244e9bbd2111e12ee04a33045)
 
-_See [Variable Types](https://github.com/d5/tengo/wiki/Variable-Types) for more details on the variable types._
+_See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) and [Operators](https://github.com/d5/tengo/blob/master/docs/operators.md) for more details on the value types._
 
 ## Indexing
 

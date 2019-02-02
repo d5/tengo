@@ -21,6 +21,79 @@ func (o *Char) TypeName() string {
 // BinaryOp returns another object that is the result of
 // a given binary operator and a right-hand side object.
 func (o *Char) BinaryOp(op token.Token, rhs Object) (Object, error) {
+	switch rhs := rhs.(type) {
+	case *Char:
+		switch op {
+		case token.Add:
+			r := o.Value + rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Char{Value: r}, nil
+		case token.Sub:
+			r := o.Value - rhs.Value
+			if r == o.Value {
+				return o, nil
+			}
+			return &Char{Value: r}, nil
+		case token.Less:
+			if o.Value < rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		case token.Greater:
+			if o.Value > rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		case token.LessEq:
+			if o.Value <= rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		case token.GreaterEq:
+			if o.Value >= rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		}
+	case *Int:
+		switch op {
+		case token.Add:
+			r := o.Value + rune(rhs.Value)
+			if r == o.Value {
+				return o, nil
+			}
+			return &Char{Value: r}, nil
+		case token.Sub:
+			r := o.Value - rune(rhs.Value)
+			if r == o.Value {
+				return o, nil
+			}
+			return &Char{Value: r}, nil
+		case token.Less:
+			if int64(o.Value) < rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		case token.Greater:
+			if int64(o.Value) > rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		case token.LessEq:
+			if int64(o.Value) <= rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		case token.GreaterEq:
+			if int64(o.Value) >= rhs.Value {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		}
+	}
+
 	return nil, ErrInvalidOperator
 }
 

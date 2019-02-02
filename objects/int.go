@@ -144,6 +144,33 @@ func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 			}
 			return FalseValue, nil
 		}
+	case *Char:
+		switch op {
+		case token.Add:
+			return &Char{rune(o.Value) + rhs.Value}, nil
+		case token.Sub:
+			return &Char{rune(o.Value) - rhs.Value}, nil
+		case token.Less:
+			if o.Value < int64(rhs.Value) {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		case token.Greater:
+			if o.Value > int64(rhs.Value) {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		case token.LessEq:
+			if o.Value <= int64(rhs.Value) {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		case token.GreaterEq:
+			if o.Value >= int64(rhs.Value) {
+				return TrueValue, nil
+			}
+			return FalseValue, nil
+		}
 	}
 
 	return nil, ErrInvalidOperator

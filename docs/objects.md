@@ -45,7 +45,7 @@ Alternatively the method can return an `Error` value as its result `res` (the fi
 IsFalsy() bool
 ```
 
-IsFalsy method should return true if the underlying value is considered to be [falsy](https://github.com/d5/tengo/wiki/Variable-Types#objectisfalsy).
+IsFalsy method should return true if the underlying value is considered to be [falsy](https://github.com/d5/tengo/blob/master/docs/runtime-types.md#objectisfalsy).
 
 ```golang
 Equals(o Object) bool

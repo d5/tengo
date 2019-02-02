@@ -85,7 +85,7 @@ five := from_json(`"five"`)
 
 ## string
 
-Tries to convert an object to string object. See [this](https://github.com/d5/tengo/wiki/Variable-Types) for more details on type conversion.
+Tries to convert an object to string object. See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on type conversion.
 
 ```golang
 x := string(123) //  v == "123"

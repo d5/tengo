@@ -67,7 +67,7 @@ _* See [here](https://github.com/d5/tengobench) for commands/codes used_
 
 - [Language Syntax](https://github.com/d5/tengo/blob/master/docs/tutorial.md)
 - [Object Types](https://github.com/d5/tengo/blob/master/docs/objects.md)
-- [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md)
+- [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) and [Operators](https://github.com/d5/tengo/blob/master/docs/operators.md)
 - [Builtin Functions](https://github.com/d5/tengo/blob/master/docs/builtins.md)
 - [Interoperability](https://github.com/d5/tengo/blob/master/docs/interoperability.md)
 - [Tengo CLI](https://github.com/d5/tengo/blob/master/docs/tengo-cli.md)
