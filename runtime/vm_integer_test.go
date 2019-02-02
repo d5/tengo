@@ -24,4 +24,7 @@ func TestInteger(t *testing.T) {
 	expect(t, `out = 5 % 3 + 4`, 6)
 	expect(t, `out = +5`, 5)
 	expect(t, `out = +5 + -5`, 0)
+
+	expect(t, `out = 9 + '0'`, '9')
+	expect(t, `out = '9' - 5`, '4')
 }
