@@ -145,6 +145,8 @@ s.DisableBuiltinFunction("print")
 _, err := s.Run() // compile error 
 ```
 
+Note that when a script is being added to another script as a module (via `Script.AddModule`), it does not inherit the disabled builtin function list from the main script.  
+
 #### Script.DisableStdModule(name string)
 
 DisableStdModule disables a [standard library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) module. Compile will report a compile-time error if the code tries to import the module with the given name.
@@ -156,6 +158,8 @@ s.DisableStdModule("exec")
 
 _, err := s.Run() // compile error 
 ```
+
+Note that when a script is being added to another script as a module (via `Script.AddModule`), it does not inherit the disabled standard module list from the main script.
 
 #### Script.SetUserModuleLoader(loader compiler.ModuleLoader)
 
@@ -172,6 +176,8 @@ s.SetUserModuleLoader(func(moduleName string) ([]byte, error) {
     return nil, errors.New("module not found")
 })
 ```
+
+Note that when a script is being added to another script as a module (via `Script.AddModule`), it does not inherit the module loader from the main script.
 
 ## Compiler and VM
 

@@ -77,6 +77,10 @@ func (c *Compiler) doCompileModule(moduleName string, src []byte) (*objects.Comp
 	}
 
 	symbolTable := NewSymbolTable()
+	for idx, fn := range objects.Builtins {
+		symbolTable.DefineBuiltin(idx, fn.Name)
+	}
+
 	globals := make(map[string]int)
 
 	moduleCompiler := c.fork(moduleName, symbolTable)

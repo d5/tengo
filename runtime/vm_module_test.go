@@ -126,4 +126,9 @@ if !is_error(cmd) {
 	expectWithUserModules(t, `m1 := import("mod1"); m1.a.b = 5; out = m1.a.b`, 5, map[string]string{
 		"mod1": `a := {b: 3}`,
 	})
+
+	// make sure module has same builtin functions
+	expectWithUserModules(t, `out = import("mod1").a`, "int", map[string]string{
+		"mod1": `a := func() { return type_name(0) }()`,
+	})
 }
