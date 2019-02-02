@@ -14,7 +14,7 @@ var (
 	fileSet = source.NewFileSet()
 )
 
-func (c *Compiler) compileModule(moduleName string) (*objects.CompiledModule, error) {
+func (c *Compiler) compileModule(moduleName string) (*objects.CompiledFunction, error) {
 	compiledModule, exists := c.loadCompiledModule(moduleName)
 	if exists {
 		return compiledModule, nil
@@ -69,7 +69,7 @@ func (c *Compiler) checkCyclicImports(moduleName string) error {
 	return nil
 }
 
-func (c *Compiler) doCompileModule(moduleName string, src []byte) (*objects.CompiledModule, error) {
+func (c *Compiler) doCompileModule(moduleName string, src []byte) (*objects.CompiledFunction, error) {
 	p := parser.NewParser(fileSet.AddFile(moduleName, -1, len(src)), src, nil)
 	file, err := p.ParseFile()
 	if err != nil {
@@ -77,31 +77,36 @@ func (c *Compiler) doCompileModule(moduleName string, src []byte) (*objects.Comp
 	}
 
 	symbolTable := NewSymbolTable()
+
+	// inherit builtin functions
 	for idx, fn := range objects.Builtins {
-		symbolTable.DefineBuiltin(idx, fn.Name)
+		s, _, ok := c.symbolTable.Resolve(fn.Name)
+		if ok && s.Scope == ScopeBuiltin {
+			symbolTable.DefineBuiltin(idx, fn.Name)
+		}
 	}
 
-	globals := make(map[string]int)
+	// no global scope for the module
+	symbolTable = symbolTable.Fork(false)
 
+	// compile module
 	moduleCompiler := c.fork(moduleName, symbolTable)
 	if err := moduleCompiler.Compile(file); err != nil {
 		return nil, err
 	}
 
-	for _, name := range symbolTable.Names() {
-		symbol, _, _ := symbolTable.Resolve(name)
-		if symbol.Scope == ScopeGlobal {
-			globals[name] = symbol.Index
-		}
+	// add OpReturn (== export undefined) if export is missing
+	if !moduleCompiler.lastInstructionIs(OpReturnValue) {
+		moduleCompiler.emit(OpReturn)
 	}
 
-	return &objects.CompiledModule{
+	return &objects.CompiledFunction{
 		Instructions: moduleCompiler.Bytecode().Instructions,
-		Globals:      globals,
+		NumLocals:    symbolTable.MaxSymbols(),
 	}, nil
 }
 
-func (c *Compiler) loadCompiledModule(moduleName string) (mod *objects.CompiledModule, ok bool) {
+func (c *Compiler) loadCompiledModule(moduleName string) (mod *objects.CompiledFunction, ok bool) {
 	if c.parent != nil {
 		return c.parent.loadCompiledModule(moduleName)
 	}
@@ -111,7 +116,7 @@ func (c *Compiler) loadCompiledModule(moduleName string) (mod *objects.CompiledM
 	return
 }
 
-func (c *Compiler) storeCompiledModule(moduleName string, module *objects.CompiledModule) {
+func (c *Compiler) storeCompiledModule(moduleName string, module *objects.CompiledFunction) {
 	if c.parent != nil {
 		c.parent.storeCompiledModule(moduleName, module)
 	}

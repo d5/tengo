@@ -41,6 +41,7 @@ const (
 	OpCall                           // Call function
 	OpReturn                         // Return
 	OpReturnValue                    // Return value
+	OpExport                         // Export
 	OpGetGlobal                      // Get global variable
 	OpSetGlobal                      // Set global variable
 	OpSetSelGlobal                   // Set global variable using selectors
@@ -57,7 +58,6 @@ const (
 	OpIteratorNext                   // Iterator next
 	OpIteratorKey                    // Iterator key
 	OpIteratorValue                  // Iterator value
-	OpModule                         // Module
 )
 
 // OpcodeNames is opcode names.
@@ -101,6 +101,7 @@ var OpcodeNames = [...]string{
 	OpCall:             "CALL",
 	OpReturn:           "RET",
 	OpReturnValue:      "RETVAL",
+	OpExport:           "EXPORT",
 	OpGetLocal:         "GETL",
 	OpSetLocal:         "SETL",
 	OpDefineLocal:      "DEFL",
@@ -114,7 +115,6 @@ var OpcodeNames = [...]string{
 	OpIteratorNext:     "ITNXT",
 	OpIteratorKey:      "ITKEY",
 	OpIteratorValue:    "ITVAL",
-	OpModule:           "MODULE",
 }
 
 // OpcodeOperands is the number of operands.
@@ -158,6 +158,7 @@ var OpcodeOperands = [...][]int{
 	OpCall:             {1},
 	OpReturn:           {},
 	OpReturnValue:      {},
+	OpExport:           {},
 	OpGetLocal:         {1},
 	OpSetLocal:         {1},
 	OpDefineLocal:      {1},
@@ -171,7 +172,6 @@ var OpcodeOperands = [...][]int{
 	OpIteratorNext:     {},
 	OpIteratorKey:      {},
 	OpIteratorValue:    {},
-	OpModule:           {2},
 }
 
 // ReadOperands reads operands from the bytecode.

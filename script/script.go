@@ -17,7 +17,6 @@ type Script struct {
 	variables         map[string]*Variable
 	removedBuiltins   map[string]bool
 	removedStdModules map[string]bool
-	scriptModules     map[string]*Script
 	userModuleLoader  compiler.ModuleLoader
 	input             []byte
 }
@@ -78,16 +77,6 @@ func (s *Script) DisableStdModule(name string) {
 // SetUserModuleLoader sets the user module loader for the compiler.
 func (s *Script) SetUserModuleLoader(loader compiler.ModuleLoader) {
 	s.userModuleLoader = loader
-}
-
-// AddModule adds another script as a module. Script module will be
-// compiled and run right before the main script s is compiled.
-func (s *Script) AddModule(name string, scriptModule *Script) {
-	if s.scriptModules == nil {
-		s.scriptModules = make(map[string]*Script)
-	}
-
-	s.scriptModules[name] = scriptModule
 }
 
 // Compile compiles the script with all the defined variables, and, returns Compiled object.
@@ -165,40 +154,8 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, stdModules ma
 			stdModules[name] = mod
 		}
 	}
-	for name, scriptModule := range s.scriptModules {
-		if scriptModule == nil {
-			err = fmt.Errorf("script module must not be nil: %s", name)
-		}
 
-		var compiledModule *Compiled
-		compiledModule, err = scriptModule.Compile()
-		if err != nil {
-			return
-		}
-
-		err = compiledModule.Run()
-		if err != nil {
-			return
-		}
-
-		mod := &objects.ImmutableMap{
-			Value: make(map[string]objects.Object),
-		}
-
-		for _, symbolName := range compiledModule.symbolTable.Names() {
-			symbol, _, ok := compiledModule.symbolTable.Resolve(symbolName)
-			if ok && symbol.Scope == compiler.ScopeGlobal {
-				value := compiledModule.machine.Globals()[symbol.Index]
-				if value != nil {
-					mod.Value[symbolName] = *value
-				}
-			}
-		}
-
-		stdModules[name] = mod
-	}
-
-	globals = make([]*objects.Object, len(names), len(names))
+	globals = make([]*objects.Object, runtime.GlobalsSize, runtime.GlobalsSize)
 
 	for idx, name := range names {
 		symbol := symbolTable.Define(name)

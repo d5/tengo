@@ -247,12 +247,18 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	bytecode := c.Bytecode()
 	var constStr []string
 	for cidx, cn := range bytecode.Constants {
-		if cmFn, ok := cn.(*objects.CompiledFunction); ok {
+		switch cn := cn.(type) {
+		case *objects.CompiledFunction:
 			constStr = append(constStr, fmt.Sprintf("[% 3d] (Compiled Function|%p)", cidx, &cn))
-			for _, l := range compiler.FormatInstructions(cmFn.Instructions, 0) {
+			for _, l := range compiler.FormatInstructions(cn.Instructions, 0) {
 				constStr = append(constStr, fmt.Sprintf("     %s", l))
 			}
-		} else {
+		case *objects.CompiledModule:
+			constStr = append(constStr, fmt.Sprintf("[% 3d] (Compiled Module|%p)", cidx, &cn))
+			for _, l := range compiler.FormatInstructions(cn.Instructions, 0) {
+				constStr = append(constStr, fmt.Sprintf("     %s", l))
+			}
+		default:
 			constStr = append(constStr, fmt.Sprintf("[% 3d] %s (%s|%p)", cidx, cn, reflect.TypeOf(cn).Elem().Name(), &cn))
 		}
 	}
@@ -273,28 +279,33 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 
 			res[name] = *globals[sym.Index]
 		}
-		var globalsStr []string
-		for gidx, g := range globals {
-			if g == nil {
-				break
-			}
-
-			if cmFn, ok := (*g).(*objects.Closure); ok {
-				globalsStr = append(globalsStr, fmt.Sprintf("[% 3d] (Closure|%p)", gidx, g))
-				for _, l := range compiler.FormatInstructions(cmFn.Fn.Instructions, 0) {
-					globalsStr = append(globalsStr, fmt.Sprintf("     %s", l))
-				}
-			} else {
-				globalsStr = append(globalsStr, fmt.Sprintf("[% 3d] %s (%s|%p)", gidx, (*g).String(), reflect.TypeOf(*g).Elem().Name(), g))
-			}
-		}
-		trace = append(trace, fmt.Sprintf("\n[Globals]\n\n%s", strings.Join(globalsStr, "\n")))
+		trace = append(trace, fmt.Sprintf("\n[Globals]\n\n%s", strings.Join(formatGlobals(globals), "\n")))
 
 		frameIdx, ip := v.FrameInfo()
 		trace = append(trace, fmt.Sprintf("\n[IP]\n\nFrame=%d, IP=%d", frameIdx, ip+1))
 	}
 	if err != nil {
 		return
+	}
+
+	return
+}
+
+func formatGlobals(globals []*objects.Object) (formatted []string) {
+	for idx, global := range globals {
+		if global == nil {
+			return
+		}
+
+		switch global := (*global).(type) {
+		case *objects.Closure:
+			formatted = append(formatted, fmt.Sprintf("[% 3d] (Closure|%p)", idx, global))
+			for _, l := range compiler.FormatInstructions(global.Fn.Instructions, 0) {
+				formatted = append(formatted, fmt.Sprintf("     %s", l))
+			}
+		default:
+			formatted = append(formatted, fmt.Sprintf("[% 3d] %s (%s|%p)", idx, global.String(), reflect.TypeOf(global).Elem().Name(), global))
+		}
 	}
 
 	return

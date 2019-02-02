@@ -91,23 +91,23 @@ func TestSymbolTable(t *testing.T) {
 	resolveExpect(t, local2Block2, "b", globalSymbol("b", 1), 2)
 }
 
-func symbol(name string, scope compiler.SymbolScope, index int) compiler.Symbol {
-	return compiler.Symbol{
+func symbol(name string, scope compiler.SymbolScope, index int) *compiler.Symbol {
+	return &compiler.Symbol{
 		Name:  name,
 		Scope: scope,
 		Index: index,
 	}
 }
 
-func globalSymbol(name string, index int) compiler.Symbol {
+func globalSymbol(name string, index int) *compiler.Symbol {
 	return symbol(name, compiler.ScopeGlobal, index)
 }
 
-func localSymbol(name string, index int) compiler.Symbol {
+func localSymbol(name string, index int) *compiler.Symbol {
 	return symbol(name, compiler.ScopeLocal, index)
 }
 
-func freeSymbol(name string, index int) compiler.Symbol {
+func freeSymbol(name string, index int) *compiler.Symbol {
 	return symbol(name, compiler.ScopeFree, index)
 }
 
@@ -115,7 +115,7 @@ func symbolTable() *compiler.SymbolTable {
 	return compiler.NewSymbolTable()
 }
 
-func resolveExpect(t *testing.T, symbolTable *compiler.SymbolTable, name string, expectedSymbol compiler.Symbol, expectedDepth int) {
+func resolveExpect(t *testing.T, symbolTable *compiler.SymbolTable, name string, expectedSymbol *compiler.Symbol, expectedDepth int) {
 	actualSymbol, actualDepth, ok := symbolTable.Resolve(name)
 	assert.True(t, ok)
 	assert.Equal(t, expectedSymbol, actualSymbol)

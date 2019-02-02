@@ -6,8 +6,8 @@ import (
 
 // CompiledModule represents a compiled module.
 type CompiledModule struct {
-	Instructions []byte         // compiled instructions
-	Globals      map[string]int // global variable name-to-index map
+	Instructions []byte // compiled instructions
+	NumGlobals   int
 }
 
 // TypeName returns the name of the type.
@@ -27,14 +27,9 @@ func (o *CompiledModule) BinaryOp(op token.Token, rhs Object) (Object, error) {
 
 // Copy returns a copy of the type.
 func (o *CompiledModule) Copy() Object {
-	globals := make(map[string]int, len(o.Globals))
-	for name, index := range o.Globals {
-		globals[name] = index
-	}
-
 	return &CompiledModule{
 		Instructions: append([]byte{}, o.Instructions...),
-		Globals:      globals,
+		NumGlobals:   o.NumGlobals,
 	}
 }
 

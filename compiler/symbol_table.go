@@ -4,22 +4,22 @@ package compiler
 type SymbolTable struct {
 	parent        *SymbolTable
 	block         bool
-	store         map[string]Symbol
+	store         map[string]*Symbol
 	numDefinition int
 	maxDefinition int
-	freeSymbols   []Symbol
+	freeSymbols   []*Symbol
 }
 
 // NewSymbolTable creates a SymbolTable.
 func NewSymbolTable() *SymbolTable {
 	return &SymbolTable{
-		store: make(map[string]Symbol),
+		store: make(map[string]*Symbol),
 	}
 }
 
 // Define adds a new symbol in the current scope.
-func (t *SymbolTable) Define(name string) Symbol {
-	symbol := Symbol{Name: name, Index: t.nextIndex()}
+func (t *SymbolTable) Define(name string) *Symbol {
+	symbol := &Symbol{Name: name, Index: t.nextIndex()}
 	t.numDefinition++
 
 	if t.Parent(true) == nil {
@@ -36,8 +36,8 @@ func (t *SymbolTable) Define(name string) Symbol {
 }
 
 // DefineBuiltin adds a symbol for builtin function.
-func (t *SymbolTable) DefineBuiltin(index int, name string) Symbol {
-	symbol := Symbol{
+func (t *SymbolTable) DefineBuiltin(index int, name string) *Symbol {
+	symbol := &Symbol{
 		Name:  name,
 		Index: index,
 		Scope: ScopeBuiltin,
@@ -49,7 +49,7 @@ func (t *SymbolTable) DefineBuiltin(index int, name string) Symbol {
 }
 
 // Resolve resolves a symbol with a given name.
-func (t *SymbolTable) Resolve(name string) (symbol Symbol, depth int, ok bool) {
+func (t *SymbolTable) Resolve(name string) (symbol *Symbol, depth int, ok bool) {
 	symbol, ok = t.store[name]
 	if !ok && t.parent != nil {
 		symbol, depth, ok = t.parent.Resolve(name)
@@ -76,7 +76,7 @@ func (t *SymbolTable) Resolve(name string) (symbol Symbol, depth int, ok bool) {
 // Fork creates a new symbol table for a new scope.
 func (t *SymbolTable) Fork(block bool) *SymbolTable {
 	return &SymbolTable{
-		store:  make(map[string]Symbol),
+		store:  make(map[string]*Symbol),
 		parent: t,
 		block:  block,
 	}
@@ -97,7 +97,7 @@ func (t *SymbolTable) MaxSymbols() int {
 }
 
 // FreeSymbols returns free symbols for the scope.
-func (t *SymbolTable) FreeSymbols() []Symbol {
+func (t *SymbolTable) FreeSymbols() []*Symbol {
 	return t.freeSymbols
 }
 
@@ -128,12 +128,12 @@ func (t *SymbolTable) updateMaxDefs(numDefs int) {
 	}
 }
 
-func (t *SymbolTable) defineFree(original Symbol) Symbol {
+func (t *SymbolTable) defineFree(original *Symbol) *Symbol {
 	// TODO: should we check duplicates?
 
 	t.freeSymbols = append(t.freeSymbols, original)
 
-	symbol := Symbol{
+	symbol := &Symbol{
 		Name:  original.Name,
 		Index: len(t.freeSymbols) - 1,
 		Scope: ScopeFree,
