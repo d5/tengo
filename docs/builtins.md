@@ -185,32 +185,40 @@ v := bytes(100)
 
 ## is_string
 
-Returns `true` if the object is string. Or it returns `false`.
+Returns `true` if the object's type is string. Or it returns `false`.
 
 ## is_int
 
-Returns `true` if the object is int. Or it returns `false`.
+Returns `true` if the object's type is int. Or it returns `false`.
 
 ## is_bool
 
-Returns `true` if the object is bool. Or it returns `false`.
+Returns `true` if the object's type is bool. Or it returns `false`.
 
 ## is_float
 
-Returns `true` if the object is float. Or it returns `false`.
+Returns `true` if the object's type is float. Or it returns `false`.
 
 ## is_char
 
-Returns `true` if the object is char. Or it returns `false`.
+Returns `true` if the object's type is char. Or it returns `false`.
 
 ## is_bytes
 
-Returns `true` if the object is bytes. Or it returns `false`.
+Returns `true` if the object's type is bytes. Or it returns `false`.
 
 ## is_error
 
-Returns `true` if the object is error. Or it returns `false`.
+Returns `true` if the object's type is error. Or it returns `false`.
 
 ## is_undefined
 
-Returns `true` if the object is undefined. Or it returns `false`.
+Returns `true` if the object's type is undefined. Or it returns `false`.
+
+## is_function
+
+Returns `true` if the object's type is function or closure. Or it returns `false`. Note that `is_function` returns `false` for builtin functions and user-provided callable objects. 
+
+## is_callable
+
+Returns `true` if the object is callable (e.g. function, closure, builtin function, or user-provided callable objects). Or it returns `false`.
