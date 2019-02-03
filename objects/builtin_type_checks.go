@@ -155,3 +155,29 @@ func builtinIsUndefined(args ...Object) (Object, error) {
 
 	return FalseValue, nil
 }
+
+func builtinIsFunction(args ...Object) (Object, error) {
+	if len(args) != 1 {
+		return nil, ErrWrongNumArguments
+	}
+
+	switch args[0].(type) {
+	case *CompiledFunction, *Closure:
+		return TrueValue, nil
+	}
+
+	return FalseValue, nil
+}
+
+func builtinIsCallable(args ...Object) (Object, error) {
+	if len(args) != 1 {
+		return nil, ErrWrongNumArguments
+	}
+
+	switch args[0].(type) {
+	case *CompiledFunction, *Closure, Callable: // BuiltinFunction is Callable
+		return TrueValue, nil
+	}
+
+	return FalseValue, nil
+}

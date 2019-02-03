@@ -113,6 +113,14 @@ var Builtins = []NamedBuiltinFunc{
 		Func: builtinIsUndefined,
 	},
 	{
+		Name: "is_function",
+		Func: builtinIsFunction,
+	},
+	{
+		Name: "is_callable",
+		Func: builtinIsCallable,
+	},
+	{
 		Name: "to_json",
 		Func: builtinToJSON,
 	},
