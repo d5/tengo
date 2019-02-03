@@ -217,22 +217,32 @@ if is_error(err1) {     // 'is_error' builtin function
 You can load other scripts as modules using `import` expression.
 
 Main script:
-```golang
-mod1 := import("./mod1") // assuming mod1.tengo file exists in the current directory 
-                         // same as 'import("./mod1.tengo")' or 'import("mod1")'
-mod1.func1(a)            // module function 
-a += mod1.foo            // module variable
-//mod1.foo = 5           // error: module variables are read-only
-```
-
-`mod1.tengo` file:
 
 ```golang
-func1 := func(x) { print(x) }
-foo := 2
+sum := import("./sum")   // assuming sum.tengo file exists in the current directory 
+                         // same as 'import("./sum.tengo")' or 'import("sum")'
+print(sum(10))           // module function 
 ```
 
-Basically, `import` expression returns all the global variables defined in the module as an ImmutableMap value.
+`sum.tengo` file:
+
+```golang
+base := 5
+
+export func(x) {
+    return x + base
+}
+```
+
+In Tengo, modules are very similar to functions.
+
+- `import` expression loads the module and execute like a function. 
+- Module should return a value using `export` statement.
+    - Module can return `export` any Tengo objects: int, string, map, array, function, etc.
+    - `export` in a module is like `return` in a function: it stops execution and return a value to the importing code.
+    - `export`-ed values are always immutable.
+    - If the module does not have any `export` statement, `import` expression simply returns `undefined`. _(Just like the function that has no `return`.)_  
+    - Note that `export` statement is completely ignored and not evaluated if the code is executed as a regular script.  
 
 Also, you can use `import` to load the [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md).
 

@@ -7,6 +7,7 @@ func (c *Compiler) currentInstructions() []byte {
 func (c *Compiler) enterScope() {
 	scope := CompilationScope{
 		instructions: make([]byte, 0),
+		symbolInit:   make(map[string]bool),
 	}
 
 	c.scopes = append(c.scopes, scope)

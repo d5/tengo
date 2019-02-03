@@ -76,6 +76,7 @@ const (
 	Immutable
 	If
 	Return
+	Export
 	True
 	False
 	In
@@ -149,6 +150,7 @@ var tokens = [...]string{
 	Immutable:    "immutable",
 	If:           "if",
 	Return:       "return",
+	Export:       "export",
 	True:         "true",
 	False:        "false",
 	In:           "in",

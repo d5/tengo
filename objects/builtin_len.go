@@ -12,6 +12,8 @@ func builtinLen(args ...Object) (Object, error) {
 	switch arg := args[0].(type) {
 	case *Array:
 		return &Int{Value: int64(len(arg.Value))}, nil
+	case *ImmutableArray:
+		return &Int{Value: int64(len(arg.Value))}, nil
 	case *String:
 		return &Int{Value: int64(len(arg.Value))}, nil
 	case *Bytes:

@@ -1,7 +1,6 @@
 package script_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/d5/tengo/assert"
@@ -58,23 +57,4 @@ func TestScript_DisableStdModule(t *testing.T) {
 	s.DisableStdModule("math")
 	_, err = s.Run()
 	assert.Error(t, err)
-}
-
-func TestScript_SetUserModuleLoader(t *testing.T) {
-	s := script.New([]byte(`math := import("mod1"); a := math.foo()`))
-	_, err := s.Run()
-	assert.Error(t, err)
-	s.SetUserModuleLoader(func(moduleName string) (res []byte, err error) {
-		if moduleName == "mod1" {
-			res = []byte(`foo := func() { return 5 }`)
-			return
-		}
-
-		err = errors.New("module not found")
-		return
-	})
-	c, err := s.Run()
-	assert.NoError(t, err)
-	assert.NotNil(t, c)
-	compiledGet(t, c, "a", int64(5))
 }

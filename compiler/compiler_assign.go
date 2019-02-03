@@ -105,12 +105,15 @@ func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
 		if numSel > 0 {
 			c.emit(OpSetSelLocal, symbol.Index, numSel)
 		} else {
-			if op == token.Define {
+			if op == token.Define && !symbol.LocalAssigned {
 				c.emit(OpDefineLocal, symbol.Index)
 			} else {
 				c.emit(OpSetLocal, symbol.Index)
 			}
 		}
+
+		// mark the symbol as local-assigned
+		symbol.LocalAssigned = true
 	case ScopeFree:
 		if numSel > 0 {
 			c.emit(OpSetSelFree, symbol.Index, numSel)

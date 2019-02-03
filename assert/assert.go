@@ -121,8 +121,8 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		if expected != actual.(rune) {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
-	case compiler.Symbol:
-		if !equalSymbol(expected, actual.(compiler.Symbol)) {
+	case *compiler.Symbol:
+		if !equalSymbol(expected, actual.(*compiler.Symbol)) {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
 	case source.Pos:
@@ -238,7 +238,7 @@ func equalIntSlice(a, b []int) bool {
 	return true
 }
 
-func equalSymbol(a, b compiler.Symbol) bool {
+func equalSymbol(a, b *compiler.Symbol) bool {
 	return a.Name == b.Name &&
 		a.Index == b.Index &&
 		a.Scope == b.Scope

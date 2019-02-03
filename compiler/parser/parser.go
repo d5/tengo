@@ -628,6 +628,8 @@ func (p *Parser) parseStmt() (stmt ast.Stmt) {
 		return s
 	case token.Return:
 		return p.parseReturnStmt()
+	case token.Export:
+		return p.parseExportStmt()
 	case token.If:
 		return p.parseIfStmt()
 	case token.For:
@@ -870,6 +872,23 @@ func (p *Parser) parseReturnStmt() ast.Stmt {
 
 	return &ast.ReturnStmt{
 		ReturnPos: pos,
+		Result:    x,
+	}
+}
+
+func (p *Parser) parseExportStmt() ast.Stmt {
+	if p.trace {
+		defer un(trace(p, "ExportStmt"))
+	}
+
+	pos := p.pos
+	p.expect(token.Export)
+
+	x := p.parseExpr()
+	p.expectSemi()
+
+	return &ast.ExportStmt{
+		ExportPos: pos,
 		Result:    x,
 	}
 }

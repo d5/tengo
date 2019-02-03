@@ -5,7 +5,6 @@
 - [Using Scripts](#using-scripts)
   - [Type Conversion Table](#type-conversion-table)
   - [User Types](#user-types)
-  - [Importing Scripts](#importing-scripts)
 - [Sandbox Environments](#sandbox-environments)
 - [Compiler and VM](#compiler-and-vm)
 
@@ -115,20 +114,6 @@ When adding a Variable _([Script.Add](https://godoc.org/github.com/d5/tengo/scri
 
 Users can add and use a custom user type in Tengo code by implementing [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface. Tengo runtime will treat the user types in the same way it does to the runtime types with no performance overhead. See [Object Types](https://github.com/d5/tengo/blob/master/docs/objects.md) for more details.
 
-### Importing Scripts
-
-A script can import and use another script in the same way it can load the standard library or the user module. `Script.AddModule` function adds another script as a named module.
-
-```golang
-mod1Script := script.New([]byte(`a := 5`))                  // mod1 script
-
-mainScript := script.New([]byte(`print(import("mod1").a)`)) // main script
-mainScript.AddModule("mod1", mod1Script)                    // add mod1 using name "mod1"
-mainScript.Run()                                            // prints "5"
-```
-
-Note that the script modules added using `Script.AddModule` will be compiled and run right before the main script is compiled.   
-
 ## Sandbox Environments
 
 To securely compile and execute _potentially_ unsafe script code, you can use the following Script functions.
@@ -145,6 +130,8 @@ s.DisableBuiltinFunction("print")
 _, err := s.Run() // compile error 
 ```
 
+Note that when a script is being added to another script as a module (via `Script.AddModule`), it does not inherit the disabled builtin function list from the main script.  
+
 #### Script.DisableStdModule(name string)
 
 DisableStdModule disables a [standard library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) module. Compile will report a compile-time error if the code tries to import the module with the given name.
@@ -156,6 +143,8 @@ s.DisableStdModule("exec")
 
 _, err := s.Run() // compile error 
 ```
+
+Note that when a script is being added to another script as a module (via `Script.AddModule`), it does not inherit the disabled standard module list from the main script.
 
 #### Script.SetUserModuleLoader(loader compiler.ModuleLoader)
 
@@ -172,6 +161,8 @@ s.SetUserModuleLoader(func(moduleName string) ([]byte, error) {
     return nil, errors.New("module not found")
 })
 ```
+
+Note that when a script is being added to another script as a module (via `Script.AddModule`), it does not inherit the module loader from the main script.
 
 ## Compiler and VM
 

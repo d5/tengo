@@ -21,7 +21,7 @@ type Compiler struct {
 	scopeIndex      int
 	moduleLoader    ModuleLoader
 	stdModules      map[string]*objects.ImmutableMap
-	compiledModules map[string]*objects.CompiledModule
+	compiledModules map[string]*objects.CompiledFunction
 	loops           []*Loop
 	loopIndex       int
 	trace           io.Writer
@@ -60,7 +60,7 @@ func NewCompiler(symbolTable *SymbolTable, stdModules map[string]*objects.Immuta
 		loopIndex:       -1,
 		trace:           trace,
 		stdModules:      stdModules,
-		compiledModules: make(map[string]*objects.CompiledModule),
+		compiledModules: make(map[string]*objects.CompiledFunction),
 	}
 }
 
@@ -383,7 +383,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.enterScope()
 
 		for _, p := range node.Type.Params.List {
-			c.symbolTable.Define(p.Name)
+			s := c.symbolTable.Define(p.Name)
+
+			// function arguments is not assigned directly.
+			s.LocalAssigned = true
 		}
 
 		if err := c.Compile(node.Body); err != nil {
@@ -402,6 +405,50 @@ func (c *Compiler) Compile(node ast.Node) error {
 		for _, s := range freeSymbols {
 			switch s.Scope {
 			case ScopeLocal:
+				if !s.LocalAssigned {
+					// Here, the closure is capturing a local variable that's not yet assigned its value.
+					// One example is a local recursive function:
+					//
+					//   func() {
+					//     foo := func(x) {
+					//       // ..
+					//       return foo(x-1)
+					//     }
+					//   }
+					//
+					// which translate into
+					//
+					//   0000 GETL    0
+					//   0002 CLOSURE ?     1
+					//   0006 DEFL    0
+					//
+					// . So the local variable (0) is being captured before it's assigned the value.
+					//
+					// Solution is to transform the code into something like this:
+					//
+					//   func() {
+					//     foo := undefined
+					//     foo = func(x) {
+					//       // ..
+					//       return foo(x-1)
+					//     }
+					//   }
+					//
+					// that is equivalent to
+					//
+					//   0000 NULL
+					//   0001 DEFL    0
+					//   0003 GETL    0
+					//   0005 CLOSURE ?     1
+					//   0009 SETL    0
+					//
+
+					c.emit(OpNull)
+					c.emit(OpDefineLocal, s.Index)
+
+					s.LocalAssigned = true
+				}
+
 				c.emit(OpGetLocal, s.Index)
 			case ScopeFree:
 				c.emit(OpGetFree, s.Index)
@@ -461,8 +508,27 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 
-			c.emit(OpModule, c.addConstant(userMod))
+			c.emit(OpConstant, c.addConstant(userMod))
+			c.emit(OpCall, 0)
 		}
+
+	case *ast.ExportStmt:
+		// export statement must be in top-level scope
+		if c.scopeIndex != 0 {
+			return fmt.Errorf("cannot use 'export' inside function")
+		}
+
+		// export statement is simply ignore when compiling non-module code
+		if c.parent == nil {
+			break
+		}
+
+		if err := c.Compile(node.Result); err != nil {
+			return err
+		}
+
+		c.emit(OpImmutable)
+		c.emit(OpReturnValue)
 
 	case *ast.ErrorExpr:
 		if err := c.Compile(node.Expr); err != nil {

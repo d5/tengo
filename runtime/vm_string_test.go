@@ -28,7 +28,7 @@ func TestString(t *testing.T) {
 	expectError(t, fmt.Sprintf("%s[%d]", strStr, strLen))
 
 	// slice operator
-	for low := 0; low < strLen; low++ {
+	for low := 0; low <= strLen; low++ {
 		for high := low; high <= strLen; high++ {
 			expect(t, fmt.Sprintf("out = %s[%d:%d]", strStr, low, high), str[low:high])
 			expect(t, fmt.Sprintf("out = %s[0 + %d : 0 + %d]", strStr, low, high), str[low:high])

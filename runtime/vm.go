@@ -47,10 +47,6 @@ type VM struct {
 func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object) *VM {
 	if globals == nil {
 		globals = make([]*objects.Object, GlobalsSize)
-	} else if len(globals) < GlobalsSize {
-		g := make([]*objects.Object, GlobalsSize)
-		copy(g, globals)
-		globals = g
 	}
 
 	frames := make([]Frame, MaxFrames)
@@ -648,7 +644,7 @@ func (v *VM) Run() error {
 			case *objects.Array:
 				numElements := int64(len(left.Value))
 
-				if lowIdx < 0 || lowIdx >= numElements {
+				if lowIdx < 0 || lowIdx > numElements {
 					return fmt.Errorf("index out of bounds: %d", lowIdx)
 				}
 				if highIdx < 0 {
@@ -673,7 +669,7 @@ func (v *VM) Run() error {
 			case *objects.ImmutableArray:
 				numElements := int64(len(left.Value))
 
-				if lowIdx < 0 || lowIdx >= numElements {
+				if lowIdx < 0 || lowIdx > numElements {
 					return fmt.Errorf("index out of bounds: %d", lowIdx)
 				}
 				if highIdx < 0 {
@@ -698,7 +694,7 @@ func (v *VM) Run() error {
 			case *objects.String:
 				numElements := int64(len(left.Value))
 
-				if lowIdx < 0 || lowIdx >= numElements {
+				if lowIdx < 0 || lowIdx > numElements {
 					return fmt.Errorf("index out of bounds: %d", lowIdx)
 				}
 				if highIdx < 0 {
@@ -822,14 +818,15 @@ func (v *VM) Run() error {
 			v.curIPLimit = len(v.curInsts) - 1
 			v.ip = v.curFrame.ip
 
-			v.sp = lastFrame.basePointer - 1
+			//v.sp = lastFrame.basePointer - 1
+			v.sp = lastFrame.basePointer
 
-			if v.sp >= StackSize {
+			if v.sp-1 >= StackSize {
 				return ErrStackOverflow
 			}
 
-			v.stack[v.sp] = undefinedPtr
-			v.sp++
+			v.stack[v.sp-1] = undefinedPtr
+			//v.sp++
 
 		case compiler.OpDefineLocal:
 			localIndex := int(v.curInsts[v.ip+1])
@@ -1005,14 +1002,6 @@ func (v *VM) Run() error {
 			v.stack[v.sp] = &val
 			v.sp++
 
-		case compiler.OpModule:
-			cidx := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
-			v.ip += 2
-
-			if err := v.importModule(v.constants[cidx].(*objects.CompiledModule)); err != nil {
-				return err
-			}
-
 		default:
 			return fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])
 		}
@@ -1020,7 +1009,7 @@ func (v *VM) Run() error {
 
 	// check if stack still has some objects left
 	if v.sp > 0 && atomic.LoadInt64(&v.aborting) == 0 {
-		return fmt.Errorf("non empty stack after execution")
+		return fmt.Errorf("non empty stack after execution: %d", v.sp)
 	}
 
 	return nil
@@ -1033,7 +1022,7 @@ func (v *VM) Globals() []*objects.Object {
 
 // FrameInfo returns the current function call frame information.
 func (v *VM) FrameInfo() (frameIndex, ip int) {
-	return v.framesIndex - 1, v.frames[v.framesIndex-1].ip
+	return v.framesIndex - 1, v.ip
 }
 
 func (v *VM) pushClosure(constIndex, numFree int) error {
@@ -1156,35 +1145,6 @@ func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Obje
 	//  |--------|
 	//  |  ARG1  | (BP+0) <- BP
 	//  |--------|
-
-	return nil
-}
-
-// TODO: should reuse *objects.ImmutableMap for the same imports?
-func (v *VM) importModule(compiledModule *objects.CompiledModule) error {
-	// import module is basically to create a new instance of VM
-	// and run the module code and retrieve all global variables after execution.
-	moduleVM := NewVM(&compiler.Bytecode{
-		Instructions: compiledModule.Instructions,
-		Constants:    v.constants,
-	}, nil)
-	if err := moduleVM.Run(); err != nil {
-		return err
-	}
-
-	mmValue := make(map[string]objects.Object)
-	for name, index := range compiledModule.Globals {
-		mmValue[name] = *moduleVM.globals[index]
-	}
-
-	var mm objects.Object = &objects.ImmutableMap{Value: mmValue}
-
-	if v.sp >= StackSize {
-		return ErrStackOverflow
-	}
-
-	v.stack[v.sp] = &mm
-	v.sp++
 
 	return nil
 }
