@@ -644,7 +644,7 @@ func (v *VM) Run() error {
 			case *objects.Array:
 				numElements := int64(len(left.Value))
 
-				if lowIdx < 0 || lowIdx >= numElements {
+				if lowIdx < 0 || lowIdx > numElements {
 					return fmt.Errorf("index out of bounds: %d", lowIdx)
 				}
 				if highIdx < 0 {
@@ -669,7 +669,7 @@ func (v *VM) Run() error {
 			case *objects.ImmutableArray:
 				numElements := int64(len(left.Value))
 
-				if lowIdx < 0 || lowIdx >= numElements {
+				if lowIdx < 0 || lowIdx > numElements {
 					return fmt.Errorf("index out of bounds: %d", lowIdx)
 				}
 				if highIdx < 0 {
@@ -694,7 +694,7 @@ func (v *VM) Run() error {
 			case *objects.String:
 				numElements := int64(len(left.Value))
 
-				if lowIdx < 0 || lowIdx >= numElements {
+				if lowIdx < 0 || lowIdx > numElements {
 					return fmt.Errorf("index out of bounds: %d", lowIdx)
 				}
 				if highIdx < 0 {
