@@ -61,6 +61,7 @@ func TestScanner_Scan(t *testing.T) {
 	                        bar` +
 			"`",
 		},
+		{token.Valid, "??"},
 		{token.String, "`\r`"},
 		{token.String, "`foo\r\nbar`"},
 		{token.Add, "+"},

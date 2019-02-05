@@ -3,6 +3,10 @@ package runtime_test
 import "testing"
 
 func TestCondExpr(t *testing.T) {
+	expect(t, `out = false ?? 5`, 5)
+	expect(t, `out = 1 ?? 5`, 1)
+	expect(t, `out = true ?? 5`, true)
+	expect(t, `out = 10 ?? 5`, 10)
 	expect(t, `out = true ? 5 : 10`, 5)
 	expect(t, `out = false ? 5 : 10`, 10)
 	expect(t, `out = (1 == 1) ? 2 + 3 : 12 - 2`, 5)

@@ -87,6 +87,8 @@ func (p *Parser) parseExpr() ast.Expr {
 	// ternary conditional expression
 	if p.token == token.Question {
 		return p.parseCondExpr(expr)
+	} else if p.token == token.Valid {
+		return p.parseValidExpr(expr)
 	}
 
 	return expr
@@ -133,6 +135,18 @@ func (p *Parser) parseCondExpr(cond ast.Expr) ast.Expr {
 		False:       falseExpr,
 		QuestionPos: questionPos,
 		ColonPos:    colonPos,
+	}
+}
+
+func (p *Parser) parseValidExpr(cond ast.Expr) ast.Expr {
+	questionPos := p.expect(token.Valid)
+	defaultExpr := p.parseExpr()
+
+	return &ast.ValidExpr{
+		Cond:        cond,
+		True:        cond,
+		False:       defaultExpr,
+		QuestionPos: questionPos,
 	}
 }
 

@@ -65,6 +65,7 @@ const (
 	Semicolon    // ;
 	Colon        // :
 	Question     // ?
+	Valid        // ??
 	_operatorEnd
 	_keywordBeg
 	Break

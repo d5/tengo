@@ -570,6 +570,33 @@ func (c *Compiler) Compile(node ast.Node) error {
 		// update second jump offset
 		curPos = len(c.currentInstructions())
 		c.changeOperand(jumpPos2, curPos)
+
+	case *ast.ValidExpr:
+		if err := c.Compile(node.Cond); err != nil {
+			return err
+		}
+
+		// first jump placeholder
+		jumpPos1 := c.emit(OpJumpFalsy, 0)
+
+		if err := c.Compile(node.True); err != nil {
+			return err
+		}
+
+		// second jump placeholder
+		jumpPos2 := c.emit(OpJump, 0)
+
+		// update first jump offset
+		curPos := len(c.currentInstructions())
+		c.changeOperand(jumpPos1, curPos)
+
+		if err := c.Compile(node.False); err != nil {
+			return err
+		}
+
+		// update second jump offset
+		curPos = len(c.currentInstructions())
+		c.changeOperand(jumpPos2, curPos)
 	}
 
 	return nil
