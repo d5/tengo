@@ -66,6 +66,16 @@ func makeOSFile(file *os.File) *objects.ImmutableMap {
 					return &objects.Int{Value: res}, nil
 				},
 			},
+			// stat() => imap(fileinfo)/error
+			"stat": &objects.UserFunction{
+				Value: func(args ...objects.Object) (ret objects.Object, err error) {
+					if len(args) != 0 {
+						return nil, objects.ErrWrongNumArguments
+					}
+
+					return osStat(&objects.String{Value: file.Name()})
+				},
+			},
 		},
 	}
 }

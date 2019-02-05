@@ -77,6 +77,40 @@ var osModule = map[string]objects.Object{
 	"start_process":       &objects.UserFunction{Value: osStartProcess}, // start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
 	"exec_look_path":      FuncASRSE(exec.LookPath),                     // exec_look_path(file) => string/error
 	"exec":                &objects.UserFunction{Value: osExec},         // exec(name, args...) => command
+	"stat":                &objects.UserFunction{Value: osStat},         // stat(name) => imap(fileinfo)/error
+}
+
+func osStat(args ...objects.Object) (ret objects.Object, err error) {
+	if len(args) != 1 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	fname, ok := objects.ToString(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	stat, err := os.Stat(fname)
+	if err != nil {
+		return wrapError(err), nil
+	}
+
+	fstat := &objects.ImmutableMap{
+		Value: map[string]objects.Object{
+			"name":  &objects.String{Value: stat.Name()},
+			"mtime": &objects.Time{Value: stat.ModTime()},
+			"size":  &objects.Int{Value: stat.Size()},
+			"mode":  &objects.Int{Value: int64(stat.Mode())},
+		},
+	}
+
+	if stat.IsDir() {
+		fstat.Value["directory"] = objects.TrueValue
+	} else {
+		fstat.Value["directory"] = objects.FalseValue
+	}
+
+	return fstat, nil
 }
 
 func osCreate(args ...objects.Object) (objects.Object, error) {
