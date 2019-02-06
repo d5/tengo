@@ -68,6 +68,7 @@ os := import("os")
 - `remove_all(name string) => error `: removes path and any children it contains.
 - `rename(oldpath string, newpath string) => error `: renames (moves) oldpath to newpath.
 - `setenv(key string, value string) => error `: sets the value of the environment variable named by the key.
+- `stat(filename string) => FileInfo/error`: returns a file info structure describing the file
 - `symlink(oldname string newname string) => error `: creates newname as a symbolic link to oldname.
 - `temp_dir() => string `: returns the default directory to use for temporary files.
 - `truncate(name string, size int) => error `: changes the size of the named file.
@@ -98,6 +99,7 @@ file.close()
 - `write(bytes) => int/error`: writes len(b) bytes to the File.
 - `write_string(string) => int/error`: is like 'write', but writes the contents of string s rather than a slice of bytes.
 - `read(bytes) => int/error`: reads up to len(b) bytes from the File.
+- `stat() => FileInfo/error`: returns a file info structure describing the file
 - `chmod(mode int) => error`: changes the mode of the file to mode.
 - `seek(offset int, whence int) => int/error`: sets the offset for the next Read or Write on file to offset, interpreted according to whence: 0 means relative to the origin of the file, 1 means relative to the current offset, and 2 means relative to the end.
 
@@ -130,6 +132,14 @@ pid := stat.pid()
 cmd := exec.command("echo", ["foo", "bar"])
 output := cmd.output()
 ```
+
+## FileInfo
+
+- `name`: name of the file the info describes
+- `mtime`: time the file was last modified
+- `size`: file size in bytes
+- `mode`: file permissions as in int, comparable to octal permissions
+- `directory`: boolean indicating if the file is a directory
 
 ## Command
 
