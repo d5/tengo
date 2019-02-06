@@ -63,6 +63,7 @@ os := import("os")
 - `lookup_env(key string) => string/false`: retrieves the value of the environment variable named by the key.
 - `mkdir(name string, perm int) => error `: creates a new directory with the specified name and permission bits (before umask).
 - `mkdir_all(name string, perm int) => error `: creates a directory named path, along with any necessary parents, and returns nil, or else returns an error.
+- `read_file(name string) => bytes/error `: reads the contents of a file into a byte array
 - `readlink(name string) => string/error `: returns the destination of the named symbolic link.
 - `remove(name string) => error `: removes the named file or (empty) directory.
 - `remove_all(name string) => error `: removes path and any children it contains.
