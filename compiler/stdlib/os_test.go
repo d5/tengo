@@ -5,25 +5,23 @@ import (
 	"os"
 	"testing"
 
+	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/objects"
 )
 
 func TestReadFile(t *testing.T) {
 	content := []byte("the quick brown fox jumps over the lazy dog")
 	tf, err := ioutil.TempFile("", "test")
-	if err != nil {
-		t.Logf("could not open tempfile: %s", err)
+	if !assert.NoError(t, err) {
 		return
 	}
-	defer os.Remove(tf.Name())
+	defer func() { _ = os.Remove(tf.Name()) }()
 
 	_, err = tf.Write(content)
-	if err != nil {
-		t.Logf("could not write temp content: %s", err)
+	if !assert.NoError(t, err) {
 		return
 	}
-
-	tf.Close()
+	_ = tf.Close()
 
 	module(t, "os").call("read_file", tf.Name()).expect(&objects.Bytes{Value: content})
 }
@@ -38,19 +36,16 @@ func TestFileStatArgs(t *testing.T) {
 func TestFileStatFile(t *testing.T) {
 	content := []byte("the quick brown fox jumps over the lazy dog")
 	tf, err := ioutil.TempFile("", "test")
-	if err != nil {
-		t.Logf("could not open tempfile: %s", err)
+	if !assert.NoError(t, err) {
 		return
 	}
-	defer os.Remove(tf.Name())
+	defer func() { _ = os.Remove(tf.Name()) }()
 
 	_, err = tf.Write(content)
-	if err != nil {
-		t.Logf("could not write temp content: %s", err)
+	if !assert.NoError(t, err) {
 		return
 	}
-
-	tf.Close()
+	_ = tf.Close()
 
 	stat, err := os.Stat(tf.Name())
 	if err != nil {
@@ -71,15 +66,13 @@ func TestFileStatFile(t *testing.T) {
 
 func TestFileStatDir(t *testing.T) {
 	td, err := ioutil.TempDir("", "test")
-	if err != nil {
-		t.Logf("could not open tempdir: %s", err)
+	if !assert.NoError(t, err) {
 		return
 	}
-	defer os.RemoveAll(td)
+	defer func() { _ = os.RemoveAll(td) }()
 
 	stat, err := os.Stat(td)
-	if err != nil {
-		t.Logf("could not get tmp dir stat: %s", err)
+	if !assert.NoError(t, err) {
 		return
 	}
 
