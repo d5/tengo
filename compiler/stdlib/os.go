@@ -2,6 +2,7 @@ package stdlib
 
 import (
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -78,6 +79,25 @@ var osModule = map[string]objects.Object{
 	"exec_look_path":      FuncASRSE(exec.LookPath),                     // exec_look_path(file) => string/error
 	"exec":                &objects.UserFunction{Value: osExec},         // exec(name, args...) => command
 	"stat":                &objects.UserFunction{Value: osStat},         // stat(name) => imap(fileinfo)/error
+	"read_file":           &objects.UserFunction{Value: osReadFile},     // readfile(name) => array(byte)/error
+}
+
+func osReadFile(args ...objects.Object) (ret objects.Object, err error) {
+	if len(args) != 1 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	fname, ok := objects.ToString(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidTypeConversion
+	}
+
+	bytes, err := ioutil.ReadFile(fname)
+	if err != nil {
+		return wrapError(err), nil
+	}
+
+	return &objects.Bytes{Value: bytes}, nil
 }
 
 func osStat(args ...objects.Object) (ret objects.Object, err error) {

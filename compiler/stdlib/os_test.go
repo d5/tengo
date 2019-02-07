@@ -8,6 +8,29 @@ import (
 	"github.com/d5/tengo/objects"
 )
 
+func TestReadFile(t *testing.T) {
+	content := []byte("the quick brown fox jumps over the lazy dog")
+	tf, err := ioutil.TempFile("", "test")
+	if err != nil {
+		t.Logf("could not open tempfile: %s", err)
+		return
+	}
+	defer os.Remove(tf.Name())
+
+	_, err = tf.Write(content)
+	if err != nil {
+		t.Logf("could not write temp content: %s", err)
+		return
+	}
+
+	tf.Close()
+
+	module(t, "os").call("read_file", tf.Name()).expect(&objects.Bytes{Value: content})
+}
+
+func TestReadFileArgs(t *testing.T) {
+	module(t, "os").call("read_file").expectError()
+}
 func TestFileStatArgs(t *testing.T) {
 	module(t, "os").call("stat").expectError()
 }
