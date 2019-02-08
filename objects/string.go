@@ -73,7 +73,7 @@ func (o *String) IndexGet(index Object) (res Object, err error) {
 	}
 
 	if idxVal < 0 || idxVal >= len(o.runeStr) {
-		err = ErrIndexOutOfBounds
+		res = UndefinedValue
 		return
 	}
 

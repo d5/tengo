@@ -66,7 +66,7 @@ func (o *Bytes) IndexGet(index Object) (res Object, err error) {
 	idxVal := int(intIdx.Value)
 
 	if idxVal < 0 || idxVal >= len(o.Value) {
-		err = ErrIndexOutOfBounds
+		res = UndefinedValue
 		return
 	}
 

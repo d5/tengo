@@ -35,3 +35,8 @@ func (o *Undefined) IsFalsy() bool {
 func (o *Undefined) Equals(x Object) bool {
 	return o == x
 }
+
+// IndexGet returns an element at a given index.
+func (o *Undefined) IndexGet(index Object) (Object, error) {
+	return UndefinedValue, nil
+}
