@@ -1,4 +1,4 @@
-# Module - "os"
+# Module - "rand"
 
 ```golang
 rand := import("rand")
