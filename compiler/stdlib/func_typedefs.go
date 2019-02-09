@@ -34,6 +34,60 @@ func FuncARI(fn func() int) *objects.UserFunction {
 	}
 }
 
+// FuncARI64 transform a function of 'func() int64' signature
+// into a user function object.
+func FuncARI64(fn func() int64) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 0 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			return &objects.Int{Value: fn()}, nil
+		},
+	}
+}
+
+// FuncAI64RI64 transform a function of 'func(int64) int64' signature
+// into a user function object.
+func FuncAI64RI64(fn func(int64) int64) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			i1, ok := objects.ToInt64(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			return &objects.Int{Value: fn(i1)}, nil
+		},
+	}
+}
+
+// FuncAI64R transform a function of 'func(int64)' signature
+// into a user function object.
+func FuncAI64R(fn func(int64)) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			i1, ok := objects.ToInt64(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			fn(i1)
+
+			return objects.UndefinedValue, nil
+		},
+	}
+}
+
 // FuncARB transform a function of 'func() bool' signature
 // into a user function object.
 func FuncARB(fn func() bool) *objects.UserFunction {
@@ -164,6 +218,32 @@ func FuncARIsE(fn func() ([]int, error)) *objects.UserFunction {
 			if err != nil {
 				return wrapError(err), nil
 			}
+
+			arr := &objects.Array{}
+			for _, v := range res {
+				arr.Value = append(arr.Value, &objects.Int{Value: int64(v)})
+			}
+
+			return arr, nil
+		},
+	}
+}
+
+// FuncAIRIs transform a function of 'func(int) []int' signature
+// into a user function object.
+func FuncAIRIs(fn func(int) []int) *objects.UserFunction {
+	return &objects.UserFunction{
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			if len(args) != 1 {
+				return nil, objects.ErrWrongNumArguments
+			}
+
+			i1, ok := objects.ToInt(args[0])
+			if !ok {
+				return nil, objects.ErrInvalidTypeConversion
+			}
+
+			res := fn(i1)
 
 			arr := &objects.Array{}
 			for _, v := range res {

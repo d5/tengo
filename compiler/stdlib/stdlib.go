@@ -8,4 +8,5 @@ var Modules = map[string]*objects.ImmutableMap{
 	"os":    {Value: osModule},
 	"text":  {Value: textModule},
 	"times": {Value: timesModule},
+	"rand":  {Value: randModule},
 }
