@@ -122,6 +122,13 @@ func object(v interface{}) objects.Object {
 		return &objects.ImmutableArray{Value: objs}
 	case time.Time:
 		return &objects.Time{Value: v}
+	case []int:
+		var objs []objects.Object
+		for _, e := range v {
+			objs = append(objs, &objects.Int{Value: int64(e)})
+		}
+
+		return &objects.Array{Value: objs}
 	}
 
 	panic(fmt.Errorf("unknown type: %T", v))

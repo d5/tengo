@@ -448,6 +448,51 @@ func TestFuncAIRS(t *testing.T) {
 	assert.Equal(t, objects.ErrWrongNumArguments, err)
 }
 
+func TestFuncAIRIs(t *testing.T) {
+	uf := stdlib.FuncAIRIs(func(a int) []int { return []int{a, a} })
+	ret, err := uf.Call(&objects.Int{Value: 55})
+	assert.NoError(t, err)
+	assert.Equal(t, array(&objects.Int{Value: 55}, &objects.Int{Value: 55}), ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncAI64R(t *testing.T) {
+	uf := stdlib.FuncAIR(func(a int) {})
+	ret, err := uf.Call(&objects.Int{Value: 55})
+	assert.NoError(t, err)
+	assert.Equal(t, objects.UndefinedValue, ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncARI64(t *testing.T) {
+	uf := stdlib.FuncARI64(func() int64 { return 55 })
+	ret, err := uf.Call()
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Int{Value: 55}, ret)
+	ret, err = uf.Call(&objects.Int{Value: 55})
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncASsSRS(t *testing.T) {
+	uf := stdlib.FuncASsSRS(func(a []string, b string) string { return strings.Join(a, b) })
+	ret, err := uf.Call(array(&objects.String{Value: "abc"}, &objects.String{Value: "def"}), &objects.String{Value: "-"})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.String{Value: "abc-def"}, ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
+func TestFuncAI64RI64(t *testing.T) {
+	uf := stdlib.FuncAI64RI64(func(a int64) int64 { return a * 2 })
+	ret, err := uf.Call(&objects.Int{Value: 55})
+	assert.NoError(t, err)
+	assert.Equal(t, &objects.Int{Value: 110}, ret)
+	ret, err = uf.Call()
+	assert.Equal(t, objects.ErrWrongNumArguments, err)
+}
+
 func array(elements ...objects.Object) *objects.Array {
 	return &objects.Array{Value: elements}
 }
