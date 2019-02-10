@@ -94,7 +94,7 @@ func (s *Script) Compile() (*Compiled, error) {
 		return nil, fmt.Errorf("parse error: %s", err.Error())
 	}
 
-	c := compiler.NewCompiler(symbolTable, stdModules, nil)
+	c := compiler.NewCompiler(symbolTable, nil, stdModules, nil)
 
 	if s.userModuleLoader != nil {
 		c.SetModuleLoader(s.userModuleLoader)

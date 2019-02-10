@@ -186,6 +186,8 @@ func runREPL(in io.Reader, out io.Writer) {
 		symbolTable.DefineBuiltin(idx, fn.Name)
 	}
 
+	var constants []objects.Object
+
 	for {
 		_, _ = fmt.Fprintf(out, replPrompt)
 
@@ -204,13 +206,15 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		file = addPrints(file)
 
-		c := compiler.NewCompiler(symbolTable, nil, nil)
+		c := compiler.NewCompiler(symbolTable, constants, nil, nil)
 		if err := c.Compile(file); err != nil {
 			_, _ = fmt.Fprintf(out, "Compilation error:\n %s\n", err.Error())
 			continue
 		}
 
-		machine := runtime.NewVM(c.Bytecode(), globals)
+		bytecode := c.Bytecode()
+
+		machine := runtime.NewVM(bytecode, globals)
 		if err != nil {
 			_, _ = fmt.Fprintf(out, "VM error:\n %s\n", err.Error())
 			continue
@@ -219,6 +223,8 @@ func runREPL(in io.Reader, out io.Writer) {
 			_, _ = fmt.Fprintf(out, "Execution error:\n %s\n", err.Error())
 			continue
 		}
+
+		constants = bytecode.Constants
 	}
 }
 
@@ -231,7 +237,7 @@ func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(nil, nil, nil)
+	c := compiler.NewCompiler(nil, nil, nil, nil)
 	if err := c.Compile(file); err != nil {
 		return nil, err
 	}
