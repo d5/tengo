@@ -68,6 +68,8 @@ _See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.
 
 You can use the dot selector (`.`) and indexer (`[]`) operator to read or write elements of arrays, strings, or maps.
 
+Reading a nonexistent index returns `Undefined` value.
+
 ```golang
 ["one", "two", "three"][1]	// == "two"
 
@@ -80,6 +82,8 @@ m.a				// == 1
 m["b"][1]			// == 3
 m.c()				// == 10
 m.x = 5				// add 'x' to map 'm'
+m["b"][5]                       // == undefined
+m["b"][5].d                     // == undefined
 //m.b[5] = 0			// but this is an error: index out of bounds
 ```
 > [Run in Playground](https://tengolang.com/?s=d510c75ed8f06ef1e22c1aaf8a7d4565c793514c)
@@ -91,6 +95,7 @@ a := [1, 2, 3, 4, 5][1:3]	// == [2, 3]
 b := [1, 2, 3, 4, 5][3:]	// == [4, 5]
 c := [1, 2, 3, 4, 5][:3]	// == [1, 2, 3]
 d := "hello world"[2:10]	// == "llo worl"
+c := [1, 2, 3, 4, 5][-1:10]    // == [1, 2, 3, 4, 5]
 ```
 > [Run in Playground](https://tengolang.com/?s=214ab490bb24549578770984985f6b161aed915d)
 

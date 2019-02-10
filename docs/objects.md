@@ -84,7 +84,7 @@ If `IndexGet` returns an error (`err`), the VM will treat it as a run-time error
 
 Array and Map implementation forces the type of index Object to be Int and String respectively, but, it's not a required behavior of the VM. It is completely okay to take various index types as long as it is consistent. 
 
-By convention, Array or Array-like types return `ErrIndexOutOfBounds` error (as a runtime error) when the index is invalid (out of the bounds), and, Map or Map-like types return `Undefined` value (instead of a run-time error) when the key does not exist. But, again, this is not a required behavior.
+By convention, Array or Array-like types and Map or Map-like types return `Undefined` value when the key does not exist. But, again, this is not a required behavior.
 
 ### Index-Assignable Interface
 
@@ -97,8 +97,6 @@ type IndexAssignable interface {
 ```
 
 Array and Map implementation forces the type of index Object to be Int and String respectively, but, it's not a required behavior of the VM. It is completely okay to take various index types as long as it is consistent. 
-
-By convention, Array or Array-like types return `ErrIndexOutOfBounds` error (as a runtime error) when the index is invalid (out of the bounds).
 
 ### Iterable Interface
 

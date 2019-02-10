@@ -631,30 +631,32 @@ func (v *VM) Run() error {
 				}
 			}
 
-			var highIdx int64
-			if *high == objects.UndefinedValue {
-				highIdx = -1
-			} else if high, ok := (*high).(*objects.Int); ok {
-				highIdx = high.Value
-			} else {
-				return fmt.Errorf("non-integer slice index: %s", high.TypeName())
-			}
-
 			switch left := (*left).(type) {
 			case *objects.Array:
 				numElements := int64(len(left.Value))
-
-				if lowIdx < 0 || lowIdx > numElements {
-					return fmt.Errorf("index out of bounds: %d", lowIdx)
-				}
-				if highIdx < 0 {
+				var highIdx int64
+				if *high == objects.UndefinedValue {
 					highIdx = numElements
-				} else if highIdx < 0 || highIdx > numElements {
-					return fmt.Errorf("index out of bounds: %d", highIdx)
+				} else if high, ok := (*high).(*objects.Int); ok {
+					highIdx = high.Value
+				} else {
+					return fmt.Errorf("non-integer slice index: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
 					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
+				}
+
+				if lowIdx < 0 {
+					lowIdx = 0
+				} else if lowIdx > numElements {
+					lowIdx = numElements
+				}
+
+				if highIdx < 0 {
+					highIdx = 0
+				} else if highIdx > numElements {
+					highIdx = numElements
 				}
 
 				if v.sp >= StackSize {
@@ -662,24 +664,34 @@ func (v *VM) Run() error {
 				}
 
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
-
 				v.stack[v.sp] = &val
 				v.sp++
 
 			case *objects.ImmutableArray:
 				numElements := int64(len(left.Value))
-
-				if lowIdx < 0 || lowIdx > numElements {
-					return fmt.Errorf("index out of bounds: %d", lowIdx)
-				}
-				if highIdx < 0 {
+				var highIdx int64
+				if *high == objects.UndefinedValue {
 					highIdx = numElements
-				} else if highIdx < 0 || highIdx > numElements {
-					return fmt.Errorf("index out of bounds: %d", highIdx)
+				} else if high, ok := (*high).(*objects.Int); ok {
+					highIdx = high.Value
+				} else {
+					return fmt.Errorf("non-integer slice index: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
 					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
+				}
+
+				if lowIdx < 0 {
+					lowIdx = 0
+				} else if lowIdx > numElements {
+					lowIdx = numElements
+				}
+
+				if highIdx < 0 {
+					highIdx = 0
+				} else if highIdx > numElements {
+					highIdx = numElements
 				}
 
 				if v.sp >= StackSize {
@@ -693,18 +705,29 @@ func (v *VM) Run() error {
 
 			case *objects.String:
 				numElements := int64(len(left.Value))
-
-				if lowIdx < 0 || lowIdx > numElements {
-					return fmt.Errorf("index out of bounds: %d", lowIdx)
-				}
-				if highIdx < 0 {
+				var highIdx int64
+				if *high == objects.UndefinedValue {
 					highIdx = numElements
-				} else if highIdx < 0 || highIdx > numElements {
-					return fmt.Errorf("index out of bounds: %d", highIdx)
+				} else if high, ok := (*high).(*objects.Int); ok {
+					highIdx = high.Value
+				} else {
+					return fmt.Errorf("non-integer slice index: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
 					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
+				}
+
+				if lowIdx < 0 {
+					lowIdx = 0
+				} else if lowIdx > numElements {
+					lowIdx = numElements
+				}
+
+				if highIdx < 0 {
+					highIdx = 0
+				} else if highIdx > numElements {
+					highIdx = numElements
 				}
 
 				if v.sp >= StackSize {
@@ -718,18 +741,29 @@ func (v *VM) Run() error {
 
 			case *objects.Bytes:
 				numElements := int64(len(left.Value))
-
-				if lowIdx < 0 || lowIdx >= numElements {
-					return fmt.Errorf("index out of bounds: %d", lowIdx)
-				}
-				if highIdx < 0 {
+				var highIdx int64
+				if *high == objects.UndefinedValue {
 					highIdx = numElements
-				} else if highIdx < 0 || highIdx > numElements {
-					return fmt.Errorf("index out of bounds: %d", highIdx)
+				} else if high, ok := (*high).(*objects.Int); ok {
+					highIdx = high.Value
+				} else {
+					return fmt.Errorf("non-integer slice index: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
 					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
+				}
+
+				if lowIdx < 0 {
+					lowIdx = 0
+				} else if lowIdx > numElements {
+					lowIdx = numElements
+				}
+
+				if highIdx < 0 {
+					highIdx = 0
+				} else if highIdx > numElements {
+					highIdx = numElements
 				}
 
 				if v.sp >= StackSize {
@@ -740,9 +774,6 @@ func (v *VM) Run() error {
 
 				v.stack[v.sp] = &val
 				v.sp++
-
-			default:
-				return fmt.Errorf("cannot slice %s", left.TypeName())
 			}
 
 		case compiler.OpCall:

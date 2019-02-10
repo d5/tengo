@@ -1,6 +1,10 @@
 package runtime_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/d5/tengo/objects"
+)
 
 func TestImmutable(t *testing.T) {
 	// primitive types are already immutable values
@@ -26,6 +30,7 @@ func TestImmutable(t *testing.T) {
 	expect(t, `out = immutable([1, 2, 3, 4])[1]`, 2)
 	expect(t, `out = immutable([1, 2, 3, 4])[1:3]`, ARR{2, 3})
 	expect(t, `a := immutable([1,2,3]); a = 5; out = a`, 5)
+	expect(t, `a := immutable([1, 2, 3]); out = a[5]`, objects.UndefinedValue)
 
 	// map
 	expectError(t, `a := immutable({b: 1, c: 2}); a.b = 5`)
@@ -42,6 +47,7 @@ func TestImmutable(t *testing.T) {
 	expect(t, `out = immutable({a:1,b:2}).b`, 2)
 	expect(t, `out = immutable({a:1,b:2})["b"]`, 2)
 	expect(t, `a := immutable({a:1,b:2}); a = 5; out = 5`, 5)
+	expect(t, `a := immutable({a:1,b:2}); out = a.c`, objects.UndefinedValue)
 
 	expect(t, `a := immutable({b: 5, c: "foo"}); out = a.b`, 5)
 	expectError(t, `a := immutable({b: 5, c: "foo"}); a.b = 10`)
