@@ -34,7 +34,7 @@ type Compiler struct {
 // a new symbol table and use the default builtin functions. Likewise, standard
 // modules can be explicitly provided if user wants to add or remove some modules.
 // By default, Compile will use all the standard modules otherwise.
-func NewCompiler(symbolTable *SymbolTable, stdModules map[string]*objects.ImmutableMap, trace io.Writer) *Compiler {
+func NewCompiler(symbolTable *SymbolTable, constants []objects.Object, stdModules map[string]*objects.ImmutableMap, trace io.Writer) *Compiler {
 	mainScope := CompilationScope{
 		instructions: make([]byte, 0),
 	}
@@ -55,6 +55,7 @@ func NewCompiler(symbolTable *SymbolTable, stdModules map[string]*objects.Immuta
 
 	return &Compiler{
 		symbolTable:     symbolTable,
+		constants:       constants,
 		scopes:          []CompilationScope{mainScope},
 		scopeIndex:      0,
 		loopIndex:       -1,
@@ -591,7 +592,7 @@ func (c *Compiler) SetModuleLoader(moduleLoader ModuleLoader) {
 }
 
 func (c *Compiler) fork(moduleName string, symbolTable *SymbolTable) *Compiler {
-	child := NewCompiler(symbolTable, c.stdModules, c.trace)
+	child := NewCompiler(symbolTable, nil, c.stdModules, c.trace)
 	child.moduleName = moduleName       // name of the module to compile
 	child.parent = c                    // parent to set to current compiler
 	child.moduleLoader = c.moduleLoader // share module loader

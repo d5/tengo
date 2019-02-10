@@ -230,7 +230,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(symTable, nil, tr)
+	c := compiler.NewCompiler(symTable, nil, nil, tr)
 	c.SetModuleLoader(func(moduleName string) ([]byte, error) {
 		if src, ok := userModules[moduleName]; ok {
 			return []byte(src), nil
