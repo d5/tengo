@@ -2,7 +2,9 @@ package compiler
 
 import (
 	"encoding/gob"
+	"fmt"
 	"io"
+	"reflect"
 
 	"github.com/d5/tengo/objects"
 )
@@ -43,6 +45,35 @@ func (b *Bytecode) Encode(w io.Writer) error {
 
 	// constants
 	return enc.Encode(b.Constants)
+}
+
+// FormatInstructions returns human readable string representations of
+// compiled instructions.
+func (b *Bytecode) FormatInstructions() []string {
+	return FormatInstructions(b.Instructions, 0)
+}
+
+// FormatConstants returns human readable string representations of
+// compiled constants.
+func (b *Bytecode) FormatConstants() (output []string) {
+	for cidx, cn := range b.Constants {
+		switch cn := cn.(type) {
+		case *objects.CompiledFunction:
+			output = append(output, fmt.Sprintf("[% 3d] (Compiled Function|%p)", cidx, &cn))
+			for _, l := range FormatInstructions(cn.Instructions, 0) {
+				output = append(output, fmt.Sprintf("     %s", l))
+			}
+		case *objects.CompiledModule:
+			output = append(output, fmt.Sprintf("[% 3d] (Compiled Module|%p)", cidx, &cn))
+			for _, l := range FormatInstructions(cn.Instructions, 0) {
+				output = append(output, fmt.Sprintf("     %s", l))
+			}
+		default:
+			output = append(output, fmt.Sprintf("[% 3d] %s (%s|%p)", cidx, cn, reflect.TypeOf(cn).Elem().Name(), &cn))
+		}
+	}
+
+	return
 }
 
 func cleanupObjects(o objects.Object) objects.Object {
