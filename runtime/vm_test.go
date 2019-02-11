@@ -245,25 +245,8 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	}
 
 	bytecode := c.Bytecode()
-	var constStr []string
-	for cidx, cn := range bytecode.Constants {
-		switch cn := cn.(type) {
-		case *objects.CompiledFunction:
-			constStr = append(constStr, fmt.Sprintf("[% 3d] (Compiled Function|%p)", cidx, &cn))
-			for _, l := range compiler.FormatInstructions(cn.Instructions, 0) {
-				constStr = append(constStr, fmt.Sprintf("     %s", l))
-			}
-		case *objects.CompiledModule:
-			constStr = append(constStr, fmt.Sprintf("[% 3d] (Compiled Module|%p)", cidx, &cn))
-			for _, l := range compiler.FormatInstructions(cn.Instructions, 0) {
-				constStr = append(constStr, fmt.Sprintf("     %s", l))
-			}
-		default:
-			constStr = append(constStr, fmt.Sprintf("[% 3d] %s (%s|%p)", cidx, cn, reflect.TypeOf(cn).Elem().Name(), &cn))
-		}
-	}
-	trace = append(trace, fmt.Sprintf("\n[Compiled Constants]\n\n%s", strings.Join(constStr, "\n")))
-	trace = append(trace, fmt.Sprintf("\n[Compiled Instructions]\n\n%s\n", strings.Join(compiler.FormatInstructions(bytecode.Instructions, 0), "\n")))
+	trace = append(trace, fmt.Sprintf("\n[Compiled Constants]\n\n%s", strings.Join(bytecode.FormatConstants(), "\n")))
+	trace = append(trace, fmt.Sprintf("\n[Compiled Instructions]\n\n%s\n", strings.Join(bytecode.FormatInstructions(), "\n")))
 
 	v = runtime.NewVM(bytecode, globals)
 

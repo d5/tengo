@@ -2,7 +2,6 @@ package compiler_test
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -985,20 +984,10 @@ func traceCompile(input string, symbols map[string]objects.Object) (res *compile
 	err = c.Compile(parsed)
 	{
 		trace = append(trace, fmt.Sprintf("Compiler Trace:\n%s", strings.Join(tr.Out, "")))
+
 		bytecode := c.Bytecode()
-		var constStr []string
-		for cidx, cn := range bytecode.Constants {
-			if cmFn, ok := cn.(*objects.CompiledFunction); ok {
-				constStr = append(constStr, fmt.Sprintf("[% 3d] (Compiled Function|%p)", cidx, cn))
-				for _, l := range compiler.FormatInstructions(cmFn.Instructions, 0) {
-					constStr = append(constStr, fmt.Sprintf("     %s", l))
-				}
-			} else {
-				constStr = append(constStr, fmt.Sprintf("[% 3d] %s (%s|%p)", cidx, cn, reflect.TypeOf(cn).Name(), cn))
-			}
-		}
-		trace = append(trace, fmt.Sprintf("Compiled Constants:\n%s", strings.Join(constStr, "\n")))
-		trace = append(trace, fmt.Sprintf("Compiled Instructions:\n%s\n", strings.Join(compiler.FormatInstructions(bytecode.Instructions, 0), "\n")))
+		trace = append(trace, fmt.Sprintf("Compiled Constants:\n%s", strings.Join(bytecode.FormatConstants(), "\n")))
+		trace = append(trace, fmt.Sprintf("Compiled Instructions:\n%s\n", strings.Join(bytecode.FormatInstructions(), "\n")))
 	}
 	if err != nil {
 		return
