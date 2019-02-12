@@ -63,7 +63,7 @@ func (t *SymbolTable) Resolve(name string) (symbol *Symbol, depth int, ok bool) 
 
 		// if symbol is defined in parent table and if it's not global/builtin
 		// then it's free variable.
-		if depth > 0 && symbol.Scope != ScopeGlobal && symbol.Scope != ScopeBuiltin {
+		if !t.block && depth > 0 && symbol.Scope != ScopeGlobal && symbol.Scope != ScopeBuiltin {
 			return t.defineFree(symbol), depth, true
 		}
 

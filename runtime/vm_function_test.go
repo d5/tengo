@@ -219,4 +219,38 @@ out = func() {
 }()`, 15)
 
 	expectError(t, `return 5`)
+
+	// closure and block scopes
+	expect(t, `
+func() {
+	a := 10
+	func() {
+		b := 5
+		if true {
+			out = a + 5
+		}
+	}()
+}()`, 15)
+	expect(t, `
+func() {
+	a := 10
+	b := func() { return 5 }
+	func() {
+		if b() {
+			out = a + b()
+		}
+	}()
+}()`, 15)
+	expect(t, `
+func() {
+	a := 10
+	func() {
+		b := func() { return 5 }
+		func() {
+			if true {
+				out = a + b()
+			}
+		}()
+	}()
+}()`, 15)
 }
