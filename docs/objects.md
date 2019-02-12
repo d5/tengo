@@ -140,7 +140,7 @@ These are the basic types Tengo runtime supports out of the box:
 - [Iterators](https://godoc.org/github.com/d5/tengo/objects#Iterator): [StringIterator](https://godoc.org/github.com/d5/tengo/objects#StringIterator), [ArrayIterator](https://godoc.org/github.com/d5/tengo/objects#ArrayIterator), [MapIterator](https://godoc.org/github.com/d5/tengo/objects#MapIterator), [ImmutableMapIterator](https://godoc.org/github.com/d5/tengo/objects#ImmutableMapIterator)
 - [Error](https://godoc.org/github.com/d5/tengo/objects#Error)
 - [Undefined](https://godoc.org/github.com/d5/tengo/objects#Undefined)
-- Other internal objects: [Closure](https://godoc.org/github.com/d5/tengo/objects#Closure), [CompiledModule](https://godoc.org/github.com/d5/tengo/objects#CompiledModule), [Break](https://godoc.org/github.com/d5/tengo/objects#Break), [Continue](https://godoc.org/github.com/d5/tengo/objects#Continue), [ReturnValue](https://godoc.org/github.com/d5/tengo/objects#ReturnValue)
+- Other internal objects: [Closure](https://godoc.org/github.com/d5/tengo/objects#Closure), [Break](https://godoc.org/github.com/d5/tengo/objects#Break), [Continue](https://godoc.org/github.com/d5/tengo/objects#Continue), [ReturnValue](https://godoc.org/github.com/d5/tengo/objects#ReturnValue)
 
 See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on these runtime types.
 
