@@ -6,12 +6,74 @@ import (
 
 func TestFor(t *testing.T) {
 	expect(t, `
+	for {
+		out++
+		if out == 5 {
+			break
+		}
+	}`, 5)
+
+	expect(t, `
+	for {
+		out++
+		if out == 5 {
+			break
+		}
+	}`, 5)
+
+	expect(t, `
+	a := 0
+	for {
+		a++
+		if a == 3 { continue }
+		if a == 5 { break }
+		out += a
+	}`, 7) // 1 + 2 + 4
+
+	expect(t, `
+	a := 0
+	for {
+		a++
+		if a == 3 { continue }
+		out += a
+		if a == 5 { break }
+	}`, 12) // 1 + 2 + 4 + 5
+
+	expect(t, `
 	for true {
 		out++
 		if out == 5 {
 			break
 		}
 	}`, 5)
+
+	expect(t, `
+	a := 0
+	for true {
+		a++
+		if a == 5 {
+			break
+		}
+	}
+	out = a`, 5)
+
+	expect(t, `
+	a := 0
+	for true {
+		a++
+		if a == 3 { continue }
+		if a == 5 { break }
+		out += a
+	}`, 7) // 1 + 2 + 4
+
+	expect(t, `
+	a := 0
+	for true {
+		a++
+		if a == 3 { continue }
+		out += a
+		if a == 5 { break }
+	}`, 12) // 1 + 2 + 4 + 5
 
 	expect(t, `
 	func() {
@@ -34,6 +96,78 @@ func TestFor(t *testing.T) {
 			out += b
 		}
 	}`, 54)
+
+	expect(t, `
+	func() {
+		for {
+			out++
+			if out == 5 {
+				break
+			}
+		}
+	}()`, 5)
+
+	expect(t, `
+	func() {
+		for true {
+			out++
+			if out == 5 {
+				break
+			}
+		}
+	}()`, 5)
+
+	expect(t, `
+	out = func() {
+		a := 0
+		for {
+			a++
+			if a == 5 {
+				break
+			}
+		}
+		return a
+	}()`, 5)
+
+	expect(t, `
+	out = func() {
+		a := 0
+		for true {
+			a++
+			if a== 5 {
+				break
+			}
+		}
+		return a
+	}()`, 5)
+
+	expect(t, `
+	out = func() {
+		a := 0
+		func() {
+			for {
+				a++
+				if a == 5 {
+					break
+				}
+			}
+		}()
+		return a
+	}()`, 5)
+
+	expect(t, `
+	out = func() {
+		a := 0
+		func() {
+			for true {
+				a++
+				if a == 5 {
+					break
+				}
+			}
+		}()
+		return a
+	}()`, 5)
 
 	expect(t, `
 	out = func() {

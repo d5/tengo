@@ -21,11 +21,14 @@ func (c *Compiler) compileForStmt(stmt *ast.ForStmt) error {
 	preCondPos := len(c.currentInstructions())
 
 	// condition expression
-	if err := c.Compile(stmt.Cond); err != nil {
-		return err
+	postCondPos := -1
+	if stmt.Cond != nil {
+		if err := c.Compile(stmt.Cond); err != nil {
+			return err
+		}
+		// condition jump position
+		postCondPos = c.emit(OpJumpFalsy, 0)
 	}
-	// condition jump position
-	postCondPos := c.emit(OpJumpFalsy, 0)
 
 	// enter loop
 	loop := c.enterLoop()
@@ -53,7 +56,9 @@ func (c *Compiler) compileForStmt(stmt *ast.ForStmt) error {
 
 	// post-statement position
 	postStmtPos := len(c.currentInstructions())
-	c.changeOperand(postCondPos, postStmtPos)
+	if postCondPos >= 0 {
+		c.changeOperand(postCondPos, postStmtPos)
+	}
 
 	// update all break/continue jump positions
 	for _, pos := range loop.Breaks {
