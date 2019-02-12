@@ -208,3 +208,41 @@ export func() {
 		"mod1": `export a`,
 	})
 }
+
+func TestModuleBlockScopes(t *testing.T) {
+	// block scopes in module
+	expectWithUserModules(t, `out = import("mod1")()`, 1, map[string]string{
+		"mod1": `
+	rand := import("rand")
+	foo := func() { return 1 }
+	export func() {
+		rand.intn(3)
+		return foo()
+	}
+	`,
+	})
+
+	expectWithUserModules(t, `out = import("mod1")()`, 10, map[string]string{
+		"mod1": `
+rand := import("rand")
+foo := func() { return 1 }
+export func() {
+	rand.intn(3)
+	if foo() {}
+	return 10
+}
+`,
+	})
+
+	expectWithUserModules(t, `out = import("mod1")()`, 10, map[string]string{
+		"mod1": `
+	rand := import("rand")
+	foo := func() { return 1 }
+	export func() {
+		rand.intn(3)
+		if true { foo() }
+		return 10
+	}
+	`,
+	})
+}

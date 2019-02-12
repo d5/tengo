@@ -63,11 +63,6 @@ func (b *Bytecode) FormatConstants() (output []string) {
 			for _, l := range FormatInstructions(cn.Instructions, 0) {
 				output = append(output, fmt.Sprintf("     %s", l))
 			}
-		case *objects.CompiledModule:
-			output = append(output, fmt.Sprintf("[% 3d] (Compiled Module|%p)", cidx, &cn))
-			for _, l := range FormatInstructions(cn.Instructions, 0) {
-				output = append(output, fmt.Sprintf("     %s", l))
-			}
 		default:
 			output = append(output, fmt.Sprintf("[% 3d] %s (%s|%p)", cidx, cn, reflect.TypeOf(cn).Elem().Name(), &cn))
 		}
@@ -116,5 +111,4 @@ func init() {
 	gob.Register(&objects.MapIterator{})
 	gob.Register(&objects.ArrayIterator{})
 	gob.Register(&objects.Time{})
-	gob.Register(&objects.CompiledModule{})
 }
