@@ -115,6 +115,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.Add, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s + %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -132,6 +136,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.Sub, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s - %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -149,6 +157,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.Mul, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s * %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -166,6 +178,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.Quo, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s / %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -183,6 +199,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.Rem, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s %% %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -200,6 +220,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.And, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s & %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -217,6 +241,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.Or, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s | %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -234,6 +262,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.Xor, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s ^ %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -251,6 +283,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.AndNot, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s &^ %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -268,6 +304,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.Shl, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s << %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -285,6 +325,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.Shr, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s >> %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -334,6 +378,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.Greater, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s > %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -351,6 +399,10 @@ func (v *VM) Run() error {
 
 			res, err := (*left).BinaryOp(token.GreaterEq, *right)
 			if err != nil {
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s >= %s", (*left).TypeName(), (*right).TypeName())
+				}
+
 				return err
 			}
 
@@ -410,7 +462,7 @@ func (v *VM) Run() error {
 				v.stack[v.sp] = &res
 				v.sp++
 			default:
-				return fmt.Errorf("invalid operation on %s", (*operand).TypeName())
+				return fmt.Errorf("invalid operation: ^%s", (*operand).TypeName())
 			}
 
 		case compiler.OpMinus:
@@ -437,7 +489,7 @@ func (v *VM) Run() error {
 				v.stack[v.sp] = &res
 				v.sp++
 			default:
-				return fmt.Errorf("invalid operation on %s", (*operand).TypeName())
+				return fmt.Errorf("invalid operation: -%s", (*operand).TypeName())
 			}
 
 		case compiler.OpJumpFalsy:
@@ -586,6 +638,10 @@ func (v *VM) Run() error {
 			case objects.Indexable:
 				val, err := left.IndexGet(*index)
 				if err != nil {
+					if err == objects.ErrInvalidIndexType {
+						return fmt.Errorf("invalid index type: %s", (*index).TypeName())
+					}
+
 					return err
 				}
 				if val == nil {
@@ -602,7 +658,7 @@ func (v *VM) Run() error {
 			case *objects.Error: // err.value
 				key, ok := (*index).(*objects.String)
 				if !ok || key.Value != "value" {
-					return errors.New("invalid selector on error")
+					return errors.New("invalid index on error")
 				}
 
 				if v.sp >= StackSize {
@@ -613,7 +669,7 @@ func (v *VM) Run() error {
 				v.sp++
 
 			default:
-				return objects.ErrNotIndexable
+				return fmt.Errorf("not indexable: %s", left.TypeName())
 			}
 
 		case compiler.OpSliceIndex:
@@ -627,7 +683,7 @@ func (v *VM) Run() error {
 				if low, ok := (*low).(*objects.Int); ok {
 					lowIdx = low.Value
 				} else {
-					return fmt.Errorf("non-integer slice index: %s", low.TypeName())
+					return fmt.Errorf("invalid slice index type: %s", low.TypeName())
 				}
 			}
 
@@ -640,7 +696,7 @@ func (v *VM) Run() error {
 				} else if high, ok := (*high).(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
-					return fmt.Errorf("non-integer slice index: %s", high.TypeName())
+					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
@@ -675,7 +731,7 @@ func (v *VM) Run() error {
 				} else if high, ok := (*high).(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
-					return fmt.Errorf("non-integer slice index: %s", high.TypeName())
+					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
@@ -711,7 +767,7 @@ func (v *VM) Run() error {
 				} else if high, ok := (*high).(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
-					return fmt.Errorf("non-integer slice index: %s", high.TypeName())
+					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
@@ -747,7 +803,7 @@ func (v *VM) Run() error {
 				} else if high, ok := (*high).(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
-					return fmt.Errorf("non-integer slice index: %s", high.TypeName())
+					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
@@ -817,7 +873,7 @@ func (v *VM) Run() error {
 				v.stack[v.sp] = &ret
 				v.sp++
 			default:
-				return fmt.Errorf("calling non-function: %s", callee.TypeName())
+				return fmt.Errorf("not callable: %s", callee.TypeName())
 			}
 
 		case compiler.OpReturnValue:
@@ -978,7 +1034,7 @@ func (v *VM) Run() error {
 
 			iterable, ok := (*dst).(objects.Iterable)
 			if !ok {
-				return fmt.Errorf("non-iterable type: %s", (*dst).TypeName())
+				return fmt.Errorf("not iterable: %s", (*dst).TypeName())
 			}
 
 			iterator = iterable.Iterate()
@@ -1034,13 +1090,13 @@ func (v *VM) Run() error {
 			v.sp++
 
 		default:
-			return fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])
+			panic(fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip]))
 		}
 	}
 
 	// check if stack still has some objects left
 	if v.sp > 0 && atomic.LoadInt64(&v.aborting) == 0 {
-		return fmt.Errorf("non empty stack after execution: %d", v.sp)
+		panic(fmt.Errorf("non empty stack after execution: %d", v.sp))
 	}
 
 	return nil
@@ -1061,7 +1117,7 @@ func (v *VM) pushClosure(constIndex, numFree int) error {
 
 	fn, ok := c.(*objects.CompiledFunction)
 	if !ok {
-		return fmt.Errorf("not a function: %s", fn.TypeName())
+		return fmt.Errorf("not function: %s", fn.TypeName())
 	}
 
 	free := make([]*objects.Object, numFree)
@@ -1087,8 +1143,7 @@ func (v *VM) pushClosure(constIndex, numFree int) error {
 
 func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Object, numArgs int) error {
 	if numArgs != fn.NumParameters {
-		return fmt.Errorf("wrong number of arguments: want=%d, got=%d",
-			fn.NumParameters, numArgs)
+		return fmt.Errorf("wrong number of arguments: want=%d, got=%d", fn.NumParameters, numArgs)
 	}
 
 	// check if this is a tail-call (recursive call right before return)
@@ -1186,11 +1241,15 @@ func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 	for sidx := numSel - 1; sidx > 0; sidx-- {
 		indexable, ok := (*dst).(objects.Indexable)
 		if !ok {
-			return objects.ErrNotIndexable
+			return fmt.Errorf("not indexable: %s", (*dst).TypeName())
 		}
 
 		next, err := indexable.IndexGet(*selectors[sidx])
 		if err != nil {
+			if err == objects.ErrInvalidIndexType {
+				return fmt.Errorf("invalid index type: %s", (*selectors[sidx]).TypeName())
+			}
+
 			return err
 		}
 
@@ -1199,7 +1258,7 @@ func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 
 	indexAssignable, ok := (*dst).(objects.IndexAssignable)
 	if !ok {
-		return objects.ErrNotIndexAssignable
+		return fmt.Errorf("not index-assignable: %s", (*dst).TypeName())
 	}
 
 	return indexAssignable.IndexSet(*selectors[0], *src)
