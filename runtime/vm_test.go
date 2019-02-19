@@ -122,12 +122,6 @@ func runVM(t *testing.T, file *ast.File, expected interface{}, symbols map[strin
 	return
 }
 
-// TODO: should differentiate compile-time error, runtime error, and, error object returned
-func runVMError(file *ast.File, symbols map[string]objects.Object, userModules map[string]string) (trace []string, err error) {
-
-	return
-}
-
 func errorObject(v interface{}) *objects.Error {
 	return &objects.Error{Value: toObject(v)}
 }

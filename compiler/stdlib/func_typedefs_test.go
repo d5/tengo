@@ -182,6 +182,7 @@ func TestFuncASSRE(t *testing.T) {
 	uf := stdlib.FuncASSRE(func(a, b string) error { return nil })
 	ret, err := funcCall(uf, &objects.String{Value: "foo"}, &objects.String{Value: "bar"})
 	assert.NoError(t, err)
+	assert.Equal(t, objects.TrueValue, ret)
 	uf = stdlib.FuncASSRE(func(a, b string) error { return errors.New("some error") })
 	ret, err = funcCall(uf, &objects.String{Value: "foo"}, &objects.String{Value: "bar"})
 	assert.NoError(t, err)
