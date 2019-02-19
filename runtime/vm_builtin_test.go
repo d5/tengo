@@ -18,7 +18,7 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = len(immutable([1, 2, 3]))`, 3)
 	expect(t, `out = len(immutable({}))`, 0)
 	expect(t, `out = len(immutable({a:1, b:2}))`, 2)
-	expectErrorString(t, `len(1)`, "   ")
+	expectError(t, `len(1)`)
 	expectErrorString(t, `len("one", "two")`, "wrong number of arguments")
 
 	expect(t, `out = copy(1)`, 1)
