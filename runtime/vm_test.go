@@ -53,29 +53,48 @@ func expectWithUserModules(t *testing.T, input string, expected interface{}, use
 }
 
 func expectError(t *testing.T, input string) {
-	expectErrorWithUserModules(t, input, nil)
+	_ = expectErrorWithUserModules(t, input, nil)
 }
 
-func expectErrorWithUserModules(t *testing.T, input string, userModules map[string]string) {
-	// parse
-	program := parse(t, input)
-	if program == nil {
+func expectErrorString(t *testing.T, input, expected string) {
+	err := expectErrorWithUserModules(t, input, nil)
+	if err == nil {
 		return
 	}
 
-	// compiler/VM
-	runVMError(t, program, nil, userModules)
+	assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error())
 }
 
-func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objects.Object) {
+func expectErrorWithUserModules(t *testing.T, input string, userModules map[string]string) error {
 	// parse
 	program := parse(t, input)
 	if program == nil {
-		return
+		return nil
 	}
 
 	// compiler/VM
-	runVMError(t, program, symbols, nil)
+	_, trace, err := traceCompileRun(program, nil, userModules)
+	if err == nil {
+		t.Log("\n" + strings.Join(trace, "\n"))
+	}
+
+	return err
+}
+
+func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objects.Object) error {
+	// parse
+	program := parse(t, input)
+	if program == nil {
+		return nil
+	}
+
+	// compiler/VM
+	_, trace, err := traceCompileRun(program, symbols, nil)
+	if err == nil {
+		t.Log("\n" + strings.Join(trace, "\n"))
+	}
+
+	return err
 }
 
 func runVM(t *testing.T, file *ast.File, expected interface{}, symbols map[string]objects.Object, userModules map[string]string) (ok bool) {
@@ -104,16 +123,7 @@ func runVM(t *testing.T, file *ast.File, expected interface{}, symbols map[strin
 }
 
 // TODO: should differentiate compile-time error, runtime error, and, error object returned
-func runVMError(t *testing.T, file *ast.File, symbols map[string]objects.Object, userModules map[string]string) (ok bool) {
-	_, trace, err := traceCompileRun(file, symbols, userModules)
-
-	defer func() {
-		if !ok {
-			t.Log("\n" + strings.Join(trace, "\n"))
-		}
-	}()
-
-	ok = assert.Error(t, err)
+func runVMError(file *ast.File, symbols map[string]objects.Object, userModules map[string]string) (trace []string, err error) {
 
 	return
 }

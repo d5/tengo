@@ -2,6 +2,7 @@ package objects
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 func builtinToJSON(args ...Object) (Object, error) {
@@ -11,7 +12,7 @@ func builtinToJSON(args ...Object) (Object, error) {
 
 	res, err := json.Marshal(objectToInterface(args[0]))
 	if err != nil {
-		return nil, err
+		return &Error{Value: &String{Value: err.Error()}}, nil
 	}
 
 	return &Bytes{Value: res}, nil
@@ -28,15 +29,15 @@ func builtinFromJSON(args ...Object) (Object, error) {
 	case *Bytes:
 		err := json.Unmarshal(o.Value, &target)
 		if err != nil {
-			return nil, err
+			return &Error{Value: &String{Value: err.Error()}}, nil
 		}
 	case *String:
 		err := json.Unmarshal([]byte(o.Value), &target)
 		if err != nil {
-			return nil, err
+			return &Error{Value: &String{Value: err.Error()}}, nil
 		}
 	default:
-		return nil, ErrInvalidTypeConversion
+		return nil, fmt.Errorf("invalid type for argument 0: %s", o.TypeName())
 	}
 
 	res, err := FromInterface(target)

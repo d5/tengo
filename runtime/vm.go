@@ -836,9 +836,9 @@ func (v *VM) Run() error {
 			numArgs := int(v.curInsts[v.ip+1])
 			v.ip++
 
-			callee := *v.stack[v.sp-1-numArgs]
+			value := *v.stack[v.sp-1-numArgs]
 
-			switch callee := callee.(type) {
+			switch callee := value.(type) {
 			case *objects.Closure:
 				if err := v.callFunction(callee.Fn, callee.Free, numArgs); err != nil {
 					return err
@@ -858,6 +858,12 @@ func (v *VM) Run() error {
 
 				// runtime error
 				if err != nil {
+					if err == objects.ErrWrongNumArguments {
+						return fmt.Errorf("wrong number of arguments in call to %s", value.TypeName())
+					}
+
+					// TODO: find other types of errors from stdlib and builtin functions
+
 					return err
 				}
 
@@ -1267,6 +1273,9 @@ func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 func init() {
 	builtinFuncs = make([]objects.Object, len(objects.Builtins))
 	for i, b := range objects.Builtins {
-		builtinFuncs[i] = &objects.BuiltinFunction{Value: b.Func}
+		builtinFuncs[i] = &objects.BuiltinFunction{
+			Name:  b.Name,
+			Value: b.Func,
+		}
 	}
 }

@@ -34,8 +34,10 @@ func TestObject_TypeName(t *testing.T) {
 	assert.Equal(t, "break", o.TypeName())
 	o = &objects.Continue{}
 	assert.Equal(t, "continue", o.TypeName())
-	o = &objects.BuiltinFunction{}
-	assert.Equal(t, "builtin-function", o.TypeName())
+	o = &objects.BuiltinFunction{Name: "fn"}
+	assert.Equal(t, "builtin-function:fn", o.TypeName())
+	o = &objects.UserFunction{Name: "fn"}
+	assert.Equal(t, "user-function:fn", o.TypeName())
 	o = &objects.Closure{}
 	assert.Equal(t, "closure", o.TypeName())
 	o = &objects.CompiledFunction{}

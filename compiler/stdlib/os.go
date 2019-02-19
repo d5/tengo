@@ -38,48 +38,48 @@ var osModule = map[string]objects.Object{
 	"seek_set":            &objects.Int{Value: int64(io.SeekStart)},
 	"seek_cur":            &objects.Int{Value: int64(io.SeekCurrent)},
 	"seek_end":            &objects.Int{Value: int64(io.SeekEnd)},
-	"args":                &objects.UserFunction{Value: osArgs},         // args() => array(string)
-	"chdir":               FuncASRE(os.Chdir),                           // chdir(dir string) => error
-	"chmod":               osFuncASFmRE(os.Chmod),                       // chmod(name string, mode int) => error
-	"chown":               FuncASIIRE(os.Chown),                         // chown(name string, uid int, gid int) => error
-	"clearenv":            FuncAR(os.Clearenv),                          // clearenv()
-	"environ":             FuncARSs(os.Environ),                         // environ() => array(string)
-	"exit":                FuncAIR(os.Exit),                             // exit(code int)
-	"expand_env":          FuncASRS(os.ExpandEnv),                       // expand_env(s string) => string
-	"getegid":             FuncARI(os.Getegid),                          // getegid() => int
-	"getenv":              FuncASRS(os.Getenv),                          // getenv(s string) => string
-	"geteuid":             FuncARI(os.Geteuid),                          // geteuid() => int
-	"getgid":              FuncARI(os.Getgid),                           // getgid() => int
-	"getgroups":           FuncARIsE(os.Getgroups),                      // getgroups() => array(string)/error
-	"getpagesize":         FuncARI(os.Getpagesize),                      // getpagesize() => int
-	"getpid":              FuncARI(os.Getpid),                           // getpid() => int
-	"getppid":             FuncARI(os.Getppid),                          // getppid() => int
-	"getuid":              FuncARI(os.Getuid),                           // getuid() => int
-	"getwd":               FuncARSE(os.Getwd),                           // getwd() => string/error
-	"hostname":            FuncARSE(os.Hostname),                        // hostname() => string/error
-	"lchown":              FuncASIIRE(os.Lchown),                        // lchown(name string, uid int, gid int) => error
-	"link":                FuncASSRE(os.Link),                           // link(oldname string, newname string) => error
-	"lookup_env":          &objects.UserFunction{Value: osLookupEnv},    // lookup_env(key string) => string/false
-	"mkdir":               osFuncASFmRE(os.Mkdir),                       // mkdir(name string, perm int) => error
-	"mkdir_all":           osFuncASFmRE(os.MkdirAll),                    // mkdir_all(name string, perm int) => error
-	"readlink":            FuncASRSE(os.Readlink),                       // readlink(name string) => string/error
-	"remove":              FuncASRE(os.Remove),                          // remove(name string) => error
-	"remove_all":          FuncASRE(os.RemoveAll),                       // remove_all(name string) => error
-	"rename":              FuncASSRE(os.Rename),                         // rename(oldpath string, newpath string) => error
-	"setenv":              FuncASSRE(os.Setenv),                         // setenv(key string, value string) => error
-	"symlink":             FuncASSRE(os.Symlink),                        // symlink(oldname string newname string) => error
-	"temp_dir":            FuncARS(os.TempDir),                          // temp_dir() => string
-	"truncate":            FuncASI64RE(os.Truncate),                     // truncate(name string, size int) => error
-	"unsetenv":            FuncASRE(os.Unsetenv),                        // unsetenv(key string) => error
-	"create":              &objects.UserFunction{Value: osCreate},       // create(name string) => imap(file)/error
-	"open":                &objects.UserFunction{Value: osOpen},         // open(name string) => imap(file)/error
-	"open_file":           &objects.UserFunction{Value: osOpenFile},     // open_file(name string, flag int, perm int) => imap(file)/error
-	"find_process":        &objects.UserFunction{Value: osFindProcess},  // find_process(pid int) => imap(process)/error
-	"start_process":       &objects.UserFunction{Value: osStartProcess}, // start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
-	"exec_look_path":      FuncASRSE(exec.LookPath),                     // exec_look_path(file) => string/error
-	"exec":                &objects.UserFunction{Value: osExec},         // exec(name, args...) => command
-	"stat":                &objects.UserFunction{Value: osStat},         // stat(name) => imap(fileinfo)/error
-	"read_file":           &objects.UserFunction{Value: osReadFile},     // readfile(name) => array(byte)/error
+	"args":                &objects.UserFunction{Value: osArgs},                                           // args() => array(string)
+	"chdir":               &objects.UserFunction{Name: "chdir", Value: FuncASRE(os.Chdir)},                // chdir(dir string) => error
+	"chmod":               osFuncASFmRE(os.Chmod),                                                         // chmod(name string, mode int) => error
+	"chown":               &objects.UserFunction{Name: "chown", Value: FuncASIIRE(os.Chown)},              // chown(name string, uid int, gid int) => error
+	"clearenv":            &objects.UserFunction{Name: "clearenv", Value: FuncAR(os.Clearenv)},            // clearenv()
+	"environ":             &objects.UserFunction{Name: "environ", Value: FuncARSs(os.Environ)},            // environ() => array(string)
+	"exit":                &objects.UserFunction{Name: "exit", Value: FuncAIR(os.Exit)},                   // exit(code int)
+	"expand_env":          &objects.UserFunction{Name: "expand_env", Value: FuncASRS(os.ExpandEnv)},       // expand_env(s string) => string
+	"getegid":             &objects.UserFunction{Name: "getegid", Value: FuncARI(os.Getegid)},             // getegid() => int
+	"getenv":              &objects.UserFunction{Name: "getenv", Value: FuncASRS(os.Getenv)},              // getenv(s string) => string
+	"geteuid":             &objects.UserFunction{Name: "geteuid", Value: FuncARI(os.Geteuid)},             // geteuid() => int
+	"getgid":              &objects.UserFunction{Name: "getgid", Value: FuncARI(os.Getgid)},               // getgid() => int
+	"getgroups":           &objects.UserFunction{Name: "getgroups", Value: FuncARIsE(os.Getgroups)},       // getgroups() => array(string)/error
+	"getpagesize":         &objects.UserFunction{Name: "getpagesize", Value: FuncARI(os.Getpagesize)},     // getpagesize() => int
+	"getpid":              &objects.UserFunction{Name: "getpid", Value: FuncARI(os.Getpid)},               // getpid() => int
+	"getppid":             &objects.UserFunction{Name: "getppid", Value: FuncARI(os.Getppid)},             // getppid() => int
+	"getuid":              &objects.UserFunction{Name: "getuid", Value: FuncARI(os.Getuid)},               // getuid() => int
+	"getwd":               &objects.UserFunction{Name: "getwd", Value: FuncARSE(os.Getwd)},                // getwd() => string/error
+	"hostname":            &objects.UserFunction{Name: "hostname", Value: FuncARSE(os.Hostname)},          // hostname() => string/error
+	"lchown":              &objects.UserFunction{Name: "lchown", Value: FuncASIIRE(os.Lchown)},            // lchown(name string, uid int, gid int) => error
+	"link":                &objects.UserFunction{Name: "link", Value: FuncASSRE(os.Link)},                 // link(oldname string, newname string) => error
+	"lookup_env":          &objects.UserFunction{Value: osLookupEnv},                                      // lookup_env(key string) => string/false
+	"mkdir":               osFuncASFmRE(os.Mkdir),                                                         // mkdir(name string, perm int) => error
+	"mkdir_all":           osFuncASFmRE(os.MkdirAll),                                                      // mkdir_all(name string, perm int) => error
+	"readlink":            &objects.UserFunction{Name: "readlink", Value: FuncASRSE(os.Readlink)},         // readlink(name string) => string/error
+	"remove":              &objects.UserFunction{Name: "remove", Value: FuncASRE(os.Remove)},              // remove(name string) => error
+	"remove_all":          &objects.UserFunction{Name: "remove_all", Value: FuncASRE(os.RemoveAll)},       // remove_all(name string) => error
+	"rename":              &objects.UserFunction{Name: "rename", Value: FuncASSRE(os.Rename)},             // rename(oldpath string, newpath string) => error
+	"setenv":              &objects.UserFunction{Name: "setenv", Value: FuncASSRE(os.Setenv)},             // setenv(key string, value string) => error
+	"symlink":             &objects.UserFunction{Name: "symlink", Value: FuncASSRE(os.Symlink)},           // symlink(oldname string newname string) => error
+	"temp_dir":            &objects.UserFunction{Name: "temp_dir", Value: FuncARS(os.TempDir)},            // temp_dir() => string
+	"truncate":            &objects.UserFunction{Name: "truncate", Value: FuncASI64RE(os.Truncate)},       // truncate(name string, size int) => error
+	"unsetenv":            &objects.UserFunction{Name: "unsetenv", Value: FuncASRE(os.Unsetenv)},          // unsetenv(key string) => error
+	"create":              &objects.UserFunction{Value: osCreate},                                         // create(name string) => imap(file)/error
+	"open":                &objects.UserFunction{Value: osOpen},                                           // open(name string) => imap(file)/error
+	"open_file":           &objects.UserFunction{Value: osOpenFile},                                       // open_file(name string, flag int, perm int) => imap(file)/error
+	"find_process":        &objects.UserFunction{Value: osFindProcess},                                    // find_process(pid int) => imap(process)/error
+	"start_process":       &objects.UserFunction{Value: osStartProcess},                                   // start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
+	"exec_look_path":      &objects.UserFunction{Name: "exec_look_path", Value: FuncASRSE(exec.LookPath)}, // exec_look_path(file) => string/error
+	"exec":                &objects.UserFunction{Value: osExec},                                           // exec(name, args...) => command
+	"stat":                &objects.UserFunction{Value: osStat},                                           // stat(name) => imap(fileinfo)/error
+	"read_file":           &objects.UserFunction{Value: osReadFile},                                       // readfile(name) => array(byte)/error
 }
 
 func osReadFile(args ...objects.Object) (ret objects.Object, err error) {

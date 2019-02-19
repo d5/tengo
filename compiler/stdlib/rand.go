@@ -7,13 +7,13 @@ import (
 )
 
 var randModule = map[string]objects.Object{
-	"int":        FuncARI64(rand.Int63),
-	"float":      FuncARF(rand.Float64),
-	"intn":       FuncAI64RI64(rand.Int63n),
-	"exp_float":  FuncARF(rand.ExpFloat64),
-	"norm_float": FuncARF(rand.NormFloat64),
-	"perm":       FuncAIRIs(rand.Perm),
-	"seed":       FuncAI64R(rand.Seed),
+	"int":        &objects.UserFunction{Name: "int", Value: FuncARI64(rand.Int63)},
+	"float":      &objects.UserFunction{Name: "float", Value: FuncARF(rand.Float64)},
+	"intn":       &objects.UserFunction{Name: "intn", Value: FuncAI64RI64(rand.Int63n)},
+	"exp_float":  &objects.UserFunction{Name: "exp_float", Value: FuncARF(rand.ExpFloat64)},
+	"norm_float": &objects.UserFunction{Name: "norm_float", Value: FuncARF(rand.NormFloat64)},
+	"perm":       &objects.UserFunction{Name: "perm", Value: FuncAIRIs(rand.Perm)},
+	"seed":       &objects.UserFunction{Name: "seed", Value: FuncAI64R(rand.Seed)},
 	"read": &objects.UserFunction{
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 1 {
@@ -55,13 +55,13 @@ var randModule = map[string]objects.Object{
 func randRand(r *rand.Rand) *objects.ImmutableMap {
 	return &objects.ImmutableMap{
 		Value: map[string]objects.Object{
-			"int":        FuncARI64(r.Int63),
-			"float":      FuncARF(r.Float64),
-			"intn":       FuncAI64RI64(r.Int63n),
-			"exp_float":  FuncARF(r.ExpFloat64),
-			"norm_float": FuncARF(r.NormFloat64),
-			"perm":       FuncAIRIs(r.Perm),
-			"seed":       FuncAI64R(r.Seed),
+			"int":        &objects.UserFunction{Name: "int", Value: FuncARI64(r.Int63)},
+			"float":      &objects.UserFunction{Name: "float", Value: FuncARF(r.Float64)},
+			"intn":       &objects.UserFunction{Name: "intn", Value: FuncAI64RI64(r.Int63n)},
+			"exp_float":  &objects.UserFunction{Name: "exp_float", Value: FuncARF(r.ExpFloat64)},
+			"norm_float": &objects.UserFunction{Name: "norm_float", Value: FuncARF(r.NormFloat64)},
+			"perm":       &objects.UserFunction{Name: "perm", Value: FuncAIRIs(r.Perm)},
+			"seed":       &objects.UserFunction{Name: "seed", Value: FuncAI64R(r.Seed)},
 			"read": &objects.UserFunction{
 				Value: func(args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 1 {

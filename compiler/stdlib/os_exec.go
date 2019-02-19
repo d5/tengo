@@ -10,15 +10,15 @@ func makeOSExecCommand(cmd *exec.Cmd) *objects.ImmutableMap {
 	return &objects.ImmutableMap{
 		Value: map[string]objects.Object{
 			// combined_output() => bytes/error
-			"combined_output": FuncARYE(cmd.CombinedOutput),
+			"combined_output": &objects.UserFunction{Name: "combined_output", Value: FuncARYE(cmd.CombinedOutput)}, //
 			// output() => bytes/error
-			"output": FuncARYE(cmd.Output),
+			"output": &objects.UserFunction{Name: "output", Value: FuncARYE(cmd.Output)}, //
 			// run() => error
-			"run": FuncARE(cmd.Run),
+			"run": &objects.UserFunction{Name: "run", Value: FuncARE(cmd.Run)}, //
 			// start() => error
-			"start": FuncARE(cmd.Start),
+			"start": &objects.UserFunction{Name: "start", Value: FuncARE(cmd.Start)}, //
 			// wait() => error
-			"wait": FuncARE(cmd.Wait),
+			"wait": &objects.UserFunction{Name: "wait", Value: FuncARE(cmd.Wait)}, //
 			// set_path(path string)
 			"set_path": &objects.UserFunction{
 				Value: func(args ...objects.Object) (ret objects.Object, err error) {

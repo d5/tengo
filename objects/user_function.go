@@ -6,12 +6,13 @@ import (
 
 // UserFunction represents a user function.
 type UserFunction struct {
+	Name  string
 	Value CallableFunc
 }
 
 // TypeName returns the name of the type.
 func (o *UserFunction) TypeName() string {
-	return "user-function"
+	return "user-function:" + o.Name
 }
 
 func (o *UserFunction) String() string {

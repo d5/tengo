@@ -245,5 +245,5 @@ func FromInterface(v interface{}) (Object, error) {
 		return v, nil
 	}
 
-	return nil, fmt.Errorf("unsupported value type: %T", v)
+	return nil, fmt.Errorf("cannot convert to object: %T", v)
 }

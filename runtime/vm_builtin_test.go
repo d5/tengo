@@ -18,8 +18,8 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = len(immutable([1, 2, 3]))`, 3)
 	expect(t, `out = len(immutable({}))`, 0)
 	expect(t, `out = len(immutable({a:1, b:2}))`, 2)
-	expectError(t, `len(1)`)
-	expectError(t, `len("one", "two")`)
+	expectErrorString(t, `len(1)`, "   ")
+	expectErrorString(t, `len("one", "two")`, "wrong number of arguments")
 
 	expect(t, `out = copy(1)`, 1)
 	expectError(t, `out = copy(1, 2)`)
@@ -157,8 +157,8 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = sprintf("foo %d %v %s", 1, 2, "bar")`, "foo 1 2 bar")
 	expect(t, `out = sprintf("foo %v", [1, "bar", true])`, "foo [1 bar true]")
 	expect(t, `out = sprintf("foo %v %d", [1, "bar", true], 19)`, "foo [1 bar true] 19")
-	expectError(t, `sprintf(1)`)   // format has to be String
-	expectError(t, `sprintf('c')`) // format has to be String
+	expectErrorString(t, `sprintf(1)`, "invalid type conversion") // format has to be String
+	expectError(t, `sprintf('c')`)                                // format has to be String
 
 	// type_name
 	expect(t, `out = type_name(1)`, "int")
@@ -192,5 +192,4 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `a := func(x) { return func() { return x } }; out = is_callable(a)`, true)                      // function
 	expect(t, `a := func(x) { return func() { return x } }; out = is_callable(a(5))`, true)                   // closure
 	expectWithSymbols(t, `out = is_callable(x)`, true, SYM{"x": &StringArray{Value: []string{"foo", "bar"}}}) // user object
-
 }
