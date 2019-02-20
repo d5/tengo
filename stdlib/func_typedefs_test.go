@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/compiler/stdlib"
 	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo/stdlib"
 )
 
 func TestFuncAIR(t *testing.T) {

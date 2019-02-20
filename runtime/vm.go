@@ -8,6 +8,7 @@ import (
 	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo/stdlib"
 )
 
 const (
@@ -1099,6 +1100,25 @@ mainloop:
 			}
 
 			v.stack[v.sp] = &builtinFuncs[builtinIndex]
+			v.sp++
+
+		case compiler.OpGetBuiltinModule:
+			val := v.stack[v.sp-1]
+			v.sp--
+
+			moduleName := (*val).(*objects.String).Value
+
+			module, ok := stdlib.Modules[moduleName]
+			if !ok {
+				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-3])
+				return fmt.Errorf("%s: module '%s' not found", filePos, moduleName)
+			}
+
+			if v.sp >= StackSize {
+				return ErrStackOverflow
+			}
+
+			v.stack[v.sp] = module
 			v.sp++
 
 		case compiler.OpClosure:

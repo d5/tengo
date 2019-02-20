@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/compiler/stdlib"
 	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo/stdlib"
 )
 
 type ARR = []interface{}
@@ -66,7 +66,7 @@ func module(t *testing.T, moduleName string) callres {
 		return callres{t: t, e: fmt.Errorf("module not found: %s", moduleName)}
 	}
 
-	return callres{t: t, o: mod}
+	return callres{t: t, o: (*mod).(*objects.ImmutableMap)}
 }
 
 func object(v interface{}) objects.Object {

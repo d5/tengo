@@ -7,9 +7,9 @@ import (
 
 	"github.com/d5/tengo/compiler/ast"
 	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/compiler/stdlib"
 	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo/stdlib"
 )
 
 // Compiler compiles the AST into a bytecode.
@@ -22,7 +22,7 @@ type Compiler struct {
 	scopes          []CompilationScope
 	scopeIndex      int
 	moduleLoader    ModuleLoader
-	stdModules      map[string]*objects.ImmutableMap
+	builtinModules  map[string]bool
 	compiledModules map[string]*objects.CompiledFunction
 	loops           []*Loop
 	loopIndex       int
@@ -36,7 +36,7 @@ type Compiler struct {
 // a new symbol table and use the default builtin functions. Likewise, standard
 // modules can be explicitly provided if user wants to add or remove some modules.
 // By default, Compile will use all the standard modules otherwise.
-func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []objects.Object, stdModules map[string]*objects.ImmutableMap, trace io.Writer) *Compiler {
+func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []objects.Object, builtinModules map[string]bool, trace io.Writer) *Compiler {
 	mainScope := CompilationScope{
 		symbolInit: make(map[string]bool),
 		sourceMap:  make(map[int]source.Pos),
@@ -51,9 +51,12 @@ func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []object
 		}
 	}
 
-	// standard modules
-	if stdModules == nil {
-		stdModules = stdlib.Modules
+	// builtin modules
+	if builtinModules == nil {
+		builtinModules = make(map[string]bool)
+		for name := range stdlib.Modules {
+			builtinModules[name] = true
+		}
 	}
 
 	return &Compiler{
@@ -64,7 +67,7 @@ func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []object
 		scopeIndex:      0,
 		loopIndex:       -1,
 		trace:           trace,
-		stdModules:      stdModules,
+		builtinModules:  builtinModules,
 		compiledModules: make(map[string]*objects.CompiledFunction),
 	}
 }
@@ -503,11 +506,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.emit(node, OpCall, len(node.Args))
 
 	case *ast.ImportExpr:
-		stdMod, ok := c.stdModules[node.ModuleName]
-		if ok {
-			// standard modules contain only globals with no code.
-			// so no need to compile anything
-			c.emit(node, OpConstant, c.addConstant(stdMod))
+		if c.builtinModules[node.ModuleName] {
+			c.emit(node, OpConstant, c.addConstant(&objects.String{Value: node.ModuleName}))
+			c.emit(node, OpGetBuiltinModule)
 		} else {
 			userMod, err := c.compileModule(node)
 			if err != nil {
@@ -601,7 +602,7 @@ func (c *Compiler) SetModuleLoader(moduleLoader ModuleLoader) {
 }
 
 func (c *Compiler) fork(file *source.File, moduleName string, symbolTable *SymbolTable) *Compiler {
-	child := NewCompiler(file, symbolTable, nil, c.stdModules, c.trace)
+	child := NewCompiler(file, symbolTable, nil, c.builtinModules, c.trace)
 	child.moduleName = moduleName       // name of the module to compile
 	child.parent = c                    // parent to set to current compiler
 	child.moduleLoader = c.moduleLoader // share module loader
