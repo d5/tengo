@@ -1,7 +1,7 @@
 package compiler
 
 // Opcode represents a single byte operation code.
-type Opcode byte
+type Opcode = byte
 
 // List of opcodes
 const (

@@ -35,8 +35,8 @@ func() {
 	}()
 }()`, 4)
 
-	expectErrorString(t, `a := 1; a := 2`, "redeclared")              // redeclared in the same scope
-	expectErrorString(t, `func() { a := 1; a := 2 }()`, "redeclared") // redeclared in the same scope
+	expectError(t, `a := 1; a := 2`, "redeclared")              // redeclared in the same scope
+	expectError(t, `func() { a := 1; a := 2 }()`, "redeclared") // redeclared in the same scope
 
 	expect(t, `a := 1; a += 2; out = a`, 3)
 	expect(t, `a := 1; a += 4 - 2;; out = a`, 3)
@@ -48,10 +48,10 @@ func() {
 	expect(t, `a := 10; a /= 5 - 3;; out = a`, 5)
 
 	// composite assignment operator does not define new variable
-	expectErrorString(t, `a += 4`, "unresolved reference")
-	expectErrorString(t, `a -= 4`, "unresolved reference")
-	expectErrorString(t, `a *= 4`, "unresolved reference")
-	expectErrorString(t, `a /= 4`, "unresolved reference")
+	expectError(t, `a += 4`, "unresolved reference")
+	expectError(t, `a -= 4`, "unresolved reference")
+	expectError(t, `a *= 4`, "unresolved reference")
+	expectError(t, `a /= 4`, "unresolved reference")
 
 	expect(t, `
 f1 := func() { 
@@ -241,7 +241,7 @@ a.c.h = "bar"
 out = a.c.h
 `, "bar")
 
-	expectErrorString(t, `
+	expectError(t, `
 a := {
 	b: [1, 2, 3],
 	c: {

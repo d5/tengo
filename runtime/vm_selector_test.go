@@ -81,10 +81,10 @@ func() {
 }()
 `, 9)
 
-	expectErrorString(t, `a := {b: {c: 1}}; a.d.c = 2`, "not index-assignable")
-	expectErrorString(t, `a := [1, 2, 3]; a.b = 2`, "invalid index type")
-	expectErrorString(t, `a := "foo"; a.b = 2`, "not index-assignable")
-	expectErrorString(t, `func() { a := {b: {c: 1}}; a.d.c = 2 }()`, "not index-assignable")
-	expectErrorString(t, `func() { a := [1, 2, 3]; a.b = 2 }()`, "invalid index type")
-	expectErrorString(t, `func() { a := "foo"; a.b = 2 }()`, "not index-assignable")
+	expectError(t, `a := {b: {c: 1}}; a.d.c = 2`, "not index-assignable")
+	expectError(t, `a := [1, 2, 3]; a.b = 2`, "invalid index type")
+	expectError(t, `a := "foo"; a.b = 2`, "not index-assignable")
+	expectError(t, `func() { a := {b: {c: 1}}; a.d.c = 2 }()`, "not index-assignable")
+	expectError(t, `func() { a := [1, 2, 3]; a.b = 2 }()`, "invalid index type")
+	expectError(t, `func() { a := "foo"; a.b = 2 }()`, "not index-assignable")
 }

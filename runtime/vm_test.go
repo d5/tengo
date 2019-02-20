@@ -52,7 +52,7 @@ func expectWithUserModules(t *testing.T, input string, expected interface{}, use
 	runVM(t, file, expected, nil, userModules)
 }
 
-func expectErrorString(t *testing.T, input, expected string) {
+func expectError(t *testing.T, input, expected string) {
 	expected = strings.TrimSpace(expected)
 	if expected == "" {
 		panic("expected must not be empty")

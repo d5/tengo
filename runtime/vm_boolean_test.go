@@ -31,13 +31,13 @@ func TestBoolean(t *testing.T) {
 	expect(t, `out = (1 > 2) == true`, false)
 	expect(t, `out = (1 > 2) == false`, true)
 
-	expectErrorString(t, `5 + true`, "invalid operation")
-	expectErrorString(t, `5 + true; 5`, "invalid operation")
-	expectErrorString(t, `-true`, "invalid operation")
-	expectErrorString(t, `true + false`, "invalid operation")
-	expectErrorString(t, `5; true + false; 5`, "invalid operation")
-	expectErrorString(t, `if (10 > 1) { true + false; }`, "invalid operation")
-	expectErrorString(t, `
+	expectError(t, `5 + true`, "invalid operation")
+	expectError(t, `5 + true; 5`, "invalid operation")
+	expectError(t, `-true`, "invalid operation")
+	expectError(t, `true + false`, "invalid operation")
+	expectError(t, `5; true + false; 5`, "invalid operation")
+	expectError(t, `if (10 > 1) { true + false; }`, "invalid operation")
+	expectError(t, `
 func() {
 	if (10 > 1) {
 		if (10 > 1) {
@@ -48,8 +48,8 @@ func() {
 	}
 }()
 `, "invalid operation")
-	expectErrorString(t, `if (true + false) { 10 }`, "invalid operation")
-	expectErrorString(t, `10 + (true + false)`, "invalid operation")
-	expectErrorString(t, `(true + false) + 20`, "invalid operation")
-	expectErrorString(t, `!(true + false)`, "invalid operation")
+	expectError(t, `if (true + false) { 10 }`, "invalid operation")
+	expectError(t, `10 + (true + false)`, "invalid operation")
+	expectError(t, `(true + false) + 20`, "invalid operation")
+	expectError(t, `!(true + false)`, "invalid operation")
 }

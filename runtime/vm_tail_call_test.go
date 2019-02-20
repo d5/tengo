@@ -79,6 +79,19 @@ iter := func(n, max) {
 }
 out = iter(0, 9999)
 `, 9999)
+	expect(t, `
+c := 0
+iter := func(n, max) {
+	if n == max {
+		return
+	}
+
+	c++
+	iter(n+1, max)
+}
+iter(0, 9999)
+out = c 
+`, 9999)
 }
 
 // tail call with free vars

@@ -18,11 +18,11 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = len(immutable([1, 2, 3]))`, 3)
 	expect(t, `out = len(immutable({}))`, 0)
 	expect(t, `out = len(immutable({a:1, b:2}))`, 2)
-	expectErrorString(t, `len(1)`, "invalid type for argument")
-	expectErrorString(t, `len("one", "two")`, "wrong number of arguments")
+	expectError(t, `len(1)`, "invalid type for argument")
+	expectError(t, `len("one", "two")`, "wrong number of arguments")
 
 	expect(t, `out = copy(1)`, 1)
-	expectErrorString(t, `copy(1, 2)`, "wrong number of arguments")
+	expectError(t, `copy(1, 2)`, "wrong number of arguments")
 
 	expect(t, `out = append([1, 2, 3], 4)`, ARR{1, 2, 3, 4})
 	expect(t, `out = append([1, 2, 3], 4, 5, 6)`, ARR{1, 2, 3, 4, 5, 6})
@@ -157,8 +157,8 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = sprintf("foo %d %v %s", 1, 2, "bar")`, "foo 1 2 bar")
 	expect(t, `out = sprintf("foo %v", [1, "bar", true])`, "foo [1 bar true]")
 	expect(t, `out = sprintf("foo %v %d", [1, "bar", true], 19)`, "foo [1 bar true] 19")
-	expectErrorString(t, `sprintf(1)`, "invalid type for argument")   // format has to be String
-	expectErrorString(t, `sprintf('c')`, "invalid type for argument") // format has to be String
+	expectError(t, `sprintf(1)`, "invalid type for argument")   // format has to be String
+	expectError(t, `sprintf('c')`, "invalid type for argument") // format has to be String
 
 	// type_name
 	expect(t, `out = type_name(1)`, "int")

@@ -48,10 +48,10 @@ func TestString(t *testing.T) {
 	expect(t, fmt.Sprintf("out = %s[:%d]", strStr, strLen+1), str)
 	expect(t, fmt.Sprintf("out = %s[%d:%d]", strStr, 2, 2), "")
 
-	expectErrorString(t, fmt.Sprintf("%s[:%d]", strStr, -1), "invalid slice index")
-	expectErrorString(t, fmt.Sprintf("%s[%d:]", strStr, strLen+1), "invalid slice index")
-	expectErrorString(t, fmt.Sprintf("%s[%d:%d]", strStr, 0, -1), "invalid slice index")
-	expectErrorString(t, fmt.Sprintf("%s[%d:%d]", strStr, 2, 1), "invalid slice index")
+	expectError(t, fmt.Sprintf("%s[:%d]", strStr, -1), "invalid slice index")
+	expectError(t, fmt.Sprintf("%s[%d:]", strStr, strLen+1), "invalid slice index")
+	expectError(t, fmt.Sprintf("%s[%d:%d]", strStr, 0, -1), "invalid slice index")
+	expectError(t, fmt.Sprintf("%s[%d:%d]", strStr, 2, 1), "invalid slice index")
 
 	// string concatenation with other types
 	expect(t, `out = "foo" + 1`, "foo1")
@@ -68,7 +68,7 @@ func TestString(t *testing.T) {
 	// also works with "+=" operator
 	expect(t, `out = "foo"; out += 1.5`, "foo1.5")
 	// string concats works only when string is LHS
-	expectErrorString(t, `1 + "foo"`, "invalid operation")
+	expectError(t, `1 + "foo"`, "invalid operation")
 
-	expectErrorString(t, `"foo" - "bar"`, "invalid operation")
+	expectError(t, `"foo" - "bar"`, "invalid operation")
 }

@@ -8,7 +8,7 @@ import (
 // CompiledFunction represents a compiled function.
 type CompiledFunction struct {
 	Instructions  []byte
-	NumLocals     int
+	NumLocals     int // number of local variables (including function parameters)
 	NumParameters int
 	SourceMap     map[int]source.Pos
 }

@@ -15,7 +15,7 @@ func TestError(t *testing.T) {
 	expect(t, `out = error("some error").value`, "some error")
 	expect(t, `out = error("some error")["value"]`, "some error")
 
-	expectErrorString(t, `error("error").err`, "invalid index on error")
-	expectErrorString(t, `error("error").value_`, "invalid index on error")
-	expectErrorString(t, `error([1,2,3])[1]`, "invalid index on error")
+	expectError(t, `error("error").err`, "invalid index on error")
+	expectError(t, `error("error").value_`, "invalid index on error")
+	expectError(t, `error([1,2,3])[1]`, "invalid index on error")
 }

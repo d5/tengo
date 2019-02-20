@@ -87,10 +87,11 @@ func (v *VM) Run() error {
 	v.ip = -1
 	atomic.StoreInt64(&v.aborting, 0)
 
+mainloop:
 	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
 		v.ip++
 
-		switch compiler.Opcode(v.curInsts[v.ip]) {
+		switch v.curInsts[v.ip] {
 		case compiler.OpConstant:
 			cidx := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
@@ -119,7 +120,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s + %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s + %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -141,7 +143,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s - %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s - %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -163,7 +166,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s * %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s * %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -185,7 +189,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s / %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s / %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -207,7 +212,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s %% %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s %% %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -229,7 +235,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s & %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s & %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -251,7 +258,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s | %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s | %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -273,7 +281,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s ^ %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s ^ %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -295,7 +304,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s &^ %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s &^ %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -317,7 +327,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s << %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s << %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -339,7 +350,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s >> %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s >> %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -393,7 +405,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s > %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s > %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -415,7 +428,8 @@ func (v *VM) Run() error {
 			if err != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s >= %s", filePos, (*left).TypeName(), (*right).TypeName())
+					return fmt.Errorf("%s: invalid operation: %s >= %s",
+						filePos, (*left).TypeName(), (*right).TypeName())
 				}
 
 				return fmt.Errorf("%s: %s", filePos, err.Error())
@@ -877,7 +891,31 @@ func (v *VM) Run() error {
 						filePos, callee.Fn.NumParameters, numArgs)
 				}
 
-				v.callFunction(callee.Fn, callee.Free, numArgs)
+				// test if it's tail-call
+				if callee.Fn == v.curFrame.fn { // recursion
+					nextOp := v.curInsts[v.ip+1]
+					if nextOp == compiler.OpReturnValue ||
+						(nextOp == compiler.OpPop && compiler.OpReturn == v.curInsts[v.ip+2]) {
+						for p := 0; p < numArgs; p++ {
+							v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
+						}
+						v.sp -= numArgs + 1
+						v.ip = -1 // reset IP to beginning of the frame
+						continue mainloop
+					}
+				}
+
+				// update call frame
+				v.curFrame.ip = v.ip // store current ip before call
+				v.curFrame = &(v.frames[v.framesIndex])
+				v.curFrame.fn = callee.Fn
+				v.curFrame.freeVars = callee.Free
+				v.curFrame.basePointer = v.sp - numArgs
+				v.curInsts = callee.Fn.Instructions
+				v.ip = -1
+				v.curIPLimit = len(v.curInsts) - 1
+				v.framesIndex++
+				v.sp = v.sp - numArgs + callee.Fn.NumLocals
 
 			case *objects.CompiledFunction:
 				if numArgs != callee.NumParameters {
@@ -886,7 +924,31 @@ func (v *VM) Run() error {
 						filePos, callee.NumParameters, numArgs)
 				}
 
-				v.callFunction(callee, nil, numArgs)
+				// test if it's tail-call
+				if callee == v.curFrame.fn { // recursion
+					nextOp := v.curInsts[v.ip+1]
+					if nextOp == compiler.OpReturnValue ||
+						(nextOp == compiler.OpPop && compiler.OpReturn == v.curInsts[v.ip+2]) {
+						for p := 0; p < numArgs; p++ {
+							v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
+						}
+						v.sp -= numArgs + 1
+						v.ip = -1 // reset IP to beginning of the frame
+						continue mainloop
+					}
+				}
+
+				// update call frame
+				v.curFrame.ip = v.ip // store current ip before call
+				v.curFrame = &(v.frames[v.framesIndex])
+				v.curFrame.fn = callee
+				v.curFrame.freeVars = nil
+				v.curFrame.basePointer = v.sp - numArgs
+				v.curInsts = callee.Instructions
+				v.ip = -1
+				v.curIPLimit = len(v.curInsts) - 1
+				v.framesIndex++
+				v.sp = v.sp - numArgs + callee.NumLocals
 
 			case objects.Callable:
 				var args []objects.Object
@@ -902,7 +964,8 @@ func (v *VM) Run() error {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-1])
 
 					if err == objects.ErrWrongNumArguments {
-						return fmt.Errorf("%s: wrong number of arguments in call to '%s'", filePos, value.TypeName())
+						return fmt.Errorf("%s: wrong number of arguments in call to '%s'",
+							filePos, value.TypeName())
 					}
 
 					if err, ok := err.(objects.ErrInvalidArgumentType); ok {
@@ -944,9 +1007,10 @@ func (v *VM) Run() error {
 			//v.sp = lastFrame.basePointer - 1
 			v.sp = lastFrame.basePointer
 
-			if v.sp-1 >= StackSize {
-				return ErrStackOverflow
-			}
+			// skip stack overflow check because (newSP) <= (oldSP)
+			//if v.sp-1 >= StackSize {
+			//	return ErrStackOverflow
+			//}
 
 			v.stack[v.sp-1] = retVal
 			//v.sp++
@@ -962,9 +1026,10 @@ func (v *VM) Run() error {
 			//v.sp = lastFrame.basePointer - 1
 			v.sp = lastFrame.basePointer
 
-			if v.sp-1 >= StackSize {
-				return ErrStackOverflow
-			}
+			// skip stack overflow check because (newSP) <= (oldSP)
+			//if v.sp-1 >= StackSize {
+			//	return ErrStackOverflow
+			//}
 
 			v.stack[v.sp-1] = undefinedPtr
 			//v.sp++
@@ -1187,94 +1252,6 @@ func (v *VM) Globals() []*objects.Object {
 // FrameInfo returns the current function call frame information.
 func (v *VM) FrameInfo() (frameIndex, ip int) {
 	return v.framesIndex - 1, v.ip
-}
-
-func (v *VM) callFunction(fn *objects.CompiledFunction, freeVars []*objects.Object, numArgs int) {
-	// check if this is a tail-call (recursive call right before return)
-	if fn == v.curFrame.fn { // recursion
-		nextOp := compiler.Opcode(v.curInsts[v.ip+1])
-		if nextOp == compiler.OpReturnValue || // tail call
-			(nextOp == compiler.OpPop &&
-				compiler.OpReturn == compiler.Opcode(v.curInsts[v.ip+2])) {
-
-			//  stack before tail-call
-			//
-			//  |--------|
-			//  |        | <- SP  current
-			//  |--------|
-			//  | *ARG2  |        for next function (tail-call)
-			//  |--------|
-			//  | *ARG1  |        for next function (tail-call)
-			//  |--------|
-			//  |  FUNC  |        function itself
-			//  |--------|
-			//  | LOCAL3 |        for current function
-			//  |--------|
-			//  | LOCAL2 |        for current function
-			//  |--------|
-			//  |  ARG2  |        for current function
-			//  |--------|
-			//  |  ARG1  | <- BP  for current function
-			//  |--------|
-
-			for p := 0; p < numArgs; p++ {
-				v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
-			}
-			v.sp -= numArgs + 1
-			v.ip = -1 // reset IP to beginning of the frame
-
-			//  stack after tail-call
-			//
-			//  |--------|
-			//  |        |
-			//  |--------|
-			//  | *ARG2  |
-			//  |--------|
-			//  | *ARG1  |
-			//  |--------|
-			//  |  FUNC  | <- SP  current
-			//  |--------|
-			//  | LOCAL3 |        for current function
-			//  |--------|
-			//  | LOCAL2 |        for current function
-			//  |--------|
-			//  | *ARG2  |        (copied)
-			//  |--------|
-			//  | *ARG1  | <- BP  (copied)
-			//  |--------|
-
-			return
-		}
-	}
-
-	// store current ip before call
-	v.curFrame.ip = v.ip
-
-	// update call frame
-	v.curFrame = &(v.frames[v.framesIndex])
-	v.curFrame.fn = fn
-	v.curFrame.freeVars = freeVars
-	v.curFrame.basePointer = v.sp - numArgs
-	v.curInsts = fn.Instructions
-	v.ip = -1
-	v.curIPLimit = len(v.curInsts) - 1
-	v.framesIndex++
-
-	v.sp = v.sp - numArgs + fn.NumLocals
-
-	//  stack after the function call
-	//
-	//  |--------|
-	//  |        |        <- SP after function call
-	//  |--------|
-	//  | LOCAL4 | (BP+3)
-	//  |--------|
-	//  | LOCAL3 | (BP+2) <- SP before function call
-	//  |--------|
-	//  |  ARG2  | (BP+1)
-	//  |--------|
-	//  |  ARG1  | (BP+0) <- BP
-	//  |--------|
 }
 
 func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {

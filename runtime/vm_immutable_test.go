@@ -14,11 +14,11 @@ func TestImmutable(t *testing.T) {
 	expect(t, `a := immutable(1); a = 5; out = a`, 5)
 
 	// array
-	expectErrorString(t, `a := immutable([1, 2, 3]); a[1] = 5`, "not index-assignable")
-	expectErrorString(t, `a := immutable(["foo", [1,2,3]]); a[1] = "bar"`, "not index-assignable")
+	expectError(t, `a := immutable([1, 2, 3]); a[1] = 5`, "not index-assignable")
+	expectError(t, `a := immutable(["foo", [1,2,3]]); a[1] = "bar"`, "not index-assignable")
 	expect(t, `a := immutable(["foo", [1,2,3]]); a[1][1] = "bar"; out = a`, IARR{"foo", ARR{1, "bar", 3}})
-	expectErrorString(t, `a := immutable(["foo", immutable([1,2,3])]); a[1][1] = "bar"`, "not index-assignable")
-	expectErrorString(t, `a := ["foo", immutable([1,2,3])]; a[1][1] = "bar"`, "not index-assignable")
+	expectError(t, `a := immutable(["foo", immutable([1,2,3])]); a[1][1] = "bar"`, "not index-assignable")
+	expectError(t, `a := ["foo", immutable([1,2,3])]; a[1][1] = "bar"`, "not index-assignable")
 	expect(t, `a := immutable([1,2,3]); b := copy(a); b[1] = 5; out = b`, ARR{1, 5, 3})
 	expect(t, `a := immutable([1,2,3]); b := copy(a); b[1] = 5; out = a`, IARR{1, 2, 3})
 	expect(t, `out = immutable([1,2,3]) == [1,2,3]`, true)
@@ -33,11 +33,11 @@ func TestImmutable(t *testing.T) {
 	expect(t, `a := immutable([1, 2, 3]); out = a[5]`, objects.UndefinedValue)
 
 	// map
-	expectErrorString(t, `a := immutable({b: 1, c: 2}); a.b = 5`, "not index-assignable")
-	expectErrorString(t, `a := immutable({b: 1, c: 2}); a["b"] = "bar"`, "not index-assignable")
+	expectError(t, `a := immutable({b: 1, c: 2}); a.b = 5`, "not index-assignable")
+	expectError(t, `a := immutable({b: 1, c: 2}); a["b"] = "bar"`, "not index-assignable")
 	expect(t, `a := immutable({b: 1, c: [1,2,3]}); a.c[1] = "bar"; out = a`, IMAP{"b": 1, "c": ARR{1, "bar", 3}})
-	expectErrorString(t, `a := immutable({b: 1, c: immutable([1,2,3])}); a.c[1] = "bar"`, "not index-assignable")
-	expectErrorString(t, `a := {b: 1, c: immutable([1,2,3])}; a.c[1] = "bar"`, "not index-assignable")
+	expectError(t, `a := immutable({b: 1, c: immutable([1,2,3])}); a.c[1] = "bar"`, "not index-assignable")
+	expectError(t, `a := {b: 1, c: immutable([1,2,3])}; a.c[1] = "bar"`, "not index-assignable")
 	expect(t, `out = immutable({a:1,b:2}) == {a:1,b:2}`, true)
 	expect(t, `out = immutable({a:1,b:2}) == immutable({a:1,b:2})`, true)
 	expect(t, `out = {a:1,b:2} == immutable({a:1,b:2})`, true)
@@ -50,5 +50,5 @@ func TestImmutable(t *testing.T) {
 	expect(t, `a := immutable({a:1,b:2}); out = a.c`, objects.UndefinedValue)
 
 	expect(t, `a := immutable({b: 5, c: "foo"}); out = a.b`, 5)
-	expectErrorString(t, `a := immutable({b: 5, c: "foo"}); a.b = 10`, "not index-assignable")
+	expectError(t, `a := immutable({b: 5, c: "foo"}); a.b = 10`, "not index-assignable")
 }
