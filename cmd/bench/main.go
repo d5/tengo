@@ -206,7 +206,7 @@ func runVM(bytecode *compiler.Bytecode) (time.Duration, objects.Object, error) {
 
 	start := time.Now()
 
-	v := runtime.NewVM(bytecode, globals)
+	v := runtime.NewVM(bytecode, globals, nil)
 	if err := v.Run(); err != nil {
 		return time.Since(start), nil, err
 	}

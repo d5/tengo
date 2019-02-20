@@ -107,7 +107,7 @@ func (s *Script) Compile() (*Compiled, error) {
 
 	return &Compiled{
 		symbolTable: symbolTable,
-		machine:     runtime.NewVM(c.Bytecode(), globals),
+		machine:     runtime.NewVM(c.Bytecode(), globals, nil),
 	}, nil
 }
 

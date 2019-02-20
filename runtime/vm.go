@@ -31,24 +31,29 @@ var (
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
-	constants   []objects.Object
-	stack       []*objects.Object
-	sp          int
-	globals     []*objects.Object
-	fileSet     *source.FileSet
-	frames      []Frame
-	framesIndex int
-	curFrame    *Frame
-	curInsts    []byte
-	curIPLimit  int
-	ip          int
-	aborting    int64
+	constants      []objects.Object
+	stack          []*objects.Object
+	sp             int
+	globals        []*objects.Object
+	fileSet        *source.FileSet
+	frames         []Frame
+	framesIndex    int
+	curFrame       *Frame
+	curInsts       []byte
+	curIPLimit     int
+	ip             int
+	aborting       int64
+	builtinModules map[string]*objects.Object
 }
 
 // NewVM creates a VM.
-func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object) *VM {
+func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinModules map[string]*objects.Object) *VM {
 	if globals == nil {
 		globals = make([]*objects.Object, GlobalsSize)
+	}
+
+	if builtinModules == nil {
+		builtinModules = stdlib.Modules
 	}
 
 	frames := make([]Frame, MaxFrames)
@@ -58,17 +63,18 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object) *VM {
 	frames[0].basePointer = 0
 
 	return &VM{
-		constants:   bytecode.Constants,
-		stack:       make([]*objects.Object, StackSize),
-		sp:          0,
-		globals:     globals,
-		fileSet:     bytecode.FileSet,
-		frames:      frames,
-		framesIndex: 1,
-		curFrame:    &(frames[0]),
-		curInsts:    frames[0].fn.Instructions,
-		curIPLimit:  len(frames[0].fn.Instructions) - 1,
-		ip:          -1,
+		constants:      bytecode.Constants,
+		stack:          make([]*objects.Object, StackSize),
+		sp:             0,
+		globals:        globals,
+		fileSet:        bytecode.FileSet,
+		frames:         frames,
+		framesIndex:    1,
+		curFrame:       &(frames[0]),
+		curInsts:       frames[0].fn.Instructions,
+		curIPLimit:     len(frames[0].fn.Instructions) - 1,
+		ip:             -1,
+		builtinModules: builtinModules,
 	}
 }
 
@@ -1108,7 +1114,7 @@ mainloop:
 
 			moduleName := (*val).(*objects.String).Value
 
-			module, ok := stdlib.Modules[moduleName]
+			module, ok := v.builtinModules[moduleName]
 			if !ok {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-3])
 				return fmt.Errorf("%s: module '%s' not found", filePos, moduleName)
