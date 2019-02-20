@@ -85,7 +85,11 @@ func timesSleep(args ...objects.Object) (ret objects.Object, err error) {
 
 	i1, ok := objects.ToInt64(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -103,7 +107,11 @@ func timesParseDuration(args ...objects.Object) (ret objects.Object, err error) 
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -126,7 +134,11 @@ func timesSince(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -143,7 +155,11 @@ func timesUntil(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -160,7 +176,11 @@ func timesDurationHours(args ...objects.Object) (ret objects.Object, err error) 
 
 	i1, ok := objects.ToInt64(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -177,7 +197,11 @@ func timesDurationMinutes(args ...objects.Object) (ret objects.Object, err error
 
 	i1, ok := objects.ToInt64(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -194,7 +218,11 @@ func timesDurationNanoseconds(args ...objects.Object) (ret objects.Object, err e
 
 	i1, ok := objects.ToInt64(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -211,7 +239,11 @@ func timesDurationSeconds(args ...objects.Object) (ret objects.Object, err error
 
 	i1, ok := objects.ToInt64(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -228,7 +260,11 @@ func timesDurationString(args ...objects.Object) (ret objects.Object, err error)
 
 	i1, ok := objects.ToInt64(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -245,7 +281,11 @@ func timesMonthString(args ...objects.Object) (ret objects.Object, err error) {
 
 	i1, ok := objects.ToInt64(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -262,37 +302,65 @@ func timesDate(args ...objects.Object) (ret objects.Object, err error) {
 
 	i1, ok := objects.ToInt(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 	i2, ok := objects.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 	i3, ok := objects.ToInt(args[2])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "third",
+			Expected: "int(compatible)",
+			Found:    args[2].TypeName(),
+		}
 		return
 	}
 	i4, ok := objects.ToInt(args[3])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "fourth",
+			Expected: "int(compatible)",
+			Found:    args[3].TypeName(),
+		}
 		return
 	}
 	i5, ok := objects.ToInt(args[4])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "fifth",
+			Expected: "int(compatible)",
+			Found:    args[4].TypeName(),
+		}
 		return
 	}
 	i6, ok := objects.ToInt(args[5])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "sixth",
+			Expected: "int(compatible)",
+			Found:    args[5].TypeName(),
+		}
 		return
 	}
 	i7, ok := objects.ToInt(args[6])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "seventh",
+			Expected: "int(compatible)",
+			Found:    args[6].TypeName(),
+		}
 		return
 	}
 
@@ -320,13 +388,21 @@ func timesParse(args ...objects.Object) (ret objects.Object, err error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	s2, ok := objects.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -349,13 +425,21 @@ func timesUnix(args ...objects.Object) (ret objects.Object, err error) {
 
 	i1, ok := objects.ToInt64(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	i2, ok := objects.ToInt64(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -372,13 +456,21 @@ func timesAdd(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	i2, ok := objects.ToInt64(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -395,13 +487,21 @@ func timesSub(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	t2, ok := objects.ToTime(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "time(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -418,25 +518,41 @@ func timesAddDate(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	i2, ok := objects.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
 	i3, ok := objects.ToInt(args[2])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "third",
+			Expected: "int(compatible)",
+			Found:    args[2].TypeName(),
+		}
 		return
 	}
 
 	i4, ok := objects.ToInt(args[3])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "fourth",
+			Expected: "int(compatible)",
+			Found:    args[3].TypeName(),
+		}
 		return
 	}
 
@@ -453,13 +569,21 @@ func timesAfter(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	t2, ok := objects.ToTime(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "time(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -480,13 +604,21 @@ func timesBefore(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	t2, ok := objects.ToTime(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -507,7 +639,11 @@ func timesTimeYear(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -524,7 +660,11 @@ func timesTimeMonth(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -541,7 +681,11 @@ func timesTimeDay(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -558,7 +702,11 @@ func timesTimeWeekday(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -575,7 +723,11 @@ func timesTimeHour(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -592,7 +744,11 @@ func timesTimeMinute(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -609,7 +765,11 @@ func timesTimeSecond(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -626,7 +786,11 @@ func timesTimeNanosecond(args ...objects.Object) (ret objects.Object, err error)
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -643,7 +807,11 @@ func timesTimeUnix(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -660,7 +828,11 @@ func timesTimeUnixNano(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -677,13 +849,21 @@ func timesTimeFormat(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	s2, ok := objects.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -700,7 +880,11 @@ func timesIsZero(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -721,7 +905,11 @@ func timesToLocal(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -738,7 +926,11 @@ func timesToUTC(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -755,7 +947,11 @@ func timesTimeLocation(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -772,7 +968,11 @@ func timesTimeString(args ...objects.Object) (ret objects.Object, err error) {
 
 	t1, ok := objects.ToTime(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 

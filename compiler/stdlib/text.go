@@ -62,13 +62,21 @@ func textREMatch(args ...objects.Object) (ret objects.Object, err error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	s2, ok := objects.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -96,7 +104,11 @@ func textREFind(args ...objects.Object) (ret objects.Object, err error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -108,7 +120,11 @@ func textREFind(args ...objects.Object) (ret objects.Object, err error) {
 
 	s2, ok := objects.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -135,7 +151,11 @@ func textREFind(args ...objects.Object) (ret objects.Object, err error) {
 
 	i3, ok := objects.ToInt(args[2])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "third",
+			Expected: "int(compatible)",
+			Found:    args[2].TypeName(),
+		}
 		return
 	}
 	m := re.FindAllStringSubmatchIndex(s2, i3)
@@ -171,19 +191,31 @@ func textREReplace(args ...objects.Object) (ret objects.Object, err error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	s2, ok := objects.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
 	s3, ok := objects.ToString(args[2])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "third",
+			Expected: "string(compatible)",
+			Found:    args[2].TypeName(),
+		}
 		return
 	}
 
@@ -206,13 +238,21 @@ func textRESplit(args ...objects.Object) (ret objects.Object, err error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	s2, ok := objects.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -220,7 +260,11 @@ func textRESplit(args ...objects.Object) (ret objects.Object, err error) {
 	if numArgs > 2 {
 		i3, ok = objects.ToInt(args[2])
 		if !ok {
-			err = objects.ErrInvalidTypeConversion
+			err = objects.ErrInvalidArgumentType{
+				Name:     "third",
+				Expected: "int(compatible)",
+				Found:    args[2].TypeName(),
+			}
 			return
 		}
 	}
@@ -249,7 +293,11 @@ func textRECompile(args ...objects.Object) (ret objects.Object, err error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -271,25 +319,41 @@ func textReplace(args ...objects.Object) (ret objects.Object, err error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	s2, ok := objects.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
 	s3, ok := objects.ToString(args[2])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "third",
+			Expected: "string(compatible)",
+			Found:    args[2].TypeName(),
+		}
 		return
 	}
 
 	i4, ok := objects.ToInt(args[3])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "fourth",
+			Expected: "int(compatible)",
+			Found:    args[3].TypeName(),
+		}
 		return
 	}
 
@@ -306,7 +370,11 @@ func textFormatBool(args ...objects.Object) (ret objects.Object, err error) {
 
 	b1, ok := args[0].(*objects.Bool)
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "bool",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -327,25 +395,41 @@ func textFormatFloat(args ...objects.Object) (ret objects.Object, err error) {
 
 	f1, ok := args[0].(*objects.Float)
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "float",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	s2, ok := objects.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
 	i3, ok := objects.ToInt(args[2])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "third",
+			Expected: "int(compatible)",
+			Found:    args[2].TypeName(),
+		}
 		return
 	}
 
 	i4, ok := objects.ToInt(args[3])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "fourth",
+			Expected: "int(compatible)",
+			Found:    args[3].TypeName(),
+		}
 		return
 	}
 
@@ -362,13 +446,21 @@ func textFormatInt(args ...objects.Object) (ret objects.Object, err error) {
 
 	i1, ok := args[0].(*objects.Int)
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	i2, ok := objects.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -385,7 +477,11 @@ func textParseBool(args ...objects.Object) (ret objects.Object, err error) {
 
 	s1, ok := args[0].(*objects.String)
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
@@ -412,13 +508,21 @@ func textParseFloat(args ...objects.Object) (ret objects.Object, err error) {
 
 	s1, ok := args[0].(*objects.String)
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	i2, ok := objects.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
@@ -441,19 +545,31 @@ func textParseInt(args ...objects.Object) (ret objects.Object, err error) {
 
 	s1, ok := args[0].(*objects.String)
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
 		return
 	}
 
 	i2, ok := objects.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int(compatible)",
+			Found:    args[1].TypeName(),
+		}
 		return
 	}
 
 	i3, ok := objects.ToInt(args[2])
 	if !ok {
-		err = objects.ErrInvalidTypeConversion
+		err = objects.ErrInvalidArgumentType{
+			Name:     "third",
+			Expected: "int(compatible)",
+			Found:    args[2].TypeName(),
+		}
 		return
 	}
 

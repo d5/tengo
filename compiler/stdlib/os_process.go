@@ -31,7 +31,11 @@ func makeOSProcess(proc *os.Process) *objects.ImmutableMap {
 
 					i1, ok := objects.ToInt64(args[0])
 					if !ok {
-						return nil, objects.ErrInvalidTypeConversion
+						return nil, objects.ErrInvalidArgumentType{
+							Name:     "first",
+							Expected: "int(compatible)",
+							Found:    args[0].TypeName(),
+						}
 					}
 
 					return wrapError(proc.Signal(syscall.Signal(i1))), nil

@@ -21,7 +21,7 @@ a := {
 }
 out = a.b.c`, 4)
 
-	expectError(t, `
+	expect(t, `
 a := {
 	b: {
 		c: 4,
@@ -29,9 +29,9 @@ a := {
 	},
 	c: "foo bar"
 }
-out = a.x.c`)
+b := a.x.c`, objects.UndefinedValue)
 
-	expectError(t, `
+	expect(t, `
 a := {
 	b: {
 		c: 4,
@@ -39,7 +39,7 @@ a := {
 	},
 	c: "foo bar"
 }
-out = a.x.y`)
+b := a.x.y`, objects.UndefinedValue)
 
 	expect(t, `a := {b: 1, c: "foo"}; a.b = 2; out = a.b`, 2)
 	expect(t, `a := {b: 1, c: "foo"}; a.c = 2; out = a.c`, 2) // type not checked on sub-field
@@ -81,10 +81,10 @@ func() {
 }()
 `, 9)
 
-	expectError(t, `a := {b: {c: 1}}; a.d.c = 2`)
-	expectError(t, `a := [1, 2, 3]; a.b = 2`)
-	expectError(t, `a := "foo"; a.b = 2`)
-	expectError(t, `func() { a := {b: {c: 1}}; a.d.c = 2 }()`)
-	expectError(t, `func() { a := [1, 2, 3]; a.b = 2 }()`)
-	expectError(t, `func() { a := "foo"; a.b = 2 }()`)
+	expectErrorString(t, `a := {b: {c: 1}}; a.d.c = 2`, "not index-assignable")
+	expectErrorString(t, `a := [1, 2, 3]; a.b = 2`, "invalid index type")
+	expectErrorString(t, `a := "foo"; a.b = 2`, "not index-assignable")
+	expectErrorString(t, `func() { a := {b: {c: 1}}; a.d.c = 2 }()`, "not index-assignable")
+	expectErrorString(t, `func() { a := [1, 2, 3]; a.b = 2 }()`, "invalid index type")
+	expectErrorString(t, `func() { a := "foo"; a.b = 2 }()`, "not index-assignable")
 }

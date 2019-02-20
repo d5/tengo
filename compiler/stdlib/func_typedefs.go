@@ -1,6 +1,8 @@
 package stdlib
 
 import (
+	"fmt"
+
 	"github.com/d5/tengo/objects"
 )
 
@@ -52,7 +54,11 @@ func FuncAI64RI64(fn func(int64) int64) objects.CallableFunc {
 
 		i1, ok := objects.ToInt64(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "int(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		return &objects.Int{Value: fn(i1)}, nil
@@ -69,7 +75,11 @@ func FuncAI64R(fn func(int64)) objects.CallableFunc {
 
 		i1, ok := objects.ToInt64(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "int(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		fn(i1)
@@ -213,7 +223,11 @@ func FuncAIRIs(fn func(int) []int) objects.CallableFunc {
 
 		i1, ok := objects.ToInt(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "int(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		res := fn(i1)
@@ -237,7 +251,11 @@ func FuncAFRF(fn func(float64) float64) objects.CallableFunc {
 
 		f1, ok := objects.ToFloat64(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "float(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		return &objects.Float{Value: fn(f1)}, nil
@@ -254,7 +272,11 @@ func FuncAIR(fn func(int)) objects.CallableFunc {
 
 		i1, ok := objects.ToInt(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "int(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		fn(i1)
@@ -273,7 +295,11 @@ func FuncAIRF(fn func(int) float64) objects.CallableFunc {
 
 		i1, ok := objects.ToInt(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "int(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		return &objects.Float{Value: fn(i1)}, nil
@@ -290,7 +316,11 @@ func FuncAFRI(fn func(float64) int) objects.CallableFunc {
 
 		f1, ok := objects.ToFloat64(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "float(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		return &objects.Int{Value: int64(fn(f1))}, nil
@@ -307,12 +337,20 @@ func FuncAFFRF(fn func(float64, float64) float64) objects.CallableFunc {
 
 		f1, ok := objects.ToFloat64(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "float(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		f2, ok := objects.ToFloat64(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "float(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		return &objects.Float{Value: fn(f1, f2)}, nil
@@ -329,12 +367,20 @@ func FuncAIFRF(fn func(int, float64) float64) objects.CallableFunc {
 
 		i1, ok := objects.ToInt(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "int(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		f2, ok := objects.ToFloat64(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "float(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		return &objects.Float{Value: fn(i1, f2)}, nil
@@ -351,12 +397,20 @@ func FuncAFIRF(fn func(float64, int) float64) objects.CallableFunc {
 
 		f1, ok := objects.ToFloat64(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "float(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		i2, ok := objects.ToInt(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "int(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		return &objects.Float{Value: fn(f1, i2)}, nil
@@ -373,12 +427,20 @@ func FuncAFIRB(fn func(float64, int) bool) objects.CallableFunc {
 
 		f1, ok := objects.ToFloat64(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "float(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		i2, ok := objects.ToInt(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "int(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		if fn(f1, i2) {
@@ -399,7 +461,11 @@ func FuncAFRB(fn func(float64) bool) objects.CallableFunc {
 
 		f1, ok := objects.ToFloat64(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "float(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		if fn(f1) {
@@ -420,7 +486,11 @@ func FuncASRS(fn func(string) string) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		return &objects.String{Value: fn(s1)}, nil
@@ -436,7 +506,11 @@ func FuncASRSs(fn func(string) []string) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		res := fn(s1)
@@ -460,7 +534,11 @@ func FuncASRSE(fn func(string) (string, error)) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		res, err := fn(s1)
@@ -482,7 +560,11 @@ func FuncASRE(fn func(string) error) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		return wrapError(fn(s1)), nil
@@ -499,12 +581,20 @@ func FuncASSRE(fn func(string, string) error) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		s2, ok := objects.ToString(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "string(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		return wrapError(fn(s1, s2)), nil
@@ -520,12 +610,20 @@ func FuncASSRSs(fn func(string, string) []string) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		s2, ok := objects.ToString(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		arr := &objects.Array{}
@@ -546,17 +644,29 @@ func FuncASSIRSs(fn func(string, string, int) []string) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		s2, ok := objects.ToString(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "string(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		i3, ok := objects.ToInt(args[2])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "third",
+				Expected: "int(compatible)",
+				Found:    args[2].TypeName(),
+			}
 		}
 
 		arr := &objects.Array{}
@@ -577,12 +687,20 @@ func FuncASSRI(fn func(string, string) int) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		s2, ok := objects.ToString(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		return &objects.Int{Value: int64(fn(s1, s2))}, nil
@@ -598,12 +716,20 @@ func FuncASSRS(fn func(string, string) string) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		s2, ok := objects.ToString(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "string(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		return &objects.String{Value: fn(s1, s2)}, nil
@@ -619,12 +745,20 @@ func FuncASSRB(fn func(string, string) bool) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		s2, ok := objects.ToString(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "string(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		if fn(s1, s2) {
@@ -643,21 +777,46 @@ func FuncASsSRS(fn func([]string, string) string) objects.CallableFunc {
 		}
 
 		var ss1 []string
-		arr, ok := args[0].(*objects.Array)
-		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
-		}
-		for _, a := range arr.Value {
-			as, ok := objects.ToString(a)
-			if !ok {
-				return nil, objects.ErrInvalidTypeConversion
+		switch arg0 := args[0].(type) {
+		case *objects.Array:
+			for idx, a := range arg0.Value {
+				as, ok := objects.ToString(a)
+				if !ok {
+					return nil, objects.ErrInvalidArgumentType{
+						Name:     fmt.Sprintf("first[%d]", idx),
+						Expected: "string(compatible)",
+						Found:    a.TypeName(),
+					}
+				}
+				ss1 = append(ss1, as)
 			}
-			ss1 = append(ss1, as)
+		case *objects.ImmutableArray:
+			for idx, a := range arg0.Value {
+				as, ok := objects.ToString(a)
+				if !ok {
+					return nil, objects.ErrInvalidArgumentType{
+						Name:     fmt.Sprintf("first[%d]", idx),
+						Expected: "string(compatible)",
+						Found:    a.TypeName(),
+					}
+				}
+				ss1 = append(ss1, as)
+			}
+		default:
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "array",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		s2, ok := objects.ToString(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "string(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		return &objects.String{Value: fn(ss1, s2)}, nil
@@ -674,12 +833,20 @@ func FuncASI64RE(fn func(string, int64) error) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		i2, ok := objects.ToInt64(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "int(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		return wrapError(fn(s1, i2)), nil
@@ -696,12 +863,20 @@ func FuncAIIRE(fn func(int, int) error) objects.CallableFunc {
 
 		i1, ok := objects.ToInt(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "int(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		i2, ok := objects.ToInt(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "int(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		return wrapError(fn(i1, i2)), nil
@@ -718,12 +893,20 @@ func FuncASIRS(fn func(string, int) string) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		i2, ok := objects.ToInt(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "int(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		return &objects.String{Value: fn(s1, i2)}, nil
@@ -740,17 +923,29 @@ func FuncASIIRE(fn func(string, int, int) error) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		i2, ok := objects.ToInt(args[1])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "int(compatible)",
+				Found:    args[1].TypeName(),
+			}
 		}
 
 		i3, ok := objects.ToInt(args[2])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "third",
+				Expected: "int(compatible)",
+				Found:    args[2].TypeName(),
+			}
 		}
 
 		return wrapError(fn(s1, i2, i3)), nil
@@ -767,7 +962,11 @@ func FuncAYRIE(fn func([]byte) (int, error)) objects.CallableFunc {
 
 		y1, ok := objects.ToByteSlice(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "bytes(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		res, err := fn(y1)
@@ -789,7 +988,11 @@ func FuncASRIE(fn func(string) (int, error)) objects.CallableFunc {
 
 		s1, ok := objects.ToString(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		res, err := fn(s1)
@@ -811,7 +1014,11 @@ func FuncAIRSsE(fn func(int) ([]string, error)) objects.CallableFunc {
 
 		i1, ok := objects.ToInt(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "int(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		res, err := fn(i1)
@@ -838,7 +1045,11 @@ func FuncAIRS(fn func(int) string) objects.CallableFunc {
 
 		i1, ok := objects.ToInt(args[0])
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "int(compatible)",
+				Found:    args[0].TypeName(),
+			}
 		}
 
 		return &objects.String{Value: fn(i1)}, nil

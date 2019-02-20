@@ -22,7 +22,11 @@ var randModule = map[string]objects.Object{
 
 			y1, ok := args[0].(*objects.Bytes)
 			if !ok {
-				return nil, objects.ErrInvalidTypeConversion
+				return nil, objects.ErrInvalidArgumentType{
+					Name:     "first",
+					Expected: "bytes",
+					Found:    args[0].TypeName(),
+				}
 			}
 
 			res, err := rand.Read(y1.Value)
@@ -42,7 +46,11 @@ var randModule = map[string]objects.Object{
 
 			i1, ok := objects.ToInt64(args[0])
 			if !ok {
-				return nil, objects.ErrInvalidTypeConversion
+				return nil, objects.ErrInvalidArgumentType{
+					Name:     "first",
+					Expected: "int(compatible)",
+					Found:    args[0].TypeName(),
+				}
 			}
 
 			src := rand.NewSource(i1)
@@ -70,7 +78,11 @@ func randRand(r *rand.Rand) *objects.ImmutableMap {
 
 					y1, ok := args[0].(*objects.Bytes)
 					if !ok {
-						return nil, objects.ErrInvalidTypeConversion
+						return nil, objects.ErrInvalidArgumentType{
+							Name:     "first",
+							Expected: "bytes",
+							Found:    args[0].TypeName(),
+						}
 					}
 
 					res, err := r.Read(y1.Value)

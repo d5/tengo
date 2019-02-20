@@ -859,10 +859,12 @@ func (v *VM) Run() error {
 				// runtime error
 				if err != nil {
 					if err == objects.ErrWrongNumArguments {
-						return fmt.Errorf("wrong number of arguments in call to %s", value.TypeName())
+						return fmt.Errorf("wrong number of arguments in call to '%s'", value.TypeName())
 					}
 
-					// TODO: find other types of errors from stdlib and builtin functions
+					if err, ok := err.(objects.ErrInvalidArgumentType); ok {
+						return fmt.Errorf("invalid type for argument '%s' in call to '%s': expected %s, found %s", err.Name, value.TypeName(), err.Expected, err.Found)
+					}
 
 					return err
 				}
@@ -1267,7 +1269,15 @@ func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 		return fmt.Errorf("not index-assignable: %s", (*dst).TypeName())
 	}
 
-	return indexAssignable.IndexSet(*selectors[0], *src)
+	if err := indexAssignable.IndexSet(*selectors[0], *src); err != nil {
+		if err == objects.ErrInvalidIndexValueType {
+			return fmt.Errorf("invaid index value type: %s", (*src).TypeName())
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func init() {

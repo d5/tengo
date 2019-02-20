@@ -1,6 +1,7 @@
 package stdlib
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -89,7 +90,11 @@ func osReadFile(args ...objects.Object) (ret objects.Object, err error) {
 
 	fname, ok := objects.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 	}
 
 	bytes, err := ioutil.ReadFile(fname)
@@ -107,7 +112,11 @@ func osStat(args ...objects.Object) (ret objects.Object, err error) {
 
 	fname, ok := objects.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 	}
 
 	stat, err := os.Stat(fname)
@@ -140,7 +149,11 @@ func osCreate(args ...objects.Object) (objects.Object, error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 	}
 
 	res, err := os.Create(s1)
@@ -158,7 +171,11 @@ func osOpen(args ...objects.Object) (objects.Object, error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 	}
 
 	res, err := os.Open(s1)
@@ -176,17 +193,29 @@ func osOpenFile(args ...objects.Object) (objects.Object, error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 	}
 
 	i2, ok := objects.ToInt(args[1])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int(compatible)",
+			Found:    args[1].TypeName(),
+		}
 	}
 
 	i3, ok := objects.ToInt(args[2])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "third",
+			Expected: "int(compatible)",
+			Found:    args[2].TypeName(),
+		}
 	}
 
 	res, err := os.OpenFile(s1, i2, os.FileMode(i3))
@@ -219,11 +248,19 @@ func osFuncASFmRE(fn func(string, os.FileMode) error) *objects.UserFunction {
 
 			s1, ok := objects.ToString(args[0])
 			if !ok {
-				return nil, objects.ErrInvalidTypeConversion
+				return nil, objects.ErrInvalidArgumentType{
+					Name:     "first",
+					Expected: "string(compatible)",
+					Found:    args[0].TypeName(),
+				}
 			}
 			i2, ok := objects.ToInt64(args[1])
 			if !ok {
-				return nil, objects.ErrInvalidTypeConversion
+				return nil, objects.ErrInvalidArgumentType{
+					Name:     "second",
+					Expected: "int(compatible)",
+					Found:    args[1].TypeName(),
+				}
 			}
 
 			return wrapError(fn(s1, os.FileMode(i2))), nil
@@ -238,7 +275,11 @@ func osLookupEnv(args ...objects.Object) (objects.Object, error) {
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 	}
 
 	res, ok := os.LookupEnv(s1)
@@ -256,14 +297,22 @@ func osExec(args ...objects.Object) (objects.Object, error) {
 
 	name, ok := objects.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 	}
 
 	var execArgs []string
-	for _, arg := range args[1:] {
+	for idx, arg := range args[1:] {
 		execArg, ok := objects.ToString(arg)
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     fmt.Sprintf("args[%d]", idx),
+				Expected: "string(compatible)",
+				Found:    args[1+idx].TypeName(),
+			}
 		}
 
 		execArgs = append(execArgs, execArg)
@@ -279,7 +328,11 @@ func osFindProcess(args ...objects.Object) (objects.Object, error) {
 
 	i1, ok := objects.ToInt(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "int(compatible)",
+			Found:    args[0].TypeName(),
+		}
 	}
 
 	proc, err := os.FindProcess(i1)
@@ -297,22 +350,61 @@ func osStartProcess(args ...objects.Object) (objects.Object, error) {
 
 	name, ok := objects.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 	}
 
-	argv, err := stringArray(args[1])
-	if err != nil {
-		return nil, err
+	var argv []string
+	var err error
+	switch arg1 := args[1].(type) {
+	case *objects.Array:
+		argv, err = stringArray(arg1.Value, "second")
+		if err != nil {
+			return nil, err
+		}
+	case *objects.ImmutableArray:
+		argv, err = stringArray(arg1.Value, "second")
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "array",
+			Found:    arg1.TypeName(),
+		}
 	}
 
 	dir, ok := objects.ToString(args[2])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "third",
+			Expected: "string(compatible)",
+			Found:    args[2].TypeName(),
+		}
 	}
 
-	env, err := stringArray(args[3])
-	if err != nil {
-		return nil, err
+	var env []string
+	switch arg3 := args[3].(type) {
+	case *objects.Array:
+		env, err = stringArray(arg3.Value, "fourth")
+		if err != nil {
+			return nil, err
+		}
+	case *objects.ImmutableArray:
+		env, err = stringArray(arg3.Value, "fourth")
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "fourth",
+			Expected: "array",
+			Found:    arg3.TypeName(),
+		}
 	}
 
 	proc, err := os.StartProcess(name, argv, &os.ProcAttr{
@@ -326,17 +418,16 @@ func osStartProcess(args ...objects.Object) (objects.Object, error) {
 	return makeOSProcess(proc), nil
 }
 
-func stringArray(o objects.Object) ([]string, error) {
-	arr, ok := o.(*objects.Array)
-	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
-	}
-
+func stringArray(arr []objects.Object, argName string) ([]string, error) {
 	var sarr []string
-	for _, elem := range arr.Value {
+	for idx, elem := range arr {
 		str, ok := elem.(*objects.String)
 		if !ok {
-			return nil, objects.ErrInvalidTypeConversion
+			return nil, objects.ErrInvalidArgumentType{
+				Name:     fmt.Sprintf("%s[%d]", argName, idx),
+				Expected: "string",
+				Found:    elem.TypeName(),
+			}
 		}
 
 		sarr = append(sarr, str.Value)

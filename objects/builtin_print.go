@@ -26,7 +26,11 @@ func builtinPrintf(args ...Object) (Object, error) {
 
 	format, ok := args[0].(*String)
 	if !ok {
-		return nil, ErrInvalidTypeConversion
+		return nil, ErrInvalidArgumentType{
+			Name:     "format",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
 	}
 	if numArgs == 1 {
 		fmt.Print(format)
@@ -52,7 +56,11 @@ func builtinSprintf(args ...Object) (Object, error) {
 
 	format, ok := args[0].(*String)
 	if !ok {
-		return nil, ErrInvalidTypeConversion
+		return nil, ErrInvalidArgumentType{
+			Name:     "format",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
 	}
 	if numArgs == 1 {
 		return format, nil // okay to return 'format' directly as String is immutable

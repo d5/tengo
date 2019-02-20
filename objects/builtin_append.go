@@ -1,9 +1,5 @@
 package objects
 
-import (
-	"fmt"
-)
-
 // append(arr, items...)
 func builtinAppend(args ...Object) (Object, error) {
 	if len(args) < 2 {
@@ -16,6 +12,10 @@ func builtinAppend(args ...Object) (Object, error) {
 	case *ImmutableArray:
 		return &Array{Value: append(arg.Value, args[1:]...)}, nil
 	default:
-		return nil, fmt.Errorf("invalid type for the first argument: %s", arg.TypeName())
+		return nil, ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "array",
+			Found:    arg.TypeName(),
+		}
 	}
 }

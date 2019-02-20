@@ -52,49 +52,43 @@ func expectWithUserModules(t *testing.T, input string, expected interface{}, use
 	runVM(t, file, expected, nil, userModules)
 }
 
-func expectError(t *testing.T, input string) {
-	_ = expectErrorWithUserModules(t, input, nil)
-}
-
 func expectErrorString(t *testing.T, input, expected string) {
-	err := expectErrorWithUserModules(t, input, nil)
-	if err == nil {
-		return
+	expected = strings.TrimSpace(expected)
+	if expected == "" {
+		panic("expected must not be empty")
 	}
 
-	assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error())
+	expectErrorWithUserModules(t, input, nil, expected)
 }
 
-func expectErrorWithUserModules(t *testing.T, input string, userModules map[string]string) error {
+func expectErrorWithUserModules(t *testing.T, input string, userModules map[string]string, expected string) {
 	// parse
 	program := parse(t, input)
 	if program == nil {
-		return nil
+		return
 	}
 
 	// compiler/VM
 	_, trace, err := traceCompileRun(program, nil, userModules)
-	if err == nil {
+	if !assert.Error(t, err) ||
+		!assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
 		t.Log("\n" + strings.Join(trace, "\n"))
 	}
-
-	return err
 }
 
-func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objects.Object) error {
+func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objects.Object, expected string) {
 	// parse
 	program := parse(t, input)
 	if program == nil {
-		return nil
+		return
 	}
 
 	// compiler/VM
 	_, trace, err := traceCompileRun(program, symbols, nil)
-	if err == nil {
+	if !assert.Error(t, err) ||
+		!assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
 		t.Log("\n" + strings.Join(trace, "\n"))
 	}
-
-	return err
 }
 
 func runVM(t *testing.T, file *ast.File, expected interface{}, symbols map[string]objects.Object, userModules map[string]string) (ok bool) {
