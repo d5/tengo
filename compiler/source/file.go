@@ -14,6 +14,7 @@ type File struct {
 	Lines []int
 }
 
+// Set returns FileSet.
 func (f *File) Set() *FileSet {
 	return f.set
 }
