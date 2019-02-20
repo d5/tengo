@@ -77,7 +77,7 @@ func (v *VM) Abort() {
 }
 
 // Run starts the execution.
-func (v *VM) Run() error {
+func (v *VM) Run() (err error) {
 	// reset VM states
 	v.sp = 0
 	v.curFrame = &(v.frames[0])
@@ -89,7 +89,21 @@ func (v *VM) Run() error {
 
 mainloop:
 	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
-		v.ip++
+		if err != nil {
+			if v.framesIndex <= 1 {
+				break
+			}
+			v.framesIndex--
+			lastFrame := v.frames[v.framesIndex]
+			v.curFrame = &v.frames[v.framesIndex-1]
+			v.curInsts = v.curFrame.fn.Instructions
+			v.curIPLimit = len(v.curInsts) - 1
+			v.ip = v.curFrame.ip - 1
+			v.sp = lastFrame.basePointer
+			v.stack[v.sp-1] = undefinedPtr
+		} else {
+			v.ip++
+		}
 
 		switch v.curInsts[v.ip] {
 		case compiler.OpConstant:
@@ -97,7 +111,8 @@ mainloop:
 			v.ip += 2
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &v.constants[cidx]
@@ -105,7 +120,8 @@ mainloop:
 
 		case compiler.OpNull:
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = undefinedPtr
@@ -116,19 +132,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.Add, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.Add, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s + %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s + %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -139,19 +158,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.Sub, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.Sub, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s - %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s - %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -162,19 +184,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.Mul, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.Mul, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s * %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s * %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -185,19 +210,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.Quo, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.Quo, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s / %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s / %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -208,19 +236,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.Rem, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.Rem, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s %% %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s %% %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -231,19 +262,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.And, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.And, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s & %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s & %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -254,19 +288,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.Or, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.Or, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s | %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s | %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -277,19 +314,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.Xor, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.Xor, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s ^ %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s ^ %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -300,19 +340,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.AndNot, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.AndNot, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s &^ %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s &^ %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -323,19 +366,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.Shl, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.Shl, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s << %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s << %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -346,19 +392,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.Shr, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.Shr, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s >> %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s >> %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -370,7 +419,8 @@ mainloop:
 			v.sp -= 2
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			if (*left).Equals(*right) {
@@ -386,7 +436,8 @@ mainloop:
 			v.sp -= 2
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			if (*left).Equals(*right) {
@@ -401,19 +452,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.Greater, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.Greater, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s > %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s > %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -424,19 +478,22 @@ mainloop:
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, err := (*left).BinaryOp(token.GreaterEq, *right)
-			if err != nil {
+			res, e := (*left).BinaryOp(token.GreaterEq, *right)
+			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if err == objects.ErrInvalidOperator {
-					return fmt.Errorf("%s: invalid operation: %s >= %s",
+				if e == objects.ErrInvalidOperator {
+					err = fmt.Errorf("%s: invalid operation: %s >= %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
+					continue mainloop
 				}
 
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &res
@@ -447,7 +504,8 @@ mainloop:
 
 		case compiler.OpTrue:
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = truePtr
@@ -455,7 +513,8 @@ mainloop:
 
 		case compiler.OpFalse:
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = falsePtr
@@ -466,7 +525,8 @@ mainloop:
 			v.sp--
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			if (*operand).IsFalsy() {
@@ -483,7 +543,8 @@ mainloop:
 			switch x := (*operand).(type) {
 			case *objects.Int:
 				if v.sp >= StackSize {
-					return ErrStackOverflow
+					err = ErrStackOverflow
+					continue mainloop
 				}
 
 				var res objects.Object = &objects.Int{Value: ^x.Value}
@@ -492,7 +553,8 @@ mainloop:
 				v.sp++
 			default:
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				return fmt.Errorf("%s: invalid operation: ^%s", filePos, (*operand).TypeName())
+				err = fmt.Errorf("%s: invalid operation: ^%s", filePos, (*operand).TypeName())
+				continue mainloop
 			}
 
 		case compiler.OpMinus:
@@ -502,7 +564,8 @@ mainloop:
 			switch x := (*operand).(type) {
 			case *objects.Int:
 				if v.sp >= StackSize {
-					return ErrStackOverflow
+					err = ErrStackOverflow
+					continue mainloop
 				}
 
 				var res objects.Object = &objects.Int{Value: -x.Value}
@@ -511,7 +574,8 @@ mainloop:
 				v.sp++
 			case *objects.Float:
 				if v.sp >= StackSize {
-					return ErrStackOverflow
+					err = ErrStackOverflow
+					continue mainloop
 				}
 
 				var res objects.Object = &objects.Float{Value: -x.Value}
@@ -520,7 +584,8 @@ mainloop:
 				v.sp++
 			default:
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				return fmt.Errorf("%s: invalid operation: -%s", filePos, (*operand).TypeName())
+				err = fmt.Errorf("%s: invalid operation: -%s", filePos, (*operand).TypeName())
+				continue mainloop
 			}
 
 		case compiler.OpJumpFalsy:
@@ -578,9 +643,10 @@ mainloop:
 			val := v.stack[v.sp-numSelectors-1]
 			v.sp -= numSelectors + 1
 
-			if err := indexAssign(v.globals[globalIndex], val, selectors); err != nil {
+			if e := indexAssign(v.globals[globalIndex], val, selectors); e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-3])
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 		case compiler.OpGetGlobal:
@@ -590,7 +656,8 @@ mainloop:
 			val := v.globals[globalIndex]
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = val
@@ -609,7 +676,8 @@ mainloop:
 			var arr objects.Object = &objects.Array{Value: elements}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &arr
@@ -630,7 +698,8 @@ mainloop:
 			var m objects.Object = &objects.Map{Value: kv}
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &m
@@ -639,11 +708,11 @@ mainloop:
 		case compiler.OpError:
 			value := v.stack[v.sp-1]
 
-			var err objects.Object = &objects.Error{
+			var e objects.Object = &objects.Error{
 				Value: *value,
 			}
 
-			v.stack[v.sp-1] = &err
+			v.stack[v.sp-1] = &e
 
 		case compiler.OpImmutable:
 			value := v.stack[v.sp-1]
@@ -668,36 +737,41 @@ mainloop:
 
 			switch left := (*left).(type) {
 			case objects.Indexable:
-				val, err := left.IndexGet(*index)
-				if err != nil {
+				val, e := left.IndexGet(*index)
+				if e != nil {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 
-					if err == objects.ErrInvalidIndexType {
-						return fmt.Errorf("%s: invalid index type: %s", filePos, (*index).TypeName())
+					if e == objects.ErrInvalidIndexType {
+						err = fmt.Errorf("%s: invalid index type: %s", filePos, (*index).TypeName())
+						continue mainloop
 					}
 
-					return fmt.Errorf("%s: %s", filePos, err.Error())
+					err = fmt.Errorf("%s: %s", filePos, e.Error())
+					continue mainloop
 				}
 				if val == nil {
 					val = objects.UndefinedValue
 				}
 
 				if v.sp >= StackSize {
-					return ErrStackOverflow
+					err = ErrStackOverflow
+					continue mainloop
 				}
 
 				v.stack[v.sp] = &val
 				v.sp++
 
-			case *objects.Error: // err.value
+			case *objects.Error: // e.value
 				key, ok := (*index).(*objects.String)
 				if !ok || key.Value != "value" {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-					return fmt.Errorf("%s: invalid index on error", filePos)
+					err = fmt.Errorf("%s: invalid index on error", filePos)
+					continue mainloop
 				}
 
 				if v.sp >= StackSize {
-					return ErrStackOverflow
+					err = ErrStackOverflow
+					continue mainloop
 				}
 
 				v.stack[v.sp] = &left.Value
@@ -705,7 +779,8 @@ mainloop:
 
 			default:
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				return fmt.Errorf("%s: not indexable: %s", filePos, left.TypeName())
+				err = fmt.Errorf("%s: not indexable: %s", filePos, left.TypeName())
+				continue mainloop
 			}
 
 		case compiler.OpSliceIndex:
@@ -720,7 +795,8 @@ mainloop:
 					lowIdx = low.Value
 				} else {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-					return fmt.Errorf("%s: invalid slice index type: %s", filePos, low.TypeName())
+					err = fmt.Errorf("%s: invalid slice index type: %s", filePos, low.TypeName())
+					continue mainloop
 				}
 			}
 
@@ -734,12 +810,14 @@ mainloop:
 					highIdx = high.Value
 				} else {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-					return fmt.Errorf("%s: invalid slice index type: %s", filePos, high.TypeName())
+					err = fmt.Errorf("%s: invalid slice index type: %s", filePos, high.TypeName())
+					continue mainloop
 				}
 
 				if lowIdx > highIdx {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-					return fmt.Errorf("%s: invalid slice index: %d > %d", filePos, lowIdx, highIdx)
+					err = fmt.Errorf("%s: invalid slice index: %d > %d", filePos, lowIdx, highIdx)
+					continue mainloop
 				}
 
 				if lowIdx < 0 {
@@ -755,7 +833,8 @@ mainloop:
 				}
 
 				if v.sp >= StackSize {
-					return ErrStackOverflow
+					err = ErrStackOverflow
+					continue mainloop
 				}
 
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
@@ -771,12 +850,14 @@ mainloop:
 					highIdx = high.Value
 				} else {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-					return fmt.Errorf("%s: invalid slice index type: %s", filePos, high.TypeName())
+					err = fmt.Errorf("%s: invalid slice index type: %s", filePos, high.TypeName())
+					continue mainloop
 				}
 
 				if lowIdx > highIdx {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-					return fmt.Errorf("%s: invalid slice index: %d > %d", filePos, lowIdx, highIdx)
+					err = fmt.Errorf("%s: invalid slice index: %d > %d", filePos, lowIdx, highIdx)
+					continue mainloop
 				}
 
 				if lowIdx < 0 {
@@ -792,7 +873,8 @@ mainloop:
 				}
 
 				if v.sp >= StackSize {
-					return ErrStackOverflow
+					err = ErrStackOverflow
+					continue mainloop
 				}
 
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
@@ -809,12 +891,14 @@ mainloop:
 					highIdx = high.Value
 				} else {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-					return fmt.Errorf("%s: invalid slice index type: %s", filePos, high.TypeName())
+					err = fmt.Errorf("%s: invalid slice index type: %s", filePos, high.TypeName())
+					continue mainloop
 				}
 
 				if lowIdx > highIdx {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-					return fmt.Errorf("%s: invalid slice index: %d > %d", filePos, lowIdx, highIdx)
+					err = fmt.Errorf("%s: invalid slice index: %d > %d", filePos, lowIdx, highIdx)
+					continue mainloop
 				}
 
 				if lowIdx < 0 {
@@ -830,7 +914,8 @@ mainloop:
 				}
 
 				if v.sp >= StackSize {
-					return ErrStackOverflow
+					err = ErrStackOverflow
+					continue mainloop
 				}
 
 				var val objects.Object = &objects.String{Value: left.Value[lowIdx:highIdx]}
@@ -847,12 +932,14 @@ mainloop:
 					highIdx = high.Value
 				} else {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-					return fmt.Errorf("%s: invalid slice index type: %s", filePos, high.TypeName())
+					err = fmt.Errorf("%s: invalid slice index type: %s", filePos, high.TypeName())
+					continue mainloop
 				}
 
 				if lowIdx > highIdx {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-					return fmt.Errorf("%s: invalid slice index: %d > %d", filePos, lowIdx, highIdx)
+					err = fmt.Errorf("%s: invalid slice index: %d > %d", filePos, lowIdx, highIdx)
+					continue mainloop
 				}
 
 				if lowIdx < 0 {
@@ -868,7 +955,8 @@ mainloop:
 				}
 
 				if v.sp >= StackSize {
-					return ErrStackOverflow
+					err = ErrStackOverflow
+					continue mainloop
 				}
 
 				var val objects.Object = &objects.Bytes{Value: left.Value[lowIdx:highIdx]}
@@ -878,6 +966,12 @@ mainloop:
 			}
 
 		case compiler.OpCall:
+			if err != nil {
+				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = fmt.Errorf("%s\nin %s", err.Error(), filePos)
+				continue mainloop
+			}
+
 			numArgs := int(v.curInsts[v.ip+1])
 			v.ip++
 
@@ -887,8 +981,9 @@ mainloop:
 			case *objects.Closure:
 				if numArgs != callee.Fn.NumParameters {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-1])
-					return fmt.Errorf("%s: wrong number of arguments: want=%d, got=%d",
+					err = fmt.Errorf("%s: wrong number of arguments: want=%d, got=%d",
 						filePos, callee.Fn.NumParameters, numArgs)
+					continue mainloop
 				}
 
 				// test if it's tail-call
@@ -920,8 +1015,9 @@ mainloop:
 			case *objects.CompiledFunction:
 				if numArgs != callee.NumParameters {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-1])
-					return fmt.Errorf("%s: wrong number of arguments: want=%d, got=%d",
+					err = fmt.Errorf("%s: wrong number of arguments: want=%d, got=%d",
 						filePos, callee.NumParameters, numArgs)
+					continue mainloop
 				}
 
 				// test if it's tail-call
@@ -956,24 +1052,27 @@ mainloop:
 					args = append(args, *arg)
 				}
 
-				ret, err := callee.Call(args...)
+				ret, e := callee.Call(args...)
 				v.sp -= numArgs + 1
 
 				// runtime error
-				if err != nil {
+				if e != nil {
 					filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-1])
 
-					if err == objects.ErrWrongNumArguments {
-						return fmt.Errorf("%s: wrong number of arguments in call to '%s'",
+					if e == objects.ErrWrongNumArguments {
+						err = fmt.Errorf("%s: wrong number of arguments in call to '%s'",
 							filePos, value.TypeName())
+						continue mainloop
 					}
 
-					if err, ok := err.(objects.ErrInvalidArgumentType); ok {
-						return fmt.Errorf("%s: invalid type for argument '%s' in call to '%s': expected %s, found %s",
-							filePos, err.Name, value.TypeName(), err.Expected, err.Found)
+					if e, ok := e.(objects.ErrInvalidArgumentType); ok {
+						err = fmt.Errorf("%s: invalid type for argument '%s' in call to '%s': expected %s, found %s",
+							filePos, e.Name, value.TypeName(), e.Expected, e.Found)
+						continue mainloop
 					}
 
-					return fmt.Errorf("%s: %s", filePos, err.Error())
+					err = fmt.Errorf("%s: %s", filePos, e.Error())
+					continue mainloop
 				}
 
 				// nil return -> undefined
@@ -982,7 +1081,8 @@ mainloop:
 				}
 
 				if v.sp >= StackSize {
-					return ErrStackOverflow
+					err = ErrStackOverflow
+					continue mainloop
 				}
 
 				v.stack[v.sp] = &ret
@@ -990,7 +1090,8 @@ mainloop:
 
 			default:
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-1])
-				return fmt.Errorf("%s: not callable: %s", filePos, callee.TypeName())
+				err = fmt.Errorf("%s: not callable: %s", filePos, callee.TypeName())
+				continue mainloop
 			}
 
 		case compiler.OpReturnValue:
@@ -1009,7 +1110,7 @@ mainloop:
 
 			// skip stack overflow check because (newSP) <= (oldSP)
 			//if v.sp-1 >= StackSize {
-			//	return ErrStackOverflow
+			//  return ErrStackOverflow
 			//}
 
 			v.stack[v.sp-1] = retVal
@@ -1028,7 +1129,7 @@ mainloop:
 
 			// skip stack overflow check because (newSP) <= (oldSP)
 			//if v.sp-1 >= StackSize {
-			//	return ErrStackOverflow
+			//  return ErrStackOverflow
 			//}
 
 			v.stack[v.sp-1] = undefinedPtr
@@ -1072,9 +1173,10 @@ mainloop:
 
 			sp := v.curFrame.basePointer + localIndex
 
-			if err := indexAssign(v.stack[sp], val, selectors); err != nil {
+			if e := indexAssign(v.stack[sp], val, selectors); e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-2])
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 		case compiler.OpGetLocal:
@@ -1084,7 +1186,8 @@ mainloop:
 			val := v.stack[v.curFrame.basePointer+localIndex]
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = val
@@ -1095,7 +1198,8 @@ mainloop:
 			v.ip++
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &builtinFuncs[builtinIndex]
@@ -1109,7 +1213,8 @@ mainloop:
 			fn, ok := v.constants[constIndex].(*objects.CompiledFunction)
 			if !ok {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-3])
-				return fmt.Errorf("%s: not function: %s", filePos, fn.TypeName())
+				err = fmt.Errorf("%s: not function: %s", filePos, fn.TypeName())
+				continue mainloop
 			}
 
 			free := make([]*objects.Object, numFree)
@@ -1119,7 +1224,8 @@ mainloop:
 			v.sp -= numFree
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			var cl objects.Object = &objects.Closure{
@@ -1137,7 +1243,8 @@ mainloop:
 			val := v.curFrame.freeVars[freeIndex]
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = val
@@ -1153,9 +1260,10 @@ mainloop:
 			val := v.stack[v.sp-numSelectors-1]
 			v.sp -= numSelectors + 1
 
-			if err := indexAssign(v.curFrame.freeVars[freeIndex], val, selectors); err != nil {
+			if e := indexAssign(v.curFrame.freeVars[freeIndex], val, selectors); e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-2])
-				return fmt.Errorf("%s: %s", filePos, err.Error())
+				err = fmt.Errorf("%s: %s", filePos, e.Error())
+				continue mainloop
 			}
 
 		case compiler.OpSetFree:
@@ -1176,13 +1284,15 @@ mainloop:
 			iterable, ok := (*dst).(objects.Iterable)
 			if !ok {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				return fmt.Errorf("%s: not iterable: %s", filePos, (*dst).TypeName())
+				err = fmt.Errorf("%s: not iterable: %s", filePos, (*dst).TypeName())
+				continue mainloop
 			}
 
 			iterator = iterable.Iterate()
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &iterator
@@ -1195,7 +1305,8 @@ mainloop:
 			hasMore := (*iterator).(objects.Iterator).Next()
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			if hasMore {
@@ -1212,7 +1323,8 @@ mainloop:
 			val := (*iterator).(objects.Iterator).Key()
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &val
@@ -1225,7 +1337,8 @@ mainloop:
 			val := (*iterator).(objects.Iterator).Value()
 
 			if v.sp >= StackSize {
-				return ErrStackOverflow
+				err = ErrStackOverflow
+				continue mainloop
 			}
 
 			v.stack[v.sp] = &val
@@ -1234,6 +1347,10 @@ mainloop:
 		default:
 			panic(fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip]))
 		}
+	}
+
+	if err != nil {
+		return err
 	}
 
 	// check if stack still has some objects left
