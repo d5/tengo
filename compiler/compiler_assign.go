@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/d5/tengo/compiler/ast"
@@ -10,41 +9,29 @@ import (
 
 func (c *Compiler) compileAssign(node ast.Node, lhs, rhs []ast.Expr, op token.Token) error {
 	numLHS, numRHS := len(lhs), len(rhs)
-	if numLHS < numRHS {
-		// # of LHS must be >= # of RHS
-		return fmt.Errorf("assigntment count error: %d < %d", numLHS, numRHS)
+	if numLHS > 1 || numRHS > 1 {
+		return c.errorf(node, "tuple assignment not allowed")
 	}
-	if numLHS > 1 {
-		// TODO: until we fully implement the tuple assignment
-		return fmt.Errorf("tuple assignment not implemented")
-	}
-	//if numLHS > 1 && op != token.Assign && op != token.Define {
-	//	return fmt.Errorf("invalid operator for tuple assignment: %s", op.String())
-	//}
 
 	// resolve and compile left-hand side
-	ident, selectors, err := resolveAssignLHS(lhs[0])
-	if err != nil {
-		return err
-	}
-
+	ident, selectors := resolveAssignLHS(lhs[0])
 	numSel := len(selectors)
 
 	if op == token.Define && numSel > 0 {
 		// using selector on new variable does not make sense
-		return errors.New("cannot use selector with ':='")
+		return c.errorf(node, "operator ':=' not allowed with selector")
 	}
 
 	symbol, depth, exists := c.symbolTable.Resolve(ident)
 	if op == token.Define {
 		if depth == 0 && exists {
-			return fmt.Errorf("'%s' redeclared in this block", ident)
+			return c.errorf(node, "'%s' redeclared in this block", ident)
 		}
 
 		symbol = c.symbolTable.Define(ident)
 	} else {
 		if !exists {
-			return fmt.Errorf("unresolved reference '%s'", ident)
+			return c.errorf(node, "unresolved reference '%s'", ident)
 		}
 	}
 
@@ -121,34 +108,25 @@ func (c *Compiler) compileAssign(node ast.Node, lhs, rhs []ast.Expr, op token.To
 			c.emit(node, OpSetFree, symbol.Index)
 		}
 	default:
-		return fmt.Errorf("invalid assignment variable scope: %s", symbol.Scope)
+		panic(fmt.Errorf("invalid assignment variable scope: %s", symbol.Scope))
 	}
 
 	return nil
 }
 
-func resolveAssignLHS(expr ast.Expr) (name string, selectors []ast.Expr, err error) {
+func resolveAssignLHS(expr ast.Expr) (name string, selectors []ast.Expr) {
 	switch term := expr.(type) {
 	case *ast.SelectorExpr:
-		name, selectors, err = resolveAssignLHS(term.Expr)
-		if err != nil {
-			return
-		}
-
+		name, selectors = resolveAssignLHS(term.Expr)
 		selectors = append(selectors, term.Sel)
-
 		return
 
 	case *ast.IndexExpr:
-		name, selectors, err = resolveAssignLHS(term.Expr)
-		if err != nil {
-			return
-		}
-
+		name, selectors = resolveAssignLHS(term.Expr)
 		selectors = append(selectors, term.Index)
 
 	case *ast.Ident:
-		return term.Name, nil, nil
+		name = term.Name
 	}
 
 	return

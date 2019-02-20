@@ -175,7 +175,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		case token.Shr:
 			c.emit(node, OpBShiftRight)
 		default:
-			return fmt.Errorf("unknown operator: %s", node.Token.String())
+			return c.errorf(node, "invalid binary operator: %s", node.Token.String())
 		}
 
 	case *ast.IntLit:
@@ -215,7 +215,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		case token.Add:
 			// do nothing?
 		default:
-			return fmt.Errorf("unknown operator: %s", node.Token.String())
+			return c.errorf(node, "invalid unary operator: %s", node.Token.String())
 		}
 
 	case *ast.IfStmt:
@@ -273,19 +273,19 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if node.Token == token.Break {
 			curLoop := c.currentLoop()
 			if curLoop == nil {
-				return fmt.Errorf("break statement outside loop")
+				return c.errorf(node, "break not allowed outside loop")
 			}
 			pos := c.emit(node, OpJump, 0)
 			curLoop.Breaks = append(curLoop.Breaks, pos)
 		} else if node.Token == token.Continue {
 			curLoop := c.currentLoop()
 			if curLoop == nil {
-				return fmt.Errorf("continue statement outside loop")
+				return c.errorf(node, "continue not allowed outside loop")
 			}
 			pos := c.emit(node, OpJump, 0)
 			curLoop.Continues = append(curLoop.Continues, pos)
 		} else {
-			return fmt.Errorf("unknown branch statement: %s", node.Token.String())
+			panic(fmt.Errorf("invalid branch statement: %s", node.Token.String()))
 		}
 
 	case *ast.BlockStmt:
@@ -303,7 +303,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.Ident:
 		symbol, _, ok := c.symbolTable.Resolve(node.Name)
 		if !ok {
-			return fmt.Errorf("undefined variable: %s", node.Name)
+			return c.errorf(node, "unresolved reference '%s'", node.Name)
 		}
 
 		switch symbol.Scope {
@@ -476,7 +476,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.ReturnStmt:
 		if c.symbolTable.Parent(true) == nil {
 			// outside the function
-			return fmt.Errorf("return statement outside function")
+			return c.errorf(node, "return not allowed outside function")
 		}
 
 		if node.Result == nil {
@@ -509,7 +509,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			// so no need to compile anything
 			c.emit(node, OpConstant, c.addConstant(stdMod))
 		} else {
-			userMod, err := c.compileModule(node.ModuleName)
+			userMod, err := c.compileModule(node)
 			if err != nil {
 				return err
 			}
@@ -521,7 +521,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.ExportStmt:
 		// export statement must be in top-level scope
 		if c.scopeIndex != 0 {
-			return fmt.Errorf("cannot use 'export' inside function")
+			return c.errorf(node, "export not allowed inside function")
 		}
 
 		// export statement is simply ignore when compiling non-module code
@@ -607,6 +607,14 @@ func (c *Compiler) fork(file *source.File, moduleName string, symbolTable *Symbo
 	child.moduleLoader = c.moduleLoader // share module loader
 
 	return child
+}
+
+func (c *Compiler) errorf(node ast.Node, format string, args ...interface{}) error {
+	return &Error{
+		fileSet: c.file.Set(),
+		node:    node,
+		error:   fmt.Errorf(format, args...),
+	}
 }
 
 func (c *Compiler) addConstant(o objects.Object) int {

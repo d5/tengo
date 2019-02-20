@@ -874,7 +874,7 @@ func() {
 				intObject(1),
 				intObject(1))))
 
-	expectError(t, `import("user1")`) // unknown module name
+	expectError(t, `import("user1")`, "no such file or directory") // unknown module name
 }
 
 func concat(instructions ...[]byte) []byte {
@@ -914,7 +914,7 @@ func expect(t *testing.T, input string, expected *compiler.Bytecode) (ok bool) {
 	return
 }
 
-func expectError(t *testing.T, input string) (ok bool) {
+func expectError(t *testing.T, input, expected string) (ok bool) {
 	_, trace, err := traceCompile(input, nil)
 
 	defer func() {
@@ -925,7 +925,15 @@ func expectError(t *testing.T, input string) (ok bool) {
 		}
 	}()
 
-	ok = assert.Error(t, err)
+	if !assert.Error(t, err) {
+		return
+	}
+
+	if !assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
+		return
+	}
+
+	ok = true
 
 	return
 }

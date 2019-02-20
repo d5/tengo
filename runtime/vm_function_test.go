@@ -218,7 +218,7 @@ out = func() {
 	return sum(5)
 }()`, 15)
 
-	expectError(t, `return 5`, "return statement outside function")
+	expectError(t, `return 5`, "return not allowed outside function")
 
 	// closure and block scopes
 	expect(t, `
