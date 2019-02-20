@@ -228,7 +228,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(symTable, nil, nil, tr)
+	c := compiler.NewCompiler(file.InputFile, symTable, nil, nil, tr)
 	c.SetModuleLoader(func(moduleName string) ([]byte, error) {
 		if src, ok := userModules[moduleName]; ok {
 			return []byte(src), nil
@@ -294,7 +294,7 @@ func formatGlobals(globals []*objects.Object) (formatted []string) {
 
 func parse(t *testing.T, input string) *ast.File {
 	testFileSet := source.NewFileSet()
-	testFile := testFileSet.AddFile("", -1, len(input))
+	testFile := testFileSet.AddFile("test", -1, len(input))
 
 	file, err := parser.ParseFile(testFile, []byte(input), nil)
 	if !assert.NoError(t, err) {

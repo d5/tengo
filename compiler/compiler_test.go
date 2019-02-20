@@ -878,7 +878,7 @@ func() {
 }
 
 func concat(instructions ...[]byte) []byte {
-	concat := make([]byte, 0)
+	var concat []byte
 	for _, i := range instructions {
 		concat = append(concat, i...)
 	}
@@ -888,7 +888,8 @@ func concat(instructions ...[]byte) []byte {
 
 func bytecode(instructions []byte, constants []objects.Object) *compiler.Bytecode {
 	return &compiler.Bytecode{
-		Instructions: instructions,
+		FileSet:      source.NewFileSet(),
+		MainFunction: &objects.CompiledFunction{Instructions: instructions},
 		Constants:    constants,
 	}
 }
@@ -930,10 +931,7 @@ func expectError(t *testing.T, input string) (ok bool) {
 }
 
 func equalBytecode(t *testing.T, expected, actual *compiler.Bytecode) bool {
-	expectedInstructions := strings.Join(compiler.FormatInstructions(expected.Instructions, 0), "\n")
-	actualInstructions := strings.Join(compiler.FormatInstructions(actual.Instructions, 0), "\n")
-
-	return assert.Equal(t, expectedInstructions, actualInstructions) &&
+	return assert.Equal(t, expected.MainFunction, actual.MainFunction) &&
 		equalConstants(t, expected.Constants, actual.Constants)
 }
 
@@ -975,7 +973,7 @@ func traceCompile(input string, symbols map[string]objects.Object) (res *compile
 	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(symTable, nil, nil, tr)
+	c := compiler.NewCompiler(file, symTable, nil, nil, tr)
 	parsed, err := p.ParseFile()
 	if err != nil {
 		return

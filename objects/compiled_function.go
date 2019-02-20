@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/compiler/token"
 )
 
@@ -9,6 +10,7 @@ type CompiledFunction struct {
 	Instructions  []byte
 	NumLocals     int
 	NumParameters int
+	SourceMap     map[int]source.Pos
 }
 
 // TypeName returns the name of the type.

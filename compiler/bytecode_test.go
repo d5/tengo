@@ -7,11 +7,17 @@ import (
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler"
+	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
 )
 
+type srcfile struct {
+	name string
+	size int
+}
+
 func TestBytecode(t *testing.T) {
-	testBytecodeSerialization(t, &compiler.Bytecode{})
+	testBytecodeSerialization(t, bytecode(concat(), objectsArray()))
 
 	testBytecodeSerialization(t, bytecode(
 		concat(), objectsArray(
@@ -48,7 +54,7 @@ func TestBytecode(t *testing.T) {
 			&objects.String{Value: "bar"},
 			objects.UndefinedValue)))
 
-	testBytecodeSerialization(t, bytecode(
+	testBytecodeSerialization(t, bytecodeFileSet(
 		concat(
 			compiler.MakeInstruction(compiler.OpConstant, 0),
 			compiler.MakeInstruction(compiler.OpSetGlobal, 0),
@@ -82,7 +88,24 @@ func TestBytecode(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpSetLocal, 0),
 				compiler.MakeInstruction(compiler.OpGetLocal, 0),
 				compiler.MakeInstruction(compiler.OpClosure, 5, 1),
-				compiler.MakeInstruction(compiler.OpReturnValue)))))
+				compiler.MakeInstruction(compiler.OpReturnValue))),
+		fileSet(srcfile{name: "file1", size: 100}, srcfile{name: "file2", size: 200})))
+}
+
+func fileSet(files ...srcfile) *source.FileSet {
+	fileSet := source.NewFileSet()
+	for _, f := range files {
+		fileSet.AddFile(f.name, -1, f.size)
+	}
+	return fileSet
+}
+
+func bytecodeFileSet(instructions []byte, constants []objects.Object, fileSet *source.FileSet) *compiler.Bytecode {
+	return &compiler.Bytecode{
+		FileSet:      fileSet,
+		MainFunction: &objects.CompiledFunction{Instructions: instructions},
+		Constants:    constants,
+	}
 }
 
 func testBytecodeSerialization(t *testing.T, b *compiler.Bytecode) {
@@ -94,6 +117,7 @@ func testBytecodeSerialization(t *testing.T, b *compiler.Bytecode) {
 	err = r.Decode(bytes.NewReader(buf.Bytes()))
 	assert.NoError(t, err)
 
-	assert.Equal(t, b.Instructions, r.Instructions)
+	assert.Equal(t, b.FileSet, r.FileSet)
+	assert.Equal(t, b.MainFunction, r.MainFunction)
 	assert.Equal(t, b.Constants, r.Constants)
 }

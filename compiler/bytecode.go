@@ -6,12 +6,14 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
 )
 
 // Bytecode is a compiled instructions and constants.
 type Bytecode struct {
-	Instructions []byte
+	FileSet      *source.FileSet
+	MainFunction *objects.CompiledFunction
 	Constants    []objects.Object
 }
 
@@ -19,7 +21,13 @@ type Bytecode struct {
 func (b *Bytecode) Decode(r io.Reader) error {
 	dec := gob.NewDecoder(r)
 
-	if err := dec.Decode(&b.Instructions); err != nil {
+	if err := dec.Decode(&b.FileSet); err != nil {
+		return err
+	}
+	// TODO: files in b.FileSet.File does not have their 'set' field properly set to b.FileSet
+	// as it's private field and not serialized by gob encoder/decoder.
+
+	if err := dec.Decode(&b.MainFunction); err != nil {
 		return err
 	}
 
@@ -39,7 +47,11 @@ func (b *Bytecode) Decode(r io.Reader) error {
 func (b *Bytecode) Encode(w io.Writer) error {
 	enc := gob.NewEncoder(w)
 
-	if err := enc.Encode(b.Instructions); err != nil {
+	if err := enc.Encode(b.FileSet); err != nil {
+		return err
+	}
+
+	if err := enc.Encode(b.MainFunction); err != nil {
 		return err
 	}
 
@@ -50,7 +62,7 @@ func (b *Bytecode) Encode(w io.Writer) error {
 // FormatInstructions returns human readable string representations of
 // compiled instructions.
 func (b *Bytecode) FormatInstructions() []string {
-	return FormatInstructions(b.Instructions, 0)
+	return FormatInstructions(b.MainFunction.Instructions, 0)
 }
 
 // FormatConstants returns human readable string representations of
@@ -94,6 +106,8 @@ func cleanupObjects(o objects.Object) objects.Object {
 }
 
 func init() {
+	gob.Register(&source.FileSet{})
+	gob.Register(&source.File{})
 	gob.Register(&objects.Int{})
 	gob.Register(&objects.Float{})
 	gob.Register(&objects.String{})

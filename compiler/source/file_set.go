@@ -2,51 +2,37 @@ package source
 
 import (
 	"sort"
-	"sync"
 )
 
 // FileSet represents a set of source files.
 type FileSet struct {
-	mutex sync.RWMutex // protects the file set
-	base  int          // base offset for the next file
-	files []*File      // list of files in the order added to the set
-	last  *File        // cache of last file looked up
+	Base     int     // base offset for the next file
+	Files    []*File // list of files in the order added to the set
+	LastFile *File   // cache of last file looked up
 }
 
 // NewFileSet creates a new file set.
 func NewFileSet() *FileSet {
 	return &FileSet{
-		base: 1, // 0 == NoPos
+		Base: 1, // 0 == NoPos
 	}
-}
-
-// Base returns the current base position of the file set.
-func (s *FileSet) Base() int {
-	s.mutex.RLock()
-	b := s.base
-	s.mutex.RUnlock()
-
-	return b
 }
 
 // AddFile adds a new file in the file set.
 func (s *FileSet) AddFile(filename string, base, size int) *File {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
 	if base < 0 {
-		base = s.base
+		base = s.Base
 	}
-	if base < s.base || size < 0 {
+	if base < s.Base || size < 0 {
 		panic("illegal base or size")
 	}
 
 	f := &File{
 		set:   s,
-		name:  filename,
-		base:  base,
-		size:  size,
-		lines: []int{0},
+		Name:  filename,
+		Base:  base,
+		Size:  size,
+		Lines: []int{0},
 	}
 
 	base += size + 1 // +1 because EOF also has a position
@@ -55,9 +41,9 @@ func (s *FileSet) AddFile(filename string, base, size int) *File {
 	}
 
 	// add the file to the file set
-	s.base = base
-	s.files = append(s.files, f)
-	s.last = f
+	s.Base = base
+	s.Files = append(s.Files, f)
+	s.LastFile = f
 
 	return f
 }
@@ -86,32 +72,25 @@ func (s *FileSet) Position(p Pos) (pos FilePos) {
 }
 
 func (s *FileSet) file(p Pos) *File {
-	s.mutex.RLock()
-
 	// common case: p is in last file
-	if f := s.last; f != nil && f.base <= int(p) && int(p) <= f.base+f.size {
-		s.mutex.RUnlock()
+	if f := s.LastFile; f != nil && f.Base <= int(p) && int(p) <= f.Base+f.Size {
 		return f
 	}
 
 	// p is not in last file - search all files
-	if i := searchFiles(s.files, int(p)); i >= 0 {
-		f := s.files[i]
+	if i := searchFiles(s.Files, int(p)); i >= 0 {
+		f := s.Files[i]
 
 		// f.base <= int(p) by definition of searchFiles
-		if int(p) <= f.base+f.size {
-			s.mutex.RUnlock()
-			s.mutex.Lock()
-			s.last = f // race is ok - s.last is only a cache
-			s.mutex.Unlock()
+		if int(p) <= f.Base+f.Size {
+			s.LastFile = f // race is ok - s.last is only a cache
 			return f
 		}
 	}
 
-	s.mutex.RUnlock()
 	return nil
 }
 
 func searchFiles(a []*File, x int) int {
-	return sort.Search(len(a), func(i int) bool { return a[i].base > x }) - 1
+	return sort.Search(len(a), func(i int) bool { return a[i].Base > x }) - 1
 }

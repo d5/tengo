@@ -27,7 +27,7 @@ func (c *Compiler) compileForStmt(stmt *ast.ForStmt) error {
 			return err
 		}
 		// condition jump position
-		postCondPos = c.emit(OpJumpFalsy, 0)
+		postCondPos = c.emit(stmt, OpJumpFalsy, 0)
 	}
 
 	// enter loop
@@ -52,7 +52,7 @@ func (c *Compiler) compileForStmt(stmt *ast.ForStmt) error {
 	}
 
 	// back to condition
-	c.emit(OpJump, preCondPos)
+	c.emit(stmt, OpJump, preCondPos)
 
 	// post-statement position
 	postStmtPos := len(c.currentInstructions())
@@ -94,11 +94,11 @@ func (c *Compiler) compileForInStmt(stmt *ast.ForInStmt) error {
 	if err := c.Compile(stmt.Iterable); err != nil {
 		return err
 	}
-	c.emit(OpIteratorInit)
+	c.emit(stmt, OpIteratorInit)
 	if itSymbol.Scope == ScopeGlobal {
-		c.emit(OpSetGlobal, itSymbol.Index)
+		c.emit(stmt, OpSetGlobal, itSymbol.Index)
 	} else {
-		c.emit(OpDefineLocal, itSymbol.Index)
+		c.emit(stmt, OpDefineLocal, itSymbol.Index)
 	}
 
 	// pre-condition position
@@ -107,14 +107,14 @@ func (c *Compiler) compileForInStmt(stmt *ast.ForInStmt) error {
 	// condition
 	//  :it.HasMore()
 	if itSymbol.Scope == ScopeGlobal {
-		c.emit(OpGetGlobal, itSymbol.Index)
+		c.emit(stmt, OpGetGlobal, itSymbol.Index)
 	} else {
-		c.emit(OpGetLocal, itSymbol.Index)
+		c.emit(stmt, OpGetLocal, itSymbol.Index)
 	}
-	c.emit(OpIteratorNext)
+	c.emit(stmt, OpIteratorNext)
 
 	// condition jump position
-	postCondPos := c.emit(OpJumpFalsy, 0)
+	postCondPos := c.emit(stmt, OpJumpFalsy, 0)
 
 	// enter loop
 	loop := c.enterLoop()
@@ -123,15 +123,15 @@ func (c *Compiler) compileForInStmt(stmt *ast.ForInStmt) error {
 	if stmt.Key.Name != "_" {
 		keySymbol := c.symbolTable.Define(stmt.Key.Name)
 		if itSymbol.Scope == ScopeGlobal {
-			c.emit(OpGetGlobal, itSymbol.Index)
+			c.emit(stmt, OpGetGlobal, itSymbol.Index)
 		} else {
-			c.emit(OpGetLocal, itSymbol.Index)
+			c.emit(stmt, OpGetLocal, itSymbol.Index)
 		}
-		c.emit(OpIteratorKey)
+		c.emit(stmt, OpIteratorKey)
 		if keySymbol.Scope == ScopeGlobal {
-			c.emit(OpSetGlobal, keySymbol.Index)
+			c.emit(stmt, OpSetGlobal, keySymbol.Index)
 		} else {
-			c.emit(OpDefineLocal, keySymbol.Index)
+			c.emit(stmt, OpDefineLocal, keySymbol.Index)
 		}
 	}
 
@@ -139,15 +139,15 @@ func (c *Compiler) compileForInStmt(stmt *ast.ForInStmt) error {
 	if stmt.Value.Name != "_" {
 		valueSymbol := c.symbolTable.Define(stmt.Value.Name)
 		if itSymbol.Scope == ScopeGlobal {
-			c.emit(OpGetGlobal, itSymbol.Index)
+			c.emit(stmt, OpGetGlobal, itSymbol.Index)
 		} else {
-			c.emit(OpGetLocal, itSymbol.Index)
+			c.emit(stmt, OpGetLocal, itSymbol.Index)
 		}
-		c.emit(OpIteratorValue)
+		c.emit(stmt, OpIteratorValue)
 		if valueSymbol.Scope == ScopeGlobal {
-			c.emit(OpSetGlobal, valueSymbol.Index)
+			c.emit(stmt, OpSetGlobal, valueSymbol.Index)
 		} else {
-			c.emit(OpDefineLocal, valueSymbol.Index)
+			c.emit(stmt, OpDefineLocal, valueSymbol.Index)
 		}
 	}
 
@@ -163,7 +163,7 @@ func (c *Compiler) compileForInStmt(stmt *ast.ForInStmt) error {
 	postBodyPos := len(c.currentInstructions())
 
 	// back to condition
-	c.emit(OpJump, preCondPos)
+	c.emit(stmt, OpJump, preCondPos)
 
 	// post-statement position
 	postStmtPos := len(c.currentInstructions())

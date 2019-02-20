@@ -6,12 +6,7 @@ import (
 	"strings"
 
 	"github.com/d5/tengo/compiler/parser"
-	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
-)
-
-var (
-	fileSet = source.NewFileSet()
 )
 
 func (c *Compiler) compileModule(moduleName string) (*objects.CompiledFunction, error) {
@@ -70,7 +65,8 @@ func (c *Compiler) checkCyclicImports(moduleName string) error {
 }
 
 func (c *Compiler) doCompileModule(moduleName string, src []byte) (*objects.CompiledFunction, error) {
-	p := parser.NewParser(fileSet.AddFile(moduleName, -1, len(src)), src, nil)
+	modFile := c.file.Set().AddFile(moduleName, -1, len(src))
+	p := parser.NewParser(modFile, src, nil)
 	file, err := p.ParseFile()
 	if err != nil {
 		return nil, err
@@ -90,20 +86,20 @@ func (c *Compiler) doCompileModule(moduleName string, src []byte) (*objects.Comp
 	symbolTable = symbolTable.Fork(false)
 
 	// compile module
-	moduleCompiler := c.fork(moduleName, symbolTable)
+	moduleCompiler := c.fork(modFile, moduleName, symbolTable)
 	if err := moduleCompiler.Compile(file); err != nil {
 		return nil, err
 	}
 
 	// add OpReturn (== export undefined) if export is missing
 	if !moduleCompiler.lastInstructionIs(OpReturnValue) {
-		moduleCompiler.emit(OpReturn)
+		moduleCompiler.emit(nil, OpReturn)
 	}
 
-	return &objects.CompiledFunction{
-		Instructions: moduleCompiler.Bytecode().Instructions,
-		NumLocals:    symbolTable.MaxSymbols(),
-	}, nil
+	compiledFunc := moduleCompiler.Bytecode().MainFunction
+	compiledFunc.NumLocals = symbolTable.MaxSymbols()
+
+	return compiledFunc, nil
 }
 
 func (c *Compiler) loadCompiledModule(moduleName string) (mod *objects.CompiledFunction, ok bool) {

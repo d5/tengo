@@ -87,14 +87,15 @@ func (s *Script) Compile() (*Compiled, error) {
 	}
 
 	fileSet := source.NewFileSet()
+	srcFile := fileSet.AddFile("(main)", -1, len(s.input))
 
-	p := parser.NewParser(fileSet.AddFile("", -1, len(s.input)), s.input, nil)
+	p := parser.NewParser(srcFile, s.input, nil)
 	file, err := p.ParseFile()
 	if err != nil {
 		return nil, fmt.Errorf("parse error: %s", err.Error())
 	}
 
-	c := compiler.NewCompiler(symbolTable, nil, stdModules, nil)
+	c := compiler.NewCompiler(srcFile, symbolTable, nil, stdModules, nil)
 
 	if s.userModuleLoader != nil {
 		c.SetModuleLoader(s.userModuleLoader)

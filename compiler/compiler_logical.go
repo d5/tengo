@@ -14,9 +14,9 @@ func (c *Compiler) compileLogical(node *ast.BinaryExpr) error {
 	// jump position
 	var jumpPos int
 	if node.Token == token.LAnd {
-		jumpPos = c.emit(OpAndJump, 0)
+		jumpPos = c.emit(node, OpAndJump, 0)
 	} else {
-		jumpPos = c.emit(OpOrJump, 0)
+		jumpPos = c.emit(node, OpOrJump, 0)
 	}
 
 	// right side term

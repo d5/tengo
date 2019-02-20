@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/d5/tengo/compiler/ast"
+	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/compiler/stdlib"
 	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
@@ -13,6 +14,7 @@ import (
 
 // Compiler compiles the AST into a bytecode.
 type Compiler struct {
+	file            *source.File
 	parent          *Compiler
 	moduleName      string
 	constants       []objects.Object
@@ -34,9 +36,10 @@ type Compiler struct {
 // a new symbol table and use the default builtin functions. Likewise, standard
 // modules can be explicitly provided if user wants to add or remove some modules.
 // By default, Compile will use all the standard modules otherwise.
-func NewCompiler(symbolTable *SymbolTable, constants []objects.Object, stdModules map[string]*objects.ImmutableMap, trace io.Writer) *Compiler {
+func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []objects.Object, stdModules map[string]*objects.ImmutableMap, trace io.Writer) *Compiler {
 	mainScope := CompilationScope{
-		instructions: make([]byte, 0),
+		symbolInit: make(map[string]bool),
+		sourceMap:  make(map[int]source.Pos),
 	}
 
 	// symbol table
@@ -54,6 +57,7 @@ func NewCompiler(symbolTable *SymbolTable, constants []objects.Object, stdModule
 	}
 
 	return &Compiler{
+		file:            file,
 		symbolTable:     symbolTable,
 		constants:       constants,
 		scopes:          []CompilationScope{mainScope},
@@ -87,7 +91,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err := c.Compile(node.Expr); err != nil {
 			return err
 		}
-		c.emit(OpPop)
+		c.emit(node, OpPop)
 
 	case *ast.IncDecStmt:
 		op := token.AddAssign
@@ -95,7 +99,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			op = token.SubAssign
 		}
 
-		return c.compileAssign([]ast.Expr{node.Expr}, []ast.Expr{&ast.IntLit{Value: 1}}, op)
+		return c.compileAssign(node, []ast.Expr{node.Expr}, []ast.Expr{&ast.IntLit{Value: 1}}, op)
 
 	case *ast.ParenExpr:
 		if err := c.Compile(node.Expr); err != nil {
@@ -116,7 +120,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 
-			c.emit(OpGreaterThan)
+			c.emit(node, OpGreaterThan)
 
 			return nil
 		} else if node.Token == token.LessEq {
@@ -127,7 +131,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 
-			c.emit(OpGreaterThanEqual)
+			c.emit(node, OpGreaterThanEqual)
 
 			return nil
 		}
@@ -141,60 +145,60 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		switch node.Token {
 		case token.Add:
-			c.emit(OpAdd)
+			c.emit(node, OpAdd)
 		case token.Sub:
-			c.emit(OpSub)
+			c.emit(node, OpSub)
 		case token.Mul:
-			c.emit(OpMul)
+			c.emit(node, OpMul)
 		case token.Quo:
-			c.emit(OpDiv)
+			c.emit(node, OpDiv)
 		case token.Rem:
-			c.emit(OpRem)
+			c.emit(node, OpRem)
 		case token.Greater:
-			c.emit(OpGreaterThan)
+			c.emit(node, OpGreaterThan)
 		case token.GreaterEq:
-			c.emit(OpGreaterThanEqual)
+			c.emit(node, OpGreaterThanEqual)
 		case token.Equal:
-			c.emit(OpEqual)
+			c.emit(node, OpEqual)
 		case token.NotEqual:
-			c.emit(OpNotEqual)
+			c.emit(node, OpNotEqual)
 		case token.And:
-			c.emit(OpBAnd)
+			c.emit(node, OpBAnd)
 		case token.Or:
-			c.emit(OpBOr)
+			c.emit(node, OpBOr)
 		case token.Xor:
-			c.emit(OpBXor)
+			c.emit(node, OpBXor)
 		case token.AndNot:
-			c.emit(OpBAndNot)
+			c.emit(node, OpBAndNot)
 		case token.Shl:
-			c.emit(OpBShiftLeft)
+			c.emit(node, OpBShiftLeft)
 		case token.Shr:
-			c.emit(OpBShiftRight)
+			c.emit(node, OpBShiftRight)
 		default:
 			return fmt.Errorf("unknown operator: %s", node.Token.String())
 		}
 
 	case *ast.IntLit:
-		c.emit(OpConstant, c.addConstant(&objects.Int{Value: node.Value}))
+		c.emit(node, OpConstant, c.addConstant(&objects.Int{Value: node.Value}))
 
 	case *ast.FloatLit:
-		c.emit(OpConstant, c.addConstant(&objects.Float{Value: node.Value}))
+		c.emit(node, OpConstant, c.addConstant(&objects.Float{Value: node.Value}))
 
 	case *ast.BoolLit:
 		if node.Value {
-			c.emit(OpTrue)
+			c.emit(node, OpTrue)
 		} else {
-			c.emit(OpFalse)
+			c.emit(node, OpFalse)
 		}
 
 	case *ast.StringLit:
-		c.emit(OpConstant, c.addConstant(&objects.String{Value: node.Value}))
+		c.emit(node, OpConstant, c.addConstant(&objects.String{Value: node.Value}))
 
 	case *ast.CharLit:
-		c.emit(OpConstant, c.addConstant(&objects.Char{Value: node.Value}))
+		c.emit(node, OpConstant, c.addConstant(&objects.Char{Value: node.Value}))
 
 	case *ast.UndefinedLit:
-		c.emit(OpNull)
+		c.emit(node, OpNull)
 
 	case *ast.UnaryExpr:
 		if err := c.Compile(node.Expr); err != nil {
@@ -203,11 +207,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		switch node.Token {
 		case token.Not:
-			c.emit(OpLNot)
+			c.emit(node, OpLNot)
 		case token.Sub:
-			c.emit(OpMinus)
+			c.emit(node, OpMinus)
 		case token.Xor:
-			c.emit(OpBComplement)
+			c.emit(node, OpBComplement)
 		case token.Add:
 			// do nothing?
 		default:
@@ -232,7 +236,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		// first jump placeholder
-		jumpPos1 := c.emit(OpJumpFalsy, 0)
+		jumpPos1 := c.emit(node, OpJumpFalsy, 0)
 
 		if err := c.Compile(node.Body); err != nil {
 			return err
@@ -240,7 +244,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		if node.Else != nil {
 			// second jump placeholder
-			jumpPos2 := c.emit(OpJump, 0)
+			jumpPos2 := c.emit(node, OpJump, 0)
 
 			// update first jump offset
 			curPos := len(c.currentInstructions())
@@ -271,14 +275,14 @@ func (c *Compiler) Compile(node ast.Node) error {
 			if curLoop == nil {
 				return fmt.Errorf("break statement outside loop")
 			}
-			pos := c.emit(OpJump, 0)
+			pos := c.emit(node, OpJump, 0)
 			curLoop.Breaks = append(curLoop.Breaks, pos)
 		} else if node.Token == token.Continue {
 			curLoop := c.currentLoop()
 			if curLoop == nil {
 				return fmt.Errorf("continue statement outside loop")
 			}
-			pos := c.emit(OpJump, 0)
+			pos := c.emit(node, OpJump, 0)
 			curLoop.Continues = append(curLoop.Continues, pos)
 		} else {
 			return fmt.Errorf("unknown branch statement: %s", node.Token.String())
@@ -292,7 +296,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 	case *ast.AssignStmt:
-		if err := c.compileAssign(node.LHS, node.RHS, node.Token); err != nil {
+		if err := c.compileAssign(node, node.LHS, node.RHS, node.Token); err != nil {
 			return err
 		}
 
@@ -304,13 +308,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		switch symbol.Scope {
 		case ScopeGlobal:
-			c.emit(OpGetGlobal, symbol.Index)
+			c.emit(node, OpGetGlobal, symbol.Index)
 		case ScopeLocal:
-			c.emit(OpGetLocal, symbol.Index)
+			c.emit(node, OpGetLocal, symbol.Index)
 		case ScopeBuiltin:
-			c.emit(OpGetBuiltin, symbol.Index)
+			c.emit(node, OpGetBuiltin, symbol.Index)
 		case ScopeFree:
-			c.emit(OpGetFree, symbol.Index)
+			c.emit(node, OpGetFree, symbol.Index)
 		}
 
 	case *ast.ArrayLit:
@@ -320,12 +324,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		}
 
-		c.emit(OpArray, len(node.Elements))
+		c.emit(node, OpArray, len(node.Elements))
 
 	case *ast.MapLit:
 		for _, elt := range node.Elements {
 			// key
-			c.emit(OpConstant, c.addConstant(&objects.String{Value: elt.Key}))
+			c.emit(node, OpConstant, c.addConstant(&objects.String{Value: elt.Key}))
 
 			// value
 			if err := c.Compile(elt.Value); err != nil {
@@ -333,7 +337,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		}
 
-		c.emit(OpMap, len(node.Elements)*2)
+		c.emit(node, OpMap, len(node.Elements)*2)
 
 	case *ast.SelectorExpr: // selector on RHS side
 		if err := c.Compile(node.Expr); err != nil {
@@ -344,7 +348,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
-		c.emit(OpIndex)
+		c.emit(node, OpIndex)
 
 	case *ast.IndexExpr:
 		if err := c.Compile(node.Expr); err != nil {
@@ -355,7 +359,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
-		c.emit(OpIndex)
+		c.emit(node, OpIndex)
 
 	case *ast.SliceExpr:
 		if err := c.Compile(node.Expr); err != nil {
@@ -367,7 +371,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		} else {
-			c.emit(OpNull)
+			c.emit(node, OpNull)
 		}
 
 		if node.High != nil {
@@ -375,10 +379,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 		} else {
-			c.emit(OpNull)
+			c.emit(node, OpNull)
 		}
 
-		c.emit(OpSliceIndex)
+		c.emit(node, OpSliceIndex)
 
 	case *ast.FuncLit:
 		c.enterScope()
@@ -396,12 +400,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		// add OpReturn if function returns nothing
 		if !c.lastInstructionIs(OpReturnValue) && !c.lastInstructionIs(OpReturn) {
-			c.emit(OpReturn)
+			c.emit(node, OpReturn)
 		}
 
 		freeSymbols := c.symbolTable.FreeSymbols()
 		numLocals := c.symbolTable.MaxSymbols()
-		instructions := c.leaveScope()
+		instructions, sourceMap := c.leaveScope()
 
 		for _, s := range freeSymbols {
 			switch s.Scope {
@@ -444,15 +448,15 @@ func (c *Compiler) Compile(node ast.Node) error {
 					//   0009 SETL    0
 					//
 
-					c.emit(OpNull)
-					c.emit(OpDefineLocal, s.Index)
+					c.emit(node, OpNull)
+					c.emit(node, OpDefineLocal, s.Index)
 
 					s.LocalAssigned = true
 				}
 
-				c.emit(OpGetLocal, s.Index)
+				c.emit(node, OpGetLocal, s.Index)
 			case ScopeFree:
-				c.emit(OpGetFree, s.Index)
+				c.emit(node, OpGetFree, s.Index)
 			}
 		}
 
@@ -460,12 +464,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 			Instructions:  instructions,
 			NumLocals:     numLocals,
 			NumParameters: len(node.Type.Params.List),
+			SourceMap:     sourceMap,
 		}
 
 		if len(freeSymbols) > 0 {
-			c.emit(OpClosure, c.addConstant(compiledFunction), len(freeSymbols))
+			c.emit(node, OpClosure, c.addConstant(compiledFunction), len(freeSymbols))
 		} else {
-			c.emit(OpConstant, c.addConstant(compiledFunction))
+			c.emit(node, OpConstant, c.addConstant(compiledFunction))
 		}
 
 	case *ast.ReturnStmt:
@@ -475,13 +480,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		if node.Result == nil {
-			c.emit(OpReturn)
+			c.emit(node, OpReturn)
 		} else {
 			if err := c.Compile(node.Result); err != nil {
 				return err
 			}
 
-			c.emit(OpReturnValue)
+			c.emit(node, OpReturnValue)
 		}
 
 	case *ast.CallExpr:
@@ -495,22 +500,22 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		}
 
-		c.emit(OpCall, len(node.Args))
+		c.emit(node, OpCall, len(node.Args))
 
 	case *ast.ImportExpr:
 		stdMod, ok := c.stdModules[node.ModuleName]
 		if ok {
 			// standard modules contain only globals with no code.
 			// so no need to compile anything
-			c.emit(OpConstant, c.addConstant(stdMod))
+			c.emit(node, OpConstant, c.addConstant(stdMod))
 		} else {
 			userMod, err := c.compileModule(node.ModuleName)
 			if err != nil {
 				return err
 			}
 
-			c.emit(OpConstant, c.addConstant(userMod))
-			c.emit(OpCall, 0)
+			c.emit(node, OpConstant, c.addConstant(userMod))
+			c.emit(node, OpCall, 0)
 		}
 
 	case *ast.ExportStmt:
@@ -528,22 +533,22 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
-		c.emit(OpImmutable)
-		c.emit(OpReturnValue)
+		c.emit(node, OpImmutable)
+		c.emit(node, OpReturnValue)
 
 	case *ast.ErrorExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
 		}
 
-		c.emit(OpError)
+		c.emit(node, OpError)
 
 	case *ast.ImmutableExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
 		}
 
-		c.emit(OpImmutable)
+		c.emit(node, OpImmutable)
 
 	case *ast.CondExpr:
 		if err := c.Compile(node.Cond); err != nil {
@@ -551,14 +556,14 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		// first jump placeholder
-		jumpPos1 := c.emit(OpJumpFalsy, 0)
+		jumpPos1 := c.emit(node, OpJumpFalsy, 0)
 
 		if err := c.Compile(node.True); err != nil {
 			return err
 		}
 
 		// second jump placeholder
-		jumpPos2 := c.emit(OpJump, 0)
+		jumpPos2 := c.emit(node, OpJump, 0)
 
 		// update first jump offset
 		curPos := len(c.currentInstructions())
@@ -579,8 +584,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 // Bytecode returns a compiled bytecode.
 func (c *Compiler) Bytecode() *Bytecode {
 	return &Bytecode{
-		Instructions: c.currentInstructions(),
-		Constants:    c.constants,
+		FileSet: c.file.Set(),
+		MainFunction: &objects.CompiledFunction{
+			Instructions: c.currentInstructions(),
+			SourceMap:    c.currentSourceMap(),
+		},
+		Constants: c.constants,
 	}
 }
 
@@ -591,8 +600,8 @@ func (c *Compiler) SetModuleLoader(moduleLoader ModuleLoader) {
 	c.moduleLoader = moduleLoader
 }
 
-func (c *Compiler) fork(moduleName string, symbolTable *SymbolTable) *Compiler {
-	child := NewCompiler(symbolTable, nil, c.stdModules, c.trace)
+func (c *Compiler) fork(file *source.File, moduleName string, symbolTable *SymbolTable) *Compiler {
+	child := NewCompiler(file, symbolTable, nil, c.stdModules, c.trace)
 	child.moduleName = moduleName       // name of the module to compile
 	child.parent = c                    // parent to set to current compiler
 	child.moduleLoader = c.moduleLoader // share module loader
@@ -666,9 +675,15 @@ func (c *Compiler) changeOperand(opPos int, operand ...int) {
 	c.replaceInstruction(opPos, inst)
 }
 
-func (c *Compiler) emit(opcode Opcode, operands ...int) int {
+func (c *Compiler) emit(node ast.Node, opcode Opcode, operands ...int) int {
+	filePos := source.NoPos
+	if node != nil {
+		filePos = node.Pos()
+	}
+
 	inst := MakeInstruction(opcode, operands...)
 	pos := c.addInstruction(inst)
+	c.scopes[c.scopeIndex].sourceMap[pos] = filePos
 	c.setLastInstruction(opcode, pos)
 
 	if c.trace != nil {

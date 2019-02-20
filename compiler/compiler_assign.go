@@ -8,7 +8,7 @@ import (
 	"github.com/d5/tengo/compiler/token"
 )
 
-func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
+func (c *Compiler) compileAssign(node ast.Node, lhs, rhs []ast.Expr, op token.Token) error {
 	numLHS, numRHS := len(lhs), len(rhs)
 	if numLHS < numRHS {
 		// # of LHS must be >= # of RHS
@@ -64,27 +64,27 @@ func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
 
 	switch op {
 	case token.AddAssign:
-		c.emit(OpAdd)
+		c.emit(node, OpAdd)
 	case token.SubAssign:
-		c.emit(OpSub)
+		c.emit(node, OpSub)
 	case token.MulAssign:
-		c.emit(OpMul)
+		c.emit(node, OpMul)
 	case token.QuoAssign:
-		c.emit(OpDiv)
+		c.emit(node, OpDiv)
 	case token.RemAssign:
-		c.emit(OpRem)
+		c.emit(node, OpRem)
 	case token.AndAssign:
-		c.emit(OpBAnd)
+		c.emit(node, OpBAnd)
 	case token.OrAssign:
-		c.emit(OpBOr)
+		c.emit(node, OpBOr)
 	case token.AndNotAssign:
-		c.emit(OpBAndNot)
+		c.emit(node, OpBAndNot)
 	case token.XorAssign:
-		c.emit(OpBXor)
+		c.emit(node, OpBXor)
 	case token.ShlAssign:
-		c.emit(OpBShiftLeft)
+		c.emit(node, OpBShiftLeft)
 	case token.ShrAssign:
-		c.emit(OpBShiftRight)
+		c.emit(node, OpBShiftRight)
 	}
 
 	// compile selector expressions (right to left)
@@ -97,18 +97,18 @@ func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
 	switch symbol.Scope {
 	case ScopeGlobal:
 		if numSel > 0 {
-			c.emit(OpSetSelGlobal, symbol.Index, numSel)
+			c.emit(node, OpSetSelGlobal, symbol.Index, numSel)
 		} else {
-			c.emit(OpSetGlobal, symbol.Index)
+			c.emit(node, OpSetGlobal, symbol.Index)
 		}
 	case ScopeLocal:
 		if numSel > 0 {
-			c.emit(OpSetSelLocal, symbol.Index, numSel)
+			c.emit(node, OpSetSelLocal, symbol.Index, numSel)
 		} else {
 			if op == token.Define && !symbol.LocalAssigned {
-				c.emit(OpDefineLocal, symbol.Index)
+				c.emit(node, OpDefineLocal, symbol.Index)
 			} else {
-				c.emit(OpSetLocal, symbol.Index)
+				c.emit(node, OpSetLocal, symbol.Index)
 			}
 		}
 
@@ -116,9 +116,9 @@ func (c *Compiler) compileAssign(lhs, rhs []ast.Expr, op token.Token) error {
 		symbol.LocalAssigned = true
 	case ScopeFree:
 		if numSel > 0 {
-			c.emit(OpSetSelFree, symbol.Index, numSel)
+			c.emit(node, OpSetSelFree, symbol.Index, numSel)
 		} else {
-			c.emit(OpSetFree, symbol.Index)
+			c.emit(node, OpSetFree, symbol.Index)
 		}
 	default:
 		return fmt.Errorf("invalid assignment variable scope: %s", symbol.Scope)

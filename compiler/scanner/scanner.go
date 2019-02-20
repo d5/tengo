@@ -38,8 +38,8 @@ type Scanner struct {
 
 // NewScanner creates a Scanner.
 func NewScanner(file *source.File, src []byte, errorHandler ErrorHandler, mode Mode) *Scanner {
-	if file.Size() != len(src) {
-		panic(fmt.Sprintf("file size (%d) does not match src len (%d)", file.Size(), len(src)))
+	if file.Size != len(src) {
+		panic(fmt.Sprintf("file size (%d) does not match src len (%d)", file.Size, len(src)))
 	}
 
 	s := &Scanner{

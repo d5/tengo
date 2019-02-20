@@ -33,7 +33,7 @@ func Error(t *testing.T, err error, msg ...interface{}) bool {
 
 // Nil asserts v is nil.
 func Nil(t *testing.T, v interface{}, msg ...interface{}) bool {
-	if v == nil {
+	if isNil(v) {
 		return true
 	}
 
@@ -60,7 +60,7 @@ func False(t *testing.T, v bool, msg ...interface{}) bool {
 
 // NotNil asserts v is not nil.
 func NotNil(t *testing.T, v interface{}, msg ...interface{}) bool {
-	if v != nil {
+	if !isNil(v) {
 		return true
 	}
 
@@ -78,7 +78,7 @@ func IsType(t *testing.T, expected, actual interface{}, msg ...interface{}) bool
 
 // Equal asserts expected and actual are equal.
 func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool {
-	if expected == nil {
+	if isNil(expected) {
 		return Nil(t, actual, "expected nil, but got not nil")
 	}
 	if !NotNil(t, actual, "expected not nil, but got nil") {
@@ -175,6 +175,13 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		if !expected.Equals(actual.(objects.Object)) {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
+	case *source.FileSet:
+		return equalFileSet(t, expected, actual.(*source.FileSet), msg...)
+	case *source.File:
+		return Equal(t, expected.Name, actual.(*source.File).Name, msg...) &&
+			Equal(t, expected.Base, actual.(*source.File).Base, msg...) &&
+			Equal(t, expected.Size, actual.(*source.File).Size, msg...) &&
+			True(t, equalIntSlice(expected.Lines, actual.(*source.File).Lines), msg...)
 	case error:
 		if expected != actual.(error) {
 			return failExpectedActual(t, expected, actual, msg...)
@@ -245,8 +252,6 @@ func equalSymbol(a, b *compiler.Symbol) bool {
 }
 
 func equalObjectSlice(t *testing.T, expected, actual []objects.Object, msg ...interface{}) bool {
-	// TODO: this test does not differentiate nil vs empty slice
-
 	if !Equal(t, len(expected), len(actual), msg...) {
 		return false
 	}
@@ -258,6 +263,20 @@ func equalObjectSlice(t *testing.T, expected, actual []objects.Object, msg ...in
 	}
 
 	return true
+}
+
+func equalFileSet(t *testing.T, expected, actual *source.FileSet, msg ...interface{}) bool {
+	if !Equal(t, len(expected.Files), len(actual.Files), msg...) {
+		return false
+	}
+	for i, f := range expected.Files {
+		if !Equal(t, f, actual.Files[i], msg...) {
+			return false
+		}
+	}
+
+	return Equal(t, expected.Base, actual.Base) &&
+		Equal(t, expected.LastFile, actual.LastFile)
 }
 
 func equalObjectMap(t *testing.T, expected, actual map[string]objects.Object, msg ...interface{}) bool {
@@ -302,4 +321,18 @@ func equalClosure(t *testing.T, expected, actual objects.Object, msg ...interfac
 	}
 
 	return true
+}
+
+func isNil(v interface{}) bool {
+	if v == nil {
+		return true
+	}
+
+	value := reflect.ValueOf(v)
+	kind := value.Kind()
+	if kind >= reflect.Chan && kind <= reflect.Slice && value.IsNil() {
+		return true
+	}
+
+	return false
 }
