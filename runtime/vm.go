@@ -1350,11 +1350,9 @@ mainloop:
 	}
 
 	if err != nil {
-		for v.ip < v.curIPLimit && v.framesIndex > 1 {
+		for v.framesIndex > 1 {
 			v.framesIndex--
 			v.curFrame = &v.frames[v.framesIndex-1]
-			v.curInsts = v.curFrame.fn.Instructions
-			v.curIPLimit = len(v.curInsts) - 1
 
 			filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.curFrame.ip-1])
 			err = fmt.Errorf("%s\nin %s", err.Error(), filePos)
