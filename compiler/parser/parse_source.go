@@ -8,9 +8,9 @@ import (
 )
 
 // ParseSource parses source code 'src' and builds an AST.
-func ParseSource(src []byte, trace io.Writer) (res *ast.File, err error) {
+func ParseSource(filename string, src []byte, trace io.Writer) (res *ast.File, err error) {
 	fileSet := source.NewFileSet()
-	file := fileSet.AddFile("", -1, len(src))
+	file := fileSet.AddFile(filename, -1, len(src))
 
 	return ParseFile(file, src, trace)
 }

@@ -1,14 +1,16 @@
 package objects
 
 import (
+	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/compiler/token"
 )
 
 // CompiledFunction represents a compiled function.
 type CompiledFunction struct {
 	Instructions  []byte
-	NumLocals     int
+	NumLocals     int // number of local variables (including function parameters)
 	NumParameters int
+	SourceMap     map[int]source.Pos
 }
 
 // TypeName returns the name of the type.

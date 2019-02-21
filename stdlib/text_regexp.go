@@ -19,7 +19,11 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 
 					s1, ok := objects.ToString(args[0])
 					if !ok {
-						err = objects.ErrInvalidTypeConversion
+						err = objects.ErrInvalidArgumentType{
+							Name:     "first",
+							Expected: "string(compatible)",
+							Found:    args[0].TypeName(),
+						}
 						return
 					}
 
@@ -45,7 +49,11 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 
 					s1, ok := objects.ToString(args[0])
 					if !ok {
-						err = objects.ErrInvalidTypeConversion
+						err = objects.ErrInvalidArgumentType{
+							Name:     "first",
+							Expected: "string(compatible)",
+							Found:    args[0].TypeName(),
+						}
 						return
 					}
 
@@ -72,7 +80,11 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 
 					i2, ok := objects.ToInt(args[1])
 					if !ok {
-						err = objects.ErrInvalidTypeConversion
+						err = objects.ErrInvalidArgumentType{
+							Name:     "second",
+							Expected: "int(compatible)",
+							Found:    args[1].TypeName(),
+						}
 						return
 					}
 					m := re.FindAllStringSubmatchIndex(s1, i2)
@@ -111,13 +123,21 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 
 					s1, ok := objects.ToString(args[0])
 					if !ok {
-						err = objects.ErrInvalidTypeConversion
+						err = objects.ErrInvalidArgumentType{
+							Name:     "first",
+							Expected: "string(compatible)",
+							Found:    args[0].TypeName(),
+						}
 						return
 					}
 
 					s2, ok := objects.ToString(args[1])
 					if !ok {
-						err = objects.ErrInvalidTypeConversion
+						err = objects.ErrInvalidArgumentType{
+							Name:     "second",
+							Expected: "string(compatible)",
+							Found:    args[1].TypeName(),
+						}
 						return
 					}
 
@@ -139,7 +159,11 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 
 					s1, ok := objects.ToString(args[0])
 					if !ok {
-						err = objects.ErrInvalidTypeConversion
+						err = objects.ErrInvalidArgumentType{
+							Name:     "first",
+							Expected: "string(compatible)",
+							Found:    args[0].TypeName(),
+						}
 						return
 					}
 
@@ -147,7 +171,11 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 					if numArgs > 1 {
 						i2, ok = objects.ToInt(args[1])
 						if !ok {
-							err = objects.ErrInvalidTypeConversion
+							err = objects.ErrInvalidArgumentType{
+								Name:     "second",
+								Expected: "int(compatible)",
+								Found:    args[1].TypeName(),
+							}
 							return
 						}
 					}

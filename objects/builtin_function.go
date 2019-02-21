@@ -6,12 +6,13 @@ import (
 
 // BuiltinFunction represents a builtin function.
 type BuiltinFunction struct {
+	Name  string
 	Value CallableFunc
 }
 
 // TypeName returns the name of the type.
 func (o *BuiltinFunction) TypeName() string {
-	return "builtin-function"
+	return "builtin-function:" + o.Name
 }
 
 func (o *BuiltinFunction) String() string {

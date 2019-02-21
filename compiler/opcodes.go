@@ -1,7 +1,7 @@
 package compiler
 
 // Opcode represents a single byte operation code.
-type Opcode byte
+type Opcode = byte
 
 // List of opcodes
 const (
@@ -53,6 +53,7 @@ const (
 	OpSetFree                        // Set free variables
 	OpSetSelFree                     // Set free variables using selectors
 	OpGetBuiltin                     // Get builtin function
+	OpGetBuiltinModule               // Get builtin module
 	OpClosure                        // Push closure
 	OpIteratorInit                   // Iterator init
 	OpIteratorNext                   // Iterator next
@@ -107,6 +108,7 @@ var OpcodeNames = [...]string{
 	OpDefineLocal:      "DEFL",
 	OpSetSelLocal:      "SETSL",
 	OpGetBuiltin:       "BUILTIN",
+	OpGetBuiltinModule: "BLTMOD",
 	OpClosure:          "CLOSURE",
 	OpGetFree:          "GETF",
 	OpSetFree:          "SETF",
@@ -164,6 +166,7 @@ var OpcodeOperands = [...][]int{
 	OpDefineLocal:      {1},
 	OpSetSelLocal:      {1, 1},
 	OpGetBuiltin:       {1},
+	OpGetBuiltinModule: {},
 	OpClosure:          {2, 1},
 	OpGetFree:          {1},
 	OpSetFree:          {1},

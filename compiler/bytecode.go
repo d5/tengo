@@ -6,12 +6,14 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
 )
 
 // Bytecode is a compiled instructions and constants.
 type Bytecode struct {
-	Instructions []byte
+	FileSet      *source.FileSet
+	MainFunction *objects.CompiledFunction
 	Constants    []objects.Object
 }
 
@@ -19,7 +21,13 @@ type Bytecode struct {
 func (b *Bytecode) Decode(r io.Reader) error {
 	dec := gob.NewDecoder(r)
 
-	if err := dec.Decode(&b.Instructions); err != nil {
+	if err := dec.Decode(&b.FileSet); err != nil {
+		return err
+	}
+	// TODO: files in b.FileSet.File does not have their 'set' field properly set to b.FileSet
+	// as it's private field and not serialized by gob encoder/decoder.
+
+	if err := dec.Decode(&b.MainFunction); err != nil {
 		return err
 	}
 
@@ -39,7 +47,11 @@ func (b *Bytecode) Decode(r io.Reader) error {
 func (b *Bytecode) Encode(w io.Writer) error {
 	enc := gob.NewEncoder(w)
 
-	if err := enc.Encode(b.Instructions); err != nil {
+	if err := enc.Encode(b.FileSet); err != nil {
+		return err
+	}
+
+	if err := enc.Encode(b.MainFunction); err != nil {
 		return err
 	}
 
@@ -50,7 +62,7 @@ func (b *Bytecode) Encode(w io.Writer) error {
 // FormatInstructions returns human readable string representations of
 // compiled instructions.
 func (b *Bytecode) FormatInstructions() []string {
-	return FormatInstructions(b.Instructions, 0)
+	return FormatInstructions(b.MainFunction.Instructions, 0)
 }
 
 // FormatConstants returns human readable string representations of
@@ -94,21 +106,29 @@ func cleanupObjects(o objects.Object) objects.Object {
 }
 
 func init() {
-	gob.Register(&objects.Int{})
-	gob.Register(&objects.Float{})
-	gob.Register(&objects.String{})
-	gob.Register(&objects.Bool{})
-	gob.Register(&objects.Char{})
+	gob.Register(&source.FileSet{})
+	gob.Register(&source.File{})
 	gob.Register(&objects.Array{})
-	gob.Register(&objects.ImmutableArray{})
-	gob.Register(&objects.Map{})
-	gob.Register(&objects.ImmutableMap{})
-	gob.Register(&objects.CompiledFunction{})
-	gob.Register(&objects.Undefined{})
-	gob.Register(&objects.Error{})
-	gob.Register(&objects.Bytes{})
-	gob.Register(&objects.StringIterator{})
-	gob.Register(&objects.MapIterator{})
 	gob.Register(&objects.ArrayIterator{})
+	gob.Register(&objects.Bool{})
+	gob.Register(&objects.Break{})
+	gob.Register(&objects.BuiltinFunction{})
+	gob.Register(&objects.Bytes{})
+	gob.Register(&objects.Char{})
+	gob.Register(&objects.Closure{})
+	gob.Register(&objects.CompiledFunction{})
+	gob.Register(&objects.Continue{})
+	gob.Register(&objects.Error{})
+	gob.Register(&objects.Float{})
+	gob.Register(&objects.ImmutableArray{})
+	gob.Register(&objects.ImmutableMap{})
+	gob.Register(&objects.Int{})
+	gob.Register(&objects.Map{})
+	gob.Register(&objects.MapIterator{})
+	gob.Register(&objects.ReturnValue{})
+	gob.Register(&objects.String{})
+	gob.Register(&objects.StringIterator{})
 	gob.Register(&objects.Time{})
+	gob.Register(&objects.Undefined{})
+	gob.Register(&objects.UserFunction{})
 }

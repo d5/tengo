@@ -135,9 +135,9 @@ func TestFunction(t *testing.T) {
 	out = outer() + g
 	`, 50)
 
-	expectError(t, `func() { return 1; }(1)`)
-	expectError(t, `func(a) { return a; }()`)
-	expectError(t, `func(a, b) { return a + b; }(1)`)
+	expectError(t, `func() { return 1; }(1)`, "wrong number of arguments")
+	expectError(t, `func(a) { return a; }()`, "wrong number of arguments")
+	expectError(t, `func(a, b) { return a + b; }(1)`, "wrong number of arguments")
 
 	expect(t, `
 		f1 := func(a) {
@@ -218,7 +218,7 @@ out = func() {
 	return sum(5)
 }()`, 15)
 
-	expectError(t, `return 5`)
+	expectError(t, `return 5`, "return not allowed outside function")
 
 	// closure and block scopes
 	expect(t, `

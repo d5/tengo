@@ -874,11 +874,11 @@ func() {
 				intObject(1),
 				intObject(1))))
 
-	expectError(t, `import("user1")`) // unknown module name
+	expectError(t, `import("user1")`, "no such file or directory") // unknown module name
 }
 
 func concat(instructions ...[]byte) []byte {
-	concat := make([]byte, 0)
+	var concat []byte
 	for _, i := range instructions {
 		concat = append(concat, i...)
 	}
@@ -888,7 +888,8 @@ func concat(instructions ...[]byte) []byte {
 
 func bytecode(instructions []byte, constants []objects.Object) *compiler.Bytecode {
 	return &compiler.Bytecode{
-		Instructions: instructions,
+		FileSet:      source.NewFileSet(),
+		MainFunction: &objects.CompiledFunction{Instructions: instructions},
 		Constants:    constants,
 	}
 }
@@ -913,7 +914,7 @@ func expect(t *testing.T, input string, expected *compiler.Bytecode) (ok bool) {
 	return
 }
 
-func expectError(t *testing.T, input string) (ok bool) {
+func expectError(t *testing.T, input, expected string) (ok bool) {
 	_, trace, err := traceCompile(input, nil)
 
 	defer func() {
@@ -924,16 +925,21 @@ func expectError(t *testing.T, input string) (ok bool) {
 		}
 	}()
 
-	ok = assert.Error(t, err)
+	if !assert.Error(t, err) {
+		return
+	}
+
+	if !assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
+		return
+	}
+
+	ok = true
 
 	return
 }
 
 func equalBytecode(t *testing.T, expected, actual *compiler.Bytecode) bool {
-	expectedInstructions := strings.Join(compiler.FormatInstructions(expected.Instructions, 0), "\n")
-	actualInstructions := strings.Join(compiler.FormatInstructions(actual.Instructions, 0), "\n")
-
-	return assert.Equal(t, expectedInstructions, actualInstructions) &&
+	return assert.Equal(t, expected.MainFunction, actual.MainFunction) &&
 		equalConstants(t, expected.Constants, actual.Constants)
 }
 
@@ -975,7 +981,7 @@ func traceCompile(input string, symbols map[string]objects.Object) (res *compile
 	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(symTable, nil, nil, tr)
+	c := compiler.NewCompiler(file, symTable, nil, nil, tr)
 	parsed, err := p.ParseFile()
 	if err != nil {
 		return

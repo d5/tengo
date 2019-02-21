@@ -148,7 +148,7 @@ func compileAndRun(data []byte, inputFile string) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil)
+	machine := runtime.NewVM(bytecode, nil, nil)
 
 	err = machine.Run()
 	if err != nil {
@@ -165,7 +165,7 @@ func runCompiled(data []byte) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil)
+	machine := runtime.NewVM(bytecode, nil, nil)
 
 	err = machine.Run()
 	if err != nil {
@@ -198,7 +198,8 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		line := stdin.Text()
 
-		file, err := parser.ParseFile(fileSet.AddFile("test", -1, len(line)), []byte(line), nil)
+		srcFile := fileSet.AddFile("repl", -1, len(line))
+		file, err := parser.ParseFile(srcFile, []byte(line), nil)
 		if err != nil {
 			_, _ = fmt.Fprintf(out, "error: %s\n", err.Error())
 			continue
@@ -206,7 +207,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		file = addPrints(file)
 
-		c := compiler.NewCompiler(symbolTable, constants, nil, nil)
+		c := compiler.NewCompiler(srcFile, symbolTable, constants, nil, nil)
 		if err := c.Compile(file); err != nil {
 			_, _ = fmt.Fprintf(out, "Compilation error:\n %s\n", err.Error())
 			continue
@@ -214,7 +215,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		bytecode := c.Bytecode()
 
-		machine := runtime.NewVM(bytecode, globals)
+		machine := runtime.NewVM(bytecode, globals, nil)
 		if err != nil {
 			_, _ = fmt.Fprintf(out, "VM error:\n %s\n", err.Error())
 			continue
@@ -230,14 +231,15 @@ func runREPL(in io.Reader, out io.Writer) {
 
 func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
 	fileSet := source.NewFileSet()
+	srcFile := fileSet.AddFile(filename, -1, len(src))
 
-	p := parser.NewParser(fileSet.AddFile(filename, -1, len(src)), src, nil)
+	p := parser.NewParser(srcFile, src, nil)
 	file, err := p.ParseFile()
 	if err != nil {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(nil, nil, nil, nil)
+	c := compiler.NewCompiler(srcFile, nil, nil, nil, nil)
 	if err := c.Compile(file); err != nil {
 		return nil, err
 	}

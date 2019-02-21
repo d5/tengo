@@ -213,7 +213,7 @@ func TestStripCR(t *testing.T) {
 }
 
 func scanExpect(t *testing.T, input string, mode scanner.Mode, expected ...scanResult) bool {
-	testFile := testFileSet.AddFile("", testFileSet.Base(), len(input))
+	testFile := testFileSet.AddFile("test", -1, len(input))
 
 	s := scanner.NewScanner(
 		testFile,

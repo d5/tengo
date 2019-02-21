@@ -1158,8 +1158,8 @@ func (p *Parser) printTrace(a ...interface{}) {
 }
 
 func (p *Parser) safePos(pos source.Pos) source.Pos {
-	fileBase := p.file.Base()
-	fileSize := p.file.Size()
+	fileBase := p.file.Base
+	fileSize := p.file.Size
 
 	if int(pos) < fileBase || int(pos) > fileBase+fileSize {
 		return source.Pos(fileBase + fileSize)

@@ -86,10 +86,10 @@ func TestUserModules(t *testing.T) {
 	// export value is immutable
 	expectErrorWithUserModules(t, `m1 := import("mod1"); m1.a = 5`, map[string]string{
 		"mod1": `export {a: 1, b: 2}`,
-	})
+	}, "not index-assignable")
 	expectErrorWithUserModules(t, `m1 := import("mod1"); m1[1] = 5`, map[string]string{
 		"mod1": `export [1, 2, 3]`,
-	})
+	}, "not index-assignable")
 
 	// code after export statement will not be executed
 	expectWithUserModules(t, `out = import("mod1")`, 10, map[string]string{
@@ -160,27 +160,27 @@ export func() {
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `import("mod2")`,
 		"mod2": `import("mod1")`,
-	})
+	}, "mod2:1:1: cyclic module import")
 	// (main) -> mod1 -> mod2 -> mod3 -> mod1
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `import("mod2")`,
 		"mod2": `import("mod3")`,
 		"mod3": `import("mod1")`,
-	})
+	}, "mod3:1:1: cyclic module import")
 	// (main) -> mod1 -> mod2 -> mod3 -> mod2
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `import("mod2")`,
 		"mod2": `import("mod3")`,
 		"mod3": `import("mod2")`,
-	})
+	}, "mod3:1:1: cyclic module import")
 
 	// unknown modules
 	expectErrorWithUserModules(t, `import("mod0")`, map[string]string{
 		"mod1": `a := 5`,
-	})
+	}, "module 'mod0' not found")
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `import("mod2")`,
-	})
+	}, "module 'mod2' not found")
 
 	// module is immutable but its variables is not necessarily immutable.
 	expectWithUserModules(t, `m1 := import("mod1"); m1.a.b = 5; out = m1.a.b`, 5, map[string]string{
@@ -198,15 +198,15 @@ export func() {
 	// 'export' must be in the top-level
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `func() { export 5 }()`,
-	})
+	}, "mod1:1:10: export not allowed inside function")
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `func() { func() { export 5 }() }()`,
-	})
+	}, "mod1:1:19: export not allowed inside function")
 
 	// module cannot access outer scope
-	expectErrorWithUserModules(t, `a := 5; import("mod")`, map[string]string{
+	expectErrorWithUserModules(t, `a := 5; import("mod1")`, map[string]string{
 		"mod1": `export a`,
-	})
+	}, "mod1:1:8: unresolved reference 'a'")
 }
 
 func TestModuleBlockScopes(t *testing.T) {

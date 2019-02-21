@@ -52,11 +52,16 @@ func expectWithUserModules(t *testing.T, input string, expected interface{}, use
 	runVM(t, file, expected, nil, userModules)
 }
 
-func expectError(t *testing.T, input string) {
-	expectErrorWithUserModules(t, input, nil)
+func expectError(t *testing.T, input, expected string) {
+	expected = strings.TrimSpace(expected)
+	if expected == "" {
+		panic("expected must not be empty")
+	}
+
+	expectErrorWithUserModules(t, input, nil, expected)
 }
 
-func expectErrorWithUserModules(t *testing.T, input string, userModules map[string]string) {
+func expectErrorWithUserModules(t *testing.T, input string, userModules map[string]string, expected string) {
 	// parse
 	program := parse(t, input)
 	if program == nil {
@@ -64,10 +69,14 @@ func expectErrorWithUserModules(t *testing.T, input string, userModules map[stri
 	}
 
 	// compiler/VM
-	runVMError(t, program, nil, userModules)
+	_, trace, err := traceCompileRun(program, nil, userModules)
+	if !assert.Error(t, err) ||
+		!assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
+		t.Log("\n" + strings.Join(trace, "\n"))
+	}
 }
 
-func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objects.Object) {
+func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objects.Object, expected string) {
 	// parse
 	program := parse(t, input)
 	if program == nil {
@@ -75,7 +84,11 @@ func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objec
 	}
 
 	// compiler/VM
-	runVMError(t, program, symbols, nil)
+	_, trace, err := traceCompileRun(program, symbols, nil)
+	if !assert.Error(t, err) ||
+		!assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
+		t.Log("\n" + strings.Join(trace, "\n"))
+	}
 }
 
 func runVM(t *testing.T, file *ast.File, expected interface{}, symbols map[string]objects.Object, userModules map[string]string) (ok bool) {
@@ -99,21 +112,6 @@ func runVM(t *testing.T, file *ast.File, expected interface{}, symbols map[strin
 	}
 
 	ok = assert.Equal(t, expectedObj, res[testOut])
-
-	return
-}
-
-// TODO: should differentiate compile-time error, runtime error, and, error object returned
-func runVMError(t *testing.T, file *ast.File, symbols map[string]objects.Object, userModules map[string]string) (ok bool) {
-	_, trace, err := traceCompileRun(file, symbols, userModules)
-
-	defer func() {
-		if !ok {
-			t.Log("\n" + strings.Join(trace, "\n"))
-		}
-	}()
-
-	ok = assert.Error(t, err)
 
 	return
 }
@@ -230,7 +228,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(symTable, nil, nil, tr)
+	c := compiler.NewCompiler(file.InputFile, symTable, nil, nil, tr)
 	c.SetModuleLoader(func(moduleName string) ([]byte, error) {
 		if src, ok := userModules[moduleName]; ok {
 			return []byte(src), nil
@@ -248,7 +246,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	trace = append(trace, fmt.Sprintf("\n[Compiled Constants]\n\n%s", strings.Join(bytecode.FormatConstants(), "\n")))
 	trace = append(trace, fmt.Sprintf("\n[Compiled Instructions]\n\n%s\n", strings.Join(bytecode.FormatInstructions(), "\n")))
 
-	v = runtime.NewVM(bytecode, globals)
+	v = runtime.NewVM(bytecode, globals, nil)
 
 	err = v.Run()
 	{
@@ -296,7 +294,7 @@ func formatGlobals(globals []*objects.Object) (formatted []string) {
 
 func parse(t *testing.T, input string) *ast.File {
 	testFileSet := source.NewFileSet()
-	testFile := testFileSet.AddFile("", -1, len(input))
+	testFile := testFileSet.AddFile("test", -1, len(input))
 
 	file, err := parser.ParseFile(testFile, []byte(input), nil)
 	if !assert.NoError(t, err) {

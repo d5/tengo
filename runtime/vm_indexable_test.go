@@ -51,7 +51,7 @@ func (o *StringDict) IndexSet(index, value objects.Object) error {
 
 	strVal, ok := objects.ToString(value)
 	if !ok {
-		return objects.ErrInvalidTypeConversion
+		return objects.ErrInvalidIndexValueType
 	}
 
 	o.Value[strings.ToLower(strIdx.Value)] = strVal
@@ -95,7 +95,7 @@ func (o *StringCircle) IndexSet(index, value objects.Object) error {
 
 	strVal, ok := objects.ToString(value)
 	if !ok {
-		return objects.ErrInvalidTypeConversion
+		return objects.ErrInvalidIndexValueType
 	}
 
 	o.Value[r] = strVal
@@ -184,7 +184,7 @@ func (o *StringArray) IndexGet(index objects.Object) (objects.Object, error) {
 func (o *StringArray) IndexSet(index, value objects.Object) error {
 	strVal, ok := objects.ToString(value)
 	if !ok {
-		return objects.ErrInvalidTypeConversion
+		return objects.ErrInvalidIndexValueType
 	}
 
 	intIdx, ok := index.(*objects.Int)
@@ -207,7 +207,11 @@ func (o *StringArray) Call(args ...objects.Object) (ret objects.Object, err erro
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
 	}
 
 	for i, v := range o.Value {
@@ -224,7 +228,7 @@ func TestIndexable(t *testing.T) {
 	expectWithSymbols(t, `out = dict["a"]`, "foo", SYM{"dict": dict()})
 	expectWithSymbols(t, `out = dict["B"]`, "bar", SYM{"dict": dict()})
 	expectWithSymbols(t, `out = dict["x"]`, objects.UndefinedValue, SYM{"dict": dict()})
-	expectErrorWithSymbols(t, `out = dict[0]`, SYM{"dict": dict()})
+	expectErrorWithSymbols(t, `dict[0]`, SYM{"dict": dict()}, "invalid index type")
 
 	strCir := func() *StringCircle { return &StringCircle{Value: []string{"one", "two", "three"}} }
 	expectWithSymbols(t, `out = cir[0]`, "one", SYM{"cir": strCir()})
@@ -232,7 +236,7 @@ func TestIndexable(t *testing.T) {
 	expectWithSymbols(t, `out = cir[-1]`, "three", SYM{"cir": strCir()})
 	expectWithSymbols(t, `out = cir[-2]`, "two", SYM{"cir": strCir()})
 	expectWithSymbols(t, `out = cir[3]`, "one", SYM{"cir": strCir()})
-	expectErrorWithSymbols(t, `out = cir["a"]`, SYM{"cir": strCir()})
+	expectErrorWithSymbols(t, `cir["a"]`, SYM{"cir": strCir()}, "invalid index type")
 
 	strArr := func() *StringArray { return &StringArray{Value: []string{"one", "two", "three"}} }
 	expectWithSymbols(t, `out = arr["one"]`, 0, SYM{"arr": strArr()})
@@ -240,7 +244,7 @@ func TestIndexable(t *testing.T) {
 	expectWithSymbols(t, `out = arr["four"]`, objects.UndefinedValue, SYM{"arr": strArr()})
 	expectWithSymbols(t, `out = arr[0]`, "one", SYM{"arr": strArr()})
 	expectWithSymbols(t, `out = arr[1]`, "two", SYM{"arr": strArr()})
-	expectErrorWithSymbols(t, `out = arr[-1]`, SYM{"arr": strArr()})
+	expectErrorWithSymbols(t, `arr[-1]`, SYM{"arr": strArr()}, "index out of bounds")
 }
 
 func TestIndexAssignable(t *testing.T) {
@@ -248,17 +252,17 @@ func TestIndexAssignable(t *testing.T) {
 	expectWithSymbols(t, `dict["a"] = "1984"; out = dict["a"]`, "1984", SYM{"dict": dict()})
 	expectWithSymbols(t, `dict["c"] = "1984"; out = dict["c"]`, "1984", SYM{"dict": dict()})
 	expectWithSymbols(t, `dict["c"] = 1984; out = dict["C"]`, "1984", SYM{"dict": dict()})
-	expectErrorWithSymbols(t, `dict[0] = "1984"`, SYM{"dict": dict()})
+	expectErrorWithSymbols(t, `dict[0] = "1984"`, SYM{"dict": dict()}, "invalid index type")
 
 	strCir := func() *StringCircle { return &StringCircle{Value: []string{"one", "two", "three"}} }
 	expectWithSymbols(t, `cir[0] = "ONE"; out = cir[0]`, "ONE", SYM{"cir": strCir()})
 	expectWithSymbols(t, `cir[1] = "TWO"; out = cir[1]`, "TWO", SYM{"cir": strCir()})
 	expectWithSymbols(t, `cir[-1] = "THREE"; out = cir[2]`, "THREE", SYM{"cir": strCir()})
 	expectWithSymbols(t, `cir[0] = "ONE"; out = cir[3]`, "ONE", SYM{"cir": strCir()})
-	expectErrorWithSymbols(t, `cir["a"] = "ONE"`, SYM{"cir": strCir()})
+	expectErrorWithSymbols(t, `cir["a"] = "ONE"`, SYM{"cir": strCir()}, "invalid index type")
 
 	strArr := func() *StringArray { return &StringArray{Value: []string{"one", "two", "three"}} }
 	expectWithSymbols(t, `arr[0] = "ONE"; out = arr[0]`, "ONE", SYM{"arr": strArr()})
 	expectWithSymbols(t, `arr[1] = "TWO"; out = arr[1]`, "TWO", SYM{"arr": strArr()})
-	expectErrorWithSymbols(t, `arr["one"] = "ONE"`, SYM{"arr": strArr()})
+	expectErrorWithSymbols(t, `arr["one"] = "ONE"`, SYM{"arr": strArr()}, "invalid index type")
 }

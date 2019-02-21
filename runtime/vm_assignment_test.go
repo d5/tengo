@@ -35,8 +35,8 @@ func() {
 	}()
 }()`, 4)
 
-	expectError(t, `a := 1; a := 2`)              // redeclared in the same scope
-	expectError(t, `func() { a := 1; a := 2 }()`) // redeclared in the same scope
+	expectError(t, `a := 1; a := 2`, "redeclared")              // redeclared in the same scope
+	expectError(t, `func() { a := 1; a := 2 }()`, "redeclared") // redeclared in the same scope
 
 	expect(t, `a := 1; a += 2; out = a`, 3)
 	expect(t, `a := 1; a += 4 - 2;; out = a`, 3)
@@ -47,11 +47,11 @@ func() {
 	expect(t, `a := 10; a /= 2;; out = a`, 5)
 	expect(t, `a := 10; a /= 5 - 3;; out = a`, 5)
 
-	// +=, -=, *=, /= operator does not define new variable
-	expectError(t, `a += 4`)
-	expectError(t, `a -= 4`)
-	expectError(t, `a *= 4`)
-	expectError(t, `a /= 4`)
+	// composite assignment operator does not define new variable
+	expectError(t, `a += 4`, "unresolved reference")
+	expectError(t, `a -= 4`, "unresolved reference")
+	expectError(t, `a *= 4`, "unresolved reference")
+	expectError(t, `a /= 4`, "unresolved reference")
 
 	expect(t, `
 f1 := func() { 
@@ -193,8 +193,8 @@ out = func() {
 `, 136)
 
 	// assigning different type value
-	expect(t, `a := 1; a = "foo"; out = a`, "foo")              // global
-	expect(t, `func() { a := 1; a = "foo"; out = a }()`, "foo") // local
+	expect(t, `a := 1; a = "foo"; out = a`, "foo")                                                 // global
+	expect(t, `func() { a := 1; a = "foo"; out = a }()`, "foo")                                    // local
 	expect(t, `
 out = func() { 
 	a := 5
@@ -250,7 +250,7 @@ a := {
 		f: [9, 8]
 	}
 }
-a.x.e = "bar"`)
+a.x.e = "bar"`, "not index-assignable")
 
 	// multi-variables
 	//expect(t, `a, b = 1, 2; out = a + b`, 3)

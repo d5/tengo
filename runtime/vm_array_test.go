@@ -15,7 +15,7 @@ func TestArray(t *testing.T) {
 	expect(t, `func () { a1 := [1, 2, 3]; a2 := a1; a1[0] = 5; out = a2 }()`, ARR{5, 2, 3})
 
 	// array index set
-	expectError(t, `a1 := [1, 2, 3]; a1[3] = 5`)
+	expectError(t, `a1 := [1, 2, 3]; a1[3] = 5`, "index out of bounds")
 
 	// index operator
 	arr := ARR{1, 2, 3, 4, 5, 6}
@@ -48,8 +48,8 @@ func TestArray(t *testing.T) {
 	expect(t, fmt.Sprintf("out = %s[:%d]", arrStr, arrLen+1), arr)
 	expect(t, fmt.Sprintf("out = %s[%d:%d]", arrStr, 2, 2), ARR{})
 
-	expectError(t, fmt.Sprintf("out = %s[:%d]", arrStr, -1))
-	expectError(t, fmt.Sprintf("out = %s[%d:]", arrStr, arrLen+1))
-	expectError(t, fmt.Sprintf("out = %s[%d:%d]", arrStr, 0, -1))
-	expectError(t, fmt.Sprintf("%s[%d:%d]", arrStr, 2, 1))
+	expectError(t, fmt.Sprintf("%s[:%d]", arrStr, -1), "invalid slice index")
+	expectError(t, fmt.Sprintf("%s[%d:]", arrStr, arrLen+1), "invalid slice index")
+	expectError(t, fmt.Sprintf("%s[%d:%d]", arrStr, 0, -1), "invalid slice index")
+	expectError(t, fmt.Sprintf("%s[%d:%d]", arrStr, 2, 1), "invalid slice index")
 }

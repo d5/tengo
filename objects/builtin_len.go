@@ -1,9 +1,6 @@
 package objects
 
-import (
-	"fmt"
-)
-
+// len(obj object) => int
 func builtinLen(args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
@@ -23,6 +20,10 @@ func builtinLen(args ...Object) (Object, error) {
 	case *ImmutableMap:
 		return &Int{Value: int64(len(arg.Value))}, nil
 	default:
-		return nil, fmt.Errorf("unsupported type for 'len' function: %s", arg.TypeName())
+		return nil, ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "array/string/bytes/map",
+			Found:    arg.TypeName(),
+		}
 	}
 }

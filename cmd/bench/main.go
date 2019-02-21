@@ -175,7 +175,7 @@ func runBench(input []byte) (parseTime time.Duration, compileTime time.Duration,
 
 func parse(input []byte) (time.Duration, *ast.File, error) {
 	fileSet := source.NewFileSet()
-	inputFile := fileSet.AddFile("test", -1, len(input))
+	inputFile := fileSet.AddFile("bench", -1, len(input))
 
 	start := time.Now()
 
@@ -193,7 +193,7 @@ func compileFile(file *ast.File) (time.Duration, *compiler.Bytecode, error) {
 
 	start := time.Now()
 
-	c := compiler.NewCompiler(symTable, nil, nil, nil)
+	c := compiler.NewCompiler(file.InputFile, symTable, nil, nil, nil)
 	if err := c.Compile(file); err != nil {
 		return time.Since(start), nil, err
 	}
@@ -206,7 +206,7 @@ func runVM(bytecode *compiler.Bytecode) (time.Duration, objects.Object, error) {
 
 	start := time.Now()
 
-	v := runtime.NewVM(bytecode, globals)
+	v := runtime.NewVM(bytecode, globals, nil)
 	if err := v.Run(); err != nil {
 		return time.Since(start), nil, err
 	}

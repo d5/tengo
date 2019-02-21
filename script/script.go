@@ -7,9 +7,9 @@ import (
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/parser"
 	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/compiler/stdlib"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/runtime"
+	"github.com/d5/tengo/stdlib"
 )
 
 // Script can simplify compilation and execution of embedded scripts.
@@ -87,14 +87,15 @@ func (s *Script) Compile() (*Compiled, error) {
 	}
 
 	fileSet := source.NewFileSet()
+	srcFile := fileSet.AddFile("(main)", -1, len(s.input))
 
-	p := parser.NewParser(fileSet.AddFile("", -1, len(s.input)), s.input, nil)
+	p := parser.NewParser(srcFile, s.input, nil)
 	file, err := p.ParseFile()
 	if err != nil {
 		return nil, fmt.Errorf("parse error: %s", err.Error())
 	}
 
-	c := compiler.NewCompiler(symbolTable, nil, stdModules, nil)
+	c := compiler.NewCompiler(srcFile, symbolTable, nil, stdModules, nil)
 
 	if s.userModuleLoader != nil {
 		c.SetModuleLoader(s.userModuleLoader)
@@ -106,7 +107,7 @@ func (s *Script) Compile() (*Compiled, error) {
 
 	return &Compiled{
 		symbolTable: symbolTable,
-		machine:     runtime.NewVM(c.Bytecode(), globals),
+		machine:     runtime.NewVM(c.Bytecode(), globals, nil),
 	}, nil
 }
 
@@ -135,7 +136,7 @@ func (s *Script) RunContext(ctx context.Context) (compiled *Compiled, err error)
 	return
 }
 
-func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, stdModules map[string]*objects.ImmutableMap, globals []*objects.Object, err error) {
+func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, stdModules map[string]bool, globals []*objects.Object, err error) {
 	var names []string
 	for name := range s.variables {
 		names = append(names, name)
@@ -148,10 +149,10 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, stdModules ma
 		}
 	}
 
-	stdModules = make(map[string]*objects.ImmutableMap)
-	for name, mod := range stdlib.Modules {
+	stdModules = make(map[string]bool)
+	for name := range stdlib.Modules {
 		if !s.removedStdModules[name] {
-			stdModules[name] = mod
+			stdModules[name] = true
 		}
 	}
 

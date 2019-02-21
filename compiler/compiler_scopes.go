@@ -1,13 +1,19 @@
 package compiler
 
+import "github.com/d5/tengo/compiler/source"
+
 func (c *Compiler) currentInstructions() []byte {
 	return c.scopes[c.scopeIndex].instructions
 }
 
+func (c *Compiler) currentSourceMap() map[int]source.Pos {
+	return c.scopes[c.scopeIndex].sourceMap
+}
+
 func (c *Compiler) enterScope() {
 	scope := CompilationScope{
-		instructions: make([]byte, 0),
-		symbolInit:   make(map[string]bool),
+		symbolInit: make(map[string]bool),
+		sourceMap:  make(map[int]source.Pos),
 	}
 
 	c.scopes = append(c.scopes, scope)
@@ -20,8 +26,9 @@ func (c *Compiler) enterScope() {
 	}
 }
 
-func (c *Compiler) leaveScope() []byte {
-	instructions := c.currentInstructions()
+func (c *Compiler) leaveScope() (instructions []byte, sourceMap map[int]source.Pos) {
+	instructions = c.currentInstructions()
+	sourceMap = c.currentSourceMap()
 
 	c.scopes = c.scopes[:len(c.scopes)-1]
 	c.scopeIndex--
@@ -32,5 +39,5 @@ func (c *Compiler) leaveScope() []byte {
 		c.printTrace("SCOPL", c.scopeIndex)
 	}
 
-	return instructions
+	return
 }

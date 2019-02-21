@@ -51,7 +51,7 @@ func (o *ImmutableMap) IsFalsy() bool {
 func (o *ImmutableMap) IndexGet(index Object) (res Object, err error) {
 	strIdx, ok := ToString(index)
 	if !ok {
-		err = ErrInvalidTypeConversion
+		err = ErrInvalidIndexType
 		return
 	}
 

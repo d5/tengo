@@ -36,7 +36,7 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 
 func expect(t *testing.T, input string, fn expectedFn) (ok bool) {
 	testFileSet := source.NewFileSet()
-	testFile := testFileSet.AddFile("", -1, len(input))
+	testFile := testFileSet.AddFile("test", -1, len(input))
 
 	defer func() {
 		if !ok {
@@ -76,7 +76,7 @@ func expect(t *testing.T, input string, fn expectedFn) (ok bool) {
 
 func expectError(t *testing.T, input string) (ok bool) {
 	testFileSet := source.NewFileSet()
-	testFile := testFileSet.AddFile("", -1, len(input))
+	testFile := testFileSet.AddFile("test", -1, len(input))
 
 	defer func() {
 		if !ok {
@@ -102,12 +102,12 @@ func expectString(t *testing.T, input, expected string) (ok bool) {
 		if !ok {
 			// print trace
 			tr := &tracer{}
-			_, _ = parser.ParseSource([]byte(input), tr)
+			_, _ = parser.ParseSource("test", []byte(input), tr)
 			t.Logf("Trace:\n%s", strings.Join(tr.out, ""))
 		}
 	}()
 
-	actual, err := parser.ParseSource([]byte(input), nil)
+	actual, err := parser.ParseSource("test", []byte(input), nil)
 	if !assert.NoError(t, err) {
 		return
 	}

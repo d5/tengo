@@ -94,7 +94,7 @@ func (o *Map) IndexGet(index Object) (res Object, err error) {
 func (o *Map) IndexSet(index, value Object) (err error) {
 	strIdx, ok := ToString(index)
 	if !ok {
-		err = ErrInvalidTypeConversion
+		err = ErrInvalidIndexType
 		return
 	}
 

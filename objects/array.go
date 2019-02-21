@@ -107,7 +107,7 @@ func (o *Array) IndexGet(index Object) (res Object, err error) {
 func (o *Array) IndexSet(index, value Object) (err error) {
 	intIdx, ok := ToInt(index)
 	if !ok {
-		err = ErrInvalidTypeConversion
+		err = ErrInvalidIndexType
 		return
 	}
 
