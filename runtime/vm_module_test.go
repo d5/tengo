@@ -53,7 +53,7 @@ os.remove("./temp")
 	expect(t, `
 os := import("os")
 cmd := os.exec("echo", "foo", "bar")
-if !is_error(cmd) { 
+if !is_error(cmd) {
 	out = cmd.output()
 }
 `, []byte("foo bar\n"))
@@ -207,6 +207,19 @@ export func() {
 	expectErrorWithUserModules(t, `a := 5; import("mod1")`, map[string]string{
 		"mod1": `export a`,
 	}, "mod1:1:8: unresolved reference 'a'")
+
+	// runtime error within modules
+	expectErrorWithUserModules(t, `
+a := 1;
+b := import("mod1");
+b(a)`,
+		map[string]string{"mod1": `
+export func(a) {
+   a()
+}
+`,
+		}, `mod1:3:4: not callable: int
+in test:4:1`)
 }
 
 func TestModuleBlockScopes(t *testing.T) {

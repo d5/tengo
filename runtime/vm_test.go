@@ -202,12 +202,6 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 				stackTrace = append(stackTrace, fmt.Sprintf("  %s:%d", file, line))
 			}
 
-			var ipstr string
-			if v != nil {
-				frameIdx, ip := v.FrameInfo()
-				ipstr = fmt.Sprintf("\n  (Frame=%d, IP=%d)", frameIdx, ip+1)
-			}
-			trace = append(trace, fmt.Sprintf("[Panic]\n\n  %v%s\n", e, ipstr))
 			trace = append(trace, fmt.Sprintf("[Error Trace]\n\n  %s\n", strings.Join(stackTrace, "\n  ")))
 		}
 	}()
@@ -261,9 +255,6 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 			res[name] = *globals[sym.Index]
 		}
 		trace = append(trace, fmt.Sprintf("\n[Globals]\n\n%s", strings.Join(formatGlobals(globals), "\n")))
-
-		frameIdx, ip := v.FrameInfo()
-		trace = append(trace, fmt.Sprintf("\n[IP]\n\nFrame=%d, IP=%d", frameIdx, ip+1))
 	}
 	if err != nil {
 		return
