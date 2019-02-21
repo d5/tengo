@@ -41,7 +41,6 @@ const (
 	OpCall                           // Call function
 	OpReturn                         // Return
 	OpReturnValue                    // Return value
-	OpExport                         // Export
 	OpGetGlobal                      // Get global variable
 	OpSetGlobal                      // Set global variable
 	OpSetSelGlobal                   // Set global variable using selectors
@@ -102,7 +101,6 @@ var OpcodeNames = [...]string{
 	OpCall:             "CALL",
 	OpReturn:           "RET",
 	OpReturnValue:      "RETVAL",
-	OpExport:           "EXPORT",
 	OpGetLocal:         "GETL",
 	OpSetLocal:         "SETL",
 	OpDefineLocal:      "DEFL",
@@ -160,7 +158,6 @@ var OpcodeOperands = [...][]int{
 	OpCall:             {1},
 	OpReturn:           {},
 	OpReturnValue:      {},
-	OpExport:           {},
 	OpGetLocal:         {1},
 	OpSetLocal:         {1},
 	OpDefineLocal:      {1},
