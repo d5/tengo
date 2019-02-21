@@ -1373,11 +1373,6 @@ func (v *VM) Globals() []*objects.Object {
 	return v.globals
 }
 
-// FrameInfo returns the current function call frame information.
-func (v *VM) FrameInfo() (frameIndex, ip int) {
-	return v.framesIndex - 1, v.ip
-}
-
 func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 	numSel := len(selectors)
 
