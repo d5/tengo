@@ -22,6 +22,23 @@ const (
 	MaxFrames = 1024
 )
 
+// OpcodeTokens is the mapping of opcodes to tokens.
+var opcodeTokens = []token.Token{
+	compiler.OpAdd:              token.Add,
+	compiler.OpSub:              token.Sub,
+	compiler.OpMul:              token.Mul,
+	compiler.OpDiv:              token.Quo,
+	compiler.OpRem:              token.Rem,
+	compiler.OpBAnd:             token.And,
+	compiler.OpBOr:              token.Or,
+	compiler.OpBXor:             token.Xor,
+	compiler.OpBAndNot:          token.AndNot,
+	compiler.OpBShiftLeft:       token.Shl,
+	compiler.OpBShiftRight:      token.Shr,
+	compiler.OpGreaterThan:      token.Greater,
+	compiler.OpGreaterThanEqual: token.GreaterEq,
+}
+
 var (
 	truePtr      = &objects.TrueValue
 	falsePtr     = &objects.FalseValue
@@ -120,276 +137,17 @@ mainloop:
 			v.stack[v.sp] = undefinedPtr
 			v.sp++
 
-		case compiler.OpAdd:
+		case compiler.OpBinaryOp:
+			v.ip++
 			right := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			res, e := (*left).BinaryOp(token.Add, *right)
+			res, e := (*left).BinaryOp(opcodeTokens[v.curInsts[v.ip]], *right)
 			if e != nil {
 				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if e == objects.ErrInvalidOperator {
 					err = fmt.Errorf("%s: invalid operation: %s + %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpSub:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.Sub, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s - %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpMul:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.Mul, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s * %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpDiv:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.Quo, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s / %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpRem:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.Rem, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s %% %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpBAnd:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.And, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s & %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpBOr:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.Or, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s | %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpBXor:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.Xor, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s ^ %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpBAndNot:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.AndNot, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s &^ %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpBShiftLeft:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.Shl, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s << %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpBShiftRight:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.Shr, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s >> %s",
 						filePos, (*left).TypeName(), (*right).TypeName())
 					break mainloop
 				}
@@ -438,58 +196,6 @@ mainloop:
 			} else {
 				v.stack[v.sp] = truePtr
 			}
-			v.sp++
-
-		case compiler.OpGreaterThan:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.Greater, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s > %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
-			v.sp++
-
-		case compiler.OpGreaterThanEqual:
-			right := v.stack[v.sp-1]
-			left := v.stack[v.sp-2]
-			v.sp -= 2
-
-			res, e := (*left).BinaryOp(token.GreaterEq, *right)
-			if e != nil {
-				filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
-				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s >= %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
-					break mainloop
-				}
-
-				err = fmt.Errorf("%s: %s", filePos, e.Error())
-				break mainloop
-			}
-
-			if v.sp >= StackSize {
-				err = ErrStackOverflow
-				break mainloop
-			}
-
-			v.stack[v.sp] = &res
 			v.sp++
 
 		case compiler.OpPop:
