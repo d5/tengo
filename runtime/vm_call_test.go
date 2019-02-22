@@ -15,7 +15,5 @@ c := func(a) {
    a()
 }
 b(a, c)
-`, `test:7:4: not callable: int
-in test:3:4
-in test:9:1`)
+`, "Runtime Error: not callable: int\n\tat test:7:4\n\tat test:3:4\n\tat test:9:1")
 }

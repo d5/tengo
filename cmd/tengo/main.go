@@ -201,7 +201,7 @@ func runREPL(in io.Reader, out io.Writer) {
 		srcFile := fileSet.AddFile("repl", -1, len(line))
 		file, err := parser.ParseFile(srcFile, []byte(line), nil)
 		if err != nil {
-			_, _ = fmt.Fprintf(out, "error: %s\n", err.Error())
+			_, _ = fmt.Fprintln(out, err.Error())
 			continue
 		}
 
@@ -209,19 +209,15 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		c := compiler.NewCompiler(srcFile, symbolTable, constants, nil, nil)
 		if err := c.Compile(file); err != nil {
-			_, _ = fmt.Fprintf(out, "Compilation error:\n %s\n", err.Error())
+			_, _ = fmt.Fprintln(out, err.Error())
 			continue
 		}
 
 		bytecode := c.Bytecode()
 
 		machine := runtime.NewVM(bytecode, globals, nil)
-		if err != nil {
-			_, _ = fmt.Fprintf(out, "VM error:\n %s\n", err.Error())
-			continue
-		}
 		if err := machine.Run(); err != nil {
-			_, _ = fmt.Fprintf(out, "Execution error:\n %s\n", err.Error())
+			_, _ = fmt.Fprintln(out, err.Error())
 			continue
 		}
 

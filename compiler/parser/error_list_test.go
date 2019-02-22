@@ -14,5 +14,5 @@ func TestErrorList_Sort(t *testing.T) {
 	list.Add(source.FilePos{Offset: 30, Line: 3, Column: 10}, "error 3")
 	list.Add(source.FilePos{Offset: 10, Line: 1, Column: 10}, "error 1")
 	list.Sort()
-	assert.Equal(t, "1:10: error 1 (and 2 more errors)", list.Error())
+	assert.Equal(t, "Parse Error: error 1\n\tat 1:10 (and 2 more errors)", list.Error())
 }
