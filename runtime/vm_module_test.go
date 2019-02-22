@@ -218,8 +218,7 @@ export func(a) {
    a()
 }
 `,
-		}, `mod1:3:4: not callable: int
-in test:4:1`)
+		}, "Runtime Error: not callable: int\n\tat mod1:3:4\n\tat test:4:1")
 }
 
 func TestModuleBlockScopes(t *testing.T) {
