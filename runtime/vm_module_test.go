@@ -160,19 +160,19 @@ export func() {
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `import("mod2")`,
 		"mod2": `import("mod1")`,
-	}, "mod2:1:1: cyclic module import")
+	}, "Compile Error: cyclic module import: mod1\n\tat mod2:1:1")
 	// (main) -> mod1 -> mod2 -> mod3 -> mod1
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `import("mod2")`,
 		"mod2": `import("mod3")`,
 		"mod3": `import("mod1")`,
-	}, "mod3:1:1: cyclic module import")
+	}, "Compile Error: cyclic module import: mod1\n\tat mod3:1:1")
 	// (main) -> mod1 -> mod2 -> mod3 -> mod2
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `import("mod2")`,
 		"mod2": `import("mod3")`,
 		"mod3": `import("mod2")`,
-	}, "mod3:1:1: cyclic module import")
+	}, "Compile Error: cyclic module import: mod2\n\tat mod3:1:1")
 
 	// unknown modules
 	expectErrorWithUserModules(t, `import("mod0")`, map[string]string{
@@ -198,15 +198,15 @@ export func() {
 	// 'export' must be in the top-level
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `func() { export 5 }()`,
-	}, "mod1:1:10: export not allowed inside function")
+	}, "Compile Error: export not allowed inside function\n\tat mod1:1:10")
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
 		"mod1": `func() { func() { export 5 }() }()`,
-	}, "mod1:1:19: export not allowed inside function")
+	}, "Compile Error: export not allowed inside function\n\tat mod1:1:19")
 
 	// module cannot access outer scope
 	expectErrorWithUserModules(t, `a := 5; import("mod1")`, map[string]string{
 		"mod1": `export a`,
-	}, "mod1:1:8: unresolved reference 'a'")
+	}, "Compile Error: unresolved reference 'a'\n\tat mod1:1:8")
 
 	// runtime error within modules
 	expectErrorWithUserModules(t, `

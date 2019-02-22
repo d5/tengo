@@ -3,15 +3,15 @@ package compiler_test
 import "testing"
 
 func TestCompilerErrorReport(t *testing.T) {
-	expectError(t, `import("user1")`, "test:1:1: module file read error: open user1.tengo: no such file or directory")
+	expectError(t, `import("user1")`, "Compile Error: module file read error: open user1.tengo: no such file or directory\n\tat test:1:1")
 
-	expectError(t, `a = 1`, "test:1:1: unresolved reference 'a'")
-	expectError(t, `a, b := 1, 2`, "test:1:1: tuple assignment not allowed")
+	expectError(t, `a = 1`, "Compile Error: unresolved reference 'a'\n\tat test:1:1")
+	expectError(t, `a, b := 1, 2`, "Compile Error: tuple assignment not allowed\n\tat test:1:1")
 	expectError(t, `a.b := 1`, "not allowed with selector")
-	expectError(t, `a:=1; a:=3`, "test:1:7: 'a' redeclared in this block")
+	expectError(t, `a:=1; a:=3`, "Compile Error: 'a' redeclared in this block\n\tat test:1:7")
 
-	expectError(t, `return 5`, "test:1:1: return not allowed outside function")
-	expectError(t, `func() { break }`, "test:1:10: break not allowed outside loop")
-	expectError(t, `func() { continue }`, "test:1:10: continue not allowed outside loop")
-	expectError(t, `func() { export 5 }`, "test:1:10: export not allowed inside function")
+	expectError(t, `return 5`, "Compile Error: return not allowed outside function\n\tat test:1:1")
+	expectError(t, `func() { break }`, "Compile Error: break not allowed outside loop\n\tat test:1:10")
+	expectError(t, `func() { continue }`, "Compile Error: continue not allowed outside loop\n\tat test:1:10")
+	expectError(t, `func() { export 5 }`, "Compile Error: export not allowed inside function\n\tat test:1:10")
 }

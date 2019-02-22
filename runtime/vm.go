@@ -339,8 +339,8 @@ mainloop:
 			if e != nil {
 				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				if e == objects.ErrInvalidOperator {
-					err = fmt.Errorf("%s: invalid operation: %s &^ %s",
-						filePos, (*left).TypeName(), (*right).TypeName())
+					err = fmt.Errorf("invalid operation: %s &^ %s",
+						(*left).TypeName(), (*right).TypeName())
 					break mainloop
 				}
 

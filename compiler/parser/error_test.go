@@ -10,5 +10,5 @@ import (
 
 func TestError_Error(t *testing.T) {
 	err := &parser.Error{Pos: source.FilePos{Offset: 10, Line: 1, Column: 10}, Msg: "test"}
-	assert.Equal(t, "1:10: test", err.Error())
+	assert.Equal(t, "Parse Error: test\n\tat 1:10", err.Error())
 }

@@ -1,6 +1,10 @@
 package parser
 
-import "github.com/d5/tengo/compiler/source"
+import (
+	"fmt"
+
+	"github.com/d5/tengo/compiler/source"
+)
 
 // Error represents a parser error.
 type Error struct {
@@ -10,8 +14,8 @@ type Error struct {
 
 func (e Error) Error() string {
 	if e.Pos.Filename != "" || e.Pos.IsValid() {
-		return e.Pos.String() + ": " + e.Msg
+		return fmt.Sprintf("Parse Error: %s\n\tat %s", e.Msg, e.Pos)
 	}
 
-	return e.Msg
+	return fmt.Sprintf("Parse Error: %s", e.Msg)
 }

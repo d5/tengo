@@ -16,5 +16,5 @@ type Error struct {
 
 func (e *Error) Error() string {
 	filePos := e.fileSet.Position(e.node.Pos())
-	return fmt.Sprintf("%s: %s", filePos, e.error.Error())
+	return fmt.Sprintf("Compile Error: %s\n\tat %s", e.error.Error(), filePos)
 }
