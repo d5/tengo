@@ -57,7 +57,18 @@ func NewParser(file *source.File, src []byte, trace io.Writer) *Parser {
 }
 
 // ParseFile parses the source and returns an AST file unit.
-func (p *Parser) ParseFile() (*ast.File, error) {
+func (p *Parser) ParseFile() (file *ast.File, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			if _, ok := e.(bailout); !ok {
+				panic(e)
+			}
+		}
+
+		p.errors.Sort()
+		err = p.errors.Err()
+	}()
+
 	if p.trace {
 		defer un(trace(p, "File"))
 	}
@@ -71,10 +82,12 @@ func (p *Parser) ParseFile() (*ast.File, error) {
 		return nil, p.errors.Err()
 	}
 
-	return &ast.File{
+	file = &ast.File{
 		InputFile: p.file,
 		Stmts:     stmts,
-	}, nil
+	}
+
+	return
 }
 
 func (p *Parser) parseExpr() ast.Expr {

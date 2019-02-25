@@ -92,7 +92,7 @@ func (s *Script) Compile() (*Compiled, error) {
 	p := parser.NewParser(srcFile, s.input, nil)
 	file, err := p.ParseFile()
 	if err != nil {
-		return nil, fmt.Errorf("parse error: %s", err.Error())
+		return nil, err
 	}
 
 	c := compiler.NewCompiler(srcFile, symbolTable, nil, stdModules, nil)
