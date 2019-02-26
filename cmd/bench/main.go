@@ -179,7 +179,8 @@ func parse(input []byte) (time.Duration, *ast.File, error) {
 
 	start := time.Now()
 
-	file, err := parser.ParseFile(inputFile, input, nil)
+	p := parser.NewParser(inputFile, input, nil)
+	file, err := p.ParseFile()
 	if err != nil {
 		return time.Since(start), nil, err
 	}
