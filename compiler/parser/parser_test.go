@@ -85,7 +85,7 @@ func expectError(t *testing.T, input string) (ok bool) {
 			// print trace
 			tr := &tracer{}
 			p := parser.NewParser(testFile, []byte(input), tr)
-			p.ParseFile()
+			_, _ = p.ParseFile()
 			t.Logf("Trace:\n%s", strings.Join(tr.out, ""))
 		}
 	}()
