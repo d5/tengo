@@ -17,6 +17,13 @@ func TestMap(t *testing.T) {
 					mapElementLit("key3", p(1, 23), p(1, 27), boolLit(true, p(1, 29))))))
 	})
 
+	expect(t, "{ \"key1\": 1 }", func(p pfn) []ast.Stmt {
+		return stmts(
+			exprStmt(
+				mapLit(p(1, 1), p(1, 13),
+					mapElementLit("key1", p(1, 3), p(1, 9), intLit(1, p(1, 11))))))
+	})
+
 	expect(t, "a = { key1: 1, key2: \"2\", key3: true }", func(p pfn) []ast.Stmt {
 		return stmts(
 			assignStmt(
@@ -46,8 +53,8 @@ func TestMap(t *testing.T) {
 
 	expect(t, `
 {
-	key1: 1, 
-	key2: "2", 
+	key1: 1,
+	key2: "2",
 	key3: true
 }`, func(p pfn) []ast.Stmt {
 		return stmts(
