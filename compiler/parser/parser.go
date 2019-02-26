@@ -1015,23 +1015,21 @@ func (p *Parser) parseMapElementLit() *ast.MapElementLit {
 		defer un(trace(p, "MapElementLit"))
 	}
 
-	// key: read identifier token but it's not actually an identifier
 	pos := p.pos
 	name := "_"
 
 	if p.token == token.Ident {
 		name = p.tokenLit
-		p.next()
 	} else if p.token == token.String {
 		v, _ := strconv.Unquote(p.tokenLit)
 		name = v
-		p.next()
 	} else {
-		p.expect(token.Ident)
+		p.errorExpected(pos, "map key")
 	}
 
-	colonPos := p.expect(token.Colon)
+	p.next()
 
+	colonPos := p.expect(token.Colon)
 	valueExpr := p.parseExpr()
 
 	return &ast.MapElementLit{
