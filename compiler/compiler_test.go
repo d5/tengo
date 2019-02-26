@@ -878,19 +878,19 @@ func() {
 
 	expectError(t, `
 r["x"] = {
-    "a":1,
-    "b":1,
-    "c":1,
-    "d":1,
-    "e":1,
-    "f":1,
-    "g":1,
-    "h":1,
-    "i":1,
-    "j":1,
-    "k":1,
+    @a:1,
+    @b:1,
+    @c:1,
+    @d:1,
+    @e:1,
+    @f:1,
+    @g:1,
+    @h:1,
+    @i:1,
+    @j:1,
+    @k:1
 }
-`, "Parse Error: expected 'IDENT', found \"a\"\n\tat test:3:5 (and 10 more errors)") // too many errors
+`, "Parse Error: illegal character U+0040 '@'\n\tat test:3:5 (and 10 more errors)") // too many errors
 }
 
 func concat(instructions ...[]byte) []byte {

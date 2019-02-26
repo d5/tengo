@@ -18,6 +18,17 @@ out = {
 		"three": 3,
 	})
 
+	expect(t, `
+out = {
+	"one": 10 - 9,
+	"two": 1 + 1,
+	"three": 6 / 2
+}`, MAP{
+		"one":   1,
+		"two":   2,
+		"three": 3,
+	})
+
 	expect(t, `out = {foo: 5}["foo"]`, 5)
 	expect(t, `out = {foo: 5}["bar"]`, objects.UndefinedValue)
 	expect(t, `key := "foo"; out = {foo: 5}[key]`, 5)
