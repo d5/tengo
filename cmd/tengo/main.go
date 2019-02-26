@@ -199,7 +199,8 @@ func runREPL(in io.Reader, out io.Writer) {
 		line := stdin.Text()
 
 		srcFile := fileSet.AddFile("repl", -1, len(line))
-		file, err := parser.ParseFile(srcFile, []byte(line), nil)
+		p := parser.NewParser(srcFile, []byte(line), nil)
+		file, err := p.ParseFile()
 		if err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue

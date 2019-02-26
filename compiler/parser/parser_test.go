@@ -42,7 +42,8 @@ func expect(t *testing.T, input string, fn expectedFn) (ok bool) {
 		if !ok {
 			// print trace
 			tr := &tracer{}
-			actual, _ := parser.ParseFile(testFile, []byte(input), tr)
+			p := parser.NewParser(testFile, []byte(input), tr)
+			actual, _ := p.ParseFile()
 			if actual != nil {
 				t.Logf("Parsed:\n%s", actual.String())
 			}
@@ -50,7 +51,8 @@ func expect(t *testing.T, input string, fn expectedFn) (ok bool) {
 		}
 	}()
 
-	actual, err := parser.ParseFile(testFile, []byte(input), nil)
+	p := parser.NewParser(testFile, []byte(input), nil)
+	actual, err := p.ParseFile()
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -82,12 +84,14 @@ func expectError(t *testing.T, input string) (ok bool) {
 		if !ok {
 			// print trace
 			tr := &tracer{}
-			_, _ = parser.ParseFile(testFile, []byte(input), tr)
+			p := parser.NewParser(testFile, []byte(input), tr)
+			p.ParseFile()
 			t.Logf("Trace:\n%s", strings.Join(tr.out, ""))
 		}
 	}()
 
-	_, err := parser.ParseFile(testFile, []byte(input), nil)
+	p := parser.NewParser(testFile, []byte(input), nil)
+	_, err := p.ParseFile()
 	if !assert.Error(t, err) {
 		return
 	}

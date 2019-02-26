@@ -287,7 +287,8 @@ func parse(t *testing.T, input string) *ast.File {
 	testFileSet := source.NewFileSet()
 	testFile := testFileSet.AddFile("test", -1, len(input))
 
-	file, err := parser.ParseFile(testFile, []byte(input), nil)
+	p := parser.NewParser(testFile, []byte(input), nil)
+	file, err := p.ParseFile()
 	if !assert.NoError(t, err) {
 		return nil
 	}
