@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/script"
 )
 
@@ -35,7 +34,7 @@ func TestScript_SetUserModuleLoader(t *testing.T) {
 	c, err = scr.Run()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(3), c.Get("out").Value())
-	scr.SetBuiltinFunctions(map[string]*objects.BuiltinFunction{})
+	scr.SetBuiltinFunctions(nil)
 	_, err = scr.Run()
 	assert.Error(t, err)
 
@@ -50,7 +49,7 @@ func TestScript_SetUserModuleLoader(t *testing.T) {
 	c, err = scr.Run()
 	assert.NoError(t, err)
 	assert.Equal(t, "Foo", c.Get("out").Value())
-	scr.SetBuiltinModules(map[string]*objects.ImmutableMap{})
+	scr.SetBuiltinModules(nil)
 	_, err = scr.Run()
 	assert.Error(t, err)
 

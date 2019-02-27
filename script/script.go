@@ -58,7 +58,6 @@ func (s *Script) Remove(name string) bool {
 
 // SetBuiltinFunctions allows to define builtin functions.
 func (s *Script) SetBuiltinFunctions(funcs map[string]*objects.BuiltinFunction) {
-	s.builtinFuncs = nil
 	if funcs != nil {
 		s.builtinFuncs = make([]objects.Object, len(funcs))
 		idx := 0
@@ -66,17 +65,20 @@ func (s *Script) SetBuiltinFunctions(funcs map[string]*objects.BuiltinFunction) 
 			s.builtinFuncs[idx] = fn
 			idx++
 		}
+	} else {
+		s.builtinFuncs = []objects.Object{}
 	}
 }
 
 // SetBuiltinModules allows to define builtin modules.
 func (s *Script) SetBuiltinModules(modules map[string]*objects.ImmutableMap) {
-	s.builtinModules = nil
 	if modules != nil {
 		s.builtinModules = make(map[string]*objects.Object, len(modules))
 		for k, mod := range modules {
 			s.builtinModules[k] = objectPtr(mod)
 		}
+	} else {
+		s.builtinModules = map[string]*objects.Object{}
 	}
 }
 

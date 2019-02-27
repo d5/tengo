@@ -53,7 +53,7 @@ func TestScript_SetBuiltinFunctions(t *testing.T) {
 	assert.NotNil(t, c)
 	compiledGet(t, c, "a", int64(3))
 
-	s.SetBuiltinFunctions(map[string]*objects.BuiltinFunction{})
+	s.SetBuiltinFunctions(nil)
 	_, err = s.Run()
 	assert.Error(t, err)
 }
@@ -71,7 +71,7 @@ func TestScript_SetBuiltinModules(t *testing.T) {
 	assert.NotNil(t, c)
 	compiledGet(t, c, "a", 19.84)
 
-	s.SetBuiltinModules(map[string]*objects.ImmutableMap{})
+	s.SetBuiltinModules(nil)
 	_, err = s.Run()
 	assert.Error(t, err)
 }
