@@ -75,7 +75,7 @@ func TestScript_SetBuiltinModules(t *testing.T) {
 	assert.NotNil(t, c)
 	compiledGet(t, c, "a", 19.84)
 
-	s.SetBuiltinModules(map[string]*objects.ImmutableMap{"math": objectPtr(*stdlib.Modules["os"])})
+	s.SetBuiltinModules(map[string]*objects.ImmutableMap{"os": objectPtr(*stdlib.Modules["os"])})
 	_, err = s.Run()
 	assert.Error(t, err)
 
