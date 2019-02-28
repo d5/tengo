@@ -1,6 +1,7 @@
 package objects
 
 // Builtins contains all default builtin functions.
+// Use GetBuiltinFunctions instead of accessing Builtins directly.
 var Builtins = []BuiltinFunction{
 	{
 		Name:  "print",
@@ -126,4 +127,38 @@ var Builtins = []BuiltinFunction{
 		Name:  "type_name",
 		Value: builtinTypeName,
 	},
+}
+
+// AllBuiltinFunctionNames returns a list of all default builtin function names.
+func AllBuiltinFunctionNames() []string {
+	var names []string
+	for _, bf := range Builtins {
+		names = append(names, bf.Name)
+	}
+	return names
+}
+
+// GetBuiltinFunctions returns a slice of builtin function objects.
+// GetBuiltinFunctions removes the duplicate names, and, the returned builtin functions
+// are not guaranteed to be in the same order as names.
+func GetBuiltinFunctions(names ...string) []*BuiltinFunction {
+	include := make(map[string]bool)
+	for _, name := range names {
+		include[name] = true
+	}
+
+	var builtinFuncs []*BuiltinFunction
+	for _, bf := range Builtins {
+		if include[bf.Name] {
+			bf := bf
+			builtinFuncs = append(builtinFuncs, &bf)
+		}
+	}
+
+	return builtinFuncs
+}
+
+// GetAllBuiltinFunctions returns all builtin functions.
+func GetAllBuiltinFunctions() []*BuiltinFunction {
+	return GetBuiltinFunctions(AllBuiltinFunctionNames()...)
 }

@@ -15,6 +15,38 @@ type MAP = map[string]interface{}
 type IARR []interface{}
 type IMAP map[string]interface{}
 
+func TestAllModuleNames(t *testing.T) {
+	names := stdlib.AllModuleNames()
+	if !assert.Equal(t, len(stdlib.Modules), len(names)) {
+		return
+	}
+	for _, name := range names {
+		assert.NotNil(t, stdlib.Modules[name], "name: %s", name)
+	}
+}
+
+func TestGetModules(t *testing.T) {
+	mods := stdlib.GetModules()
+	assert.Equal(t, 0, len(mods))
+
+	mods = stdlib.GetModules("os")
+	assert.Equal(t, 1, len(mods))
+	assert.NotNil(t, mods["os"])
+
+	mods = stdlib.GetModules("os", "rand")
+	assert.Equal(t, 2, len(mods))
+	assert.NotNil(t, mods["os"])
+	assert.NotNil(t, mods["rand"])
+
+	mods = stdlib.GetModules("text", "text")
+	assert.Equal(t, 1, len(mods))
+	assert.NotNil(t, mods["text"])
+
+	mods = stdlib.GetModules("nonexisting", "text")
+	assert.Equal(t, 1, len(mods))
+	assert.NotNil(t, mods["text"])
+}
+
 type callres struct {
 	t *testing.T
 	o objects.Object
