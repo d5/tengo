@@ -118,33 +118,37 @@ Users can add and use a custom user type in Tengo code by implementing [Object](
 
 To securely compile and execute _potentially_ unsafe script code, you can use the following Script functions.
 
-#### Script.DisableBuiltinFunction(name string)
+#### Script.SetBuiltinFunctions(funcs []*objects.BuiltinFunction)
 
-DisableBuiltinFunction disables and removes a builtin function from the compiler. Compiler will reports a compile-time error if the given name is referenced.
+SetBuiltinFunctions resets all builtin functions in the compiler to the ones provided in the input parameter. Compiler will report a compile-time error if the a function not set is referenced. All builtin functions are included by default unless `SetBuiltinFunctions` is called.
 
 ```golang
 s := script.New([]byte(`print([1, 2, 3])`))
 
-s.DisableBuiltinFunction("print") 
+s.SetBuiltinFunctions(nil)
 
-_, err := s.Run() // compile error 
+_, err := s.Run() // compile error
+
+s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[0]})
+
+_, err := s.Run() // prints [1, 2, 3]
 ```
 
-Note that when a script is being added to another script as a module (via `Script.AddModule`), it does not inherit the disabled builtin function list from the main script.  
+#### Script.SetBuiltinModules(modules map[string]*objects.ImmutableMap)
 
-#### Script.DisableStdModule(name string)
-
-DisableStdModule disables a [standard library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) module. Compile will report a compile-time error if the code tries to import the module with the given name.
+SetBuiltinModules resets all [standard library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) modules with modules provided in the input parameter. Compile will report a compile-time error if the code tries to import a module that hasn't been included. All standard library modules are included by default unless `SetBuiltinModules` is called.
 
 ```golang
-s := script.New([]byte(`import("exec")`))
+s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
 
-s.DisableStdModule("exec") 
+s.SetBuiltinModules(nil)
 
-_, err := s.Run() // compile error 
+_, err := s.Run() // compile error
+
+s.SetBuiltinModules(map[string]*objects.ImmutableMap{"math": objectPtr(*stdlib.Modules["math"])})
+
+_, err := s.Run() // a = 19.84
 ```
-
-Note that when a script is being added to another script as a module (via `Script.AddModule`), it does not inherit the disabled standard module list from the main script.
 
 #### Script.SetUserModuleLoader(loader compiler.ModuleLoader)
 
