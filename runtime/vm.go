@@ -1423,13 +1423,3 @@ func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 
 	return nil
 }
-
-func init() {
-	// builtinFuncs = make([]objects.Object, len(objects.Builtins))
-	// for i, b := range objects.Builtins {
-	// 	builtinFuncs[i] = &objects.BuiltinFunction{
-	// 		Name:  b.Name,
-	// 		Value: b.Func,
-	// 	}
-	// }
-}

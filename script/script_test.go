@@ -47,13 +47,13 @@ func TestScript_SetBuiltinFunctions(t *testing.T) {
 	compiledGet(t, c, "a", int64(3))
 
 	s = script.New([]byte(`a := len([1, 2, 3])`))
-	s.SetBuiltinFunctions(map[string]*objects.BuiltinFunction{"len": &objects.Builtins[3]})
+	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[3]})
 	c, err = s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
 	compiledGet(t, c, "a", int64(3))
 
-	s.SetBuiltinFunctions(map[string]*objects.BuiltinFunction{"print": &objects.Builtins[0]})
+	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[0]})
 	_, err = s.Run()
 	assert.Error(t, err)
 

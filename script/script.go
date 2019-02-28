@@ -57,13 +57,11 @@ func (s *Script) Remove(name string) bool {
 }
 
 // SetBuiltinFunctions allows to define builtin functions.
-func (s *Script) SetBuiltinFunctions(funcs map[string]*objects.BuiltinFunction) {
+func (s *Script) SetBuiltinFunctions(funcs []*objects.BuiltinFunction) {
 	if funcs != nil {
 		s.builtinFuncs = make([]objects.Object, len(funcs))
-		idx := 0
-		for _, fn := range funcs {
+		for idx, fn := range funcs {
 			s.builtinFuncs[idx] = fn
-			idx++
 		}
 	} else {
 		s.builtinFuncs = []objects.Object{}
