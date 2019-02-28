@@ -3,6 +3,7 @@ package stdlib
 import (
 	"fmt"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/objects"
 )
 
@@ -124,7 +125,13 @@ func FuncARS(fn func() string) objects.CallableFunc {
 			return nil, objects.ErrWrongNumArguments
 		}
 
-		return &objects.String{Value: fn()}, nil
+		s := fn()
+
+		if len(s) > tengo.MaxStringLen {
+			return nil, objects.ErrStringLimit
+		}
+
+		return &objects.String{Value: s}, nil
 	}
 }
 
@@ -139,6 +146,10 @@ func FuncARSE(fn func() (string, error)) objects.CallableFunc {
 		res, err := fn()
 		if err != nil {
 			return wrapError(err), nil
+		}
+
+		if len(res) > tengo.MaxStringLen {
+			return nil, objects.ErrStringLimit
 		}
 
 		return &objects.String{Value: res}, nil
@@ -156,6 +167,10 @@ func FuncARYE(fn func() ([]byte, error)) objects.CallableFunc {
 		res, err := fn()
 		if err != nil {
 			return wrapError(err), nil
+		}
+
+		if len(res) > tengo.MaxBytesLen {
+			return nil, objects.ErrBytesLimit
 		}
 
 		return &objects.Bytes{Value: res}, nil
@@ -183,8 +198,12 @@ func FuncARSs(fn func() []string) objects.CallableFunc {
 		}
 
 		arr := &objects.Array{}
-		for _, osArg := range fn() {
-			arr.Value = append(arr.Value, &objects.String{Value: osArg})
+		for _, elem := range fn() {
+			if len(elem) > tengo.MaxStringLen {
+				return nil, objects.ErrStringLimit
+			}
+
+			arr.Value = append(arr.Value, &objects.String{Value: elem})
 		}
 
 		return arr, nil
@@ -493,7 +512,13 @@ func FuncASRS(fn func(string) string) objects.CallableFunc {
 			}
 		}
 
-		return &objects.String{Value: fn(s1)}, nil
+		s := fn(s1)
+
+		if len(s) > tengo.MaxStringLen {
+			return nil, objects.ErrStringLimit
+		}
+
+		return &objects.String{Value: s}, nil
 	}
 }
 
@@ -516,8 +541,12 @@ func FuncASRSs(fn func(string) []string) objects.CallableFunc {
 		res := fn(s1)
 
 		arr := &objects.Array{}
-		for _, osArg := range res {
-			arr.Value = append(arr.Value, &objects.String{Value: osArg})
+		for _, elem := range res {
+			if len(elem) > tengo.MaxStringLen {
+				return nil, objects.ErrStringLimit
+			}
+
+			arr.Value = append(arr.Value, &objects.String{Value: elem})
 		}
 
 		return arr, nil
@@ -544,6 +573,10 @@ func FuncASRSE(fn func(string) (string, error)) objects.CallableFunc {
 		res, err := fn(s1)
 		if err != nil {
 			return wrapError(err), nil
+		}
+
+		if len(res) > tengo.MaxStringLen {
+			return nil, objects.ErrStringLimit
 		}
 
 		return &objects.String{Value: res}, nil
@@ -628,6 +661,10 @@ func FuncASSRSs(fn func(string, string) []string) objects.CallableFunc {
 
 		arr := &objects.Array{}
 		for _, res := range fn(s1, s2) {
+			if len(res) > tengo.MaxStringLen {
+				return nil, objects.ErrStringLimit
+			}
+
 			arr.Value = append(arr.Value, &objects.String{Value: res})
 		}
 
@@ -671,6 +708,10 @@ func FuncASSIRSs(fn func(string, string, int) []string) objects.CallableFunc {
 
 		arr := &objects.Array{}
 		for _, res := range fn(s1, s2, i3) {
+			if len(res) > tengo.MaxStringLen {
+				return nil, objects.ErrStringLimit
+			}
+
 			arr.Value = append(arr.Value, &objects.String{Value: res})
 		}
 
@@ -732,7 +773,13 @@ func FuncASSRS(fn func(string, string) string) objects.CallableFunc {
 			}
 		}
 
-		return &objects.String{Value: fn(s1, s2)}, nil
+		s := fn(s1, s2)
+
+		if len(s) > tengo.MaxStringLen {
+			return nil, objects.ErrStringLimit
+		}
+
+		return &objects.String{Value: s}, nil
 	}
 }
 
@@ -819,7 +866,12 @@ func FuncASsSRS(fn func([]string, string) string) objects.CallableFunc {
 			}
 		}
 
-		return &objects.String{Value: fn(ss1, s2)}, nil
+		s := fn(ss1, s2)
+		if len(s) > tengo.MaxStringLen {
+			return nil, objects.ErrStringLimit
+		}
+
+		return &objects.String{Value: s}, nil
 	}
 }
 
@@ -909,7 +961,13 @@ func FuncASIRS(fn func(string, int) string) objects.CallableFunc {
 			}
 		}
 
-		return &objects.String{Value: fn(s1, i2)}, nil
+		s := fn(s1, i2)
+
+		if len(s) > tengo.MaxStringLen {
+			return nil, objects.ErrStringLimit
+		}
+
+		return &objects.String{Value: s}, nil
 	}
 }
 
@@ -1028,6 +1086,10 @@ func FuncAIRSsE(fn func(int) ([]string, error)) objects.CallableFunc {
 
 		arr := &objects.Array{}
 		for _, r := range res {
+			if len(r) > tengo.MaxStringLen {
+				return nil, objects.ErrStringLimit
+			}
+
 			arr.Value = append(arr.Value, &objects.String{Value: r})
 		}
 
@@ -1052,6 +1114,12 @@ func FuncAIRS(fn func(int) string) objects.CallableFunc {
 			}
 		}
 
-		return &objects.String{Value: fn(i1)}, nil
+		s := fn(i1)
+
+		if len(s) > tengo.MaxStringLen {
+			return nil, objects.ErrStringLimit
+		}
+
+		return &objects.String{Value: s}, nil
 	}
 }

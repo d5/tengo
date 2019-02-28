@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/objects"
 )
@@ -85,4 +86,34 @@ func TestFileStatDir(t *testing.T) {
 			"directory": objects.TrueValue,
 		},
 	})
+}
+
+func TestOSExpandEnv(t *testing.T) {
+	curMaxStringLen := tengo.MaxStringLen
+	defer func() { tengo.MaxStringLen = curMaxStringLen }()
+	tengo.MaxStringLen = 12
+
+	_ = os.Setenv("TENGO", "FOO BAR")
+	module(t, "os").call("expand_env", "$TENGO").expect("FOO BAR")
+
+	_ = os.Setenv("TENGO", "FOO")
+	module(t, "os").call("expand_env", "$TENGO $TENGO").expect("FOO FOO")
+
+	_ = os.Setenv("TENGO", "123456789012")
+	module(t, "os").call("expand_env", "$TENGO").expect("123456789012")
+
+	_ = os.Setenv("TENGO", "1234567890123")
+	module(t, "os").call("expand_env", "$TENGO").expectError()
+
+	_ = os.Setenv("TENGO", "123456")
+	module(t, "os").call("expand_env", "$TENGO$TENGO").expect("123456123456")
+
+	_ = os.Setenv("TENGO", "123456")
+	module(t, "os").call("expand_env", "${TENGO}${TENGO}").expect("123456123456")
+
+	_ = os.Setenv("TENGO", "123456")
+	module(t, "os").call("expand_env", "$TENGO $TENGO").expectError()
+
+	_ = os.Setenv("TENGO", "123456")
+	module(t, "os").call("expand_env", "${TENGO} ${TENGO}").expectError()
 }

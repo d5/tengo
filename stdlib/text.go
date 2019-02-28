@@ -1,19 +1,22 @@
 package stdlib
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/objects"
 )
 
 var textModule = map[string]objects.Object{
-	"re_match":       &objects.UserFunction{Value: textREMatch},                                             // re_match(pattern, text) => bool/error
-	"re_find":        &objects.UserFunction{Value: textREFind},                                              // re_find(pattern, text, count) => [[{text:,begin:,end:}]]/undefined
-	"re_replace":     &objects.UserFunction{Value: textREReplace},                                           // re_replace(pattern, text, repl) => string/error
-	"re_split":       &objects.UserFunction{Value: textRESplit},                                             // re_split(pattern, text, count) => [string]/error
-	"re_compile":     &objects.UserFunction{Value: textRECompile},                                           // re_compile(pattern) => Regexp/error
+	"re_match":       &objects.UserFunction{Name: "re_match", Value: textREMatch},                           // re_match(pattern, text) => bool/error
+	"re_find":        &objects.UserFunction{Name: "re_find", Value: textREFind},                             // re_find(pattern, text, count) => [[{text:,begin:,end:}]]/undefined
+	"re_replace":     &objects.UserFunction{Name: "re_replace", Value: textREReplace},                       // re_replace(pattern, text, repl) => string/error
+	"re_split":       &objects.UserFunction{Name: "re_split", Value: textRESplit},                           // re_split(pattern, text, count) => [string]/error
+	"re_compile":     &objects.UserFunction{Name: "re_compile", Value: textRECompile},                       // re_compile(pattern) => Regexp/error
 	"compare":        &objects.UserFunction{Name: "compare", Value: FuncASSRI(strings.Compare)},             // compare(a, b) => int
 	"contains":       &objects.UserFunction{Name: "contains", Value: FuncASSRB(strings.Contains)},           // contains(s, substr) => bool
 	"contains_any":   &objects.UserFunction{Name: "contains_any", Value: FuncASSRB(strings.ContainsAny)},    // contains_any(s, chars) => bool
@@ -24,11 +27,11 @@ var textModule = map[string]objects.Object{
 	"has_suffix":     &objects.UserFunction{Name: "has_suffix", Value: FuncASSRB(strings.HasSuffix)},        // has_suffix(s, suffix) => bool
 	"index":          &objects.UserFunction{Name: "index", Value: FuncASSRI(strings.Index)},                 // index(s, substr) => int
 	"index_any":      &objects.UserFunction{Name: "index_any", Value: FuncASSRI(strings.IndexAny)},          // index_any(s, chars) => int
-	"join":           &objects.UserFunction{Name: "join", Value: FuncASsSRS(strings.Join)},                  // join(arr, sep) => string
+	"join":           &objects.UserFunction{Name: "join", Value: textJoin},                                  // join(arr, sep) => string
 	"last_index":     &objects.UserFunction{Name: "last_index", Value: FuncASSRI(strings.LastIndex)},        // last_index(s, substr) => int
 	"last_index_any": &objects.UserFunction{Name: "last_index_any", Value: FuncASSRI(strings.LastIndexAny)}, // last_index_any(s, chars) => int
-	"repeat":         &objects.UserFunction{Name: "repeat", Value: FuncASIRS(strings.Repeat)},               // repeat(s, count) => string
-	"replace":        &objects.UserFunction{Value: textReplace},                                             // replace(s, old, new, n) => string
+	"repeat":         &objects.UserFunction{Name: "repeat", Value: textRepeat},                              // repeat(s, count) => string
+	"replace":        &objects.UserFunction{Name: "replace", Value: textReplace},                            // replace(s, old, new, n) => string
 	"split":          &objects.UserFunction{Name: "split", Value: FuncASSRSs(strings.Split)},                // split(s, sep) => [string]
 	"split_after":    &objects.UserFunction{Name: "split_after", Value: FuncASSRSs(strings.SplitAfter)},     // split_after(s, sep) => [string]
 	"split_after_n":  &objects.UserFunction{Name: "split_after_n", Value: FuncASSIRSs(strings.SplitAfterN)}, // split_after_n(s, sep, n) => [string]
@@ -43,13 +46,13 @@ var textModule = map[string]objects.Object{
 	"trim_space":     &objects.UserFunction{Name: "trim_space", Value: FuncASRS(strings.TrimSpace)},         // trim_space(s) => string
 	"trim_suffix":    &objects.UserFunction{Name: "trim_suffix", Value: FuncASSRS(strings.TrimSuffix)},      // trim_suffix(s, suffix) => string
 	"atoi":           &objects.UserFunction{Name: "atoi", Value: FuncASRIE(strconv.Atoi)},                   // atoi(str) => int/error
-	"format_bool":    &objects.UserFunction{Value: textFormatBool},                                          // format_bool(b) => string
-	"format_float":   &objects.UserFunction{Value: textFormatFloat},                                         // format_float(f, fmt, prec, bits) => string
-	"format_int":     &objects.UserFunction{Value: textFormatInt},                                           // format_int(i, base) => string
+	"format_bool":    &objects.UserFunction{Name: "format_bool", Value: textFormatBool},                     // format_bool(b) => string
+	"format_float":   &objects.UserFunction{Name: "format_float", Value: textFormatFloat},                   // format_float(f, fmt, prec, bits) => string
+	"format_int":     &objects.UserFunction{Name: "format_int", Value: textFormatInt},                       // format_int(i, base) => string
 	"itoa":           &objects.UserFunction{Name: "itoa", Value: FuncAIRS(strconv.Itoa)},                    // itoa(i) => string
-	"parse_bool":     &objects.UserFunction{Value: textParseBool},                                           // parse_bool(str) => bool/error
-	"parse_float":    &objects.UserFunction{Value: textParseFloat},                                          // parse_float(str, bits) => float/error
-	"parse_int":      &objects.UserFunction{Value: textParseInt},                                            // parse_int(str, base, bits) => int/error
+	"parse_bool":     &objects.UserFunction{Name: "parse_bool", Value: textParseBool},                       // parse_bool(str) => bool/error
+	"parse_float":    &objects.UserFunction{Name: "parse_float", Value: textParseFloat},                     // parse_float(str, bits) => float/error
+	"parse_int":      &objects.UserFunction{Name: "parse_int", Value: textParseInt},                         // parse_int(str, base, bits) => int/error
 	"quote":          &objects.UserFunction{Name: "quote", Value: FuncASRS(strconv.Quote)},                  // quote(str) => string
 	"unquote":        &objects.UserFunction{Name: "unquote", Value: FuncASRSE(strconv.Unquote)},             // unquote(str) => string/error
 }
@@ -223,7 +226,12 @@ func textREReplace(args ...objects.Object) (ret objects.Object, err error) {
 	if err != nil {
 		ret = wrapError(err)
 	} else {
-		ret = &objects.String{Value: re.ReplaceAllString(s2, s3)}
+		s, ok := doTextRegexpReplace(re, s2, s3)
+		if !ok {
+			return nil, objects.ErrStringLimit
+		}
+
+		ret = &objects.String{Value: s}
 	}
 
 	return
@@ -357,9 +365,104 @@ func textReplace(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	ret = &objects.String{Value: strings.Replace(s1, s2, s3, i4)}
+	s, ok := doTextReplace(s1, s2, s3, i4)
+	if !ok {
+		err = objects.ErrStringLimit
+		return
+	}
+
+	ret = &objects.String{Value: s}
 
 	return
+}
+
+func textRepeat(args ...objects.Object) (ret objects.Object, err error) {
+	if len(args) != 2 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	s1, ok := objects.ToString(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	i2, ok := objects.ToInt(args[1])
+	if !ok {
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int(compatible)",
+			Found:    args[1].TypeName(),
+		}
+	}
+
+	if len(s1)*i2 > tengo.MaxStringLen {
+		return nil, objects.ErrStringLimit
+	}
+
+	return &objects.String{Value: strings.Repeat(s1, i2)}, nil
+}
+
+func textJoin(args ...objects.Object) (ret objects.Object, err error) {
+	if len(args) != 2 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	var slen int
+	var ss1 []string
+	switch arg0 := args[0].(type) {
+	case *objects.Array:
+		for idx, a := range arg0.Value {
+			as, ok := objects.ToString(a)
+			if !ok {
+				return nil, objects.ErrInvalidArgumentType{
+					Name:     fmt.Sprintf("first[%d]", idx),
+					Expected: "string(compatible)",
+					Found:    a.TypeName(),
+				}
+			}
+			slen += len(as)
+			ss1 = append(ss1, as)
+		}
+	case *objects.ImmutableArray:
+		for idx, a := range arg0.Value {
+			as, ok := objects.ToString(a)
+			if !ok {
+				return nil, objects.ErrInvalidArgumentType{
+					Name:     fmt.Sprintf("first[%d]", idx),
+					Expected: "string(compatible)",
+					Found:    a.TypeName(),
+				}
+			}
+			slen += len(as)
+			ss1 = append(ss1, as)
+		}
+	default:
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "array",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	s2, ok := objects.ToString(args[1])
+	if !ok {
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
+	}
+
+	// make sure output length does not exceed the limit
+	if slen+len(s2)*(len(ss1)-1) > tengo.MaxStringLen {
+		return nil, objects.ErrStringLimit
+	}
+
+	return &objects.String{Value: strings.Join(ss1, s2)}, nil
 }
 
 func textFormatBool(args ...objects.Object) (ret objects.Object, err error) {
@@ -582,4 +685,53 @@ func textParseInt(args ...objects.Object) (ret objects.Object, err error) {
 	ret = &objects.Int{Value: parsed}
 
 	return
+}
+
+// Modified implementation of strings.Replace
+// to limit the maximum length of output string.
+func doTextReplace(s, old, new string, n int) (string, bool) {
+	if old == new || n == 0 {
+		return s, true // avoid allocation
+	}
+
+	// Compute number of replacements.
+	if m := strings.Count(s, old); m == 0 {
+		return s, true // avoid allocation
+	} else if n < 0 || m < n {
+		n = m
+	}
+
+	// Apply replacements to buffer.
+	t := make([]byte, len(s)+n*(len(new)-len(old)))
+	w := 0
+	start := 0
+	for i := 0; i < n; i++ {
+		j := start
+		if len(old) == 0 {
+			if i > 0 {
+				_, wid := utf8.DecodeRuneInString(s[start:])
+				j += wid
+			}
+		} else {
+			j += strings.Index(s[start:], old)
+		}
+
+		ssj := s[start:j]
+		if w+len(ssj)+len(new) > tengo.MaxStringLen {
+			return "", false
+		}
+
+		w += copy(t[w:], ssj)
+		w += copy(t[w:], new)
+		start = j + len(old)
+	}
+
+	ss := s[start:]
+	if w+len(ss) > tengo.MaxStringLen {
+		return "", false
+	}
+
+	w += copy(t[w:], ss)
+
+	return string(t[0:w]), true
 }

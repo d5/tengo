@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/objects"
 )
 
@@ -39,14 +40,14 @@ var osModule = map[string]objects.Object{
 	"seek_set":            &objects.Int{Value: int64(io.SeekStart)},
 	"seek_cur":            &objects.Int{Value: int64(io.SeekCurrent)},
 	"seek_end":            &objects.Int{Value: int64(io.SeekEnd)},
-	"args":                &objects.UserFunction{Value: osArgs},                                           // args() => array(string)
+	"args":                &objects.UserFunction{Name: "args", Value: osArgs},                             // args() => array(string)
 	"chdir":               &objects.UserFunction{Name: "chdir", Value: FuncASRE(os.Chdir)},                // chdir(dir string) => error
-	"chmod":               osFuncASFmRE(os.Chmod),                                                         // chmod(name string, mode int) => error
+	"chmod":               osFuncASFmRE("chmod", os.Chmod),                                                // chmod(name string, mode int) => error
 	"chown":               &objects.UserFunction{Name: "chown", Value: FuncASIIRE(os.Chown)},              // chown(name string, uid int, gid int) => error
 	"clearenv":            &objects.UserFunction{Name: "clearenv", Value: FuncAR(os.Clearenv)},            // clearenv()
 	"environ":             &objects.UserFunction{Name: "environ", Value: FuncARSs(os.Environ)},            // environ() => array(string)
 	"exit":                &objects.UserFunction{Name: "exit", Value: FuncAIR(os.Exit)},                   // exit(code int)
-	"expand_env":          &objects.UserFunction{Name: "expand_env", Value: FuncASRS(os.ExpandEnv)},       // expand_env(s string) => string
+	"expand_env":          &objects.UserFunction{Name: "expand_env", Value: osExpandEnv},                  // expand_env(s string) => string
 	"getegid":             &objects.UserFunction{Name: "getegid", Value: FuncARI(os.Getegid)},             // getegid() => int
 	"getenv":              &objects.UserFunction{Name: "getenv", Value: FuncASRS(os.Getenv)},              // getenv(s string) => string
 	"geteuid":             &objects.UserFunction{Name: "geteuid", Value: FuncARI(os.Geteuid)},             // geteuid() => int
@@ -60,9 +61,9 @@ var osModule = map[string]objects.Object{
 	"hostname":            &objects.UserFunction{Name: "hostname", Value: FuncARSE(os.Hostname)},          // hostname() => string/error
 	"lchown":              &objects.UserFunction{Name: "lchown", Value: FuncASIIRE(os.Lchown)},            // lchown(name string, uid int, gid int) => error
 	"link":                &objects.UserFunction{Name: "link", Value: FuncASSRE(os.Link)},                 // link(oldname string, newname string) => error
-	"lookup_env":          &objects.UserFunction{Value: osLookupEnv},                                      // lookup_env(key string) => string/false
-	"mkdir":               osFuncASFmRE(os.Mkdir),                                                         // mkdir(name string, perm int) => error
-	"mkdir_all":           osFuncASFmRE(os.MkdirAll),                                                      // mkdir_all(name string, perm int) => error
+	"lookup_env":          &objects.UserFunction{Name: "lookup_env", Value: osLookupEnv},                  // lookup_env(key string) => string/false
+	"mkdir":               osFuncASFmRE("mkdir", os.Mkdir),                                                // mkdir(name string, perm int) => error
+	"mkdir_all":           osFuncASFmRE("mkdir_all", os.MkdirAll),                                         // mkdir_all(name string, perm int) => error
 	"readlink":            &objects.UserFunction{Name: "readlink", Value: FuncASRSE(os.Readlink)},         // readlink(name string) => string/error
 	"remove":              &objects.UserFunction{Name: "remove", Value: FuncASRE(os.Remove)},              // remove(name string) => error
 	"remove_all":          &objects.UserFunction{Name: "remove_all", Value: FuncASRE(os.RemoveAll)},       // remove_all(name string) => error
@@ -72,15 +73,15 @@ var osModule = map[string]objects.Object{
 	"temp_dir":            &objects.UserFunction{Name: "temp_dir", Value: FuncARS(os.TempDir)},            // temp_dir() => string
 	"truncate":            &objects.UserFunction{Name: "truncate", Value: FuncASI64RE(os.Truncate)},       // truncate(name string, size int) => error
 	"unsetenv":            &objects.UserFunction{Name: "unsetenv", Value: FuncASRE(os.Unsetenv)},          // unsetenv(key string) => error
-	"create":              &objects.UserFunction{Value: osCreate},                                         // create(name string) => imap(file)/error
-	"open":                &objects.UserFunction{Value: osOpen},                                           // open(name string) => imap(file)/error
-	"open_file":           &objects.UserFunction{Value: osOpenFile},                                       // open_file(name string, flag int, perm int) => imap(file)/error
-	"find_process":        &objects.UserFunction{Value: osFindProcess},                                    // find_process(pid int) => imap(process)/error
-	"start_process":       &objects.UserFunction{Value: osStartProcess},                                   // start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
+	"create":              &objects.UserFunction{Name: "create", Value: osCreate},                         // create(name string) => imap(file)/error
+	"open":                &objects.UserFunction{Name: "open", Value: osOpen},                             // open(name string) => imap(file)/error
+	"open_file":           &objects.UserFunction{Name: "open_file", Value: osOpenFile},                    // open_file(name string, flag int, perm int) => imap(file)/error
+	"find_process":        &objects.UserFunction{Name: "find_process", Value: osFindProcess},              // find_process(pid int) => imap(process)/error
+	"start_process":       &objects.UserFunction{Name: "start_process", Value: osStartProcess},            // start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
 	"exec_look_path":      &objects.UserFunction{Name: "exec_look_path", Value: FuncASRSE(exec.LookPath)}, // exec_look_path(file) => string/error
-	"exec":                &objects.UserFunction{Value: osExec},                                           // exec(name, args...) => command
-	"stat":                &objects.UserFunction{Value: osStat},                                           // stat(name) => imap(fileinfo)/error
-	"read_file":           &objects.UserFunction{Value: osReadFile},                                       // readfile(name) => array(byte)/error
+	"exec":                &objects.UserFunction{Name: "exec", Value: osExec},                             // exec(name, args...) => command
+	"stat":                &objects.UserFunction{Name: "stat", Value: osStat},                             // stat(name) => imap(fileinfo)/error
+	"read_file":           &objects.UserFunction{Name: "read_file", Value: osReadFile},                    // readfile(name) => array(byte)/error
 }
 
 func osReadFile(args ...objects.Object) (ret objects.Object, err error) {
@@ -100,6 +101,10 @@ func osReadFile(args ...objects.Object) (ret objects.Object, err error) {
 	bytes, err := ioutil.ReadFile(fname)
 	if err != nil {
 		return wrapError(err), nil
+	}
+
+	if len(bytes) > tengo.MaxBytesLen {
+		return nil, objects.ErrBytesLimit
 	}
 
 	return &objects.Bytes{Value: bytes}, nil
@@ -233,14 +238,19 @@ func osArgs(args ...objects.Object) (objects.Object, error) {
 
 	arr := &objects.Array{}
 	for _, osArg := range os.Args {
+		if len(osArg) > tengo.MaxStringLen {
+			return nil, objects.ErrStringLimit
+		}
+
 		arr.Value = append(arr.Value, &objects.String{Value: osArg})
 	}
 
 	return arr, nil
 }
 
-func osFuncASFmRE(fn func(string, os.FileMode) error) *objects.UserFunction {
+func osFuncASFmRE(name string, fn func(string, os.FileMode) error) *objects.UserFunction {
 	return &objects.UserFunction{
+		Name: name,
 		Value: func(args ...objects.Object) (objects.Object, error) {
 			if len(args) != 2 {
 				return nil, objects.ErrWrongNumArguments
@@ -287,7 +297,52 @@ func osLookupEnv(args ...objects.Object) (objects.Object, error) {
 		return objects.FalseValue, nil
 	}
 
+	if len(res) > tengo.MaxStringLen {
+		return nil, objects.ErrStringLimit
+	}
+
 	return &objects.String{Value: res}, nil
+}
+
+func osExpandEnv(args ...objects.Object) (objects.Object, error) {
+	if len(args) != 1 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	s1, ok := objects.ToString(args[0])
+	if !ok {
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	var vlen int
+	var failed bool
+	s := os.Expand(s1, func(k string) string {
+		if failed {
+			return ""
+		}
+
+		v := os.Getenv(k)
+
+		// this does not count the other texts that are not being replaced
+		// but the code checks the final length at the end
+		vlen += len(v)
+		if vlen > tengo.MaxStringLen {
+			failed = true
+			return ""
+		}
+
+		return v
+	})
+
+	if failed || len(s) > tengo.MaxStringLen {
+		return nil, objects.ErrStringLimit
+	}
+
+	return &objects.String{Value: s}, nil
 }
 
 func osExec(args ...objects.Object) (objects.Object, error) {
