@@ -34,7 +34,7 @@ func TestScript_SetUserModuleLoader(t *testing.T) {
 	c, err = scr.Run()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(3), c.Get("out").Value())
-	scr.DisableBuiltinFunction("len")
+	scr.SetBuiltinFunctions(nil)
 	_, err = scr.Run()
 	assert.Error(t, err)
 
@@ -49,7 +49,7 @@ func TestScript_SetUserModuleLoader(t *testing.T) {
 	c, err = scr.Run()
 	assert.NoError(t, err)
 	assert.Equal(t, "Foo", c.Get("out").Value())
-	scr.DisableStdModule("text")
+	scr.SetBuiltinModules(nil)
 	_, err = scr.Run()
 	assert.Error(t, err)
 

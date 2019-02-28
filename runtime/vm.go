@@ -26,7 +26,6 @@ var (
 	truePtr      = &objects.TrueValue
 	falsePtr     = &objects.FalseValue
 	undefinedPtr = &objects.UndefinedValue
-	builtinFuncs []objects.Object
 )
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
@@ -43,17 +42,28 @@ type VM struct {
 	curIPLimit     int
 	ip             int
 	aborting       int64
+	builtinFuncs   []objects.Object
 	builtinModules map[string]*objects.Object
 }
 
 // NewVM creates a VM.
-func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinModules map[string]*objects.Object) *VM {
+func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs []objects.Object, builtinModules map[string]*objects.Object) *VM {
 	if globals == nil {
 		globals = make([]*objects.Object, GlobalsSize)
 	}
 
 	if builtinModules == nil {
 		builtinModules = stdlib.Modules
+	}
+
+	if builtinFuncs == nil {
+		builtinFuncs = make([]objects.Object, len(objects.Builtins))
+		for idx, fn := range objects.Builtins {
+			builtinFuncs[idx] = &objects.BuiltinFunction{
+				Name:  fn.Name,
+				Value: fn.Value,
+			}
+		}
 	}
 
 	frames := make([]Frame, MaxFrames)
@@ -74,6 +84,7 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinModule
 		curInsts:       frames[0].fn.Instructions,
 		curIPLimit:     len(frames[0].fn.Instructions) - 1,
 		ip:             -1,
+		builtinFuncs:   builtinFuncs,
 		builtinModules: builtinModules,
 	}
 }
@@ -1183,7 +1194,7 @@ mainloop:
 				break mainloop
 			}
 
-			v.stack[v.sp] = &builtinFuncs[builtinIndex]
+			v.stack[v.sp] = &v.builtinFuncs[builtinIndex]
 			v.sp++
 
 		case compiler.OpGetBuiltinModule:
@@ -1411,14 +1422,4 @@ func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 	}
 
 	return nil
-}
-
-func init() {
-	builtinFuncs = make([]objects.Object, len(objects.Builtins))
-	for i, b := range objects.Builtins {
-		builtinFuncs[i] = &objects.BuiltinFunction{
-			Name:  b.Name,
-			Value: b.Func,
-		}
-	}
 }

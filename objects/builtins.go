@@ -1,135 +1,129 @@
 package objects
 
-// NamedBuiltinFunc is a named builtin function.
-type NamedBuiltinFunc struct {
-	Name string
-	Func CallableFunc
-}
-
 // Builtins contains all default builtin functions.
-var Builtins = []NamedBuiltinFunc{
+var Builtins = []BuiltinFunction{
 	{
-		Name: "print",
-		Func: builtinPrint,
+		Name:  "print",
+		Value: builtinPrint,
 	},
 	{
-		Name: "printf",
-		Func: builtinPrintf,
+		Name:  "printf",
+		Value: builtinPrintf,
 	},
 	{
-		Name: "sprintf",
-		Func: builtinSprintf,
+		Name:  "sprintf",
+		Value: builtinSprintf,
 	},
 	{
-		Name: "len",
-		Func: builtinLen,
+		Name:  "len",
+		Value: builtinLen,
 	},
 	{
-		Name: "copy",
-		Func: builtinCopy,
+		Name:  "copy",
+		Value: builtinCopy,
 	},
 	{
-		Name: "append",
-		Func: builtinAppend,
+		Name:  "append",
+		Value: builtinAppend,
 	},
 	{
-		Name: "string",
-		Func: builtinString,
+		Name:  "string",
+		Value: builtinString,
 	},
 	{
-		Name: "int",
-		Func: builtinInt,
+		Name:  "int",
+		Value: builtinInt,
 	},
 	{
-		Name: "bool",
-		Func: builtinBool,
+		Name:  "bool",
+		Value: builtinBool,
 	},
 	{
-		Name: "float",
-		Func: builtinFloat,
+		Name:  "float",
+		Value: builtinFloat,
 	},
 	{
-		Name: "char",
-		Func: builtinChar,
+		Name:  "char",
+		Value: builtinChar,
 	},
 	{
-		Name: "bytes",
-		Func: builtinBytes,
+		Name:  "bytes",
+		Value: builtinBytes,
 	},
 	{
-		Name: "time",
-		Func: builtinTime,
+		Name:  "time",
+		Value: builtinTime,
 	},
 	{
-		Name: "is_int",
-		Func: builtinIsInt,
+		Name:  "is_int",
+		Value: builtinIsInt,
 	},
 	{
-		Name: "is_float",
-		Func: builtinIsFloat,
+		Name:  "is_float",
+		Value: builtinIsFloat,
 	},
 	{
-		Name: "is_string",
-		Func: builtinIsString,
+		Name:  "is_string",
+		Value: builtinIsString,
 	},
 	{
-		Name: "is_bool",
-		Func: builtinIsBool,
+		Name:  "is_bool",
+		Value: builtinIsBool,
 	},
 	{
-		Name: "is_char",
-		Func: builtinIsChar,
+		Name:  "is_char",
+		Value: builtinIsChar,
 	},
 	{
-		Name: "is_bytes",
-		Func: builtinIsBytes,
+		Name:  "is_bytes",
+		Value: builtinIsBytes,
 	},
 	{
-		Name: "is_array",
-		Func: builtinIsArray,
+		Name:  "is_array",
+		Value: builtinIsArray,
 	},
 	{
-		Name: "is_immutable_array",
-		Func: builtinIsImmutableArray,
+		Name:  "is_immutable_array",
+		Value: builtinIsImmutableArray,
 	},
 	{
-		Name: "is_map",
-		Func: builtinIsMap,
+		Name:  "is_map",
+		Value: builtinIsMap,
 	},
 	{
-		Name: "is_immutable_map",
-		Func: builtinIsImmutableMap,
+		Name:  "is_immutable_map",
+		Value: builtinIsImmutableMap,
 	},
 	{
-		Name: "is_time",
-		Func: builtinIsTime,
+		Name:  "is_time",
+		Value: builtinIsTime,
 	},
 	{
-		Name: "is_error",
-		Func: builtinIsError,
+		Name:  "is_error",
+		Value: builtinIsError,
 	},
 	{
-		Name: "is_undefined",
-		Func: builtinIsUndefined,
+		Name:  "is_undefined",
+		Value: builtinIsUndefined,
 	},
 	{
-		Name: "is_function",
-		Func: builtinIsFunction,
+		Name:  "is_function",
+		Value: builtinIsFunction,
 	},
 	{
-		Name: "is_callable",
-		Func: builtinIsCallable,
+		Name:  "is_callable",
+		Value: builtinIsCallable,
 	},
 	{
-		Name: "to_json",
-		Func: builtinToJSON,
+		Name:  "to_json",
+		Value: builtinToJSON,
 	},
 	{
-		Name: "from_json",
-		Func: builtinFromJSON,
+		Name:  "from_json",
+		Value: builtinFromJSON,
 	},
 	{
-		Name: "type_name",
-		Func: builtinTypeName,
+		Name:  "type_name",
+		Value: builtinTypeName,
 	},
 }
