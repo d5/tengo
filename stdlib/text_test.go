@@ -233,3 +233,14 @@ func TestReplaceLimit(t *testing.T) {
 	module(t, "text").call("re_replace", "(1)(2)", "123456789012", "$2$1").expect("213456789021")
 	module(t, "text").call("re_replace", "(1)(2)", "123456789012", "${2}${1}x").expectError()
 }
+
+func TestTextRepeat(t *testing.T) {
+	curMaxStringLen := tengo.MaxStringLen
+	defer func() { tengo.MaxStringLen = curMaxStringLen }()
+	tengo.MaxStringLen = 12
+
+	module(t, "text").call("repeat", "1234", "3").expect("123412341234")
+	module(t, "text").call("repeat", "1234", "4").expectError()
+	module(t, "text").call("repeat", "1", "12").expect("111111111111")
+	module(t, "text").call("repeat", "1", "13").expectError()
+}
