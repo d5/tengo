@@ -11,6 +11,7 @@ func TestCondExpr(t *testing.T) {
 	expect(t, `out = (1 == 1) ? false ? 10 - 8 : 1 + 3 : 12 - 2`, 4)
 
 	expect(t, `
+out = 0
 f1 := func() { out += 10 }
 f2 := func() { out = -out }
 true ? f1() : f2()

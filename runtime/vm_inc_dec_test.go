@@ -5,8 +5,8 @@ import (
 )
 
 func TestIncDec(t *testing.T) {
-	expect(t, `out++`, 1)
-	expect(t, `out--`, -1)
+	expect(t, `out = 0; out++`, 1)
+	expect(t, `out = 0; out--`, -1)
 	expect(t, `a := 0; a++; out = a`, 1)
 	expect(t, `a := 0; a++; a--; out = a`, 0)
 

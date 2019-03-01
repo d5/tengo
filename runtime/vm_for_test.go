@@ -6,6 +6,7 @@ import (
 
 func TestFor(t *testing.T) {
 	expect(t, `
+	out = 0
 	for {
 		out++
 		if out == 5 {
@@ -14,6 +15,7 @@ func TestFor(t *testing.T) {
 	}`, 5)
 
 	expect(t, `
+	out = 0
 	for {
 		out++
 		if out == 5 {
@@ -22,6 +24,7 @@ func TestFor(t *testing.T) {
 	}`, 5)
 
 	expect(t, `
+	out = 0
 	a := 0
 	for {
 		a++
@@ -31,6 +34,7 @@ func TestFor(t *testing.T) {
 	}`, 7) // 1 + 2 + 4
 
 	expect(t, `
+	out = 0
 	a := 0
 	for {
 		a++
@@ -40,6 +44,7 @@ func TestFor(t *testing.T) {
 	}`, 12) // 1 + 2 + 4 + 5
 
 	expect(t, `
+	out = 0
 	for true {
 		out++
 		if out == 5 {
@@ -58,6 +63,7 @@ func TestFor(t *testing.T) {
 	out = a`, 5)
 
 	expect(t, `
+	out = 0
 	a := 0
 	for true {
 		a++
@@ -67,6 +73,7 @@ func TestFor(t *testing.T) {
 	}`, 7) // 1 + 2 + 4
 
 	expect(t, `
+	out = 0
 	a := 0
 	for true {
 		a++
@@ -76,6 +83,7 @@ func TestFor(t *testing.T) {
 	}`, 12) // 1 + 2 + 4 + 5
 
 	expect(t, `
+	out = 0
 	func() {
 		for true {
 			out++
@@ -86,11 +94,13 @@ func TestFor(t *testing.T) {
 	}()`, 5)
 
 	expect(t, `
+	out = 0
 	for a:=1; a<=10; a++ {
 		out += a
 	}`, 55)
 
 	expect(t, `
+	out = 0
 	for a:=1; a<=3; a++ {
 		for b:=3; b<=6; b++ {
 			out += b
@@ -98,6 +108,7 @@ func TestFor(t *testing.T) {
 	}`, 54)
 
 	expect(t, `
+	out = 0
 	func() {
 		for {
 			out++
@@ -108,6 +119,7 @@ func TestFor(t *testing.T) {
 	}()`, 5)
 
 	expect(t, `
+	out = 0
 	func() {
 		for true {
 			out++
@@ -199,6 +211,7 @@ func TestFor(t *testing.T) {
 	out = a`, 5)
 
 	expect(t, `
+	out = 0
 	for a:=1; a<=10; a++ {
 		if a == 3 {
 			continue
@@ -210,6 +223,7 @@ func TestFor(t *testing.T) {
 	}`, 12) // 1 + 2 + 4 + 5
 
 	expect(t, `
+	out = 0
 	for a:=1; a<=10; {
 		if a == 3 {
 			a++

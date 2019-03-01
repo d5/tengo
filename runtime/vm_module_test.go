@@ -193,7 +193,7 @@ export func() {
 	})
 
 	// 'export' statement is ignored outside module
-	expect(t, `a := 5; export func() { a = 10 }(); out = a`, 5)
+	expectNoMod(t, `a := 5; export func() { a = 10 }(); out = a`, 5)
 
 	// 'export' must be in the top-level
 	expectErrorWithUserModules(t, `import("mod1")`, map[string]string{
