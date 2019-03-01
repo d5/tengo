@@ -30,68 +30,31 @@ func expect(t *testing.T, input string, expected interface{}) {
 	expectWithUserModules(t, input, expected, nil)
 }
 
-func expectWithSymbols(t *testing.T, input string, expected interface{}, symbols map[string]objects.Object) {
-	// parse
-	file := parse(t, input)
-	if file == nil {
-		return
-	}
+func expectNoMod(t *testing.T, input string, expected interface{}) {
+	runVM(t, input, expected, nil, nil, true)
+}
 
-	// compiler/VM
-	runVM(t, file, expected, symbols, nil)
+func expectWithSymbols(t *testing.T, input string, expected interface{}, symbols map[string]objects.Object) {
+	runVM(t, input, expected, symbols, nil, true)
 }
 
 func expectWithUserModules(t *testing.T, input string, expected interface{}, userModules map[string]string) {
-	// parse
-	file := parse(t, input)
-	if file == nil {
-		return
-	}
-
-	// compiler/VM
-	runVM(t, file, expected, nil, userModules)
+	runVM(t, input, expected, nil, userModules, false)
 }
 
 func expectError(t *testing.T, input, expected string) {
-	expected = strings.TrimSpace(expected)
-	if expected == "" {
-		panic("expected must not be empty")
-	}
-
-	expectErrorWithUserModules(t, input, nil, expected)
+	runVMError(t, input, nil, nil, expected)
 }
 
 func expectErrorWithUserModules(t *testing.T, input string, userModules map[string]string, expected string) {
-	// parse
-	program := parse(t, input)
-	if program == nil {
-		return
-	}
-
-	// compiler/VM
-	_, trace, err := traceCompileRun(program, nil, userModules)
-	if !assert.Error(t, err) ||
-		!assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
-		t.Log("\n" + strings.Join(trace, "\n"))
-	}
+	runVMError(t, input, nil, userModules, expected)
 }
 
 func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objects.Object, expected string) {
-	// parse
-	program := parse(t, input)
-	if program == nil {
-		return
-	}
-
-	// compiler/VM
-	_, trace, err := traceCompileRun(program, symbols, nil)
-	if !assert.Error(t, err) ||
-		!assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
-		t.Log("\n" + strings.Join(trace, "\n"))
-	}
+	runVMError(t, input, symbols, nil, expected)
 }
 
-func runVM(t *testing.T, file *ast.File, expected interface{}, symbols map[string]objects.Object, userModules map[string]string) (ok bool) {
+func runVM(t *testing.T, input string, expected interface{}, symbols map[string]objects.Object, userModules map[string]string, skipModuleTest bool) {
 	expectedObj := toObject(expected)
 
 	if symbols == nil {
@@ -99,81 +62,68 @@ func runVM(t *testing.T, file *ast.File, expected interface{}, symbols map[strin
 	}
 	symbols[testOut] = objectZeroCopy(expectedObj)
 
-	res, trace, err := traceCompileRun(file, symbols, userModules)
+	// first pass: run the code normally
+	{
+		// parse
+		file := parse(t, input)
+		if file == nil {
+			return
+		}
 
-	defer func() {
-		if !ok {
+		// compiler/VM
+		res, trace, err := traceCompileRun(file, symbols, userModules)
+		if !assert.NoError(t, err) ||
+			!assert.Equal(t, expectedObj, res[testOut]) {
 			t.Log("\n" + strings.Join(trace, "\n"))
 		}
-	}()
+	}
 
-	if !assert.NoError(t, err) {
+	// second pass: run the code as import module
+	if !skipModuleTest {
+		file := parse(t, `out = import("__code__")`)
+		if file == nil {
+			return
+		}
+
+		expectedObj := toObject(expected)
+		switch eo := expectedObj.(type) {
+		case *objects.Array:
+			expectedObj = &objects.ImmutableArray{Value: eo.Value}
+		case *objects.Map:
+			expectedObj = &objects.ImmutableMap{Value: eo.Value}
+		}
+
+		if userModules == nil {
+			userModules = make(map[string]string)
+		}
+		userModules["__code__"] = fmt.Sprintf("out := undefined; %s; export out", input)
+
+		res, trace, err := traceCompileRun(file, symbols, userModules)
+		if !assert.NoError(t, err) ||
+			!assert.Equal(t, expectedObj, res[testOut]) {
+			t.Log("\n" + strings.Join(trace, "\n"))
+		}
+	}
+}
+
+func runVMError(t *testing.T, input string, symbols map[string]objects.Object, userModules map[string]string, expected string) {
+	expected = strings.TrimSpace(expected)
+	if expected == "" {
+		panic("expected must not be empty")
+	}
+
+	// parse
+	program := parse(t, input)
+	if program == nil {
 		return
 	}
 
-	ok = assert.Equal(t, expectedObj, res[testOut])
-
-	return
-}
-
-func errorObject(v interface{}) *objects.Error {
-	return &objects.Error{Value: toObject(v)}
-}
-
-func toObject(v interface{}) objects.Object {
-	switch v := v.(type) {
-	case objects.Object:
-		return v
-	case string:
-		return &objects.String{Value: v}
-	case int64:
-		return &objects.Int{Value: v}
-	case int: // for convenience
-		return &objects.Int{Value: int64(v)}
-	case bool:
-		if v {
-			return objects.TrueValue
-		}
-		return objects.FalseValue
-	case rune:
-		return &objects.Char{Value: v}
-	case byte: // for convenience
-		return &objects.Char{Value: rune(v)}
-	case float64:
-		return &objects.Float{Value: v}
-	case []byte:
-		return &objects.Bytes{Value: v}
-	case MAP:
-		objs := make(map[string]objects.Object)
-		for k, v := range v {
-			objs[k] = toObject(v)
-		}
-
-		return &objects.Map{Value: objs}
-	case ARR:
-		var objs []objects.Object
-		for _, e := range v {
-			objs = append(objs, toObject(e))
-		}
-
-		return &objects.Array{Value: objs}
-	case IMAP:
-		objs := make(map[string]objects.Object)
-		for k, v := range v {
-			objs[k] = toObject(v)
-		}
-
-		return &objects.ImmutableMap{Value: objs}
-	case IARR:
-		var objs []objects.Object
-		for _, e := range v {
-			objs = append(objs, toObject(e))
-		}
-
-		return &objects.ImmutableArray{Value: objs}
+	// compiler/VM
+	_, trace, err := traceCompileRun(program, symbols, userModules)
+	if !assert.Error(t, err) ||
+		!assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
+		t.Log("\n" + strings.Join(trace, "\n"))
 	}
-
-	panic(fmt.Errorf("unknown type: %T", v))
 }
 
 type tracer struct {
@@ -294,6 +244,66 @@ func parse(t *testing.T, input string) *ast.File {
 	}
 
 	return file
+}
+
+func errorObject(v interface{}) *objects.Error {
+	return &objects.Error{Value: toObject(v)}
+}
+
+func toObject(v interface{}) objects.Object {
+	switch v := v.(type) {
+	case objects.Object:
+		return v
+	case string:
+		return &objects.String{Value: v}
+	case int64:
+		return &objects.Int{Value: v}
+	case int: // for convenience
+		return &objects.Int{Value: int64(v)}
+	case bool:
+		if v {
+			return objects.TrueValue
+		}
+		return objects.FalseValue
+	case rune:
+		return &objects.Char{Value: v}
+	case byte: // for convenience
+		return &objects.Char{Value: rune(v)}
+	case float64:
+		return &objects.Float{Value: v}
+	case []byte:
+		return &objects.Bytes{Value: v}
+	case MAP:
+		objs := make(map[string]objects.Object)
+		for k, v := range v {
+			objs[k] = toObject(v)
+		}
+
+		return &objects.Map{Value: objs}
+	case ARR:
+		var objs []objects.Object
+		for _, e := range v {
+			objs = append(objs, toObject(e))
+		}
+
+		return &objects.Array{Value: objs}
+	case IMAP:
+		objs := make(map[string]objects.Object)
+		for k, v := range v {
+			objs[k] = toObject(v)
+		}
+
+		return &objects.ImmutableMap{Value: objs}
+	case IARR:
+		var objs []objects.Object
+		for _, e := range v {
+			objs = append(objs, toObject(e))
+		}
+
+		return &objects.ImmutableArray{Value: objs}
+	}
+
+	panic(fmt.Errorf("unknown type: %T", v))
 }
 
 func objectZeroCopy(o objects.Object) objects.Object {
