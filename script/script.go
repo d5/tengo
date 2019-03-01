@@ -33,6 +33,16 @@ func New(input []byte) *Script {
 func (s *Script) Add(name string, value interface{}) error {
 	obj, err := objects.FromInterface(value)
 	if err != nil {
+		switch v := value.(type) {
+		case objects.CallableFunc:
+			obj = &objects.UserFunction{Value: v}
+			err = nil
+		case func(...objects.Object) (objects.Object, error):
+			obj = &objects.UserFunction{Value: v}
+			err = nil
+		}
+	}
+	if err != nil {
 		return err
 	}
 

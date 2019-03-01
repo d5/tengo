@@ -11,14 +11,26 @@ import (
 )
 
 func TestScript_Add(t *testing.T) {
-	s := script.New([]byte(`a := b`))
+	s := script.New([]byte(`a := b; c := test(b); d := test(5)`))
 	assert.NoError(t, s.Add("b", 5))     // b = 5
 	assert.NoError(t, s.Add("b", "foo")) // b = "foo"  (re-define before compilation)
+	assert.NoError(t, s.Add("test", func(args ...objects.Object) (ret objects.Object, err error) {
+		if len(args) > 0 {
+			switch arg := args[0].(type) {
+			case *objects.Int:
+				return &objects.Int{Value: arg.Value + 1}, nil
+			}
+		}
+
+		return &objects.Int{Value: 0}, nil
+	}))
 	c, err := s.Compile()
 	assert.NoError(t, err)
 	assert.NoError(t, c.Run())
 	assert.Equal(t, "foo", c.Get("a").Value())
 	assert.Equal(t, "foo", c.Get("b").Value())
+	assert.Equal(t, int64(0), c.Get("c").Value())
+	assert.Equal(t, int64(6), c.Get("d").Value())
 }
 
 func TestScript_Remove(t *testing.T) {
