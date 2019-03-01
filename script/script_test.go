@@ -1,10 +1,13 @@
 package script_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/d5/tengo/assert"
+	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/script"
+	"github.com/d5/tengo/stdlib"
 )
 
 func TestScript_Add(t *testing.T) {
@@ -37,24 +40,66 @@ func TestScript_Run(t *testing.T) {
 	compiledGet(t, c, "a", int64(5))
 }
 
-func TestScript_DisableBuiltinFunction(t *testing.T) {
+func TestScript_SetBuiltinFunctions(t *testing.T) {
 	s := script.New([]byte(`a := len([1, 2, 3])`))
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
 	compiledGet(t, c, "a", int64(3))
-	s.DisableBuiltinFunction("len")
+
+	s = script.New([]byte(`a := len([1, 2, 3])`))
+	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[3]})
+	c, err = s.Run()
+	assert.NoError(t, err)
+	assert.NotNil(t, c)
+	compiledGet(t, c, "a", int64(3))
+
+	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[0]})
 	_, err = s.Run()
 	assert.Error(t, err)
+
+	s.SetBuiltinFunctions(nil)
+	_, err = s.Run()
+	assert.Error(t, err)
+
+	s = script.New([]byte(`a := import("b")`))
+	s.SetUserModuleLoader(func(name string) ([]byte, error) {
+		if name == "b" {
+			return []byte(`export import("c")`), nil
+		} else if name == "c" {
+			return []byte("export len([1, 2, 3])"), nil
+		}
+		return nil, errors.New("module not found")
+	})
+	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[3]})
+	c, err = s.Run()
+	assert.NoError(t, err)
+	assert.NotNil(t, c)
+	compiledGet(t, c, "a", int64(3))
 }
 
-func TestScript_DisableStdModule(t *testing.T) {
+func TestScript_SetBuiltinModules(t *testing.T) {
 	s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
 	compiledGet(t, c, "a", 19.84)
-	s.DisableStdModule("math")
+
+	s.SetBuiltinModules(map[string]*objects.ImmutableMap{"math": objectPtr(*stdlib.Modules["math"])})
+	c, err = s.Run()
+	assert.NoError(t, err)
+	assert.NotNil(t, c)
+	compiledGet(t, c, "a", 19.84)
+
+	s.SetBuiltinModules(map[string]*objects.ImmutableMap{"os": objectPtr(*stdlib.Modules["os"])})
 	_, err = s.Run()
 	assert.Error(t, err)
+
+	s.SetBuiltinModules(nil)
+	_, err = s.Run()
+	assert.Error(t, err)
+}
+
+func objectPtr(o objects.Object) *objects.ImmutableMap {
+	return o.(*objects.ImmutableMap)
 }
