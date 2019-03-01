@@ -5,6 +5,7 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler/ast"
 	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/compiler/token"
@@ -195,6 +196,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 	case *ast.StringLit:
+		if len(node.Value) > tengo.MaxStringLen {
+			return c.error(node, objects.ErrStringLimit)
+		}
+
 		c.emit(node, OpConstant, c.addConstant(&objects.String{Value: node.Value}))
 
 	case *ast.CharLit:
@@ -332,6 +337,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 	case *ast.MapLit:
 		for _, elt := range node.Elements {
 			// key
+			if len(elt.Key) > tengo.MaxStringLen {
+				return c.error(node, objects.ErrStringLimit)
+			}
 			c.emit(node, OpConstant, c.addConstant(&objects.String{Value: elt.Key}))
 
 			// value
@@ -507,6 +515,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 	case *ast.ImportExpr:
 		if c.builtinModules[node.ModuleName] {
+			if len(node.ModuleName) > tengo.MaxStringLen {
+				return c.error(node, objects.ErrStringLimit)
+			}
+
 			c.emit(node, OpConstant, c.addConstant(&objects.String{Value: node.ModuleName}))
 			c.emit(node, OpGetBuiltinModule)
 		} else {
@@ -608,6 +620,14 @@ func (c *Compiler) fork(file *source.File, moduleName string, symbolTable *Symbo
 	child.moduleLoader = c.moduleLoader // share module loader
 
 	return child
+}
+
+func (c *Compiler) error(node ast.Node, err error) error {
+	return &Error{
+		fileSet: c.file.Set(),
+		node:    node,
+		error:   err,
+	}
 }
 
 func (c *Compiler) errorf(node ast.Node, format string, args ...interface{}) error {

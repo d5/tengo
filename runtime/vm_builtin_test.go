@@ -3,6 +3,7 @@ package runtime_test
 import (
 	"testing"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/objects"
 )
 
@@ -192,4 +193,18 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `a := func(x) { return func() { return x } }; out = is_callable(a)`, true)                      // function
 	expect(t, `a := func(x) { return func() { return x } }; out = is_callable(a(5))`, true)                   // closure
 	expectWithSymbols(t, `out = is_callable(x)`, true, SYM{"x": &StringArray{Value: []string{"foo", "bar"}}}) // user object
+}
+
+func TestBytesN(t *testing.T) {
+	curMaxBytesLen := tengo.MaxBytesLen
+	defer func() { tengo.MaxBytesLen = curMaxBytesLen }()
+	tengo.MaxBytesLen = 10
+
+	expect(t, `out = bytes(0)`, make([]byte, 0))
+	expect(t, `out = bytes(10)`, make([]byte, 10))
+	expectError(t, `bytes(11)`, "bytes size limit")
+
+	tengo.MaxBytesLen = 1000
+	expect(t, `out = bytes(1000)`, make([]byte, 1000))
+	expectError(t, `bytes(1001)`, "bytes size limit")
 }

@@ -3,6 +3,7 @@ package stdlib
 import (
 	"regexp"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/objects"
 )
 
@@ -141,7 +142,12 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 						return
 					}
 
-					ret = &objects.String{Value: re.ReplaceAllString(s1, s2)}
+					s, ok := doTextRegexpReplace(re, s1, s2)
+					if !ok {
+						return nil, objects.ErrStringLimit
+					}
+
+					ret = &objects.String{Value: s}
 
 					return
 				},
@@ -192,4 +198,31 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 			},
 		},
 	}
+}
+
+// Size-limit checking implementation of regexp.ReplaceAllString.
+func doTextRegexpReplace(re *regexp.Regexp, src, repl string) (string, bool) {
+	idx := 0
+	out := ""
+
+	for _, m := range re.FindAllStringSubmatchIndex(src, -1) {
+		var exp []byte
+		exp = re.ExpandString(exp, repl, src, m)
+
+		if len(out)+m[0]-idx+len(exp) > tengo.MaxStringLen {
+			return "", false
+		}
+
+		out += src[idx:m[0]] + string(exp)
+		idx = m[1]
+	}
+	if idx < len(src) {
+		if len(out)+len(src)-idx > tengo.MaxStringLen {
+			return "", false
+		}
+
+		out += src[idx:]
+	}
+
+	return string(out), true
 }

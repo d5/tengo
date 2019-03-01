@@ -3,6 +3,7 @@ package stdlib
 import (
 	"time"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/objects"
 )
 
@@ -867,7 +868,13 @@ func timesTimeFormat(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	ret = &objects.String{Value: t1.Format(s2)}
+	s := t1.Format(s2)
+	if len(s) > tengo.MaxStringLen {
+
+		return nil, objects.ErrStringLimit
+	}
+
+	ret = &objects.String{Value: s}
 
 	return
 }

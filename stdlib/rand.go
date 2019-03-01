@@ -15,6 +15,7 @@ var randModule = map[string]objects.Object{
 	"perm":       &objects.UserFunction{Name: "perm", Value: FuncAIRIs(rand.Perm)},
 	"seed":       &objects.UserFunction{Name: "seed", Value: FuncAI64R(rand.Seed)},
 	"read": &objects.UserFunction{
+		Name: "read",
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 1 {
 				return nil, objects.ErrWrongNumArguments
@@ -39,6 +40,7 @@ var randModule = map[string]objects.Object{
 		},
 	},
 	"rand": &objects.UserFunction{
+		Name: "rand",
 		Value: func(args ...objects.Object) (ret objects.Object, err error) {
 			if len(args) != 1 {
 				return nil, objects.ErrWrongNumArguments
@@ -71,6 +73,7 @@ func randRand(r *rand.Rand) *objects.ImmutableMap {
 			"perm":       &objects.UserFunction{Name: "perm", Value: FuncAIRIs(r.Perm)},
 			"seed":       &objects.UserFunction{Name: "seed", Value: FuncAI64R(r.Seed)},
 			"read": &objects.UserFunction{
+				Name: "read",
 				Value: func(args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 1 {
 						return nil, objects.ErrWrongNumArguments
