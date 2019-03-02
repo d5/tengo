@@ -2,9 +2,11 @@ package script_test
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/d5/tengo/assert"
+	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/script"
 )
 
@@ -40,6 +42,16 @@ func TestScript_SetUserModuleLoader(t *testing.T) {
 
 	// disabled stdlib
 	scr = script.New([]byte(`out := import("mod")`))
+	scr.SetBuiltinModules(map[string]*objects.ImmutableMap{
+		"text": objectPtr(&objects.ImmutableMap{
+			Value: map[string]objects.Object{
+				"title": &objects.UserFunction{Name: "title", Value: func(args ...objects.Object) (ret objects.Object, err error) {
+					s, _ := objects.ToString(args[0])
+					return &objects.String{Value: strings.Title(s)}, nil
+				}},
+			},
+		}),
+	})
 	scr.SetUserModuleLoader(func(name string) ([]byte, error) {
 		if name == "mod" {
 			return []byte(`text := import("text"); export text.title("foo")`), nil

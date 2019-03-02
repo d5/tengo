@@ -2,12 +2,12 @@ package script_test
 
 import (
 	"errors"
+	"math"
 	"testing"
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/script"
-	"github.com/d5/tengo/stdlib"
 )
 
 func TestScript_Add(t *testing.T) {
@@ -92,18 +92,27 @@ func TestScript_SetBuiltinFunctions(t *testing.T) {
 
 func TestScript_SetBuiltinModules(t *testing.T) {
 	s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
+	s.SetBuiltinModules(map[string]*objects.ImmutableMap{
+		"math": objectPtr(&objects.ImmutableMap{
+			Value: map[string]objects.Object{
+				"abs": &objects.UserFunction{Name: "abs", Value: func(args ...objects.Object) (ret objects.Object, err error) {
+					v, _ := objects.ToFloat64(args[0])
+					return &objects.Float{Value: math.Abs(v)}, nil
+				}},
+			},
+		}),
+	})
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
 	compiledGet(t, c, "a", 19.84)
 
-	s.SetBuiltinModules(map[string]*objects.ImmutableMap{"math": objectPtr(*stdlib.Modules["math"])})
 	c, err = s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
 	compiledGet(t, c, "a", 19.84)
 
-	s.SetBuiltinModules(map[string]*objects.ImmutableMap{"os": objectPtr(*stdlib.Modules["os"])})
+	s.SetBuiltinModules(map[string]*objects.ImmutableMap{"os": objectPtr(&objects.ImmutableMap{Value: map[string]objects.Object{}})})
 	_, err = s.Run()
 	assert.Error(t, err)
 
