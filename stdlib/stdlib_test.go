@@ -7,6 +7,7 @@ import (
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo/script"
 	"github.com/d5/tengo/stdlib"
 )
 
@@ -23,6 +24,56 @@ func TestAllModuleNames(t *testing.T) {
 	for _, name := range names {
 		assert.NotNil(t, stdlib.Modules[name], "name: %s", name)
 	}
+}
+
+func TestModulesRun(t *testing.T) {
+	// os.File
+	expect(t, `
+os := import("os")
+out := ""
+
+write_file := func(filename, data) {
+	file := os.create(filename)
+	if !file { return file }
+
+	if res := file.write(bytes(data)); is_error(res) {
+		return res
+	}
+
+	return file.close()
+}
+
+read_file := func(filename) {
+	file := os.open(filename)
+	if !file { return file }
+
+	data := bytes(100)
+	cnt := file.read(data)
+	if  is_error(cnt) {
+		return cnt
+	}
+
+	file.close()
+	return data[:cnt]
+}
+
+if write_file("./temp", "foobar") {
+	out = string(read_file("./temp"))
+}
+
+os.remove("./temp")
+`, "foobar")
+
+	// exec.command
+	expect(t, `
+out := ""
+os := import("os")
+cmd := os.exec("echo", "foo", "bar")
+if !is_error(cmd) {
+	out = cmd.output()
+}
+`, []byte("foo bar\n"))
+
 }
 
 func TestGetModules(t *testing.T) {
@@ -164,4 +215,25 @@ func object(v interface{}) objects.Object {
 	}
 
 	panic(fmt.Errorf("unknown type: %T", v))
+}
+
+func expect(t *testing.T, input string, expected interface{}) {
+	s := script.New([]byte(input))
+	s.SetBuiltinModules(map[string]*objects.ImmutableMap{
+		"text": objectPtr(*stdlib.Modules["text"]),
+		"os":   objectPtr(*stdlib.Modules["os"]),
+	})
+	c, err := s.Run()
+	assert.NoError(t, err)
+	assert.NotNil(t, c)
+	v := c.Get("out")
+	if !assert.NotNil(t, v) {
+		return
+	}
+
+	assert.Equal(t, expected, v.Value())
+}
+
+func objectPtr(o objects.Object) *objects.ImmutableMap {
+	return o.(*objects.ImmutableMap)
 }

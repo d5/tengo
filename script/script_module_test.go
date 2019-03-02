@@ -40,7 +40,6 @@ func TestScript_SetUserModuleLoader(t *testing.T) {
 	_, err = scr.Run()
 	assert.Error(t, err)
 
-	// disabled stdlib
 	scr = script.New([]byte(`out := import("mod")`))
 	scr.SetBuiltinModules(map[string]*objects.ImmutableMap{
 		"text": objectPtr(&objects.ImmutableMap{
