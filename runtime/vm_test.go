@@ -58,14 +58,6 @@ func expectErrorWithUserModules(t *testing.T, input string, userModules map[stri
 	runVMError(t, input, nil, userModules, nil, expected)
 }
 
-func expectErrorWithBuiltinModules(t *testing.T, input string, builtinModules map[string]*objects.Object, expected string) {
-	runVMError(t, input, nil, nil, builtinModules, expected)
-}
-
-func expectErrorWithUserAndBuiltinModules(t *testing.T, input string, userModules map[string]string, builtinModules map[string]*objects.Object, expected string) {
-	runVMError(t, input, nil, userModules, builtinModules, expected)
-}
-
 func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objects.Object, expected string) {
 	runVMError(t, input, symbols, nil, nil, expected)
 }
@@ -188,10 +180,8 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	}
 
 	bm := make(map[string]bool)
-	if builtinModules != nil {
-		for k, _ := range builtinModules {
-			bm[k] = true
-		}
+	for k := range builtinModules {
+		bm[k] = true
 	}
 
 	tr := &tracer{}
