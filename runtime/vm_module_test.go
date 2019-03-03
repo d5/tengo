@@ -76,7 +76,7 @@ func TestUserModules(t *testing.T) {
 		"mod1": `export "foo"`,
 	})
 
-	// export composite types
+	// export compound types
 	expectWithUserModules(t, `out = import("mod1")`, IARR{1, 2, 3}, map[string]string{
 		"mod1": `export [1, 2, 3]`,
 	})

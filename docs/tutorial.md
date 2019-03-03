@@ -181,7 +181,7 @@ s = "foo"    // ok: this is not mutating the value
              //  but updating reference 's' with another String value
 ```
 
-The composite types (Array, Map) are mutable by default, but, you can make them immutable using `immutable` expression.
+The compound types (Array, Map) are mutable by default, but, you can make them immutable using `immutable` expression.
 
 ```golang
 a := [1, 2, 3]

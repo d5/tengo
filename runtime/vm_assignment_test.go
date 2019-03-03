@@ -47,7 +47,7 @@ func() {
 	expect(t, `a := 10; a /= 2;; out = a`, 5)
 	expect(t, `a := 10; a /= 5 - 3;; out = a`, 5)
 
-	// composite assignment operator does not define new variable
+	// compound assignment operator does not define new variable
 	expectError(t, `a += 4`, "unresolved reference")
 	expectError(t, `a -= 4`, "unresolved reference")
 	expectError(t, `a *= 4`, "unresolved reference")
