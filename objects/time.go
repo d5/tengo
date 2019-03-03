@@ -87,3 +87,9 @@ func (o *Time) Equals(x Object) bool {
 
 	return o.Value.Equal(t.Value)
 }
+
+// NumObjects returns the number of objects.
+func (o *Time) NumObjects() (c int64) {
+	c = 1
+	return
+}

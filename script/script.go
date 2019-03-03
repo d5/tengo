@@ -19,6 +19,7 @@ type Script struct {
 	builtinModules   map[string]*objects.Object
 	userModuleLoader compiler.ModuleLoader
 	input            []byte
+	maxAllocs        int64
 }
 
 // New creates a Script instance with an input script.
@@ -26,6 +27,7 @@ func New(input []byte) *Script {
 	return &Script{
 		variables: make(map[string]*Variable),
 		input:     input,
+		maxAllocs: -1,
 	}
 }
 
@@ -85,6 +87,12 @@ func (s *Script) SetUserModuleLoader(loader compiler.ModuleLoader) {
 	s.userModuleLoader = loader
 }
 
+// SetMaxAllocs sets the maximum number of objects allocations per function scope.
+// Compiled script will return runtime.ErrObjectsLimit error if it exceeds this limit.
+func (s *Script) SetMaxAllocs(n int64) {
+	s.maxAllocs = n
+}
+
 // Compile compiles the script with all the defined variables, and, returns Compiled object.
 func (s *Script) Compile() (*Compiled, error) {
 	symbolTable, builtinModules, globals, err := s.prepCompile()
@@ -113,7 +121,7 @@ func (s *Script) Compile() (*Compiled, error) {
 
 	return &Compiled{
 		symbolTable: symbolTable,
-		machine:     runtime.NewVM(c.Bytecode(), globals, s.builtinFuncs, s.builtinModules),
+		machine:     runtime.NewVM(c.Bytecode(), globals, s.builtinFuncs, s.builtinModules, s.maxAllocs),
 	}, nil
 }
 

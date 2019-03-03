@@ -43,3 +43,8 @@ func (o *Closure) IsFalsy() bool {
 func (o *Closure) Equals(x Object) bool {
 	return false
 }
+
+// NumObjects returns the number of objects.
+func (o *Closure) NumObjects() (c int64) {
+	return
+}

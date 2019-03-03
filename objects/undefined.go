@@ -40,3 +40,8 @@ func (o *Undefined) Equals(x Object) bool {
 func (o *Undefined) IndexGet(index Object) (Object, error) {
 	return UndefinedValue, nil
 }
+
+// NumObjects returns the number of objects.
+func (o *Undefined) NumObjects() (c int64) {
+	return
+}

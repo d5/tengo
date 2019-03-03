@@ -47,3 +47,8 @@ func (o *CompiledFunction) IsFalsy() bool {
 func (o *CompiledFunction) Equals(x Object) bool {
 	return false
 }
+
+// NumObjects returns the number of objects.
+func (o *CompiledFunction) NumObjects() (c int64) {
+	return
+}

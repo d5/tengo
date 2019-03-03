@@ -60,3 +60,8 @@ func (i *MapIterator) Value() Object {
 
 	return i.v[k]
 }
+
+// NumObjects returns the number of objects.
+func (i *MapIterator) NumObjects() (c int64) {
+	return
+}

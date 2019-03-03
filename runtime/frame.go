@@ -10,4 +10,5 @@ type Frame struct {
 	freeVars    []*objects.Object
 	ip          int
 	basePointer int
+	allocs      int64
 }

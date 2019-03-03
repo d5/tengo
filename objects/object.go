@@ -27,4 +27,7 @@ type Object interface {
 	// Copy function will be used for copy() builtin function
 	// which is expected to deep-copy the values generally.
 	Copy() Object
+
+	// NumObjects should return the number of object(s).
+	NumObjects() int64
 }

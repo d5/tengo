@@ -147,8 +147,6 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		if expected != actual {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
-	case *objects.ReturnValue:
-		return Equal(t, expected.Value, actual.(objects.ReturnValue).Value, msg...)
 	case *objects.Array:
 		return equalObjectSlice(t, expected.Value, actual.(*objects.Array).Value, msg...)
 	case *objects.ImmutableArray:

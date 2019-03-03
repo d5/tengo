@@ -30,10 +30,6 @@ func TestObject_TypeName(t *testing.T) {
 	assert.Equal(t, "string-iterator", o.TypeName())
 	o = &objects.MapIterator{}
 	assert.Equal(t, "map-iterator", o.TypeName())
-	o = &objects.Break{}
-	assert.Equal(t, "break", o.TypeName())
-	o = &objects.Continue{}
-	assert.Equal(t, "continue", o.TypeName())
 	o = &objects.BuiltinFunction{Name: "fn"}
 	assert.Equal(t, "builtin-function:fn", o.TypeName())
 	o = &objects.UserFunction{Name: "fn"}
@@ -42,8 +38,6 @@ func TestObject_TypeName(t *testing.T) {
 	assert.Equal(t, "closure", o.TypeName())
 	o = &objects.CompiledFunction{}
 	assert.Equal(t, "compiled-function", o.TypeName())
-	o = &objects.ReturnValue{}
-	assert.Equal(t, "return-value", o.TypeName())
 	o = &objects.Undefined{}
 	assert.Equal(t, "undefined", o.TypeName())
 	o = &objects.Error{}
@@ -84,17 +78,11 @@ func TestObject_IsFalsy(t *testing.T) {
 	assert.True(t, o.IsFalsy())
 	o = &objects.MapIterator{}
 	assert.True(t, o.IsFalsy())
-	o = &objects.Break{}
-	assert.False(t, o.IsFalsy())
-	o = &objects.Continue{}
-	assert.False(t, o.IsFalsy())
 	o = &objects.BuiltinFunction{}
 	assert.False(t, o.IsFalsy())
 	o = &objects.Closure{}
 	assert.False(t, o.IsFalsy())
 	o = &objects.CompiledFunction{}
-	assert.False(t, o.IsFalsy())
-	o = &objects.ReturnValue{}
 	assert.False(t, o.IsFalsy())
 	o = &objects.Undefined{}
 	assert.True(t, o.IsFalsy())
@@ -138,12 +126,6 @@ func TestObject_String(t *testing.T) {
 	assert.Equal(t, "<array-iterator>", o.String())
 	o = &objects.MapIterator{}
 	assert.Equal(t, "<map-iterator>", o.String())
-	o = &objects.Break{}
-	assert.Equal(t, "<break>", o.String())
-	o = &objects.Continue{}
-	assert.Equal(t, "<continue>", o.String())
-	o = &objects.ReturnValue{}
-	assert.Equal(t, "<return-value>", o.String())
 	o = &objects.Undefined{}
 	assert.Equal(t, "<undefined>", o.String())
 	o = &objects.Bytes{}
@@ -172,12 +154,6 @@ func TestObject_BinaryOp(t *testing.T) {
 	o = &objects.MapIterator{}
 	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
 	assert.Error(t, err)
-	o = &objects.Break{}
-	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
-	assert.Error(t, err)
-	o = &objects.Continue{}
-	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
-	assert.Error(t, err)
 	o = &objects.BuiltinFunction{}
 	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
 	assert.Error(t, err)
@@ -185,9 +161,6 @@ func TestObject_BinaryOp(t *testing.T) {
 	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
 	assert.Error(t, err)
 	o = &objects.CompiledFunction{}
-	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
-	assert.Error(t, err)
-	o = &objects.ReturnValue{}
 	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
 	assert.Error(t, err)
 	o = &objects.Undefined{}

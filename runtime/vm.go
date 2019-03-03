@@ -41,13 +41,14 @@ type VM struct {
 	curInsts       []byte
 	curIPLimit     int
 	ip             int
-	aborting       int64
+	abort          int64
 	builtinFuncs   []objects.Object
 	builtinModules map[string]*objects.Object
+	maxAllocs      int64
 }
 
 // NewVM creates a VM.
-func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs []objects.Object, builtinModules map[string]*objects.Object) *VM {
+func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs []objects.Object, builtinModules map[string]*objects.Object, maxAllocs int64) *VM {
 	if globals == nil {
 		globals = make([]*objects.Object, GlobalsSize)
 	}
@@ -66,11 +67,13 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs 
 		}
 	}
 
+	if maxAllocs < 0 {
+		maxAllocs = 9223372036854775807 // no limit
+	}
+
 	frames := make([]Frame, MaxFrames)
 	frames[0].fn = bytecode.MainFunction
-	frames[0].freeVars = nil
 	frames[0].ip = -1
-	frames[0].basePointer = 0
 
 	return &VM{
 		constants:      bytecode.Constants,
@@ -86,16 +89,19 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs 
 		ip:             -1,
 		builtinFuncs:   builtinFuncs,
 		builtinModules: builtinModules,
+		maxAllocs:      maxAllocs,
 	}
 }
 
 // Abort aborts the execution.
 func (v *VM) Abort() {
-	atomic.StoreInt64(&v.aborting, 1)
+	atomic.StoreInt64(&v.abort, 1)
 }
 
 // Run starts the execution.
 func (v *VM) Run() (err error) {
+	var filePos source.FilePos
+
 	// reset VM states
 	v.sp = 0
 	v.curFrame = &(v.frames[0])
@@ -103,12 +109,12 @@ func (v *VM) Run() (err error) {
 	v.curIPLimit = len(v.curInsts) - 1
 	v.framesIndex = 1
 	v.ip = -1
-	atomic.StoreInt64(&v.aborting, 0)
+	allocs := v.maxAllocs
 
-	var filePos source.FilePos
+	atomic.StoreInt64(&v.abort, 0)
 
 mainloop:
-	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
+	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.abort) == 0) {
 		v.ip++
 
 		switch v.curInsts[v.ip] {
@@ -117,6 +123,7 @@ mainloop:
 			v.ip += 2
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -126,6 +133,7 @@ mainloop:
 
 		case compiler.OpNull:
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -151,7 +159,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -177,7 +193,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -203,7 +227,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -229,7 +261,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -255,7 +295,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -281,7 +329,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -307,7 +363,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -333,7 +397,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -359,7 +431,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -385,7 +465,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -411,7 +499,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -425,6 +521,7 @@ mainloop:
 			v.sp -= 2
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -442,6 +539,7 @@ mainloop:
 			v.sp -= 2
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -471,7 +569,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -497,7 +603,15 @@ mainloop:
 				break mainloop
 			}
 
+			allocs -= res.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -510,6 +624,7 @@ mainloop:
 
 		case compiler.OpTrue:
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -519,6 +634,7 @@ mainloop:
 
 		case compiler.OpFalse:
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -531,6 +647,7 @@ mainloop:
 			v.sp--
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -549,11 +666,20 @@ mainloop:
 			switch x := (*operand).(type) {
 			case *objects.Int:
 				if v.sp >= StackSize {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 					err = ErrStackOverflow
 					break mainloop
 				}
 
 				var res objects.Object = &objects.Int{Value: ^x.Value}
+
+				//allocs -= val.NumObjects()
+				allocs--
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
 
 				v.stack[v.sp] = &res
 				v.sp++
@@ -570,21 +696,39 @@ mainloop:
 			switch x := (*operand).(type) {
 			case *objects.Int:
 				if v.sp >= StackSize {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 					err = ErrStackOverflow
 					break mainloop
 				}
 
 				var res objects.Object = &objects.Int{Value: -x.Value}
 
+				//allocs -= res.NumObjects()
+				allocs--
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
+
 				v.stack[v.sp] = &res
 				v.sp++
 			case *objects.Float:
 				if v.sp >= StackSize {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 					err = ErrStackOverflow
 					break mainloop
 				}
 
 				var res objects.Object = &objects.Float{Value: -x.Value}
+
+				//allocs -= res.NumObjects()
+				allocs--
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
 
 				v.stack[v.sp] = &res
 				v.sp++
@@ -662,6 +806,7 @@ mainloop:
 			val := v.globals[globalIndex]
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -681,7 +826,15 @@ mainloop:
 
 			var arr objects.Object = &objects.Array{Value: elements}
 
+			allocs -= arr.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -703,7 +856,15 @@ mainloop:
 
 			var m objects.Object = &objects.Map{Value: kv}
 
+			allocs -= m.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -718,6 +879,13 @@ mainloop:
 				Value: *value,
 			}
 
+			allocs -= e.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			v.stack[v.sp-1] = &e
 
 		case compiler.OpImmutable:
@@ -728,11 +896,27 @@ mainloop:
 				var immutableArray objects.Object = &objects.ImmutableArray{
 					Value: value.Value,
 				}
+
+				allocs -= immutableArray.NumObjects()
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
+
 				v.stack[v.sp-1] = &immutableArray
 			case *objects.Map:
 				var immutableMap objects.Object = &objects.ImmutableMap{
 					Value: value.Value,
 				}
+
+				allocs -= immutableMap.NumObjects()
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
+
 				v.stack[v.sp-1] = &immutableMap
 			}
 
@@ -759,7 +943,15 @@ mainloop:
 					val = objects.UndefinedValue
 				}
 
+				allocs -= val.NumObjects()
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
+
 				if v.sp >= StackSize {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 					err = ErrStackOverflow
 					break mainloop
 				}
@@ -776,6 +968,7 @@ mainloop:
 				}
 
 				if v.sp >= StackSize {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 					err = ErrStackOverflow
 					break mainloop
 				}
@@ -839,11 +1032,20 @@ mainloop:
 				}
 
 				if v.sp >= StackSize {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 					err = ErrStackOverflow
 					break mainloop
 				}
 
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
+
+				allocs -= val.NumObjects()
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
+
 				v.stack[v.sp] = &val
 				v.sp++
 
@@ -879,11 +1081,19 @@ mainloop:
 				}
 
 				if v.sp >= StackSize {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 					err = ErrStackOverflow
 					break mainloop
 				}
 
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
+
+				allocs -= val.NumObjects()
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
 
 				v.stack[v.sp] = &val
 				v.sp++
@@ -920,11 +1130,20 @@ mainloop:
 				}
 
 				if v.sp >= StackSize {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 					err = ErrStackOverflow
 					break mainloop
 				}
 
 				var val objects.Object = &objects.String{Value: left.Value[lowIdx:highIdx]}
+
+				//allocs -= val.NumObjects()
+				allocs--
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
 
 				v.stack[v.sp] = &val
 				v.sp++
@@ -961,11 +1180,20 @@ mainloop:
 				}
 
 				if v.sp >= StackSize {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 					err = ErrStackOverflow
 					break mainloop
 				}
 
 				var val objects.Object = &objects.Bytes{Value: left.Value[lowIdx:highIdx]}
+
+				//allocs -= val.NumObjects()
+				allocs--
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
 
 				v.stack[v.sp] = &val
 				v.sp++
@@ -996,18 +1224,21 @@ mainloop:
 						}
 						v.sp -= numArgs + 1
 						v.ip = -1 // reset IP to beginning of the frame
+						allocs = v.maxAllocs
 						continue mainloop
 					}
 				}
 
 				// update call frame
 				v.curFrame.ip = v.ip // store current ip before call
+				v.curFrame.allocs = allocs
 				v.curFrame = &(v.frames[v.framesIndex])
 				v.curFrame.fn = callee.Fn
 				v.curFrame.freeVars = callee.Free
 				v.curFrame.basePointer = v.sp - numArgs
 				v.curInsts = callee.Fn.Instructions
 				v.ip = -1
+				allocs = v.maxAllocs
 				v.curIPLimit = len(v.curInsts) - 1
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.Fn.NumLocals
@@ -1030,18 +1261,21 @@ mainloop:
 						}
 						v.sp -= numArgs + 1
 						v.ip = -1 // reset IP to beginning of the frame
+						allocs = v.maxAllocs
 						continue mainloop
 					}
 				}
 
 				// update call frame
 				v.curFrame.ip = v.ip // store current ip before call
+				v.curFrame.allocs = allocs
 				v.curFrame = &(v.frames[v.framesIndex])
 				v.curFrame.fn = callee
 				v.curFrame.freeVars = nil
 				v.curFrame.basePointer = v.sp - numArgs
 				v.curInsts = callee.Instructions
 				v.ip = -1
+				allocs = v.maxAllocs
 				v.curIPLimit = len(v.curInsts) - 1
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.NumLocals
@@ -1080,7 +1314,15 @@ mainloop:
 					ret = objects.UndefinedValue
 				}
 
+				allocs -= ret.NumObjects()
+				if allocs < 0 {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+					err = ErrObjectsLimit
+					break mainloop
+				}
+
 				if v.sp >= StackSize {
+					filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 					err = ErrStackOverflow
 					break mainloop
 				}
@@ -1104,6 +1346,7 @@ mainloop:
 			v.curInsts = v.curFrame.fn.Instructions
 			v.curIPLimit = len(v.curInsts) - 1
 			v.ip = v.curFrame.ip
+			allocs = v.curFrame.allocs
 
 			//v.sp = lastFrame.basePointer - 1
 			v.sp = lastFrame.basePointer
@@ -1119,6 +1362,7 @@ mainloop:
 			v.curInsts = v.curFrame.fn.Instructions
 			v.curIPLimit = len(v.curInsts) - 1
 			v.ip = v.curFrame.ip
+			allocs = v.curFrame.allocs
 
 			//v.sp = lastFrame.basePointer - 1
 			v.sp = lastFrame.basePointer
@@ -1178,6 +1422,7 @@ mainloop:
 			val := v.stack[v.curFrame.basePointer+localIndex]
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -1190,6 +1435,7 @@ mainloop:
 			v.ip++
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -1211,6 +1457,7 @@ mainloop:
 			}
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -1237,6 +1484,7 @@ mainloop:
 			v.sp -= numFree
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -1244,6 +1492,14 @@ mainloop:
 			var cl objects.Object = &objects.Closure{
 				Fn:   fn,
 				Free: free,
+			}
+
+			//allocs -= val.NumObjects()
+			allocs--
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
 			}
 
 			v.stack[v.sp] = &cl
@@ -1256,6 +1512,7 @@ mainloop:
 			val := v.curFrame.freeVars[freeIndex]
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -1303,7 +1560,16 @@ mainloop:
 
 			iterator = iterable.Iterate()
 
+			//allocs -= val.NumObjects()
+			allocs--
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
+				break mainloop
+			}
+
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -1318,6 +1584,7 @@ mainloop:
 			hasMore := (*iterator).(objects.Iterator).Next()
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
 				break mainloop
 			}
@@ -1336,7 +1603,15 @@ mainloop:
 			val := (*iterator).(objects.Iterator).Key()
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
+				break mainloop
+			}
+
+			allocs -= val.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
 				break mainloop
 			}
 
@@ -1350,7 +1625,15 @@ mainloop:
 			val := (*iterator).(objects.Iterator).Value()
 
 			if v.sp >= StackSize {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
 				err = ErrStackOverflow
+				break mainloop
+			}
+
+			allocs -= val.NumObjects()
+			if allocs < 0 {
+				filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip])
+				err = ErrObjectsLimit
 				break mainloop
 			}
 
@@ -1375,7 +1658,7 @@ mainloop:
 	}
 
 	// check if stack still has some objects left
-	if v.sp > 0 && atomic.LoadInt64(&v.aborting) == 0 {
+	if v.sp > 0 && atomic.LoadInt64(&v.abort) == 0 {
 		panic(fmt.Errorf("non empty stack after execution: %d", v.sp))
 	}
 

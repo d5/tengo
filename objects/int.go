@@ -196,3 +196,9 @@ func (o *Int) Equals(x Object) bool {
 
 	return o.Value == t.Value
 }
+
+// NumObjects returns the number of objects.
+func (o *Int) NumObjects() (c int64) {
+	c = 1
+	return
+}
