@@ -120,7 +120,7 @@ To securely compile and execute _potentially_ unsafe script code, you can use th
 
 #### Script.SetBuiltinFunctions(funcs []*objects.BuiltinFunction)
 
-SetBuiltinFunctions resets all builtin functions in the compiler to the ones provided in the input parameter. Compiler will report a compile-time error if the a function not set is referenced. Passing `nil` will disable all builtin functions. All builtin functions are **included by default** unless `SetBuiltinFunctions` is called.
+SetBuiltinFunctions resets all builtin functions in the compiler to the ones provided in the input parameter. Compiler will report a compile-time error if the a function not set is referenced. Passing `nil` will disable all builtin functions. All builtin functions **are included by default** unless `SetBuiltinFunctions` is called.
 
 ```golang
 s := script.New([]byte(`print([1, 2, 3])`))
