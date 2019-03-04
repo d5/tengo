@@ -1,63 +1,28 @@
 package runtime_test
 
 import (
+	"math"
+	"math/rand"
 	"testing"
 
 	"github.com/d5/tengo/objects"
 )
 
-func TestStdLib(t *testing.T) {
-	// stdlib
-	expect(t, `math := import("math"); out = math.abs(1)`, 1.0)
-	expect(t, `math := import("math"); out = math.abs(-1)`, 1.0)
-	expect(t, `math := import("math"); out = math.abs(1.0)`, 1.0)
-	expect(t, `math := import("math"); out = math.abs(-1.0)`, 1.0)
+func TestBuiltin(t *testing.T) {
 
-	// os.File
-	expect(t, `
-os := import("os")
-
-write_file := func(filename, data) {
-	file := os.create(filename)
-	if !file { return file }
-
-	if res := file.write(bytes(data)); is_error(res) {
-		return res
+	mathModule := map[string]*objects.Object{
+		"math": objectPtr(&objects.ImmutableMap{Value: map[string]objects.Object{
+			"abs": &objects.UserFunction{Name: "abs", Value: func(args ...objects.Object) (ret objects.Object, err error) {
+				v, _ := objects.ToFloat64(args[0])
+				return &objects.Float{Value: math.Abs(v)}, nil
+			}},
+		}}),
 	}
-
-	return file.close()
-}
-
-read_file := func(filename) {
-	file := os.open(filename)
-	if !file { return file }
-
-	data := bytes(100)
-	cnt := file.read(data)
-	if  is_error(cnt) {
-		return cnt
-	}
-
-	file.close()
-	return data[:cnt]
-}
-
-if write_file("./temp", "foobar") {
-	out = string(read_file("./temp"))
-}
-
-os.remove("./temp")
-`, "foobar")
-
-	// exec.command
-	expect(t, `
-os := import("os")
-cmd := os.exec("echo", "foo", "bar")
-if !is_error(cmd) {
-	out = cmd.output()
-}
-`, []byte("foo bar\n"))
-
+	// builtin
+	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(1)`, 1.0, mathModule)
+	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(-1)`, 1.0, mathModule)
+	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(1.0)`, 1.0, mathModule)
+	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(-1.0)`, 1.0, mathModule)
 }
 
 func TestUserModules(t *testing.T) {
@@ -76,7 +41,7 @@ func TestUserModules(t *testing.T) {
 		"mod1": `export "foo"`,
 	})
 
-	// export composite types
+	// export compound types
 	expectWithUserModules(t, `out = import("mod1")`, IARR{1, 2, 3}, map[string]string{
 		"mod1": `export [1, 2, 3]`,
 	})
@@ -222,8 +187,17 @@ export func(a) {
 }
 
 func TestModuleBlockScopes(t *testing.T) {
+	randModule := map[string]*objects.Object{
+		"rand": objectPtr(&objects.ImmutableMap{Value: map[string]objects.Object{
+			"intn": &objects.UserFunction{Name: "abs", Value: func(args ...objects.Object) (ret objects.Object, err error) {
+				v, _ := objects.ToInt64(args[0])
+				return &objects.Int{Value: rand.Int63n(v)}, nil
+			}},
+		}}),
+	}
+
 	// block scopes in module
-	expectWithUserModules(t, `out = import("mod1")()`, 1, map[string]string{
+	expectWithUserAndBuiltinModules(t, `out = import("mod1")()`, 1, map[string]string{
 		"mod1": `
 	rand := import("rand")
 	foo := func() { return 1 }
@@ -232,9 +206,9 @@ func TestModuleBlockScopes(t *testing.T) {
 		return foo()
 	}
 	`,
-	})
+	}, randModule)
 
-	expectWithUserModules(t, `out = import("mod1")()`, 10, map[string]string{
+	expectWithUserAndBuiltinModules(t, `out = import("mod1")()`, 10, map[string]string{
 		"mod1": `
 rand := import("rand")
 foo := func() { return 1 }
@@ -244,9 +218,9 @@ export func() {
 	return 10
 }
 `,
-	})
+	}, randModule)
 
-	expectWithUserModules(t, `out = import("mod1")()`, 10, map[string]string{
+	expectWithUserAndBuiltinModules(t, `out = import("mod1")()`, 10, map[string]string{
 		"mod1": `
 	rand := import("rand")
 	foo := func() { return 1 }
@@ -256,5 +230,5 @@ export func() {
 		return 10
 	}
 	`,
-	})
+	}, randModule)
 }

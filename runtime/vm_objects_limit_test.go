@@ -3,24 +3,24 @@ package runtime_test
 import "testing"
 
 func TestObjectsLimit(t *testing.T) {
-	expectObjectsLimit(t, `out = 5`, 0, 5)
-	expectObjectsLimit(t, `out = 5 + 5`, 1, 10)
-	expectErrorObjectsLimit(t, `5 + 5`, 0, "objects limit exceeded")
+	expectAllocsLimit(t, `out = 5`, 0, 5)
+	expectAllocsLimit(t, `out = 5 + 5`, 1, 10)
+	expectErrorAllocsLimit(t, `5 + 5`, 0, "objects limit exceeded")
 
-	expectObjectsLimit(t, `
+	expectAllocsLimit(t, `
 f := func() {
 	return 5 + 5
 }
 out = f() + 5
 `, 1, 15)
-	expectErrorObjectsLimit(t, `
+	expectErrorAllocsLimit(t, `
 f := func() {
 	return 5 + 5
 }
 f()
 `, 0, "objects limit exceeded")
 
-	expectObjectsLimit(t, `
+	expectAllocsLimit(t, `
 a := []
 f := func() {
 	a = append(a, 5)

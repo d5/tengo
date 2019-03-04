@@ -47,7 +47,7 @@ func() {
 	expect(t, `a := 10; a /= 2;; out = a`, 5)
 	expect(t, `a := 10; a /= 5 - 3;; out = a`, 5)
 
-	// composite assignment operator does not define new variable
+	// compound assignment operator does not define new variable
 	expectError(t, `a += 4`, "unresolved reference")
 	expectError(t, `a -= 4`, "unresolved reference")
 	expectError(t, `a *= 4`, "unresolved reference")
@@ -193,8 +193,8 @@ out = func() {
 `, 136)
 
 	// assigning different type value
-	expect(t, `a := 1; a = "foo"; out = a`, "foo")              // global
-	expect(t, `func() { a := 1; a = "foo"; out = a }()`, "foo") // local
+	expect(t, `a := 1; a = "foo"; out = a`, "foo")                                                 // global
+	expect(t, `func() { a := 1; a = "foo"; out = a }()`, "foo")                                    // local
 	expect(t, `
 out = func() { 
 	a := 5

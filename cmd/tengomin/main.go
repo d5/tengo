@@ -17,7 +17,6 @@ import (
 	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/runtime"
-	"github.com/d5/tengo/stdlib"
 )
 
 const (
@@ -26,12 +25,10 @@ const (
 )
 
 var (
-	compileOutput  string
-	showHelp       bool
-	showVersion    bool
-	version        = "dev"
-	bm             map[string]bool
-	builtinModules map[string]*objects.Object
+	compileOutput string
+	showHelp      bool
+	showVersion   bool
+	version       = "dev"
 )
 
 func init() {
@@ -48,13 +45,6 @@ func main() {
 	} else if showVersion {
 		fmt.Println(version)
 		return
-	}
-
-	bm = make(map[string]bool, len(stdlib.Modules))
-	builtinModules = make(map[string]*objects.Object, len(stdlib.Modules))
-	for k, mod := range stdlib.Modules {
-		bm[k] = true
-		builtinModules[k] = objectPtr(mod)
 	}
 
 	inputFile := flag.Arg(0)
@@ -158,7 +148,7 @@ func compileAndRun(data []byte, inputFile string) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
+	machine := runtime.NewVM(bytecode, nil, nil, nil, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -175,7 +165,7 @@ func runCompiled(data []byte) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
+	machine := runtime.NewVM(bytecode, nil, nil, nil, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -199,7 +189,7 @@ func runREPL(in io.Reader, out io.Writer) {
 	var constants []objects.Object
 
 	for {
-		_, _ = fmt.Fprintf(out, replPrompt)
+		_, _ = fmt.Fprint(out, replPrompt)
 
 		scanned := stdin.Scan()
 		if !scanned {
@@ -218,7 +208,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		file = addPrints(file)
 
-		c := compiler.NewCompiler(srcFile, symbolTable, constants, bm, nil)
+		c := compiler.NewCompiler(srcFile, symbolTable, constants, nil, nil)
 		if err := c.Compile(file); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
@@ -226,7 +216,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		bytecode := c.Bytecode()
 
-		machine := runtime.NewVM(bytecode, globals, nil, builtinModules, -1)
+		machine := runtime.NewVM(bytecode, globals, nil, nil, -1)
 		if err := machine.Run(); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
@@ -246,7 +236,7 @@ func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(srcFile, nil, nil, bm, nil)
+	c := compiler.NewCompiler(srcFile, nil, nil, nil, nil)
 	if err := c.Compile(file); err != nil {
 		return nil, err
 	}
@@ -300,8 +290,4 @@ func basename(s string) string {
 	}
 
 	return s
-}
-
-func objectPtr(o objects.Object) *objects.Object {
-	return &o
 }

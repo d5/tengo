@@ -10,7 +10,6 @@ import (
 	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/stdlib"
 )
 
 // Compiler compiles the AST into a bytecode.
@@ -55,9 +54,6 @@ func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []object
 	// builtin modules
 	if builtinModules == nil {
 		builtinModules = make(map[string]bool)
-		for name := range stdlib.Modules {
-			builtinModules[name] = true
-		}
 	}
 
 	return &Compiler{

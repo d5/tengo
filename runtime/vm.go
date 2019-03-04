@@ -8,7 +8,6 @@ import (
 	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/stdlib"
 )
 
 const (
@@ -54,7 +53,7 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs 
 	}
 
 	if builtinModules == nil {
-		builtinModules = stdlib.Modules
+		builtinModules = make(map[string]*objects.Object)
 	}
 
 	if builtinFuncs == nil {

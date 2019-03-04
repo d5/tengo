@@ -9,7 +9,6 @@ import (
 	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/runtime"
-	"github.com/d5/tengo/stdlib"
 )
 
 // Script can simplify compilation and execution of embedded scripts.
@@ -169,7 +168,7 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, builtinModule
 	}
 
 	if s.builtinModules == nil {
-		s.builtinModules = stdlib.Modules
+		s.builtinModules = make(map[string]*objects.Object)
 	}
 
 	for idx, fn := range s.builtinFuncs {
