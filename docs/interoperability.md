@@ -136,7 +136,7 @@ _, err := s.Run() // prints [1, 2, 3]
 
 #### Script.SetBuiltinModules(modules map[string]*objects.ImmutableMap)
 
-SetBuiltinModules resets all [standard library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) modules with modules provided in the input parameter. Compile will report a compile-time error if the code tries to import a module that hasn't been included. All standard library modules are included by default unless `SetBuiltinModules` is called.
+SetBuiltinModules adds builtin modules provided in the input parameter. This can be used to add [standard library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) modules into the compiler and VM. Compiler will report a compile-time error if the code tries to import a module that hasn't been included. No standard library modules are included by default unless `SetBuiltinModules` is called.
 
 ```golang
 s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
@@ -145,7 +145,15 @@ s.SetBuiltinModules(nil)
 
 _, err := s.Run() // compile error
 
-s.SetBuiltinModules(map[string]*objects.ImmutableMap{"math": objectPtr(*stdlib.Modules["math"])})
+s.SetBuiltinModules(stdlib.Modules)
+
+_, err := s.Run() // a = 19.84
+
+s.SetBuiltinModules(nil)
+
+_, err := s.Run() // compile error
+
+s.SetBuiltinModules(map[string]*objects.ImmutableMap{"math": stdlib.Modules["math"]})
 
 _, err := s.Run() // a = 19.84
 ```

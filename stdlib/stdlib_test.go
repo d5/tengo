@@ -149,7 +149,7 @@ func module(t *testing.T, moduleName string) callres {
 		return callres{t: t, e: fmt.Errorf("module not found: %s", moduleName)}
 	}
 
-	return callres{t: t, o: (*mod).(*objects.ImmutableMap)}
+	return callres{t: t, o: mod}
 }
 
 func object(v interface{}) objects.Object {
@@ -219,10 +219,7 @@ func object(v interface{}) objects.Object {
 
 func expect(t *testing.T, input string, expected interface{}) {
 	s := script.New([]byte(input))
-	s.SetBuiltinModules(map[string]*objects.ImmutableMap{
-		"text": objectPtr(*stdlib.Modules["text"]),
-		"os":   objectPtr(*stdlib.Modules["os"]),
-	})
+	s.SetBuiltinModules(stdlib.Modules)
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
@@ -232,8 +229,4 @@ func expect(t *testing.T, input string, expected interface{}) {
 	}
 
 	assert.Equal(t, expected, v.Value())
-}
-
-func objectPtr(o objects.Object) *objects.ImmutableMap {
-	return o.(*objects.ImmutableMap)
 }
