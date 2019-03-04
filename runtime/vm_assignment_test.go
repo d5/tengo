@@ -193,8 +193,8 @@ out = func() {
 `, 136)
 
 	// assigning different type value
-	expect(t, `a := 1; a = "foo"; out = a`, "foo")              // global
-	expect(t, `func() { a := 1; a = "foo"; out = a }()`, "foo") // local
+	expect(t, `a := 1; a = "foo"; out = a`, "foo")                                                 // global
+	expect(t, `func() { a := 1; a = "foo"; out = a }()`, "foo")                                    // local
 	expect(t, `
 out = func() { 
 	a := 5
