@@ -189,7 +189,7 @@ func runREPL(in io.Reader, out io.Writer) {
 	var constants []objects.Object
 
 	for {
-		_, _ = fmt.Fprintf(out, replPrompt)
+		_, _ = fmt.Fprint(out, replPrompt)
 
 		scanned := stdin.Scan()
 		if !scanned {
