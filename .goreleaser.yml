@@ -6,6 +6,14 @@ builds:
       - darwin
       - linux
       - windows
+  - env:
+      - CGO_ENABLED=0
+    main: ./cmd/tengomin/main.go
+    binary: tengomin
+    goos:
+      - darwin
+      - linux
+      - windows
 archive:
   files:
     - none*
