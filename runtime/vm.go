@@ -1118,11 +1118,12 @@ func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 func (v *VM) binaryOp(tok token.Token) {
 	right := v.stack[v.sp-1]
 	left := v.stack[v.sp-2]
-	v.sp -= 2
 
 	res, e := (*left).BinaryOp(tok, *right)
 	if e != nil {
+		v.sp -= 2
 		atomic.StoreInt64(&v.aborting, 1)
+
 		if e == objects.ErrInvalidOperator {
 			v.err = fmt.Errorf("invalid operation: %s + %s",
 				(*left).TypeName(), (*right).TypeName())
@@ -1133,12 +1134,6 @@ func (v *VM) binaryOp(tok token.Token) {
 		return
 	}
 
-	if v.sp >= StackSize {
-		atomic.StoreInt64(&v.aborting, 1)
-		v.err = ErrStackOverflow
-		return
-	}
-
-	v.stack[v.sp] = &res
-	v.sp++
+	v.stack[v.sp-2] = &res
+	v.sp--
 }
