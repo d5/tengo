@@ -158,37 +158,37 @@ mainloop:
 			v.sp++
 
 		case compiler.OpAdd:
-			v.BinaryOp(token.Add)
+			v.binaryOp(token.Add)
 
 		case compiler.OpSub:
-			v.BinaryOp(token.Sub)
+			v.binaryOp(token.Sub)
 
 		case compiler.OpMul:
-			v.BinaryOp(token.Mul)
+			v.binaryOp(token.Mul)
 
 		case compiler.OpDiv:
-			v.BinaryOp(token.Quo)
+			v.binaryOp(token.Quo)
 
 		case compiler.OpRem:
-			v.BinaryOp(token.Rem)
+			v.binaryOp(token.Rem)
 
 		case compiler.OpBAnd:
-			v.BinaryOp(token.And)
+			v.binaryOp(token.And)
 
 		case compiler.OpBOr:
-			v.BinaryOp(token.Or)
+			v.binaryOp(token.Or)
 
 		case compiler.OpBXor:
-			v.BinaryOp(token.Xor)
+			v.binaryOp(token.Xor)
 
 		case compiler.OpBAndNot:
-			v.BinaryOp(token.AndNot)
+			v.binaryOp(token.AndNot)
 
 		case compiler.OpBShiftLeft:
-			v.BinaryOp(token.Shl)
+			v.binaryOp(token.Shl)
 
 		case compiler.OpBShiftRight:
-			v.BinaryOp(token.Shr)
+			v.binaryOp(token.Shr)
 
 		case compiler.OpEqual:
 			right := v.stack[v.sp-1]
@@ -225,10 +225,10 @@ mainloop:
 			v.sp++
 
 		case compiler.OpGreaterThan:
-			v.BinaryOp(token.Greater)
+			v.binaryOp(token.Greater)
 
 		case compiler.OpGreaterThanEqual:
-			v.BinaryOp(token.GreaterEq)
+			v.binaryOp(token.GreaterEq)
 
 		case compiler.OpPop:
 			v.sp--
@@ -1115,7 +1115,7 @@ func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 	return nil
 }
 
-func (v *VM) BinaryOp(tok token.Token) {
+func (v *VM) binaryOp(tok token.Token) {
 	right := v.stack[v.sp-1]
 	left := v.stack[v.sp-2]
 	v.sp -= 2
