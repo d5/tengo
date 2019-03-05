@@ -15,7 +15,6 @@ func (objectImpl) String() string                     { return "" }
 func (objectImpl) IsFalsy() bool                      { return false }
 func (objectImpl) Equals(another objects.Object) bool { return false }
 func (objectImpl) Copy() objects.Object               { return nil }
-func (objectImpl) NumObjects() int64                  { return 1 }
 func (objectImpl) BinaryOp(token.Token, objects.Object) (objects.Object, error) {
 	return nil, objects.ErrInvalidOperator
 }
@@ -152,10 +151,6 @@ func (o *StringArray) Copy() objects.Object {
 	return &StringArray{
 		Value: append([]string{}, o.Value...),
 	}
-}
-
-func (o *StringArray) NumObjects() int64 {
-	return 1
 }
 
 func (o *StringArray) TypeName() string {

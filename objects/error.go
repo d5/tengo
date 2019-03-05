@@ -45,9 +45,3 @@ func (o *Error) Copy() Object {
 func (o *Error) Equals(x Object) bool {
 	return o == x // pointer equality
 }
-
-// NumObjects returns the number of objects.
-func (o *Error) NumObjects() (c int64) {
-	c = 1 + o.Value.NumObjects()
-	return
-}

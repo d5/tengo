@@ -87,7 +87,7 @@ func (s *Script) SetUserModuleLoader(loader compiler.ModuleLoader) {
 }
 
 // SetMaxAllocs sets the maximum number of objects allocations per function scope.
-// Compiled script will return runtime.ErrObjectsLimit error if it exceeds this limit.
+// Compiled script will return runtime.ErrObjectAllocLimit error if it exceeds this limit.
 func (s *Script) SetMaxAllocs(n int64) {
 	s.maxAllocs = n
 }

@@ -117,9 +117,3 @@ func (o *Char) Equals(x Object) bool {
 
 	return o.Value == t.Value
 }
-
-// NumObjects returns the number of objects.
-func (o *Char) NumObjects() (c int64) {
-	c = 1
-	return
-}

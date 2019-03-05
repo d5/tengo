@@ -101,9 +101,3 @@ func (o *String) Iterate() Iterator {
 		l: len(o.runeStr),
 	}
 }
-
-// NumObjects returns the number of objects.
-func (o *String) NumObjects() (c int64) {
-	c = 1
-	return
-}

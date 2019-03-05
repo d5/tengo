@@ -107,12 +107,3 @@ func (o *ImmutableArray) Iterate() Iterator {
 		l: len(o.Value),
 	}
 }
-
-// NumObjects returns the number of objects.
-func (o *ImmutableArray) NumObjects() (c int64) {
-	c = 1
-	for _, v := range o.Value {
-		c += v.NumObjects()
-	}
-	return
-}

@@ -62,8 +62,3 @@ func (o *Bool) GobEncode() (b []byte, err error) {
 
 	return
 }
-
-// NumObjects returns the number of objects.
-func (o *Bool) NumObjects() (c int64) {
-	return
-}

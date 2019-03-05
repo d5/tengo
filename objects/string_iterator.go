@@ -55,8 +55,3 @@ func (i *StringIterator) Key() Object {
 func (i *StringIterator) Value() Object {
 	return &Char{Value: i.v[i.i-1]}
 }
-
-// NumObjects returns the number of objects.
-func (i *StringIterator) NumObjects() (c int64) {
-	return
-}

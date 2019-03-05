@@ -40,7 +40,7 @@ type VM struct {
 	curInsts       []byte
 	curIPLimit     int
 	ip             int
-	abort          int64
+	aborting       int64
 	builtinFuncs   []objects.Object
 	builtinModules map[string]*objects.Object
 	maxAllocs      int64
@@ -97,7 +97,7 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs 
 
 // Abort aborts the execution.
 func (v *VM) Abort() {
-	atomic.StoreInt64(&v.abort, 1)
+	atomic.StoreInt64(&v.aborting, 1)
 }
 
 // Run starts the execution.
@@ -110,7 +110,7 @@ func (v *VM) Run() (err error) {
 	v.framesIndex = 1
 	v.ip = -1
 	v.allocs = v.maxAllocs
-	atomic.StoreInt64(&v.abort, 0)
+	atomic.StoreInt64(&v.aborting, 0)
 
 	v.run()
 
@@ -129,7 +129,7 @@ func (v *VM) Run() (err error) {
 	}
 
 	// check if stack still has some objects left
-	if v.sp > 0 && atomic.LoadInt64(&v.abort) == 0 {
+	if v.sp > 0 && atomic.LoadInt64(&v.aborting) == 0 {
 		panic(fmt.Errorf("non empty stack after execution: %d", v.sp))
 	}
 
@@ -138,7 +138,7 @@ func (v *VM) Run() (err error) {
 
 func (v *VM) run() {
 mainloop:
-	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.abort) == 0) {
+	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
 		v.ip++
 
 		switch v.curInsts[v.ip] {
@@ -288,7 +288,7 @@ mainloop:
 
 				v.allocs--
 				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
+					v.err = ErrObjectAllocLimit
 					return
 				}
 
@@ -314,7 +314,7 @@ mainloop:
 
 				v.allocs--
 				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
+					v.err = ErrObjectAllocLimit
 					return
 				}
 
@@ -330,7 +330,7 @@ mainloop:
 
 				v.allocs--
 				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
+					v.err = ErrObjectAllocLimit
 					return
 				}
 
@@ -428,9 +428,9 @@ mainloop:
 
 			var arr objects.Object = &objects.Array{Value: elements}
 
-			v.allocs -= arr.NumObjects()
+			v.allocs--
 			if v.allocs < 0 {
-				v.err = ErrObjectsLimit
+				v.err = ErrObjectAllocLimit
 				break mainloop
 			}
 
@@ -456,9 +456,9 @@ mainloop:
 
 			var m objects.Object = &objects.Map{Value: kv}
 
-			v.allocs -= m.NumObjects()
+			v.allocs--
 			if v.allocs < 0 {
-				v.err = ErrObjectsLimit
+				v.err = ErrObjectAllocLimit
 				break mainloop
 			}
 
@@ -477,9 +477,9 @@ mainloop:
 				Value: *value,
 			}
 
-			v.allocs -= e.NumObjects()
+			v.allocs--
 			if v.allocs < 0 {
-				v.err = ErrObjectsLimit
+				v.err = ErrObjectAllocLimit
 				break mainloop
 			}
 
@@ -494,9 +494,9 @@ mainloop:
 					Value: value.Value,
 				}
 
-				v.allocs -= immutableArray.NumObjects()
+				v.allocs--
 				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
+					v.err = ErrObjectAllocLimit
 					break mainloop
 				}
 
@@ -506,9 +506,9 @@ mainloop:
 					Value: value.Value,
 				}
 
-				v.allocs -= immutableMap.NumObjects()
+				v.allocs--
 				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
+					v.err = ErrObjectAllocLimit
 					break mainloop
 				}
 
@@ -535,12 +535,6 @@ mainloop:
 				}
 				if val == nil {
 					val = objects.UndefinedValue
-				}
-
-				v.allocs -= val.NumObjects()
-				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
-					break mainloop
 				}
 
 				if v.sp >= StackSize {
@@ -624,9 +618,9 @@ mainloop:
 
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
 
-				v.allocs -= val.NumObjects()
+				v.allocs--
 				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
+					v.err = ErrObjectAllocLimit
 					break mainloop
 				}
 
@@ -669,9 +663,9 @@ mainloop:
 
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
 
-				v.allocs -= val.NumObjects()
+				v.allocs--
 				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
+					v.err = ErrObjectAllocLimit
 					break mainloop
 				}
 
@@ -716,7 +710,7 @@ mainloop:
 
 				v.allocs--
 				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
+					v.err = ErrObjectAllocLimit
 					break mainloop
 				}
 
@@ -761,7 +755,7 @@ mainloop:
 
 				v.allocs--
 				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
+					v.err = ErrObjectAllocLimit
 					break mainloop
 				}
 
@@ -884,9 +878,9 @@ mainloop:
 					ret = objects.UndefinedValue
 				}
 
-				v.allocs -= ret.NumObjects()
+				v.allocs--
 				if v.allocs < 0 {
-					v.err = ErrObjectsLimit
+					v.err = ErrObjectAllocLimit
 					break mainloop
 				}
 
@@ -1060,7 +1054,7 @@ mainloop:
 
 			v.allocs--
 			if v.allocs < 0 {
-				v.err = ErrObjectsLimit
+				v.err = ErrObjectAllocLimit
 				break mainloop
 			}
 
@@ -1122,7 +1116,7 @@ mainloop:
 
 			v.allocs--
 			if v.allocs < 0 {
-				v.err = ErrObjectsLimit
+				v.err = ErrObjectAllocLimit
 				break mainloop
 			}
 
@@ -1163,12 +1157,6 @@ mainloop:
 				return
 			}
 
-			v.allocs -= val.NumObjects()
-			if v.allocs < 0 {
-				v.err = ErrObjectsLimit
-				break mainloop
-			}
-
 			v.stack[v.sp] = &val
 			v.sp++
 
@@ -1181,12 +1169,6 @@ mainloop:
 			if v.sp >= StackSize {
 				v.err = ErrStackOverflow
 				return
-			}
-
-			v.allocs -= val.NumObjects()
-			if v.allocs < 0 {
-				v.err = ErrObjectsLimit
-				break mainloop
 			}
 
 			v.stack[v.sp] = &val
@@ -1247,7 +1229,7 @@ func (v *VM) binaryOp(tok token.Token) {
 	res, e := (*left).BinaryOp(tok, *right)
 	if e != nil {
 		v.sp -= 2
-		atomic.StoreInt64(&v.abort, 1)
+		atomic.StoreInt64(&v.aborting, 1)
 
 		if e == objects.ErrInvalidOperator {
 			v.err = fmt.Errorf("invalid operation: %s + %s",
@@ -1259,9 +1241,9 @@ func (v *VM) binaryOp(tok token.Token) {
 		return
 	}
 
-	v.allocs -= res.NumObjects()
+	v.allocs--
 	if v.allocs < 0 {
-		v.err = ErrObjectsLimit
+		v.err = ErrObjectAllocLimit
 		return
 	}
 

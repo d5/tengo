@@ -45,8 +45,3 @@ func (o *BuiltinFunction) Equals(x Object) bool {
 func (o *BuiltinFunction) Call(args ...Object) (Object, error) {
 	return o.Value(args...)
 }
-
-// NumObjects returns the number of objects.
-func (o *BuiltinFunction) NumObjects() (c int64) {
-	return
-}

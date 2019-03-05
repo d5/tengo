@@ -103,12 +103,3 @@ func (o *ImmutableMap) Iterate() Iterator {
 		l: len(keys),
 	}
 }
-
-// NumObjects returns the number of objects.
-func (o *ImmutableMap) NumObjects() (c int64) {
-	c = 1
-	for _, v := range o.Value {
-		c += v.NumObjects()
-	}
-	return
-}

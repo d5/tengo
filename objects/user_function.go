@@ -45,8 +45,3 @@ func (o *UserFunction) Equals(x Object) bool {
 func (o *UserFunction) Call(args ...Object) (Object, error) {
 	return o.Value(args...)
 }
-
-// NumObjects returns the number of objects.
-func (o *UserFunction) NumObjects() (c int64) {
-	return
-}

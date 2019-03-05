@@ -55,8 +55,3 @@ func (i *ArrayIterator) Key() Object {
 func (i *ArrayIterator) Value() Object {
 	return i.v[i.i-1]
 }
-
-// NumObjects returns the number of objects.
-func (i *ArrayIterator) NumObjects() (c int64) {
-	return
-}

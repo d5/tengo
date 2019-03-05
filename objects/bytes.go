@@ -79,9 +79,3 @@ func (o *Bytes) IndexGet(index Object) (res Object, err error) {
 
 	return
 }
-
-// NumObjects returns the number of objects.
-func (o *Bytes) NumObjects() (c int64) {
-	c = 1
-	return
-}
