@@ -120,10 +120,12 @@ To securely compile and execute _potentially_ unsafe script code, you can use th
 
 #### Script.SetBuiltinFunctions(funcs []*objects.BuiltinFunction)
 
-SetBuiltinFunctions resets all builtin functions in the compiler to the ones provided in the input parameter. Compiler will report a compile-time error if the a function not set is referenced. All builtin functions are included by default unless `SetBuiltinFunctions` is called.
+SetBuiltinFunctions resets all builtin functions in the compiler to the ones provided in the input parameter. Compiler will report a compile-time error if the a function not set is referenced. Passing `nil` will disable all builtin functions. All builtin functions **are included by default** unless `SetBuiltinFunctions` is called.
 
 ```golang
 s := script.New([]byte(`print([1, 2, 3])`))
+
+_, err := s.Run() // prints [1, 2, 3]
 
 s.SetBuiltinFunctions(nil)
 
@@ -136,12 +138,10 @@ _, err := s.Run() // prints [1, 2, 3]
 
 #### Script.SetBuiltinModules(modules map[string]*objects.ImmutableMap)
 
-SetBuiltinModules adds builtin modules provided in the input parameter. This can be used to add [standard library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) modules into the compiler and VM. Compiler will report a compile-time error if the code tries to import a module that hasn't been included. No standard library modules are included by default unless `SetBuiltinModules` is called.
+SetBuiltinModules adds builtin modules provided in the input parameter. This can be used to add [standard library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) modules into the compiler and VM. Compiler will report a compile-time error if the code tries to import a module that hasn't been included. Passing `nil` will disable all builtin modules. No standard library modules are included by default unless `SetBuiltinModules` is called.
 
 ```golang
 s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
-
-s.SetBuiltinModules(nil)
 
 _, err := s.Run() // compile error
 
