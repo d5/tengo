@@ -178,9 +178,8 @@ Note that when a script is being added to another script as a module (via `Scrip
 
 #### Script.SetMaxAllocs(n int64)
 
-SetMaxAllocs sets the maximum number of object allocations per function scope. 
-Tengo runtime does not track the total number of objects that are allocated, but, it can limit 
-how many objects can be created (allocated) in a function scope. Set this to negative number (e.g. `-1`) if you don't want to limit it. 
+SetMaxAllocs sets the maximum number of object allocations. Note this is a cumulative metric that tracks only the object creations. Set this to a negative number (e.g. `-1`) if you don't need to limit the number of allocations.
+   
 
 #### tengo.MaxStringLen
 

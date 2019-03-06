@@ -69,10 +69,6 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs 
 		}
 	}
 
-	if maxAllocs < 0 {
-		maxAllocs = 9223372036854775807 // no limit
-	}
-
 	frames := make([]Frame, MaxFrames)
 	frames[0].fn = bytecode.MainFunction
 	frames[0].ip = -1
@@ -109,7 +105,7 @@ func (v *VM) Run() (err error) {
 	v.curIPLimit = len(v.curInsts) - 1
 	v.framesIndex = 1
 	v.ip = -1
-	v.allocs = v.maxAllocs
+	v.allocs = v.maxAllocs + 1
 	atomic.StoreInt64(&v.aborting, 0)
 
 	v.run()
@@ -286,7 +282,7 @@ func (v *VM) run() {
 				var res objects.Object = &objects.Int{Value: ^x.Value}
 
 				v.allocs--
-				if v.allocs < 0 {
+				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
@@ -312,7 +308,7 @@ func (v *VM) run() {
 				var res objects.Object = &objects.Int{Value: -x.Value}
 
 				v.allocs--
-				if v.allocs < 0 {
+				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
@@ -328,7 +324,7 @@ func (v *VM) run() {
 				var res objects.Object = &objects.Float{Value: -x.Value}
 
 				v.allocs--
-				if v.allocs < 0 {
+				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
@@ -428,7 +424,7 @@ func (v *VM) run() {
 			var arr objects.Object = &objects.Array{Value: elements}
 
 			v.allocs--
-			if v.allocs < 0 {
+			if v.allocs == 0 {
 				v.err = ErrObjectAllocLimit
 				return
 			}
@@ -456,7 +452,7 @@ func (v *VM) run() {
 			var m objects.Object = &objects.Map{Value: kv}
 
 			v.allocs--
-			if v.allocs < 0 {
+			if v.allocs == 0 {
 				v.err = ErrObjectAllocLimit
 				return
 			}
@@ -477,7 +473,7 @@ func (v *VM) run() {
 			}
 
 			v.allocs--
-			if v.allocs < 0 {
+			if v.allocs == 0 {
 				v.err = ErrObjectAllocLimit
 				return
 			}
@@ -494,7 +490,7 @@ func (v *VM) run() {
 				}
 
 				v.allocs--
-				if v.allocs < 0 {
+				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
@@ -506,7 +502,7 @@ func (v *VM) run() {
 				}
 
 				v.allocs--
-				if v.allocs < 0 {
+				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
@@ -618,7 +614,7 @@ func (v *VM) run() {
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
-				if v.allocs < 0 {
+				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
@@ -663,7 +659,7 @@ func (v *VM) run() {
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
-				if v.allocs < 0 {
+				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
@@ -708,7 +704,7 @@ func (v *VM) run() {
 				var val objects.Object = &objects.String{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
-				if v.allocs < 0 {
+				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
@@ -753,7 +749,7 @@ func (v *VM) run() {
 				var val objects.Object = &objects.Bytes{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
-				if v.allocs < 0 {
+				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
@@ -787,21 +783,18 @@ func (v *VM) run() {
 						}
 						v.sp -= numArgs + 1
 						v.ip = -1 // reset IP to beginning of the frame
-						v.allocs = v.maxAllocs
 						continue
 					}
 				}
 
 				// update call frame
 				v.curFrame.ip = v.ip // store current ip before call
-				v.curFrame.allocs = v.allocs
 				v.curFrame = &(v.frames[v.framesIndex])
 				v.curFrame.fn = callee.Fn
 				v.curFrame.freeVars = callee.Free
 				v.curFrame.basePointer = v.sp - numArgs
 				v.curInsts = callee.Fn.Instructions
 				v.ip = -1
-				v.allocs = v.maxAllocs
 				v.curIPLimit = len(v.curInsts) - 1
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.Fn.NumLocals
@@ -824,21 +817,18 @@ func (v *VM) run() {
 						}
 						v.sp -= numArgs + 1
 						v.ip = -1 // reset IP to beginning of the frame
-						v.allocs = v.maxAllocs
 						continue
 					}
 				}
 
 				// update call frame
 				v.curFrame.ip = v.ip // store current ip before call
-				v.curFrame.allocs = v.allocs
 				v.curFrame = &(v.frames[v.framesIndex])
 				v.curFrame.fn = callee
 				v.curFrame.freeVars = nil
 				v.curFrame.basePointer = v.sp - numArgs
 				v.curInsts = callee.Instructions
 				v.ip = -1
-				v.allocs = v.maxAllocs
 				v.curIPLimit = len(v.curInsts) - 1
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.NumLocals
@@ -878,7 +868,7 @@ func (v *VM) run() {
 				}
 
 				v.allocs--
-				if v.allocs < 0 {
+				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
@@ -907,7 +897,6 @@ func (v *VM) run() {
 			v.curInsts = v.curFrame.fn.Instructions
 			v.curIPLimit = len(v.curInsts) - 1
 			v.ip = v.curFrame.ip
-			v.allocs = v.curFrame.allocs
 
 			//v.sp = lastFrame.basePointer - 1
 			v.sp = lastFrame.basePointer
@@ -923,7 +912,6 @@ func (v *VM) run() {
 			v.curInsts = v.curFrame.fn.Instructions
 			v.curIPLimit = len(v.curInsts) - 1
 			v.ip = v.curFrame.ip
-			v.allocs = v.curFrame.allocs
 
 			//v.sp = lastFrame.basePointer - 1
 			v.sp = lastFrame.basePointer
@@ -1052,7 +1040,7 @@ func (v *VM) run() {
 			}
 
 			v.allocs--
-			if v.allocs < 0 {
+			if v.allocs == 0 {
 				v.err = ErrObjectAllocLimit
 				return
 			}
@@ -1114,7 +1102,7 @@ func (v *VM) run() {
 			iterator = iterable.Iterate()
 
 			v.allocs--
-			if v.allocs < 0 {
+			if v.allocs == 0 {
 				v.err = ErrObjectAllocLimit
 				return
 			}
@@ -1241,7 +1229,7 @@ func (v *VM) binaryOp(tok token.Token) {
 	}
 
 	v.allocs--
-	if v.allocs < 0 {
+	if v.allocs == 0 {
 		v.err = ErrObjectAllocLimit
 		return
 	}

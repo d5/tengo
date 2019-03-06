@@ -1,32 +1,31 @@
 package runtime_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/d5/tengo/objects"
+)
 
 func TestObjectsLimit(t *testing.T) {
-	expectAllocsLimit(t, `out = 5`, 0, 5)
-	expectAllocsLimit(t, `out = 5 + 5`, 1, 10)
-	expectErrorAllocsLimit(t, `5 + 5`, 0, "allocation limit exceeded")
-
-	// compound types
-	expectAllocsLimit(t, `out = [1, 2, 3]`, 1, ARR{1, 2, 3})
-	expectAllocsLimit(t, `a := 1; b := 2; c := 3; out = [a, b, c]`, 1, ARR{1, 2, 3})
-	expectAllocsLimit(t, `out = {foo: 1, bar: 2}`, 1, MAP{"foo": 1, "bar": 2})
-	expectAllocsLimit(t, `a := 1; b := 2; out = {foo: a, bar: b}`, 1, MAP{"foo": 1, "bar": 2})
-
-	expectAllocsLimit(t, `
+	testAllocsLimit(t, `5`, 0)
+	testAllocsLimit(t, `5 + 5`, 1)
+	testAllocsLimit(t, `a := [1, 2, 3]`, 1)
+	testAllocsLimit(t, `a := 1; b := 2; c := 3; d := [a, b, c]`, 1)
+	testAllocsLimit(t, `a := {foo: 1, bar: 2}`, 1)
+	testAllocsLimit(t, `a := 1; b := 2; c := {foo: a, bar: b}`, 1)
+	testAllocsLimit(t, `
 f := func() {
 	return 5 + 5
 }
-out = f() + 5
-`, 1, 15)
-	expectErrorAllocsLimit(t, `
+a := f() + 5
+`, 2)
+	testAllocsLimit(t, `
 f := func() {
 	return 5 + 5
 }
-f()
-`, 0, "allocation limit exceeded")
-
-	expectAllocsLimit(t, `
+a := f()
+`, 1)
+	testAllocsLimit(t, `
 a := []
 f := func() {
 	a = append(a, 5)
@@ -34,6 +33,17 @@ f := func() {
 f()
 f()
 f()
-out = a
-`, 1, ARR{5, 5, 5})
+`, 4)
+}
+
+func testAllocsLimit(t *testing.T, src string, limit int64) {
+	expectAllocsLimit(t, src, -1, objects.UndefinedValue) // no limit
+	expectAllocsLimit(t, src, limit, objects.UndefinedValue)
+	expectAllocsLimit(t, src, limit+1, objects.UndefinedValue)
+	if limit > 1 {
+		expectErrorAllocsLimit(t, src, limit-1, "allocation limit exceeded")
+	}
+	if limit > 2 {
+		expectErrorAllocsLimit(t, src, limit-2, "allocation limit exceeded")
+	}
 }
