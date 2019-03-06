@@ -3,7 +3,6 @@ package compiler_test
 import (
 	"bytes"
 	"testing"
-	"time"
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler"
@@ -21,20 +20,6 @@ func TestBytecode(t *testing.T) {
 
 	testBytecodeSerialization(t, bytecode(
 		concat(), objectsArray(
-			objects.UndefinedValue,
-			&objects.Time{Value: time.Now()},
-			&objects.Array{
-				Value: objectsArray(
-					&objects.Int{Value: 12},
-					&objects.String{Value: "foo"},
-					objects.TrueValue,
-					objects.FalseValue,
-					&objects.Float{Value: 93.11},
-					&objects.Char{Value: 'x'},
-					objects.UndefinedValue,
-				),
-			},
-			objects.FalseValue,
 			&objects.Char{Value: 'y'},
 			&objects.Float{Value: 93.11},
 			compiledFunction(1, 0,
@@ -44,15 +29,7 @@ func TestBytecode(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpGetFree, 0)),
 			&objects.Float{Value: 39.2},
 			&objects.Int{Value: 192},
-			&objects.Map{
-				Value: map[string]objects.Object{
-					"a": &objects.Float{Value: -93.1},
-					"b": objects.FalseValue,
-					"c": objects.UndefinedValue,
-				},
-			},
-			&objects.String{Value: "bar"},
-			objects.UndefinedValue)))
+			&objects.String{Value: "bar"})))
 
 	testBytecodeSerialization(t, bytecodeFileSet(
 		concat(
@@ -92,6 +69,132 @@ func TestBytecode(t *testing.T) {
 		fileSet(srcfile{name: "file1", size: 100}, srcfile{name: "file2", size: 200})))
 }
 
+func TestBytecode_RemoveDuplicates(t *testing.T) {
+	testBytecodeRemoveDuplicates(t,
+		bytecode(
+			concat(), objectsArray(
+				&objects.Char{Value: 'y'},
+				&objects.Float{Value: 93.11},
+				compiledFunction(1, 0,
+					compiler.MakeInstruction(compiler.OpConstant, 3),
+					compiler.MakeInstruction(compiler.OpSetLocal, 0),
+					compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+					compiler.MakeInstruction(compiler.OpGetFree, 0)),
+				&objects.Float{Value: 39.2},
+				&objects.Int{Value: 192},
+				&objects.String{Value: "bar"})),
+		bytecode(
+			concat(), objectsArray(
+				&objects.Char{Value: 'y'},
+				&objects.Float{Value: 93.11},
+				compiledFunction(1, 0,
+					compiler.MakeInstruction(compiler.OpConstant, 3),
+					compiler.MakeInstruction(compiler.OpSetLocal, 0),
+					compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+					compiler.MakeInstruction(compiler.OpGetFree, 0)),
+				&objects.Float{Value: 39.2},
+				&objects.Int{Value: 192},
+				&objects.String{Value: "bar"})))
+
+	testBytecodeRemoveDuplicates(t,
+		bytecode(
+			concat(
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpConstant, 2),
+				compiler.MakeInstruction(compiler.OpConstant, 3),
+				compiler.MakeInstruction(compiler.OpConstant, 4),
+				compiler.MakeInstruction(compiler.OpConstant, 5),
+				compiler.MakeInstruction(compiler.OpConstant, 6),
+				compiler.MakeInstruction(compiler.OpConstant, 7),
+				compiler.MakeInstruction(compiler.OpConstant, 8),
+				compiler.MakeInstruction(compiler.OpClosure, 4, 1)),
+			objectsArray(
+				&objects.Int{Value: 1},
+				&objects.Float{Value: 2.0},
+				&objects.Char{Value: '3'},
+				&objects.String{Value: "four"},
+				compiledFunction(1, 0,
+					compiler.MakeInstruction(compiler.OpConstant, 3),
+					compiler.MakeInstruction(compiler.OpConstant, 7),
+					compiler.MakeInstruction(compiler.OpSetLocal, 0),
+					compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+					compiler.MakeInstruction(compiler.OpGetFree, 0)),
+				&objects.Int{Value: 1},
+				&objects.Float{Value: 2.0},
+				&objects.Char{Value: '3'},
+				&objects.String{Value: "four"})),
+		bytecode(
+			concat(
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpConstant, 2),
+				compiler.MakeInstruction(compiler.OpConstant, 3),
+				compiler.MakeInstruction(compiler.OpConstant, 4),
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpConstant, 2),
+				compiler.MakeInstruction(compiler.OpConstant, 3),
+				compiler.MakeInstruction(compiler.OpClosure, 4, 1)),
+			objectsArray(
+				&objects.Int{Value: 1},
+				&objects.Float{Value: 2.0},
+				&objects.Char{Value: '3'},
+				&objects.String{Value: "four"},
+				compiledFunction(1, 0,
+					compiler.MakeInstruction(compiler.OpConstant, 3),
+					compiler.MakeInstruction(compiler.OpConstant, 2),
+					compiler.MakeInstruction(compiler.OpSetLocal, 0),
+					compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+					compiler.MakeInstruction(compiler.OpGetFree, 0)))))
+
+	testBytecodeRemoveDuplicates(t,
+		bytecode(
+			concat(
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpConstant, 2),
+				compiler.MakeInstruction(compiler.OpConstant, 3),
+				compiler.MakeInstruction(compiler.OpConstant, 4)),
+			objectsArray(
+				&objects.Int{Value: 1},
+				&objects.Int{Value: 2},
+				&objects.Int{Value: 3},
+				&objects.Int{Value: 1},
+				&objects.Int{Value: 3})),
+		bytecode(
+			concat(
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpConstant, 2),
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 2)),
+			objectsArray(
+				&objects.Int{Value: 1},
+				&objects.Int{Value: 2},
+				&objects.Int{Value: 3})))
+}
+
+func TestBytecode_CountObjects(t *testing.T) {
+	b := bytecode(
+		concat(),
+		objectsArray(
+			intObject(55),
+			intObject(66),
+			intObject(77),
+			intObject(88),
+			compiledFunction(1, 0,
+				compiler.MakeInstruction(compiler.OpConstant, 3),
+				compiler.MakeInstruction(compiler.OpReturnValue)),
+			compiledFunction(1, 0,
+				compiler.MakeInstruction(compiler.OpConstant, 2),
+				compiler.MakeInstruction(compiler.OpReturnValue)),
+			compiledFunction(1, 0,
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpReturnValue))))
+	assert.Equal(t, 7, b.CountObjects())
+}
+
 func fileSet(files ...srcfile) *source.FileSet {
 	fileSet := source.NewFileSet()
 	for _, f := range files {
@@ -106,6 +209,14 @@ func bytecodeFileSet(instructions []byte, constants []objects.Object, fileSet *s
 		MainFunction: &objects.CompiledFunction{Instructions: instructions},
 		Constants:    constants,
 	}
+}
+
+func testBytecodeRemoveDuplicates(t *testing.T, input, expected *compiler.Bytecode) {
+	input.RemoveDuplicates()
+
+	assert.Equal(t, expected.FileSet, input.FileSet)
+	assert.Equal(t, expected.MainFunction, input.MainFunction)
+	assert.Equal(t, expected.Constants, input.Constants)
 }
 
 func testBytecodeSerialization(t *testing.T, b *compiler.Bytecode) {

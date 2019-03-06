@@ -241,7 +241,10 @@ func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
 		return nil, err
 	}
 
-	return c.Bytecode(), nil
+	bytecode := c.Bytecode()
+	bytecode.RemoveDuplicates()
+
+	return bytecode, nil
 }
 
 func addPrints(file *ast.File) *ast.File {

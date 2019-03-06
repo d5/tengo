@@ -109,6 +109,10 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		if bytes.Compare(expected, actual.([]byte)) != 0 {
 			return failExpectedActual(t, string(expected), string(actual.([]byte)), msg...)
 		}
+	case []string:
+		if !equalStringSlice(expected, actual.([]string)) {
+			return failExpectedActual(t, expected, actual, msg...)
+		}
 	case []int:
 		if !equalIntSlice(expected, actual.([]int)) {
 			return failExpectedActual(t, expected, actual, msg...)
@@ -243,6 +247,20 @@ func equalIntSlice(a, b []int) bool {
 	return true
 }
 
+func equalStringSlice(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := 0; i < len(a); i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
 func equalSymbol(a, b *compiler.Symbol) bool {
 	return a.Name == b.Name &&
 		a.Index == b.Index &&
@@ -297,7 +315,9 @@ func equalCompiledFunction(t *testing.T, expected, actual objects.Object, msg ..
 	expectedT := expected.(*objects.CompiledFunction)
 	actualT := actual.(*objects.CompiledFunction)
 
-	return Equal(t, expectedT.Instructions, actualT.Instructions, msg...)
+	return Equal(t,
+		compiler.FormatInstructions(expectedT.Instructions, 0),
+		compiler.FormatInstructions(actualT.Instructions, 0), msg...)
 }
 
 func equalClosure(t *testing.T, expected, actual objects.Object, msg ...interface{}) bool {

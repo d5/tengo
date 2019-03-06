@@ -118,9 +118,12 @@ func (s *Script) Compile() (*Compiled, error) {
 		return nil, err
 	}
 
+	bytecode := c.Bytecode()
+	bytecode.RemoveDuplicates()
+
 	return &Compiled{
 		symbolTable: symbolTable,
-		machine:     runtime.NewVM(c.Bytecode(), globals, s.builtinFuncs, s.builtinModules, s.maxAllocs),
+		machine:     runtime.NewVM(bytecode, globals, s.builtinFuncs, s.builtinModules, s.maxAllocs),
 	}, nil
 }
 
