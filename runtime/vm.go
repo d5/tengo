@@ -137,7 +137,6 @@ func (v *VM) Run() (err error) {
 }
 
 func (v *VM) run() {
-mainloop:
 	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
 		v.ip++
 
@@ -431,7 +430,7 @@ mainloop:
 			v.allocs--
 			if v.allocs < 0 {
 				v.err = ErrObjectAllocLimit
-				break mainloop
+				return
 			}
 
 			if v.sp >= StackSize {
@@ -459,7 +458,7 @@ mainloop:
 			v.allocs--
 			if v.allocs < 0 {
 				v.err = ErrObjectAllocLimit
-				break mainloop
+				return
 			}
 
 			if v.sp >= StackSize {
@@ -480,7 +479,7 @@ mainloop:
 			v.allocs--
 			if v.allocs < 0 {
 				v.err = ErrObjectAllocLimit
-				break mainloop
+				return
 			}
 
 			v.stack[v.sp-1] = &e
@@ -497,7 +496,7 @@ mainloop:
 				v.allocs--
 				if v.allocs < 0 {
 					v.err = ErrObjectAllocLimit
-					break mainloop
+					return
 				}
 
 				v.stack[v.sp-1] = &immutableArray
@@ -509,7 +508,7 @@ mainloop:
 				v.allocs--
 				if v.allocs < 0 {
 					v.err = ErrObjectAllocLimit
-					break mainloop
+					return
 				}
 
 				v.stack[v.sp-1] = &immutableMap
@@ -621,7 +620,7 @@ mainloop:
 				v.allocs--
 				if v.allocs < 0 {
 					v.err = ErrObjectAllocLimit
-					break mainloop
+					return
 				}
 
 				v.stack[v.sp] = &val
@@ -666,7 +665,7 @@ mainloop:
 				v.allocs--
 				if v.allocs < 0 {
 					v.err = ErrObjectAllocLimit
-					break mainloop
+					return
 				}
 
 				v.stack[v.sp] = &val
@@ -711,7 +710,7 @@ mainloop:
 				v.allocs--
 				if v.allocs < 0 {
 					v.err = ErrObjectAllocLimit
-					break mainloop
+					return
 				}
 
 				v.stack[v.sp] = &val
@@ -756,7 +755,7 @@ mainloop:
 				v.allocs--
 				if v.allocs < 0 {
 					v.err = ErrObjectAllocLimit
-					break mainloop
+					return
 				}
 
 				v.stack[v.sp] = &val
@@ -789,7 +788,7 @@ mainloop:
 						v.sp -= numArgs + 1
 						v.ip = -1 // reset IP to beginning of the frame
 						v.allocs = v.maxAllocs
-						continue mainloop
+						continue
 					}
 				}
 
@@ -826,7 +825,7 @@ mainloop:
 						v.sp -= numArgs + 1
 						v.ip = -1 // reset IP to beginning of the frame
 						v.allocs = v.maxAllocs
-						continue mainloop
+						continue
 					}
 				}
 
@@ -881,7 +880,7 @@ mainloop:
 				v.allocs--
 				if v.allocs < 0 {
 					v.err = ErrObjectAllocLimit
-					break mainloop
+					return
 				}
 
 				if v.sp >= StackSize {
@@ -1055,7 +1054,7 @@ mainloop:
 			v.allocs--
 			if v.allocs < 0 {
 				v.err = ErrObjectAllocLimit
-				break mainloop
+				return
 			}
 
 			v.stack[v.sp] = &cl
@@ -1117,7 +1116,7 @@ mainloop:
 			v.allocs--
 			if v.allocs < 0 {
 				v.err = ErrObjectAllocLimit
-				break mainloop
+				return
 			}
 
 			if v.sp >= StackSize {
