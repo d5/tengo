@@ -19,14 +19,16 @@ type Script struct {
 	userModuleLoader compiler.ModuleLoader
 	input            []byte
 	maxAllocs        int64
+	maxConstObjects  int
 }
 
 // New creates a Script instance with an input script.
 func New(input []byte) *Script {
 	return &Script{
-		variables: make(map[string]*Variable),
-		input:     input,
-		maxAllocs: -1,
+		variables:       make(map[string]*Variable),
+		input:           input,
+		maxAllocs:       -1,
+		maxConstObjects: -1,
 	}
 }
 
@@ -92,6 +94,11 @@ func (s *Script) SetMaxAllocs(n int64) {
 	s.maxAllocs = n
 }
 
+// SetMaxConstObjects sets the maximum number of objects in the compiled constants.
+func (s *Script) SetMaxConstObjects(n int) {
+	s.maxConstObjects = n
+}
+
 // Compile compiles the script with all the defined variables, and, returns Compiled object.
 func (s *Script) Compile() (*Compiled, error) {
 	symbolTable, builtinModules, globals, err := s.prepCompile()
@@ -118,8 +125,20 @@ func (s *Script) Compile() (*Compiled, error) {
 		return nil, err
 	}
 
+	// reduce globals size
+	globals = globals[:symbolTable.MaxSymbols()+1]
+
+	// remove duplicates from constants
 	bytecode := c.Bytecode()
 	bytecode.RemoveDuplicates()
+
+	// check the constant objects limit
+	if s.maxConstObjects >= 0 {
+		cnt := bytecode.CountObjects()
+		if cnt > s.maxConstObjects {
+			return nil, fmt.Errorf("exceeding constant objects limit: %d", cnt)
+		}
+	}
 
 	return &Compiled{
 		symbolTable: symbolTable,

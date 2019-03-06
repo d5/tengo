@@ -121,6 +121,40 @@ func TestScript_SetBuiltinModules(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestScript_SetMaxConstObjects(t *testing.T) {
+	// one constant '5'
+	s := script.New([]byte(`a := 5`))
+	s.SetMaxConstObjects(1) // limit = 1
+	_, err := s.Compile()
+	assert.NoError(t, err)
+	s.SetMaxConstObjects(0) // limit = 0
+	_, err = s.Compile()
+	assert.Equal(t, "exceeding constant objects limit: 1", err.Error())
+
+	// two constants '5' and '1'
+	s = script.New([]byte(`a := 5 + 1`))
+	s.SetMaxConstObjects(2) // limit = 2
+	_, err = s.Compile()
+	assert.NoError(t, err)
+	s.SetMaxConstObjects(1) // limit = 1
+	_, err = s.Compile()
+	assert.Equal(t, "exceeding constant objects limit: 2", err.Error())
+
+	// duplicates will be removed
+	s = script.New([]byte(`a := 5 + 5`))
+	s.SetMaxConstObjects(1) // limit = 1
+	_, err = s.Compile()
+	assert.NoError(t, err)
+	s.SetMaxConstObjects(0) // limit = 0
+	_, err = s.Compile()
+	assert.Equal(t, "exceeding constant objects limit: 1", err.Error())
+
+	// no limit set
+	s = script.New([]byte(`a := 1 + 2 + 3 + 4 + 5`))
+	_, err = s.Compile()
+	assert.NoError(t, err)
+}
+
 func objectPtr(o objects.Object) *objects.ImmutableMap {
 	return o.(*objects.ImmutableMap)
 }
