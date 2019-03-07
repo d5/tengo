@@ -3,6 +3,7 @@ package script
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/objects"
@@ -12,26 +13,41 @@ import (
 // Compiled is a compiled instance of the user script.
 // Use Script.Compile() to create Compiled object.
 type Compiled struct {
-	symbolTable *compiler.SymbolTable
-	machine     *runtime.VM
+	globalIndexes    map[string]int // global symbol name to index
+	bytecode         *compiler.Bytecode
+	globals          []*objects.Object
+	builtinFunctions []objects.Object
+	builtinModules   map[string]*objects.Object
+	maxAllocs        int64
+	lock             sync.RWMutex
 }
 
 // Run executes the compiled script in the virtual machine.
 func (c *Compiled) Run() error {
-	return c.machine.Run()
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	v := runtime.NewVM(c.bytecode, c.globals, c.builtinFunctions, c.builtinModules, c.maxAllocs)
+
+	return v.Run()
 }
 
 // RunContext is like Run but includes a context.
 func (c *Compiled) RunContext(ctx context.Context) (err error) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	v := runtime.NewVM(c.bytecode, c.globals, c.builtinFunctions, c.builtinModules, c.maxAllocs)
+
 	ch := make(chan error, 1)
 
 	go func() {
-		ch <- c.machine.Run()
+		ch <- v.Run()
 	}()
 
 	select {
 	case <-ctx.Done():
-		c.machine.Abort()
+		v.Abort()
 		<-ch
 		err = ctx.Err()
 	case err = <-ch:
@@ -40,14 +56,42 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 	return
 }
 
+// Clone creates a new copy of Compiled.
+// Cloned copies are safe for concurrent use by multiple goroutines.
+func (c *Compiled) Clone() *Compiled {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	clone := &Compiled{
+		globalIndexes:    c.globalIndexes,
+		bytecode:         c.bytecode,
+		globals:          make([]*objects.Object, len(c.globals)),
+		builtinFunctions: c.builtinFunctions,
+		builtinModules:   c.builtinModules,
+		maxAllocs:        c.maxAllocs,
+	}
+
+	// copy global objects
+	for idx, g := range c.globals {
+		if g != nil {
+			clone.globals[idx] = objectPtr((*g).Copy())
+		}
+	}
+
+	return clone
+}
+
 // IsDefined returns true if the variable name is defined (has value) before or after the execution.
 func (c *Compiled) IsDefined(name string) bool {
-	symbol, _, ok := c.symbolTable.Resolve(name)
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
+	idx, ok := c.globalIndexes[name]
 	if !ok {
 		return false
 	}
 
-	v := c.machine.Globals()[symbol.Index]
+	v := c.globals[idx]
 	if v == nil {
 		return false
 	}
@@ -57,11 +101,13 @@ func (c *Compiled) IsDefined(name string) bool {
 
 // Get returns a variable identified by the name.
 func (c *Compiled) Get(name string) *Variable {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+
 	value := &objects.UndefinedValue
 
-	symbol, _, ok := c.symbolTable.Resolve(name)
-	if ok && symbol.Scope == compiler.ScopeGlobal {
-		value = c.machine.Globals()[symbol.Index]
+	if idx, ok := c.globalIndexes[name]; ok {
+		value = c.globals[idx]
 		if value == nil {
 			value = &objects.UndefinedValue
 		}
@@ -75,20 +121,21 @@ func (c *Compiled) Get(name string) *Variable {
 
 // GetAll returns all the variables that are defined by the compiled script.
 func (c *Compiled) GetAll() []*Variable {
-	var vars []*Variable
-	for _, name := range c.symbolTable.Names() {
-		symbol, _, ok := c.symbolTable.Resolve(name)
-		if ok && symbol.Scope == compiler.ScopeGlobal {
-			value := c.machine.Globals()[symbol.Index]
-			if value == nil {
-				value = &objects.UndefinedValue
-			}
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 
-			vars = append(vars, &Variable{
-				name:  name,
-				value: value,
-			})
+	var vars []*Variable
+
+	for name, idx := range c.globalIndexes {
+		value := c.globals[idx]
+		if value == nil {
+			value = &objects.UndefinedValue
 		}
+
+		vars = append(vars, &Variable{
+			name:  name,
+			value: value,
+		})
 	}
 
 	return vars
@@ -97,17 +144,20 @@ func (c *Compiled) GetAll() []*Variable {
 // Set replaces the value of a global variable identified by the name.
 // An error will be returned if the name was not defined during compilation.
 func (c *Compiled) Set(name string, value interface{}) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
 	obj, err := objects.FromInterface(value)
 	if err != nil {
 		return err
 	}
 
-	symbol, _, ok := c.symbolTable.Resolve(name)
-	if !ok || symbol.Scope != compiler.ScopeGlobal {
+	idx, ok := c.globalIndexes[name]
+	if !ok {
 		return fmt.Errorf("'%s' is not defined", name)
 	}
 
-	c.machine.Globals()[symbol.Index] = &obj
+	c.globals[idx] = &obj
 
 	return nil
 }

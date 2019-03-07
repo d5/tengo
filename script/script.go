@@ -128,6 +128,15 @@ func (s *Script) Compile() (*Compiled, error) {
 	// reduce globals size
 	globals = globals[:symbolTable.MaxSymbols()+1]
 
+	// global symbol names to indexes
+	globalIndexes := make(map[string]int, len(globals))
+	for _, name := range symbolTable.Names() {
+		symbol, _, _ := symbolTable.Resolve(name)
+		if symbol.Scope == compiler.ScopeGlobal {
+			globalIndexes[name] = symbol.Index
+		}
+	}
+
 	// remove duplicates from constants
 	bytecode := c.Bytecode()
 	bytecode.RemoveDuplicates()
@@ -141,8 +150,12 @@ func (s *Script) Compile() (*Compiled, error) {
 	}
 
 	return &Compiled{
-		symbolTable: symbolTable,
-		machine:     runtime.NewVM(bytecode, globals, s.builtinFuncs, s.builtinModules, s.maxAllocs),
+		globalIndexes:    globalIndexes,
+		bytecode:         bytecode,
+		globals:          globals,
+		builtinFunctions: s.builtinFuncs,
+		builtinModules:   s.builtinModules,
+		maxAllocs:        s.maxAllocs,
 	}, nil
 }
 

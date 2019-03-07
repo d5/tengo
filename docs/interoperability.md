@@ -6,6 +6,7 @@
   - [Type Conversion Table](#type-conversion-table)
   - [User Types](#user-types)
 - [Sandbox Environments](#sandbox-environments)
+- [Concurrency](#concurrency)
 - [Compiler and VM](#compiler-and-vm)
 
 ## Using Scripts
@@ -187,7 +188,34 @@ Sets the maximum byte-length of string values. This limit applies to all running
 
 #### tengo.MaxBytesLen
 
-Sets the maximum length of bytes values. This limit applies to all running VM instances in the process. Also it's not recommended to set or update this value while any VM is executing. 
+Sets the maximum length of bytes values. This limit applies to all running VM instances in the process. Also it's not recommended to set or update this value while any VM is executing.
+
+## Concurrency
+
+A compiled script (`script.Compiled`) can be used to run the code multiple times by a goroutine. If you want to run the compiled script by multiple goroutine, you should use `Compiled.Clone` function to make a copy of Compiled instances.
+
+#### Compiled.Clone()
+
+Clone creates a new copy of Compiled instance. Cloned copies are safe for concurrent use by multiple goroutines. 
+
+```golang
+for i := 0; i < concurrency; i++ {
+    go func(compiled *script.Compiled) {
+        // inputs
+        _ = compiled.Set("a", rand.Intn(10))
+        _ = compiled.Set("b", rand.Intn(10))
+        _ = compiled.Set("c", rand.Intn(10))
+        
+        if err := compiled.Run(); err != nil {
+            panic(err)
+        }
+        
+        // outputs
+        d = compiled.Get("d").Int()
+        e = compiled.Get("e").Int()
+    }(compiled.Clone()) // Pass the cloned copy of Compiled
+}
+``` 
 
 ## Compiler and VM
 
