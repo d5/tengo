@@ -43,12 +43,14 @@ type VM struct {
 	aborting       int64
 	builtinFuncs   []objects.Object
 	builtinModules map[string]*objects.Object
+	maxAllocs      int64
+	allocs         int64
 	err            error
 	errOffset      int
 }
 
 // NewVM creates a VM.
-func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs []objects.Object, builtinModules map[string]*objects.Object) *VM {
+func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs []objects.Object, builtinModules map[string]*objects.Object, maxAllocs int64) *VM {
 	if globals == nil {
 		globals = make([]*objects.Object, GlobalsSize)
 	}
@@ -69,9 +71,7 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs 
 
 	frames := make([]Frame, MaxFrames)
 	frames[0].fn = bytecode.MainFunction
-	frames[0].freeVars = nil
 	frames[0].ip = -1
-	frames[0].basePointer = 0
 
 	return &VM{
 		constants:      bytecode.Constants,
@@ -87,6 +87,7 @@ func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs 
 		ip:             -1,
 		builtinFuncs:   builtinFuncs,
 		builtinModules: builtinModules,
+		maxAllocs:      maxAllocs,
 	}
 }
 
@@ -104,6 +105,7 @@ func (v *VM) Run() (err error) {
 	v.curIPLimit = len(v.curInsts) - 1
 	v.framesIndex = 1
 	v.ip = -1
+	v.allocs = v.maxAllocs + 1
 	atomic.StoreInt64(&v.aborting, 0)
 
 	v.run()
@@ -131,7 +133,6 @@ func (v *VM) Run() (err error) {
 }
 
 func (v *VM) run() {
-mainloop:
 	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
 		v.ip++
 
@@ -190,6 +191,12 @@ mainloop:
 		case compiler.OpBShiftRight:
 			v.binaryOp(token.Shr)
 
+		case compiler.OpGreaterThan:
+			v.binaryOp(token.Greater)
+
+		case compiler.OpGreaterThanEqual:
+			v.binaryOp(token.GreaterEq)
+
 		case compiler.OpEqual:
 			right := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
@@ -223,12 +230,6 @@ mainloop:
 				v.stack[v.sp] = truePtr
 			}
 			v.sp++
-
-		case compiler.OpGreaterThan:
-			v.binaryOp(token.Greater)
-
-		case compiler.OpGreaterThanEqual:
-			v.binaryOp(token.GreaterEq)
 
 		case compiler.OpPop:
 			v.sp--
@@ -280,6 +281,12 @@ mainloop:
 
 				var res objects.Object = &objects.Int{Value: ^x.Value}
 
+				v.allocs--
+				if v.allocs == 0 {
+					v.err = ErrObjectAllocLimit
+					return
+				}
+
 				v.stack[v.sp] = &res
 				v.sp++
 			default:
@@ -300,6 +307,12 @@ mainloop:
 
 				var res objects.Object = &objects.Int{Value: -x.Value}
 
+				v.allocs--
+				if v.allocs == 0 {
+					v.err = ErrObjectAllocLimit
+					return
+				}
+
 				v.stack[v.sp] = &res
 				v.sp++
 			case *objects.Float:
@@ -309,6 +322,12 @@ mainloop:
 				}
 
 				var res objects.Object = &objects.Float{Value: -x.Value}
+
+				v.allocs--
+				if v.allocs == 0 {
+					v.err = ErrObjectAllocLimit
+					return
+				}
 
 				v.stack[v.sp] = &res
 				v.sp++
@@ -404,6 +423,12 @@ mainloop:
 
 			var arr objects.Object = &objects.Array{Value: elements}
 
+			v.allocs--
+			if v.allocs == 0 {
+				v.err = ErrObjectAllocLimit
+				return
+			}
+
 			if v.sp >= StackSize {
 				v.err = ErrStackOverflow
 				return
@@ -426,6 +451,12 @@ mainloop:
 
 			var m objects.Object = &objects.Map{Value: kv}
 
+			v.allocs--
+			if v.allocs == 0 {
+				v.err = ErrObjectAllocLimit
+				return
+			}
+
 			if v.sp >= StackSize {
 				v.err = ErrStackOverflow
 				return
@@ -441,6 +472,12 @@ mainloop:
 				Value: *value,
 			}
 
+			v.allocs--
+			if v.allocs == 0 {
+				v.err = ErrObjectAllocLimit
+				return
+			}
+
 			v.stack[v.sp-1] = &e
 
 		case compiler.OpImmutable:
@@ -451,11 +488,25 @@ mainloop:
 				var immutableArray objects.Object = &objects.ImmutableArray{
 					Value: value.Value,
 				}
+
+				v.allocs--
+				if v.allocs == 0 {
+					v.err = ErrObjectAllocLimit
+					return
+				}
+
 				v.stack[v.sp-1] = &immutableArray
 			case *objects.Map:
 				var immutableMap objects.Object = &objects.ImmutableMap{
 					Value: value.Value,
 				}
+
+				v.allocs--
+				if v.allocs == 0 {
+					v.err = ErrObjectAllocLimit
+					return
+				}
+
 				v.stack[v.sp-1] = &immutableMap
 			}
 
@@ -561,6 +612,13 @@ mainloop:
 				}
 
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
+
+				v.allocs--
+				if v.allocs == 0 {
+					v.err = ErrObjectAllocLimit
+					return
+				}
+
 				v.stack[v.sp] = &val
 				v.sp++
 
@@ -599,6 +657,12 @@ mainloop:
 				}
 
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
+
+				v.allocs--
+				if v.allocs == 0 {
+					v.err = ErrObjectAllocLimit
+					return
+				}
 
 				v.stack[v.sp] = &val
 				v.sp++
@@ -639,6 +703,12 @@ mainloop:
 
 				var val objects.Object = &objects.String{Value: left.Value[lowIdx:highIdx]}
 
+				v.allocs--
+				if v.allocs == 0 {
+					v.err = ErrObjectAllocLimit
+					return
+				}
+
 				v.stack[v.sp] = &val
 				v.sp++
 
@@ -678,6 +748,12 @@ mainloop:
 
 				var val objects.Object = &objects.Bytes{Value: left.Value[lowIdx:highIdx]}
 
+				v.allocs--
+				if v.allocs == 0 {
+					v.err = ErrObjectAllocLimit
+					return
+				}
+
 				v.stack[v.sp] = &val
 				v.sp++
 			}
@@ -707,7 +783,7 @@ mainloop:
 						}
 						v.sp -= numArgs + 1
 						v.ip = -1 // reset IP to beginning of the frame
-						continue mainloop
+						continue
 					}
 				}
 
@@ -741,7 +817,7 @@ mainloop:
 						}
 						v.sp -= numArgs + 1
 						v.ip = -1 // reset IP to beginning of the frame
-						continue mainloop
+						continue
 					}
 				}
 
@@ -789,6 +865,12 @@ mainloop:
 				// nil return -> undefined
 				if ret == nil {
 					ret = objects.UndefinedValue
+				}
+
+				v.allocs--
+				if v.allocs == 0 {
+					v.err = ErrObjectAllocLimit
+					return
 				}
 
 				if v.sp >= StackSize {
@@ -957,6 +1039,12 @@ mainloop:
 				Free: free,
 			}
 
+			v.allocs--
+			if v.allocs == 0 {
+				v.err = ErrObjectAllocLimit
+				return
+			}
+
 			v.stack[v.sp] = &cl
 			v.sp++
 
@@ -1012,6 +1100,12 @@ mainloop:
 			}
 
 			iterator = iterable.Iterate()
+
+			v.allocs--
+			if v.allocs == 0 {
+				v.err = ErrObjectAllocLimit
+				return
+			}
 
 			if v.sp >= StackSize {
 				v.err = ErrStackOverflow
@@ -1131,6 +1225,12 @@ func (v *VM) binaryOp(tok token.Token) {
 		}
 
 		v.err = e
+		return
+	}
+
+	v.allocs--
+	if v.allocs == 0 {
+		v.err = ErrObjectAllocLimit
 		return
 	}
 

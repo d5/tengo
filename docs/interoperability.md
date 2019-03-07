@@ -176,6 +176,19 @@ s.SetUserModuleLoader(func(moduleName string) ([]byte, error) {
 
 Note that when a script is being added to another script as a module (via `Script.AddModule`), it does not inherit the module loader from the main script.
 
+#### Script.SetMaxAllocs(n int64)
+
+SetMaxAllocs sets the maximum number of object allocations. Note this is a cumulative metric that tracks only the object creations. Set this to a negative number (e.g. `-1`) if you don't need to limit the number of allocations.
+   
+
+#### tengo.MaxStringLen
+
+Sets the maximum byte-length of string values. This limit applies to all running VM instances in the process. Also it's not recommended to set or update this value while any VM is executing. 
+
+#### tengo.MaxBytesLen
+
+Sets the maximum length of bytes values. This limit applies to all running VM instances in the process. Also it's not recommended to set or update this value while any VM is executing. 
+
 ## Compiler and VM
 
 Although it's not recommended, you can directly create and run the Tengo [Parser](https://godoc.org/github.com/d5/tengo/compiler/parser#Parser), [Compiler](https://godoc.org/github.com/d5/tengo/compiler#Compiler), and [VM](https://godoc.org/github.com/d5/tengo/runtime#VM) for yourself instead of using Scripts and Script Variables. It's a bit more involved as you have to manage the symbol tables and global variables between them, but, basically that's what Script and Script Variable is doing internally.

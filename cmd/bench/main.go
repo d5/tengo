@@ -199,7 +199,10 @@ func compileFile(file *ast.File) (time.Duration, *compiler.Bytecode, error) {
 		return time.Since(start), nil, err
 	}
 
-	return time.Since(start), c.Bytecode(), nil
+	bytecode := c.Bytecode()
+	bytecode.RemoveDuplicates()
+
+	return time.Since(start), bytecode, nil
 }
 
 func runVM(bytecode *compiler.Bytecode) (time.Duration, objects.Object, error) {
@@ -207,7 +210,7 @@ func runVM(bytecode *compiler.Bytecode) (time.Duration, objects.Object, error) {
 
 	start := time.Now()
 
-	v := runtime.NewVM(bytecode, globals, nil, nil)
+	v := runtime.NewVM(bytecode, globals, nil, nil, -1)
 	if err := v.Run(); err != nil {
 		return time.Since(start), nil, err
 	}

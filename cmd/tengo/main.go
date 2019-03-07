@@ -158,7 +158,7 @@ func compileAndRun(data []byte, inputFile string) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, builtinModules)
+	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -175,7 +175,7 @@ func runCompiled(data []byte) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, builtinModules)
+	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -226,7 +226,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		bytecode := c.Bytecode()
 
-		machine := runtime.NewVM(bytecode, globals, nil, builtinModules)
+		machine := runtime.NewVM(bytecode, globals, nil, builtinModules, -1)
 		if err := machine.Run(); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
@@ -251,7 +251,10 @@ func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
 		return nil, err
 	}
 
-	return c.Bytecode(), nil
+	bytecode := c.Bytecode()
+	bytecode.RemoveDuplicates()
+
+	return bytecode, nil
 }
 
 func addPrints(file *ast.File) *ast.File {
