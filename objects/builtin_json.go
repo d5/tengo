@@ -12,7 +12,12 @@ func builtinToJSON(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 
-	res, err := json.Marshal(objectToInterface(args[0]))
+	v := objectToInterface(args[0])
+	if vErr, isErr := v.(error); isErr {
+		v = vErr.Error()
+	}
+
+	res, err := json.Marshal(v)
 	if err != nil {
 		return &Error{Value: &String{Value: err.Error()}}, nil
 	}

@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -178,11 +179,25 @@ func objectToInterface(o Object) (res interface{}) {
 		for i, val := range o.Value {
 			res.([]interface{})[i] = objectToInterface(val)
 		}
+	case *ImmutableArray:
+		res = make([]interface{}, len(o.Value))
+		for i, val := range o.Value {
+			res.([]interface{})[i] = objectToInterface(val)
+		}
 	case *Map:
 		res = make(map[string]interface{})
 		for key, v := range o.Value {
 			res.(map[string]interface{})[key] = objectToInterface(v)
 		}
+	case *ImmutableMap:
+		res = make(map[string]interface{})
+		for key, v := range o.Value {
+			res.(map[string]interface{})[key] = objectToInterface(v)
+		}
+	case *Time:
+		res = o.Value
+	case *Error:
+		res = errors.New(o.String())
 	case Object:
 		return o
 	}
