@@ -32,7 +32,7 @@ func (v *Variable) Name() string {
 
 // Value returns an empty interface of the variable value.
 func (v *Variable) Value() interface{} {
-	return objectToInterface(*v.value)
+	return objects.ToInterface(*v.value)
 }
 
 // ValueType returns the name of the value type.
@@ -87,7 +87,7 @@ func (v *Variable) Array() []interface{} {
 	case *objects.Array:
 		var arr []interface{}
 		for _, e := range val.Value {
-			arr = append(arr, objectToInterface(e))
+			arr = append(arr, objects.ToInterface(e))
 		}
 		return arr
 	}
@@ -102,7 +102,7 @@ func (v *Variable) Map() map[string]interface{} {
 	case *objects.Map:
 		kv := make(map[string]interface{})
 		for mk, mv := range val.Value {
-			kv[mk] = objectToInterface(mv)
+			kv[mk] = objects.ToInterface(mv)
 		}
 		return kv
 	}
