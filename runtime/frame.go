@@ -6,8 +6,9 @@ import (
 
 // Frame represents a function call frame.
 type Frame struct {
-	fn          *objects.CompiledFunction
-	freeVars    []*objects.Object
-	ip          int
-	basePointer int
+	fn            *objects.CompiledFunction
+	freeVars      []*objects.FreeVar
+	localFreeVars map[int]*objects.FreeVar
+	ip            int
+	basePointer   int
 }

@@ -7,7 +7,7 @@ import (
 // Closure represents a function closure.
 type Closure struct {
 	Fn   *CompiledFunction
-	Free []*Object
+	Free []*FreeVar
 }
 
 // TypeName returns the name of the type.
@@ -29,7 +29,7 @@ func (o *Closure) BinaryOp(op token.Token, rhs Object) (Object, error) {
 func (o *Closure) Copy() Object {
 	return &Closure{
 		Fn:   o.Fn.Copy().(*CompiledFunction),
-		Free: append([]*Object{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
+		Free: append([]*FreeVar{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
 	}
 }
 
