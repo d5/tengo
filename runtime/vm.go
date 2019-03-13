@@ -136,7 +136,6 @@ func (v *VM) run() {
 	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
 		v.ip++
 
-		// fmt.Println(compiler.OpcodeNames[v.curInsts[v.ip]])
 		switch v.curInsts[v.ip] {
 		case compiler.OpConstant:
 			cidx := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
@@ -1242,8 +1241,6 @@ func (v *VM) run() {
 		default:
 			panic(fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip]))
 		}
-
-		// v.printStack(v.sp)
 	}
 }
 
@@ -1287,17 +1284,6 @@ func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
 	}
 
 	return nil
-}
-
-func (v *VM) printStack(sp int) {
-	fmt.Println("   STACK")
-	for i, val := range v.stack[:v.sp] {
-		fmt.Printf("    %d: %v : %v\n", i, &v.stack[i], val)
-		if obj, ok := v.stack[i].(*objects.FreeVar); ok {
-			fmt.Println("        FREE VAR")
-			fmt.Printf("        %d: %v : %v\n", i, obj.Value, *obj.Value)
-		}
-	}
 }
 
 func (v *VM) binaryOp(tok token.Token) {
