@@ -41,7 +41,7 @@ func builtinPrintf(args ...Object) (Object, error) {
 
 	formatArgs := make([]interface{}, numArgs-1, numArgs-1)
 	for idx, arg := range args[1:] {
-		formatArgs[idx] = objectToInterface(arg)
+		formatArgs[idx] = ToInterface(arg)
 	}
 
 	fmt.Printf(format.Value, formatArgs...)
@@ -70,7 +70,7 @@ func builtinSprintf(args ...Object) (Object, error) {
 
 	formatArgs := make([]interface{}, numArgs-1, numArgs-1)
 	for idx, arg := range args[1:] {
-		formatArgs[idx] = objectToInterface(arg)
+		formatArgs[idx] = ToInterface(arg)
 	}
 
 	s := fmt.Sprintf(format.Value, formatArgs...)

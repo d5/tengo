@@ -12,7 +12,7 @@ func builtinToJSON(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 
-	v := objectToInterface(args[0])
+	v := ToInterface(args[0])
 	if vErr, isErr := v.(error); isErr {
 		v = vErr.Error()
 	}
