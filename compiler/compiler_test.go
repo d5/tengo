@@ -725,17 +725,16 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpAdd),
 					compiler.MakeInstruction(compiler.OpReturnValue)),
 				compiledFunction(1, 1,
-					compiler.MakeInstruction(compiler.OpSetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 0, 1),
 					compiler.MakeInstruction(compiler.OpPop),
 					compiler.MakeInstruction(compiler.OpReturn)))))
 
 	expect(t, `
-func(a) { 
-	return func(b) { 
-		return func(c) { 
-			return a + b + c 
+func(a) {
+	return func(b) {
+		return func(c) {
+			return a + b + c
 		}
 	}
 }`,
@@ -753,12 +752,10 @@ func(a) {
 					compiler.MakeInstruction(compiler.OpReturnValue)),
 				compiledFunction(1, 1,
 					compiler.MakeInstruction(compiler.OpGetFreePtr, 0),
-					compiler.MakeInstruction(compiler.OpSetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 0, 2),
 					compiler.MakeInstruction(compiler.OpReturnValue)),
 				compiledFunction(1, 1,
-					compiler.MakeInstruction(compiler.OpSetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 1, 1),
 					compiler.MakeInstruction(compiler.OpReturnValue)))))
@@ -805,14 +802,12 @@ func() {
 					compiler.MakeInstruction(compiler.OpConstant, 2),
 					compiler.MakeInstruction(compiler.OpDefineLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetFreePtr, 0),
-					compiler.MakeInstruction(compiler.OpSetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 4, 2),
 					compiler.MakeInstruction(compiler.OpReturnValue)),
 				compiledFunction(1, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 1),
 					compiler.MakeInstruction(compiler.OpDefineLocal, 0),
-					compiler.MakeInstruction(compiler.OpSetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 5, 1),
 					compiler.MakeInstruction(compiler.OpReturnValue)))))

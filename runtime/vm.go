@@ -379,8 +379,7 @@ func (v *VM) run() {
 
 			v.sp--
 
-			obj := v.stack[v.sp]
-			v.globals[globalIndex] = obj
+			v.globals[globalIndex] = v.stack[v.sp]
 
 		case compiler.OpSetSelGlobal:
 			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
@@ -797,7 +796,6 @@ func (v *VM) run() {
 				v.curFrame = &(v.frames[v.framesIndex])
 				v.curFrame.fn = callee.Fn
 				v.curFrame.freeVars = callee.Free
-				v.curFrame.localFreeVars = nil
 				v.curFrame.basePointer = v.sp - numArgs
 				v.curInsts = callee.Fn.Instructions
 				v.ip = -1
@@ -832,7 +830,6 @@ func (v *VM) run() {
 				v.curFrame = &(v.frames[v.framesIndex])
 				v.curFrame.fn = callee
 				v.curFrame.freeVars = nil
-				v.curFrame.localFreeVars = nil
 				v.curFrame.basePointer = v.sp - numArgs
 				v.curInsts = callee.Instructions
 				v.ip = -1
@@ -951,7 +948,7 @@ func (v *VM) run() {
 			val := v.stack[v.sp-1]
 			v.sp--
 
-			if obj, ok := v.stack[sp].(*objects.FreeVar); ok {
+			if obj, ok := v.stack[sp].(*objects.ObjectPtr); ok {
 				*obj.Value = val
 				val = obj
 			}
@@ -985,7 +982,7 @@ func (v *VM) run() {
 
 			val := v.stack[v.curFrame.basePointer+localIndex]
 
-			if obj, ok := val.(*objects.FreeVar); ok {
+			if obj, ok := val.(*objects.ObjectPtr); ok {
 				val = *obj.Value
 			}
 
@@ -1042,13 +1039,13 @@ func (v *VM) run() {
 				return
 			}
 
-			free := make([]*objects.FreeVar, numFree)
+			free := make([]*objects.ObjectPtr, numFree)
 			for i := 0; i < numFree; i++ {
 				switch freeVar := (v.stack[v.sp-numFree+i]).(type) {
-				case *objects.FreeVar:
+				case *objects.ObjectPtr:
 					free[i] = freeVar
 				default:
-					free[i] = &objects.FreeVar{Value: &v.stack[v.sp-numFree+i]}
+					free[i] = &objects.ObjectPtr{Value: &v.stack[v.sp-numFree+i]}
 				}
 			}
 
@@ -1110,37 +1107,27 @@ func (v *VM) run() {
 			v.sp--
 
 		case compiler.OpGetLocalPtr:
-			freeIndex := int(v.curInsts[v.ip+1])
+			localIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+
+			sp := v.curFrame.basePointer + localIndex
+			val := v.stack[sp]
+
+			var freeVar *objects.ObjectPtr
+			if obj, ok := val.(*objects.ObjectPtr); ok {
+				freeVar = obj
+			} else {
+				freeVar = &objects.ObjectPtr{Value: &val}
+				v.stack[sp] = freeVar
+			}
 
 			if v.sp >= StackSize {
 				v.err = ErrStackOverflow
 				return
 			}
 
-			freeVar := v.curFrame.localFreeVars[freeIndex]
 			v.stack[v.sp] = freeVar
 			v.sp++
-
-		case compiler.OpSetLocalPtr:
-			localIndex := int(v.curInsts[v.ip+1])
-			v.ip++
-
-			if v.curFrame.localFreeVars == nil {
-				v.curFrame.localFreeVars = make(map[int]*objects.FreeVar)
-			}
-
-			sp := v.curFrame.basePointer + localIndex
-
-			val := v.stack[sp]
-
-			if obj, ok := val.(*objects.FreeVar); ok {
-				v.curFrame.localFreeVars[localIndex] = obj
-			} else {
-				v.curFrame.localFreeVars[localIndex] = &objects.FreeVar{Value: &val}
-			}
-
-			v.stack[sp] = v.curFrame.localFreeVars[localIndex]
 
 		case compiler.OpSetSelFree:
 			freeIndex := int(v.curInsts[v.ip+1])
