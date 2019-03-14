@@ -461,9 +461,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 					s.LocalAssigned = true
 				}
 
-				c.emit(node, OpGetLocal, s.Index)
+				c.emit(node, OpGetLocalPtr, s.Index)
 			case ScopeFree:
-				c.emit(node, OpGetFree, s.Index)
+				c.emit(node, OpGetFreePtr, s.Index)
 			}
 		}
 

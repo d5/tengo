@@ -31,7 +31,7 @@ var (
 	showVersion    bool
 	version        = "dev"
 	bm             map[string]bool
-	builtinModules map[string]*objects.Object
+	builtinModules map[string]objects.Object
 )
 
 func init() {
@@ -51,10 +51,10 @@ func main() {
 	}
 
 	bm = make(map[string]bool, len(stdlib.Modules))
-	builtinModules = make(map[string]*objects.Object, len(stdlib.Modules))
+	builtinModules = make(map[string]objects.Object, len(stdlib.Modules))
 	for k, mod := range stdlib.Modules {
 		bm[k] = true
-		builtinModules[k] = objectPtr(mod)
+		builtinModules[k] = mod
 	}
 
 	inputFile := flag.Arg(0)
@@ -189,7 +189,7 @@ func runREPL(in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
 
 	fileSet := source.NewFileSet()
-	globals := make([]*objects.Object, runtime.GlobalsSize)
+	globals := make([]objects.Object, runtime.GlobalsSize)
 
 	symbolTable := compiler.NewSymbolTable()
 	for idx, fn := range objects.Builtins {
@@ -303,8 +303,4 @@ func basename(s string) string {
 	}
 
 	return s
-}
-
-func objectPtr(o objects.Object) *objects.Object {
-	return &o
 }

@@ -31,7 +31,3 @@ func GetModules(names ...string) map[string]*objects.ImmutableMap {
 	}
 	return modules
 }
-
-func objectPtr(o objects.Object) *objects.Object {
-	return &o
-}

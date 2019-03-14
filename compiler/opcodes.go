@@ -48,8 +48,10 @@ const (
 	OpSetLocal                       // Set local variable
 	OpDefineLocal                    // Define local variable
 	OpSetSelLocal                    // Set local variable using selectors
+	OpGetFreePtr                     // Get free variable pointer object
 	OpGetFree                        // Get free variables
 	OpSetFree                        // Set free variables
+	OpGetLocalPtr                    // Get local variable as a pointer
 	OpSetSelFree                     // Set free variables using selectors
 	OpGetBuiltin                     // Get builtin function
 	OpGetBuiltinModule               // Get builtin module
@@ -108,8 +110,10 @@ var OpcodeNames = [...]string{
 	OpGetBuiltin:       "BUILTIN",
 	OpGetBuiltinModule: "BLTMOD",
 	OpClosure:          "CLOSURE",
+	OpGetFreePtr:       "GETFP",
 	OpGetFree:          "GETF",
 	OpSetFree:          "SETF",
+	OpGetLocalPtr:      "GETLP",
 	OpSetSelFree:       "SETSF",
 	OpIteratorInit:     "ITER",
 	OpIteratorNext:     "ITNXT",
@@ -165,8 +169,10 @@ var OpcodeOperands = [...][]int{
 	OpGetBuiltin:       {1},
 	OpGetBuiltinModule: {},
 	OpClosure:          {2, 1},
+	OpGetFreePtr:       {1},
 	OpGetFree:          {1},
 	OpSetFree:          {1},
+	OpGetLocalPtr:      {1},
 	OpSetSelFree:       {1, 1},
 	OpIteratorInit:     {},
 	OpIteratorNext:     {},

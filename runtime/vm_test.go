@@ -44,11 +44,11 @@ func expectWithUserModules(t *testing.T, input string, expected interface{}, use
 	runVM(t, input, expected, nil, userModules, nil, -1, false)
 }
 
-func expectWithBuiltinModules(t *testing.T, input string, expected interface{}, builtinModules map[string]*objects.Object) {
+func expectWithBuiltinModules(t *testing.T, input string, expected interface{}, builtinModules map[string]objects.Object) {
 	runVM(t, input, expected, nil, nil, builtinModules, -1, false)
 }
 
-func expectWithUserAndBuiltinModules(t *testing.T, input string, expected interface{}, userModules map[string]string, builtinModules map[string]*objects.Object) {
+func expectWithUserAndBuiltinModules(t *testing.T, input string, expected interface{}, userModules map[string]string, builtinModules map[string]objects.Object) {
 	runVM(t, input, expected, nil, userModules, builtinModules, -1, false)
 }
 
@@ -68,7 +68,7 @@ func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objec
 	runVMError(t, input, symbols, nil, nil, -1, expected)
 }
 
-func runVM(t *testing.T, input string, expected interface{}, symbols map[string]objects.Object, userModules map[string]string, builtinModules map[string]*objects.Object, maxAllocs int64, skipModuleTest bool) {
+func runVM(t *testing.T, input string, expected interface{}, symbols map[string]objects.Object, userModules map[string]string, builtinModules map[string]objects.Object, maxAllocs int64, skipModuleTest bool) {
 	expectedObj := toObject(expected)
 
 	if symbols == nil {
@@ -120,7 +120,7 @@ func runVM(t *testing.T, input string, expected interface{}, symbols map[string]
 	}
 }
 
-func runVMError(t *testing.T, input string, symbols map[string]objects.Object, userModules map[string]string, builtinModules map[string]*objects.Object, maxAllocs int64, expected string) {
+func runVMError(t *testing.T, input string, symbols map[string]objects.Object, userModules map[string]string, builtinModules map[string]objects.Object, maxAllocs int64, expected string) {
 	expected = strings.TrimSpace(expected)
 	if expected == "" {
 		panic("expected must not be empty")
@@ -149,7 +149,7 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModules map[string]string, builtinModules map[string]*objects.Object, maxAllocs int64) (res map[string]objects.Object, trace []string, err error) {
+func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModules map[string]string, builtinModules map[string]objects.Object, maxAllocs int64) (res map[string]objects.Object, trace []string, err error) {
 	var v *runtime.VM
 
 	defer func() {
@@ -170,7 +170,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 		}
 	}()
 
-	globals := make([]*objects.Object, runtime.GlobalsSize)
+	globals := make([]objects.Object, runtime.GlobalsSize)
 
 	symTable := compiler.NewSymbolTable()
 	for name, value := range symbols {
@@ -179,7 +179,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 		// should not store pointer to 'value' variable
 		// which is re-used in each iteration.
 		valueCopy := value
-		globals[sym.Index] = &valueCopy
+		globals[sym.Index] = valueCopy
 	}
 	for idx, fn := range objects.Builtins {
 		symTable.DefineBuiltin(idx, fn.Name)
@@ -222,7 +222,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 				return
 			}
 
-			res[name] = *globals[sym.Index]
+			res[name] = globals[sym.Index]
 		}
 		trace = append(trace, fmt.Sprintf("\n[Globals]\n\n%s", strings.Join(formatGlobals(globals), "\n")))
 	}
@@ -233,13 +233,13 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	return
 }
 
-func formatGlobals(globals []*objects.Object) (formatted []string) {
+func formatGlobals(globals []objects.Object) (formatted []string) {
 	for idx, global := range globals {
 		if global == nil {
 			return
 		}
 
-		switch global := (*global).(type) {
+		switch global := global.(type) {
 		case *objects.Closure:
 			formatted = append(formatted, fmt.Sprintf("[% 3d] (Closure|%p)", idx, global))
 			for _, l := range compiler.FormatInstructions(global.Fn.Instructions, 0) {
@@ -357,8 +357,4 @@ func objectZeroCopy(o objects.Object) objects.Object {
 	default:
 		panic(fmt.Errorf("unknown object type: %s", o.TypeName()))
 	}
-}
-
-func objectPtr(o objects.Object) *objects.Object {
-	return &o
 }

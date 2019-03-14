@@ -10,13 +10,13 @@ import (
 
 func TestBuiltin(t *testing.T) {
 
-	mathModule := map[string]*objects.Object{
-		"math": objectPtr(&objects.ImmutableMap{Value: map[string]objects.Object{
+	mathModule := map[string]objects.Object{
+		"math": &objects.ImmutableMap{Value: map[string]objects.Object{
 			"abs": &objects.UserFunction{Name: "abs", Value: func(args ...objects.Object) (ret objects.Object, err error) {
 				v, _ := objects.ToFloat64(args[0])
 				return &objects.Float{Value: math.Abs(v)}, nil
 			}},
-		}}),
+		}},
 	}
 	// builtin
 	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(1)`, 1.0, mathModule)
@@ -187,13 +187,13 @@ export func(a) {
 }
 
 func TestModuleBlockScopes(t *testing.T) {
-	randModule := map[string]*objects.Object{
-		"rand": objectPtr(&objects.ImmutableMap{Value: map[string]objects.Object{
+	randModule := map[string]objects.Object{
+		"rand": &objects.ImmutableMap{Value: map[string]objects.Object{
 			"intn": &objects.UserFunction{Name: "abs", Value: func(args ...objects.Object) (ret objects.Object, err error) {
 				v, _ := objects.ToInt64(args[0])
 				return &objects.Int{Value: rand.Int63n(v)}, nil
 			}},
-		}}),
+		}},
 	}
 
 	// block scopes in module

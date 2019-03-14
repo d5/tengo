@@ -15,7 +15,7 @@ import (
 type Script struct {
 	variables        map[string]*Variable
 	builtinFuncs     []objects.Object
-	builtinModules   map[string]*objects.Object
+	builtinModules   map[string]objects.Object
 	userModuleLoader compiler.ModuleLoader
 	input            []byte
 	maxAllocs        int64
@@ -41,7 +41,7 @@ func (s *Script) Add(name string, value interface{}) error {
 
 	s.variables[name] = &Variable{
 		name:  name,
-		value: &obj,
+		value: obj,
 	}
 
 	return nil
@@ -74,12 +74,12 @@ func (s *Script) SetBuiltinFunctions(funcs []*objects.BuiltinFunction) {
 // SetBuiltinModules allows to define builtin modules.
 func (s *Script) SetBuiltinModules(modules map[string]*objects.ImmutableMap) {
 	if modules != nil {
-		s.builtinModules = make(map[string]*objects.Object, len(modules))
+		s.builtinModules = make(map[string]objects.Object, len(modules))
 		for k, mod := range modules {
-			s.builtinModules[k] = objectPtr(mod)
+			s.builtinModules[k] = mod
 		}
 	} else {
-		s.builtinModules = map[string]*objects.Object{}
+		s.builtinModules = map[string]objects.Object{}
 	}
 }
 
@@ -184,7 +184,7 @@ func (s *Script) RunContext(ctx context.Context) (compiled *Compiled, err error)
 	return
 }
 
-func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, builtinModules map[string]bool, globals []*objects.Object, err error) {
+func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, builtinModules map[string]bool, globals []objects.Object, err error) {
 	var names []string
 	for name := range s.variables {
 		names = append(names, name)
@@ -203,7 +203,7 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, builtinModule
 	}
 
 	if s.builtinModules == nil {
-		s.builtinModules = make(map[string]*objects.Object)
+		s.builtinModules = make(map[string]objects.Object)
 	}
 
 	for idx, fn := range s.builtinFuncs {
@@ -216,7 +216,7 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, builtinModule
 		builtinModules[name] = true
 	}
 
-	globals = make([]*objects.Object, runtime.GlobalsSize, runtime.GlobalsSize)
+	globals = make([]objects.Object, runtime.GlobalsSize)
 
 	for idx, name := range names {
 		symbol := symbolTable.Define(name)
@@ -237,8 +237,4 @@ func (s *Script) copyVariables() map[string]*Variable {
 	}
 
 	return vars
-}
-
-func objectPtr(o objects.Object) *objects.Object {
-	return &o
 }

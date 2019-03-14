@@ -117,6 +117,19 @@ out = f1();`, 3)
 	`, 8)
 
 	expect(t, `
+    out = func() {
+        f1 := func() {
+            a := 5
+            add1 := func() { a += 1 }
+            add2 := func() { a += 2 }
+            a += 3
+            return func() { a += 4; add1(); add2(); a += 5; return a }
+        }
+        return f1()
+    }()()
+    `, 20)
+
+	expect(t, `
 		it := func(seq, fn) {
 			fn(seq[0])
 			fn(seq[1])
