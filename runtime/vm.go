@@ -207,7 +207,7 @@ func (v *VM) run() {
 				return
 			}
 
-			if (left).Equals(right) {
+			if left.Equals(right) {
 				v.stack[v.sp] = truePtr
 			} else {
 				v.stack[v.sp] = falsePtr
@@ -224,7 +224,7 @@ func (v *VM) run() {
 				return
 			}
 
-			if (left).Equals(right) {
+			if left.Equals(right) {
 				v.stack[v.sp] = falsePtr
 			} else {
 				v.stack[v.sp] = truePtr
@@ -261,7 +261,7 @@ func (v *VM) run() {
 				return
 			}
 
-			if (operand).IsFalsy() {
+			if operand.IsFalsy() {
 				v.stack[v.sp] = truePtr
 			} else {
 				v.stack[v.sp] = falsePtr
@@ -272,7 +272,7 @@ func (v *VM) run() {
 			operand := v.stack[v.sp-1]
 			v.sp--
 
-			switch x := (operand).(type) {
+			switch x := operand.(type) {
 			case *objects.Int:
 				if v.sp >= StackSize {
 					v.err = ErrStackOverflow
@@ -290,7 +290,7 @@ func (v *VM) run() {
 				v.stack[v.sp] = res
 				v.sp++
 			default:
-				v.err = fmt.Errorf("invalid operation: ^%s", (operand).TypeName())
+				v.err = fmt.Errorf("invalid operation: ^%s", operand.TypeName())
 				return
 			}
 
@@ -298,7 +298,7 @@ func (v *VM) run() {
 			operand := v.stack[v.sp-1]
 			v.sp--
 
-			switch x := (operand).(type) {
+			switch x := operand.(type) {
 			case *objects.Int:
 				if v.sp >= StackSize {
 					v.err = ErrStackOverflow
@@ -332,7 +332,7 @@ func (v *VM) run() {
 				v.stack[v.sp] = res
 				v.sp++
 			default:
-				v.err = fmt.Errorf("invalid operation: -%s", (operand).TypeName())
+				v.err = fmt.Errorf("invalid operation: -%s", operand.TypeName())
 				return
 			}
 
@@ -343,7 +343,7 @@ func (v *VM) run() {
 			condition := v.stack[v.sp-1]
 			v.sp--
 
-			if (condition).IsFalsy() {
+			if condition.IsFalsy() {
 				v.ip = pos - 1
 			}
 
@@ -488,7 +488,7 @@ func (v *VM) run() {
 		case compiler.OpImmutable:
 			value := v.stack[v.sp-1]
 
-			switch value := (value).(type) {
+			switch value := value.(type) {
 			case *objects.Array:
 				var immutableArray objects.Object = &objects.ImmutableArray{
 					Value: value.Value,
@@ -520,13 +520,13 @@ func (v *VM) run() {
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			switch left := (left).(type) {
+			switch left := left.(type) {
 			case objects.Indexable:
 				val, e := left.IndexGet(index)
 				if e != nil {
 
 					if e == objects.ErrInvalidIndexType {
-						v.err = fmt.Errorf("invalid index type: %s", (index).TypeName())
+						v.err = fmt.Errorf("invalid index type: %s", index.TypeName())
 						return
 					}
 
@@ -546,7 +546,7 @@ func (v *VM) run() {
 				v.sp++
 
 			case *objects.Error: // e.value
-				key, ok := (index).(*objects.String)
+				key, ok := index.(*objects.String)
 				if !ok || key.Value != "value" {
 					v.err = fmt.Errorf("invalid index on error")
 					return
@@ -573,7 +573,7 @@ func (v *VM) run() {
 
 			var lowIdx int64
 			if low != objects.UndefinedValue {
-				if low, ok := (low).(*objects.Int); ok {
+				if low, ok := low.(*objects.Int); ok {
 					lowIdx = low.Value
 				} else {
 					v.err = fmt.Errorf("invalid slice index type: %s", low.TypeName())
@@ -581,13 +581,13 @@ func (v *VM) run() {
 				}
 			}
 
-			switch left := (left).(type) {
+			switch left := left.(type) {
 			case *objects.Array:
 				numElements := int64(len(left.Value))
 				var highIdx int64
 				if high == objects.UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := (high).(*objects.Int); ok {
+				} else if high, ok := high.(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
 					v.err = fmt.Errorf("invalid slice index type: %s", high.TypeName())
@@ -632,7 +632,7 @@ func (v *VM) run() {
 				var highIdx int64
 				if high == objects.UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := (high).(*objects.Int); ok {
+				} else if high, ok := high.(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
 					v.err = fmt.Errorf("invalid slice index type: %s", high.TypeName())
@@ -677,7 +677,7 @@ func (v *VM) run() {
 				var highIdx int64
 				if high == objects.UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := (high).(*objects.Int); ok {
+				} else if high, ok := high.(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
 					v.err = fmt.Errorf("invalid slice index type: %s", high.TypeName())
@@ -722,7 +722,7 @@ func (v *VM) run() {
 				var highIdx int64
 				if high == objects.UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := (high).(*objects.Int); ok {
+				} else if high, ok := high.(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
 					v.err = fmt.Errorf("invalid slice index type: %s", high.TypeName())
@@ -1013,7 +1013,7 @@ func (v *VM) run() {
 			val := v.stack[v.sp-1]
 			v.sp--
 
-			moduleName := (val).(*objects.String).Value
+			moduleName := val.(*objects.String).Value
 
 			module, ok := v.builtinModules[moduleName]
 			if !ok {
@@ -1167,9 +1167,9 @@ func (v *VM) run() {
 			dst := v.stack[v.sp-1]
 			v.sp--
 
-			iterable, ok := (dst).(objects.Iterable)
+			iterable, ok := dst.(objects.Iterable)
 			if !ok {
-				v.err = fmt.Errorf("not iterable: %s", (dst).TypeName())
+				v.err = fmt.Errorf("not iterable: %s", dst.TypeName())
 				return
 			}
 
@@ -1193,7 +1193,7 @@ func (v *VM) run() {
 			iterator := v.stack[v.sp-1]
 			v.sp--
 
-			hasMore := (iterator).(objects.Iterator).Next()
+			hasMore := iterator.(objects.Iterator).Next()
 
 			if v.sp >= StackSize {
 				v.err = ErrStackOverflow
@@ -1211,7 +1211,7 @@ func (v *VM) run() {
 			iterator := v.stack[v.sp-1]
 			v.sp--
 
-			val := (iterator).(objects.Iterator).Key()
+			val := iterator.(objects.Iterator).Key()
 
 			if v.sp >= StackSize {
 				v.err = ErrStackOverflow
@@ -1225,7 +1225,7 @@ func (v *VM) run() {
 			iterator := v.stack[v.sp-1]
 			v.sp--
 
-			val := (iterator).(objects.Iterator).Value()
+			val := iterator.(objects.Iterator).Value()
 
 			if v.sp >= StackSize {
 				v.err = ErrStackOverflow
@@ -1258,7 +1258,7 @@ func indexAssign(dst, src objects.Object, selectors []objects.Object) error {
 		next, err := indexable.IndexGet(selectors[sidx])
 		if err != nil {
 			if err == objects.ErrInvalidIndexType {
-				return fmt.Errorf("invalid index type: %s", (selectors[sidx]).TypeName())
+				return fmt.Errorf("invalid index type: %s", selectors[sidx].TypeName())
 			}
 
 			return err
@@ -1287,14 +1287,14 @@ func (v *VM) binaryOp(tok token.Token) {
 	right := v.stack[v.sp-1]
 	left := v.stack[v.sp-2]
 
-	res, e := (left).BinaryOp(tok, right)
+	res, e := left.BinaryOp(tok, right)
 	if e != nil {
 		v.sp -= 2
 		atomic.StoreInt64(&v.aborting, 1)
 
 		if e == objects.ErrInvalidOperator {
 			v.err = fmt.Errorf("invalid operation: %s + %s",
-				(left).TypeName(), (right).TypeName())
+				left.TypeName(), right.TypeName())
 			return
 		}
 
