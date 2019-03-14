@@ -216,7 +216,7 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, builtinModule
 		builtinModules[name] = true
 	}
 
-	globals = make([]objects.Object, runtime.GlobalsSize, runtime.GlobalsSize)
+	globals = make([]objects.Object, runtime.GlobalsSize)
 
 	for idx, name := range names {
 		symbol := symbolTable.Define(name)
