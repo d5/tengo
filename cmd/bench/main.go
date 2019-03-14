@@ -206,7 +206,7 @@ func compileFile(file *ast.File) (time.Duration, *compiler.Bytecode, error) {
 }
 
 func runVM(bytecode *compiler.Bytecode) (time.Duration, objects.Object, error) {
-	globals := make([]*objects.Object, runtime.GlobalsSize)
+	globals := make([]objects.Object, runtime.GlobalsSize)
 
 	start := time.Now()
 
@@ -215,5 +215,5 @@ func runVM(bytecode *compiler.Bytecode) (time.Duration, objects.Object, error) {
 		return time.Since(start), nil, err
 	}
 
-	return time.Since(start), *globals[0], nil
+	return time.Since(start), globals[0], nil
 }

@@ -15,9 +15,9 @@ import (
 type Compiled struct {
 	globalIndexes    map[string]int // global symbol name to index
 	bytecode         *compiler.Bytecode
-	globals          []*objects.Object
+	globals          []objects.Object
 	builtinFunctions []objects.Object
-	builtinModules   map[string]*objects.Object
+	builtinModules   map[string]objects.Object
 	maxAllocs        int64
 	lock             sync.RWMutex
 }
@@ -65,7 +65,7 @@ func (c *Compiled) Clone() *Compiled {
 	clone := &Compiled{
 		globalIndexes:    c.globalIndexes,
 		bytecode:         c.bytecode,
-		globals:          make([]*objects.Object, len(c.globals)),
+		globals:          make([]objects.Object, len(c.globals)),
 		builtinFunctions: c.builtinFunctions,
 		builtinModules:   c.builtinModules,
 		maxAllocs:        c.maxAllocs,
@@ -74,7 +74,7 @@ func (c *Compiled) Clone() *Compiled {
 	// copy global objects
 	for idx, g := range c.globals {
 		if g != nil {
-			clone.globals[idx] = objectPtr((*g).Copy())
+			clone.globals[idx] = g
 		}
 	}
 
@@ -96,7 +96,7 @@ func (c *Compiled) IsDefined(name string) bool {
 		return false
 	}
 
-	return *v != objects.UndefinedValue
+	return v != objects.UndefinedValue
 }
 
 // Get returns a variable identified by the name.
@@ -104,12 +104,12 @@ func (c *Compiled) Get(name string) *Variable {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	value := &objects.UndefinedValue
+	value := objects.UndefinedValue
 
 	if idx, ok := c.globalIndexes[name]; ok {
 		value = c.globals[idx]
 		if value == nil {
-			value = &objects.UndefinedValue
+			value = objects.UndefinedValue
 		}
 	}
 
@@ -129,7 +129,7 @@ func (c *Compiled) GetAll() []*Variable {
 	for name, idx := range c.globalIndexes {
 		value := c.globals[idx]
 		if value == nil {
-			value = &objects.UndefinedValue
+			value = objects.UndefinedValue
 		}
 
 		vars = append(vars, &Variable{
@@ -157,7 +157,7 @@ func (c *Compiled) Set(name string, value interface{}) error {
 		return fmt.Errorf("'%s' is not defined", name)
 	}
 
-	c.globals[idx] = &obj
+	c.globals[idx] = obj
 
 	return nil
 }

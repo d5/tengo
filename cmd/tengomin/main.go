@@ -179,7 +179,7 @@ func runREPL(in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
 
 	fileSet := source.NewFileSet()
-	globals := make([]*objects.Object, runtime.GlobalsSize)
+	globals := make([]objects.Object, runtime.GlobalsSize)
 
 	symbolTable := compiler.NewSymbolTable()
 	for idx, fn := range objects.Builtins {

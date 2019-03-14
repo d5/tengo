@@ -32,7 +32,7 @@ type VM struct {
 	constants      []objects.Object
 	stack          []objects.Object
 	sp             int
-	globals        []*objects.Object
+	globals        []objects.Object
 	fileSet        *source.FileSet
 	frames         []Frame
 	framesIndex    int
@@ -42,7 +42,7 @@ type VM struct {
 	ip             int
 	aborting       int64
 	builtinFuncs   []objects.Object
-	builtinModules map[string]*objects.Object
+	builtinModules map[string]objects.Object
 	maxAllocs      int64
 	allocs         int64
 	err            error
@@ -50,13 +50,13 @@ type VM struct {
 }
 
 // NewVM creates a VM.
-func NewVM(bytecode *compiler.Bytecode, globals []*objects.Object, builtinFuncs []objects.Object, builtinModules map[string]*objects.Object, maxAllocs int64) *VM {
+func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, builtinFuncs []objects.Object, builtinModules map[string]objects.Object, maxAllocs int64) *VM {
 	if globals == nil {
-		globals = make([]*objects.Object, GlobalsSize)
+		globals = make([]objects.Object, GlobalsSize)
 	}
 
 	if builtinModules == nil {
-		builtinModules = make(map[string]*objects.Object)
+		builtinModules = make(map[string]objects.Object)
 	}
 
 	if builtinFuncs == nil {
@@ -380,7 +380,7 @@ func (v *VM) run() {
 			v.sp--
 
 			obj := v.stack[v.sp]
-			v.globals[globalIndex] = &obj
+			v.globals[globalIndex] = obj
 
 		case compiler.OpSetSelGlobal:
 			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
@@ -388,16 +388,15 @@ func (v *VM) run() {
 			v.ip += 3
 
 			// selectors and RHS value
-			selectors := make([]*objects.Object, numSelectors)
+			selectors := make([]objects.Object, numSelectors)
 			for i := 0; i < numSelectors; i++ {
-				obj := v.stack[v.sp-numSelectors+i]
-				selectors[i] = &obj
+				selectors[i] = v.stack[v.sp-numSelectors+i]
 			}
 
 			val := v.stack[v.sp-numSelectors-1]
 			v.sp -= numSelectors + 1
 
-			if e := indexAssign(v.globals[globalIndex], &val, selectors); e != nil {
+			if e := indexAssign(v.globals[globalIndex], val, selectors); e != nil {
 				v.errOffset = 3
 				v.err = e
 				return
@@ -414,7 +413,7 @@ func (v *VM) run() {
 				return
 			}
 
-			v.stack[v.sp] = *val
+			v.stack[v.sp] = val
 			v.sp++
 
 		case compiler.OpArray:
@@ -964,10 +963,9 @@ func (v *VM) run() {
 			v.ip += 2
 
 			// selectors and RHS value
-			selectors := make([]*objects.Object, numSelectors)
+			selectors := make([]objects.Object, numSelectors)
 			for i := 0; i < numSelectors; i++ {
-				obj := v.stack[v.sp-numSelectors+i]
-				selectors[i] = &obj
+				selectors[i] = v.stack[v.sp-numSelectors+i]
 			}
 
 			val := v.stack[v.sp-numSelectors-1]
@@ -975,7 +973,7 @@ func (v *VM) run() {
 
 			sp := v.curFrame.basePointer + localIndex
 
-			if e := indexAssign(&v.stack[sp], &val, selectors); e != nil {
+			if e := indexAssign(v.stack[sp], val, selectors); e != nil {
 				v.errOffset = 2
 				v.err = e
 				return
@@ -1029,7 +1027,7 @@ func (v *VM) run() {
 				return
 			}
 
-			v.stack[v.sp] = *module
+			v.stack[v.sp] = module
 			v.sp++
 
 		case compiler.OpClosure:
@@ -1150,15 +1148,14 @@ func (v *VM) run() {
 			v.ip += 2
 
 			// selectors and RHS value
-			selectors := make([]*objects.Object, numSelectors)
+			selectors := make([]objects.Object, numSelectors)
 			for i := 0; i < numSelectors; i++ {
-				obj := v.stack[v.sp-numSelectors+i]
-				selectors[i] = &obj
+				selectors[i] = v.stack[v.sp-numSelectors+i]
 			}
 			val := v.stack[v.sp-numSelectors-1]
 			v.sp -= numSelectors + 1
 
-			if e := indexAssign(v.curFrame.freeVars[freeIndex].Value, &val, selectors); e != nil {
+			if e := indexAssign(*v.curFrame.freeVars[freeIndex].Value, val, selectors); e != nil {
 				v.errOffset = 2
 				v.err = e
 				return
@@ -1245,39 +1242,39 @@ func (v *VM) run() {
 }
 
 // Globals returns the global variables.
-func (v *VM) Globals() []*objects.Object {
+func (v *VM) Globals() []objects.Object {
 	return v.globals
 }
 
-func indexAssign(dst, src *objects.Object, selectors []*objects.Object) error {
+func indexAssign(dst, src objects.Object, selectors []objects.Object) error {
 	numSel := len(selectors)
 
 	for sidx := numSel - 1; sidx > 0; sidx-- {
-		indexable, ok := (*dst).(objects.Indexable)
+		indexable, ok := dst.(objects.Indexable)
 		if !ok {
-			return fmt.Errorf("not indexable: %s", (*dst).TypeName())
+			return fmt.Errorf("not indexable: %s", dst.TypeName())
 		}
 
-		next, err := indexable.IndexGet(*selectors[sidx])
+		next, err := indexable.IndexGet(selectors[sidx])
 		if err != nil {
 			if err == objects.ErrInvalidIndexType {
-				return fmt.Errorf("invalid index type: %s", (*selectors[sidx]).TypeName())
+				return fmt.Errorf("invalid index type: %s", (selectors[sidx]).TypeName())
 			}
 
 			return err
 		}
 
-		dst = &next
+		dst = next
 	}
 
-	indexAssignable, ok := (*dst).(objects.IndexAssignable)
+	indexAssignable, ok := dst.(objects.IndexAssignable)
 	if !ok {
-		return fmt.Errorf("not index-assignable: %s", (*dst).TypeName())
+		return fmt.Errorf("not index-assignable: %s", dst.TypeName())
 	}
 
-	if err := indexAssignable.IndexSet(*selectors[0], *src); err != nil {
+	if err := indexAssignable.IndexSet(selectors[0], src); err != nil {
 		if err == objects.ErrInvalidIndexValueType {
-			return fmt.Errorf("invaid index value type: %s", (*src).TypeName())
+			return fmt.Errorf("invaid index value type: %s", src.TypeName())
 		}
 
 		return err
