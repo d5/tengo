@@ -21,12 +21,6 @@ const (
 	MaxFrames = 1024
 )
 
-var (
-	truePtr      = objects.TrueValue
-	falsePtr     = objects.FalseValue
-	undefinedPtr = objects.UndefinedValue
-)
-
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
 	constants      []objects.Object
@@ -155,7 +149,7 @@ func (v *VM) run() {
 				return
 			}
 
-			v.stack[v.sp] = undefinedPtr
+			v.stack[v.sp] = objects.UndefinedValue
 			v.sp++
 
 		case compiler.OpAdd:
@@ -208,9 +202,9 @@ func (v *VM) run() {
 			}
 
 			if left.Equals(right) {
-				v.stack[v.sp] = truePtr
+				v.stack[v.sp] = objects.TrueValue
 			} else {
-				v.stack[v.sp] = falsePtr
+				v.stack[v.sp] = objects.FalseValue
 			}
 			v.sp++
 
@@ -225,9 +219,9 @@ func (v *VM) run() {
 			}
 
 			if left.Equals(right) {
-				v.stack[v.sp] = falsePtr
+				v.stack[v.sp] = objects.FalseValue
 			} else {
-				v.stack[v.sp] = truePtr
+				v.stack[v.sp] = objects.TrueValue
 			}
 			v.sp++
 
@@ -240,7 +234,7 @@ func (v *VM) run() {
 				return
 			}
 
-			v.stack[v.sp] = truePtr
+			v.stack[v.sp] = objects.TrueValue
 			v.sp++
 
 		case compiler.OpFalse:
@@ -249,7 +243,7 @@ func (v *VM) run() {
 				return
 			}
 
-			v.stack[v.sp] = falsePtr
+			v.stack[v.sp] = objects.FalseValue
 			v.sp++
 
 		case compiler.OpLNot:
@@ -262,9 +256,9 @@ func (v *VM) run() {
 			}
 
 			if operand.IsFalsy() {
-				v.stack[v.sp] = truePtr
+				v.stack[v.sp] = objects.TrueValue
 			} else {
-				v.stack[v.sp] = falsePtr
+				v.stack[v.sp] = objects.FalseValue
 			}
 			v.sp++
 
@@ -921,7 +915,7 @@ func (v *VM) run() {
 			v.sp = lastFrame.basePointer
 
 			// skip stack overflow check because (newSP) <= (oldSP)
-			v.stack[v.sp-1] = undefinedPtr
+			v.stack[v.sp-1] = objects.UndefinedValue
 			//v.sp++
 
 		case compiler.OpDefineLocal:
@@ -1188,9 +1182,9 @@ func (v *VM) run() {
 			}
 
 			if hasMore {
-				v.stack[v.sp] = truePtr
+				v.stack[v.sp] = objects.TrueValue
 			} else {
-				v.stack[v.sp] = falsePtr
+				v.stack[v.sp] = objects.FalseValue
 			}
 			v.sp++
 
