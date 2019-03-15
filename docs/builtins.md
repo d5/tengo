@@ -9,9 +9,7 @@ v := [1, 2, 3]
 print(v)  // "[1, 2, 3]"
 
 print(1, 2, 3)
-// "1"
-// "2"
-// "3"
+// "123"
 ```
 
 ## println
@@ -20,9 +18,9 @@ Prints a string representation of the given variable to the standard output with
 
 ```golang
 v := [1, 2, 3]
-print(v)  // "[1, 2, 3]"
+println(v)  // "[1, 2, 3]"
 
-print(1, 2, 3)
+println(1, 2, 3)
 // "1"
 // "2"
 // "3"
