@@ -25,14 +25,24 @@ const (
 )
 
 var (
+	//Compile output file
 	CompileOutput  string
+
+	//Show help flag
 	ShowHelp       bool
+
+	//Show version flag
 	ShowVersion    bool
+
+	//Builtin modules
 	BuiltinModules map[string]objects.Object
+
 	bm             map[string]bool
+	
 	version        = "dev"
 )
 
+//Run REPL
 func Run() {
 	if ShowHelp {
 		doHelp()
