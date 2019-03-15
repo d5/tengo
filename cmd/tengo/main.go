@@ -35,9 +35,11 @@ func main() {
 		builtinModules[k] = mod
 	}
 
-	repl.ShowHelp = showHelp
-	repl.ShowVersion = showVersion
-	repl.CompileOutput = compileOutput
-	repl.BuiltinModules = builtinModules
-	repl.Run()
+	repl.Run(&repl.Options {
+		ShowHelp: showHelp,
+		ShowVersion: showVersion,
+		CompileOutput: compileOutput,
+	 	BuiltinModules: builtinModules,
+		InputFile: flag.Arg(0),
+	})
 }

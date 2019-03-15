@@ -3,7 +3,6 @@ package repl
 import (
 	"bufio"
 	"bytes"
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -24,7 +23,8 @@ const (
 	replPrompt    = ">> "
 )
 
-var (
+
+type Options struct {
 	//Compile output file
 	CompileOutput  string
 
@@ -34,49 +34,54 @@ var (
 	//Show version flag
 	ShowVersion    bool
 
+	//Input file
+	InputFile      string
+
 	//Builtin modules
 	BuiltinModules map[string]objects.Object
+}
 
+var (
 	bm             map[string]bool
-	
+	builtinModules map[string]objects.Object
 	version        = "dev"
 )
 
 //Run REPL
-func Run() {
-	if ShowHelp {
+func Run(options *Options) {
+	if options.ShowHelp {
 		doHelp()
 		os.Exit(2)
-	} else if ShowVersion {
+	} else if options.ShowVersion {
 		fmt.Println(version)
 		return
 	}
 
-	bm = make(map[string]bool, len(BuiltinModules))
-	for k := range BuiltinModules {
+	builtinModules = options.BuiltinModules
+	bm = make(map[string]bool, len(builtinModules))
+	for k := range builtinModules {
 		bm[k] = true
 	}
 
-	inputFile := flag.Arg(0)
-	if inputFile == "" {
+	if options.InputFile == "" {
 		// REPL
 		runREPL(os.Stdin, os.Stdout)
 		return
 	}
 
-	inputData, err := ioutil.ReadFile(inputFile)
+	inputData, err := ioutil.ReadFile(options.InputFile)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error reading input file: %s", err.Error())
 		os.Exit(1)
 	}
 
-	if CompileOutput != "" {
-		if err := compileOnly(inputData, inputFile, CompileOutput); err != nil {
+	if options.CompileOutput != "" {
+		if err := compileOnly(inputData, options.InputFile, options.CompileOutput); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
-	} else if filepath.Ext(inputFile) == sourceFileExt {
-		if err := compileAndRun(inputData, inputFile); err != nil {
+	} else if filepath.Ext(options.InputFile) == sourceFileExt {
+		if err := compileAndRun(inputData, options.InputFile); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
@@ -158,7 +163,7 @@ func compileAndRun(data []byte, inputFile string) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, BuiltinModules, -1)
+	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -175,7 +180,7 @@ func runCompiled(data []byte) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, BuiltinModules, -1)
+	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -226,7 +231,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		bytecode := c.Bytecode()
 
-		machine := runtime.NewVM(bytecode, globals, nil, BuiltinModules, -1)
+		machine := runtime.NewVM(bytecode, globals, nil, builtinModules, -1)
 		if err := machine.Run(); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue

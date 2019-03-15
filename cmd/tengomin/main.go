@@ -21,8 +21,10 @@ func init() {
 }
 
 func main() {
-	repl.ShowHelp = showHelp
-	repl.ShowVersion = showVersion
-	repl.CompileOutput = compileOutput
-	repl.Run()
+	repl.Run(&repl.Options {
+		ShowHelp: showHelp,
+		ShowVersion: showVersion,
+		CompileOutput: compileOutput,
+		InputFile: flag.Arg(0),
+	})
 }
