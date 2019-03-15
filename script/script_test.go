@@ -60,7 +60,7 @@ func TestScript_SetBuiltinFunctions(t *testing.T) {
 	compiledGet(t, c, "a", int64(3))
 
 	s = script.New([]byte(`a := len([1, 2, 3])`))
-	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[3]})
+	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[4]})
 	c, err = s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
@@ -83,7 +83,7 @@ func TestScript_SetBuiltinFunctions(t *testing.T) {
 		}
 		return nil, errors.New("module not found")
 	})
-	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[3]})
+	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[4]})
 	c, err = s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
