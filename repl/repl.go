@@ -24,6 +24,7 @@ const (
 )
 
 
+//REPL Options
 type Options struct {
 	//Compile output file
 	CompileOutput  string
