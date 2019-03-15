@@ -14,6 +14,20 @@ print(1, 2, 3)
 // "3"
 ```
 
+## println
+
+Prints a string representation of the given variable to the standard output with a newline appended.
+
+```golang
+v := [1, 2, 3]
+print(v)  // "[1, 2, 3]"
+
+print(1, 2, 3)
+// "1"
+// "2"
+// "3"
+```
+
 ## printf
 
 Prints a formatted string to the standard output. It does not append the newline character at the end. The first argument must a String object. It's same as Go's `fmt.Printf`.
