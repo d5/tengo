@@ -10,6 +10,19 @@ import (
 func builtinPrint(args ...Object) (Object, error) {
 	for _, arg := range args {
 		if str, ok := arg.(*String); ok {
+			fmt.Print(str.Value)
+		} else {
+			fmt.Print(arg.String())
+		}
+	}
+
+	return nil, nil
+}
+
+// print(args...)
+func builtinPrintln(args ...Object) (Object, error) {
+	for _, arg := range args {
+		if str, ok := arg.(*String); ok {
 			fmt.Println(str.Value)
 		} else {
 			fmt.Println(arg.String())
