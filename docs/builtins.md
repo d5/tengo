@@ -8,8 +8,7 @@ Prints a string representation of the given variable to the standard output.
 v := [1, 2, 3]
 print(v)  // "[1, 2, 3]"
 
-print(1, 2, 3)
-// "123"
+print(1, 2, 3)  // "123"
 ```
 
 ## println
