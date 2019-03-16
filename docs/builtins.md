@@ -2,16 +2,24 @@
 
 ## print
 
-Prints a string representation of the given variable to the standard output.
+Prints a string representation of the given variable to the standard output. No spaces are added between the operands.
 
 ```golang
 v := [1, 2, 3]
 print(v)  // "[1, 2, 3]"
 
-print(1, 2, 3)
-// "1"
-// "2"
-// "3"
+print(1, 2, 3)  // "123"
+```
+
+## println
+
+Prints a string representation of the given variable to the standard output with a newline appended. No spaces are added between the operands.
+
+```golang
+v := [1, 2, 3]
+println(v)  // "[1, 2, 3]"
+
+println(1, 2, 3)  // "123" newline
 ```
 
 ## printf
