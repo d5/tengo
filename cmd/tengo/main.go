@@ -3,23 +3,16 @@ package main
 import (
 	"flag"
 
-	"github.com/d5/tengo/repl"
-	"github.com/d5/tengo/stdlib"
+	"github.com/d5/tengo/cli"
 	"github.com/d5/tengo/objects"
-)
-
-const (
-	sourceFileExt = ".tengo"
-	replPrompt    = ">> "
+	"github.com/d5/tengo/stdlib"
 )
 
 var (
-	compileOutput  string
-	showHelp       bool
-	showVersion    bool
-	version        = "dev"
-	bm             map[string]bool
-	builtinModules map[string]objects.Object
+	compileOutput string
+	showHelp      bool
+	showVersion   bool
+	version       = "dev"
 )
 
 func init() {
@@ -30,16 +23,17 @@ func init() {
 }
 
 func main() {
-	builtinModules = make(map[string]objects.Object, len(stdlib.Modules))
+	builtinModules := make(map[string]objects.Object, len(stdlib.Modules))
 	for k, mod := range stdlib.Modules {
 		builtinModules[k] = mod
 	}
 
-	repl.Run(&repl.Options {
-		ShowHelp: showHelp,
-		ShowVersion: showVersion,
-		CompileOutput: compileOutput,
-	 	BuiltinModules: builtinModules,
-		InputFile: flag.Arg(0),
+	cli.Run(&cli.Options{
+		ShowHelp:       showHelp,
+		ShowVersion:    showVersion,
+		Version:        version,
+		CompileOutput:  compileOutput,
+		BuiltinModules: builtinModules,
+		InputFile:      flag.Arg(0),
 	})
 }

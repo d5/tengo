@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	
-	"github.com/d5/tengo/repl"
+
+	"github.com/d5/tengo/cli"
 )
 
 var (
@@ -21,10 +21,11 @@ func init() {
 }
 
 func main() {
-	repl.Run(&repl.Options {
-		ShowHelp: showHelp,
-		ShowVersion: showVersion,
+	cli.Run(&cli.Options{
+		ShowHelp:      showHelp,
+		ShowVersion:   showVersion,
+		Version:       version,
 		CompileOutput: compileOutput,
-		InputFile: flag.Arg(0),
+		InputFile:     flag.Arg(0),
 	})
 }

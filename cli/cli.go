@@ -1,4 +1,4 @@
-package repl
+package cli
 
 import (
 	"bufio"
@@ -23,20 +23,22 @@ const (
 	replPrompt    = ">> "
 )
 
-
 //Options represent REPL options
 type Options struct {
 	//Compile output file
-	CompileOutput  string
+	CompileOutput string
 
 	//Show help flag
-	ShowHelp       bool
+	ShowHelp bool
 
 	//Show version flag
-	ShowVersion    bool
+	ShowVersion bool
 
 	//Input file
-	InputFile      string
+	InputFile string
+
+	//Version
+	Version string
 
 	//Builtin modules
 	BuiltinModules map[string]objects.Object
@@ -45,7 +47,6 @@ type Options struct {
 var (
 	bm             map[string]bool
 	builtinModules map[string]objects.Object
-	version        = "dev"
 )
 
 //Run REPL
@@ -54,7 +55,7 @@ func Run(options *Options) {
 		doHelp()
 		os.Exit(2)
 	} else if options.ShowVersion {
-		fmt.Println(version)
+		fmt.Println(options.Version)
 		return
 	}
 
