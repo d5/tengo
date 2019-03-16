@@ -6,28 +6,45 @@ import (
 	"github.com/d5/tengo"
 )
 
+func getPrintArgs(args ...Object) ([]string, error) {
+	var printArgs []string
+	l := 0
+	for _, arg := range args {
+		s, _ := ToString(arg)
+		slen := len(s)
+		if l+slen > tengo.MaxStringLen { // make sure length does not exceed the limit
+			return nil, ErrStringLimit
+		}
+		l += slen
+
+		printArgs = append(printArgs, s)
+	}
+
+	return printArgs, nil
+}
+
 // print(args...)
 func builtinPrint(args ...Object) (Object, error) {
-	for _, arg := range args {
-		if str, ok := arg.(*String); ok {
-			fmt.Print(str.Value)
-		} else {
-			fmt.Print(arg.String())
-		}
+	printArgs, err := getPrintArgs(args...)
+	
+	if err != nil {
+		return nil, err
 	}
+
+	_, _ = fmt.Print(printArgs...)
 
 	return nil, nil
 }
 
-// print(args...)
+// println(args...)
 func builtinPrintln(args ...Object) (Object, error) {
-	for _, arg := range args {
-		if str, ok := arg.(*String); ok {
-			fmt.Println(str.Value)
-		} else {
-			fmt.Println(arg.String())
-		}
+	printArgs, err := getPrintArgs(args...)
+	
+	if err != nil {
+		return nil, err
 	}
+
+	_, _ = fmt.Println(printArgs...)
 
 	return nil, nil
 }

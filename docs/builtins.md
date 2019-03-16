@@ -19,10 +19,7 @@ Prints a string representation of the given variable to the standard output with
 v := [1, 2, 3]
 println(v)  // "[1, 2, 3]"
 
-println(1, 2, 3)
-// "1"
-// "2"
-// "3"
+print(1, 2, 3)  // "1 2 3" newline
 ```
 
 ## printf
