@@ -6,8 +6,8 @@ import (
 	"github.com/d5/tengo"
 )
 
-func getPrintArgs(args ...Object) ([]string, error) {
-	var printArgs []string
+func getPrintArgs(args ...Object) ([]interface{}, error) {
+	var printArgs []interface{}
 	l := 0
 	for _, arg := range args {
 		s, _ := ToString(arg)
