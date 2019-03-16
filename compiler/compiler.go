@@ -31,11 +31,6 @@ type Compiler struct {
 }
 
 // NewCompiler creates a Compiler.
-// User can optionally provide the symbol table if one wants to add or remove
-// some global- or builtin- scope symbols. If not (nil), Compile will create
-// a new symbol table and use the default builtin functions. Likewise, standard
-// modules can be explicitly provided if user wants to add or remove some modules.
-// By default, Compile will use all the standard modules otherwise.
 func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []objects.Object, builtinModules map[string]bool, trace io.Writer) *Compiler {
 	mainScope := CompilationScope{
 		symbolInit: make(map[string]bool),
@@ -45,10 +40,11 @@ func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []object
 	// symbol table
 	if symbolTable == nil {
 		symbolTable = NewSymbolTable()
+	}
 
-		for idx, fn := range objects.Builtins {
-			symbolTable.DefineBuiltin(idx, fn.Name)
-		}
+	// add builtin functions to the symbol table
+	for idx, fn := range objects.Builtins {
+		symbolTable.DefineBuiltin(idx, fn.Name)
 	}
 
 	// builtin modules
