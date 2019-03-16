@@ -11,6 +11,8 @@ var BuiltinModules = map[string]*objects.ImmutableMap{
 	"text":  {Value: textModule},
 	"times": {Value: timesModule},
 	"rand":  {Value: randModule},
+	"fmt":   {Value: fmtModule},
+	"json":  {Value: jsonModule},
 }
 
 // AllModuleNames returns a list of all default module names.
@@ -19,9 +21,9 @@ func AllModuleNames() []string {
 	for name := range BuiltinModules {
 		names = append(names, name)
 	}
-	for name := range CompiledModules {
-		names = append(names, name)
-	}
+	//for name := range CompiledModules {
+	//	names = append(names, name)
+	//}
 	return names
 }
 
@@ -30,7 +32,7 @@ func AllModuleNames() []string {
 func GetModules(names ...string) map[string]*objects.ImmutableMap {
 	modules := make(map[string]*objects.ImmutableMap)
 	for _, name := range names {
-		if mod := Modules[name]; mod != nil {
+		if mod := BuiltinModules[name]; mod != nil {
 			modules[name] = mod
 		}
 	}

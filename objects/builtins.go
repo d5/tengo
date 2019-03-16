@@ -4,22 +4,6 @@ package objects
 // Use GetBuiltinFunctions instead of accessing Builtins directly.
 var Builtins = []BuiltinFunction{
 	{
-		Name:  "print",
-		Value: builtinPrint,
-	},
-	{
-		Name:  "println",
-		Value: builtinPrintln,
-	},
-	{
-		Name:  "printf",
-		Value: builtinPrintf,
-	},
-	{
-		Name:  "sprintf",
-		Value: builtinSprintf,
-	},
-	{
 		Name:  "len",
 		Value: builtinLen,
 	},
@@ -118,14 +102,6 @@ var Builtins = []BuiltinFunction{
 	{
 		Name:  "is_callable",
 		Value: builtinIsCallable,
-	},
-	{
-		Name:  "to_json",
-		Value: builtinToJSON,
-	},
-	{
-		Name:  "from_json",
-		Value: builtinFromJSON,
 	},
 	{
 		Name:  "type_name",

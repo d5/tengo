@@ -18,11 +18,11 @@ type IMAP map[string]interface{}
 
 func TestAllModuleNames(t *testing.T) {
 	names := stdlib.AllModuleNames()
-	if !assert.Equal(t, len(stdlib.Modules), len(names)) {
+	if !assert.Equal(t, len(stdlib.BuiltinModules), len(names)) {
 		return
 	}
 	for _, name := range names {
-		assert.NotNil(t, stdlib.Modules[name], "name: %s", name)
+		assert.NotNil(t, stdlib.BuiltinModules[name], "name: %s", name)
 	}
 }
 
@@ -144,7 +144,7 @@ func (c callres) expectError() bool {
 }
 
 func module(t *testing.T, moduleName string) callres {
-	mod, ok := stdlib.Modules[moduleName]
+	mod, ok := stdlib.BuiltinModules[moduleName]
 	if !ok {
 		return callres{t: t, e: fmt.Errorf("module not found: %s", moduleName)}
 	}
@@ -219,7 +219,7 @@ func object(v interface{}) objects.Object {
 
 func expect(t *testing.T, input string, expected interface{}) {
 	s := script.New([]byte(input))
-	s.SetBuiltinModules(stdlib.Modules)
+	s.SetBuiltinModules(stdlib.BuiltinModules)
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
