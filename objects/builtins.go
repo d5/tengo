@@ -8,6 +8,10 @@ var Builtins = []BuiltinFunction{
 		Value: builtinPrint,
 	},
 	{
+		Name:  "println",
+		Value: builtinPrintln,
+	},
+	{
 		Name:  "printf",
 		Value: builtinPrintf,
 	},
