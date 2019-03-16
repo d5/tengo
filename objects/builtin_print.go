@@ -26,7 +26,6 @@ func getPrintArgs(args ...Object) ([]interface{}, error) {
 // print(args...)
 func builtinPrint(args ...Object) (Object, error) {
 	printArgs, err := getPrintArgs(args...)
-	
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +38,6 @@ func builtinPrint(args ...Object) (Object, error) {
 // println(args...)
 func builtinPrintln(args ...Object) (Object, error) {
 	printArgs, err := getPrintArgs(args...)
-	
 	if err != nil {
 		return nil, err
 	}
