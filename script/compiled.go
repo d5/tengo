@@ -13,13 +13,12 @@ import (
 // Compiled is a compiled instance of the user script.
 // Use Script.Compile() to create Compiled object.
 type Compiled struct {
-	globalIndexes    map[string]int // global symbol name to index
-	bytecode         *compiler.Bytecode
-	globals          []objects.Object
-	builtinFunctions []objects.Object
-	builtinModules   map[string]objects.Object
-	maxAllocs        int64
-	lock             sync.RWMutex
+	globalIndexes  map[string]int // global symbol name to index
+	bytecode       *compiler.Bytecode
+	globals        []objects.Object
+	builtinModules map[string]objects.Object
+	maxAllocs      int64
+	lock           sync.RWMutex
 }
 
 // Run executes the compiled script in the virtual machine.
@@ -27,7 +26,7 @@ func (c *Compiled) Run() error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	v := runtime.NewVM(c.bytecode, c.globals, c.builtinFunctions, c.builtinModules, c.maxAllocs)
+	v := runtime.NewVM(c.bytecode, c.globals, c.builtinModules, c.maxAllocs)
 
 	return v.Run()
 }
@@ -37,7 +36,7 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	v := runtime.NewVM(c.bytecode, c.globals, c.builtinFunctions, c.builtinModules, c.maxAllocs)
+	v := runtime.NewVM(c.bytecode, c.globals, c.builtinModules, c.maxAllocs)
 
 	ch := make(chan error, 1)
 
@@ -63,12 +62,11 @@ func (c *Compiled) Clone() *Compiled {
 	defer c.lock.Unlock()
 
 	clone := &Compiled{
-		globalIndexes:    c.globalIndexes,
-		bytecode:         c.bytecode,
-		globals:          make([]objects.Object, len(c.globals)),
-		builtinFunctions: c.builtinFunctions,
-		builtinModules:   c.builtinModules,
-		maxAllocs:        c.maxAllocs,
+		globalIndexes:  c.globalIndexes,
+		bytecode:       c.bytecode,
+		globals:        make([]objects.Object, len(c.globals)),
+		builtinModules: c.builtinModules,
+		maxAllocs:      c.maxAllocs,
 	}
 
 	// copy global objects

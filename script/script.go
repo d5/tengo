@@ -14,7 +14,6 @@ import (
 // Script can simplify compilation and execution of embedded scripts.
 type Script struct {
 	variables        map[string]*Variable
-	builtinFuncs     []objects.Object
 	builtinModules   map[string]objects.Object
 	userModuleLoader compiler.ModuleLoader
 	input            []byte
@@ -57,18 +56,6 @@ func (s *Script) Remove(name string) bool {
 	delete(s.variables, name)
 
 	return true
-}
-
-// SetBuiltinFunctions allows to define builtin functions.
-func (s *Script) SetBuiltinFunctions(funcs []*objects.BuiltinFunction) {
-	if funcs != nil {
-		s.builtinFuncs = make([]objects.Object, len(funcs))
-		for idx, fn := range funcs {
-			s.builtinFuncs[idx] = fn
-		}
-	} else {
-		s.builtinFuncs = []objects.Object{}
-	}
 }
 
 // SetBuiltinModules allows to define builtin modules.
@@ -150,12 +137,11 @@ func (s *Script) Compile() (*Compiled, error) {
 	}
 
 	return &Compiled{
-		globalIndexes:    globalIndexes,
-		bytecode:         bytecode,
-		globals:          globals,
-		builtinFunctions: s.builtinFuncs,
-		builtinModules:   s.builtinModules,
-		maxAllocs:        s.maxAllocs,
+		globalIndexes:  globalIndexes,
+		bytecode:       bytecode,
+		globals:        globals,
+		builtinModules: s.builtinModules,
+		maxAllocs:      s.maxAllocs,
 	}, nil
 }
 
@@ -191,24 +177,12 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, builtinModule
 	}
 
 	symbolTable = compiler.NewSymbolTable()
-
-	if s.builtinFuncs == nil {
-		s.builtinFuncs = make([]objects.Object, len(objects.Builtins))
-		for idx, fn := range objects.Builtins {
-			s.builtinFuncs[idx] = &objects.BuiltinFunction{
-				Name:  fn.Name,
-				Value: fn.Value,
-			}
-		}
+	for idx, fn := range objects.Builtins {
+		symbolTable.DefineBuiltin(idx, fn.Name)
 	}
 
 	if s.builtinModules == nil {
 		s.builtinModules = make(map[string]objects.Object)
-	}
-
-	for idx, fn := range s.builtinFuncs {
-		f := fn.(*objects.BuiltinFunction)
-		symbolTable.DefineBuiltin(idx, f.Name)
 	}
 
 	builtinModules = make(map[string]bool)

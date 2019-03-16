@@ -28,18 +28,6 @@ func TestScript_SetUserModuleLoader(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, int64(8), c.Get("out").Value())
 
-	// disabled builtin function
-	scr = script.New([]byte(`out := import("mod")`))
-	scr.SetUserModuleLoader(func(name string) ([]byte, error) {
-		return []byte(`export len([1, 2, 3])`), nil
-	})
-	c, err = scr.Run()
-	assert.NoError(t, err)
-	assert.Equal(t, int64(3), c.Get("out").Value())
-	scr.SetBuiltinFunctions(nil)
-	_, err = scr.Run()
-	assert.Error(t, err)
-
 	scr = script.New([]byte(`out := import("mod")`))
 	scr.SetBuiltinModules(map[string]*objects.ImmutableMap{
 		"text": objectPtr(&objects.ImmutableMap{

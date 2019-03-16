@@ -33,7 +33,7 @@ b += c
 a += b * 2
 
 arr := [a, b, c]
-arrstr := stringify(arr)
+arrstr := string(arr)
 map := {a: a, b: b, c: c}
 
 d := a + b + c
@@ -63,15 +63,6 @@ e := mod1.double(s)
 	_ = scr.Add("c", 0)
 	scr.SetBuiltinModules(map[string]*objects.ImmutableMap{
 		"mod1": mod1,
-	})
-	scr.SetBuiltinFunctions([]*objects.BuiltinFunction{
-		{
-			Name: "stringify",
-			Value: func(args ...objects.Object) (ret objects.Object, err error) {
-				ret = &objects.String{Value: args[0].String()}
-				return
-			},
-		},
 	})
 	compiled, err := scr.Compile()
 	assert.NoError(t, err)

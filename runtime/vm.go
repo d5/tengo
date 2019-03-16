@@ -35,7 +35,6 @@ type VM struct {
 	curIPLimit     int
 	ip             int
 	aborting       int64
-	builtinFuncs   []objects.Object
 	builtinModules map[string]objects.Object
 	maxAllocs      int64
 	allocs         int64
@@ -44,23 +43,13 @@ type VM struct {
 }
 
 // NewVM creates a VM.
-func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, builtinFuncs []objects.Object, builtinModules map[string]objects.Object, maxAllocs int64) *VM {
+func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, builtinModules map[string]objects.Object, maxAllocs int64) *VM {
 	if globals == nil {
 		globals = make([]objects.Object, GlobalsSize)
 	}
 
 	if builtinModules == nil {
 		builtinModules = make(map[string]objects.Object)
-	}
-
-	if builtinFuncs == nil {
-		builtinFuncs = make([]objects.Object, len(objects.Builtins))
-		for idx, fn := range objects.Builtins {
-			builtinFuncs[idx] = &objects.BuiltinFunction{
-				Name:  fn.Name,
-				Value: fn.Value,
-			}
-		}
 	}
 
 	frames := make([]Frame, MaxFrames)
@@ -79,7 +68,6 @@ func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, builtinFuncs [
 		curInsts:       frames[0].fn.Instructions,
 		curIPLimit:     len(frames[0].fn.Instructions) - 1,
 		ip:             -1,
-		builtinFuncs:   builtinFuncs,
 		builtinModules: builtinModules,
 		maxAllocs:      maxAllocs,
 	}
@@ -997,7 +985,7 @@ func (v *VM) run() {
 				return
 			}
 
-			v.stack[v.sp] = v.builtinFuncs[builtinIndex]
+			v.stack[v.sp] = objects.Builtins[builtinIndex]
 			v.sp++
 
 		case compiler.OpGetBuiltinModule:

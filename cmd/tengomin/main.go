@@ -148,7 +148,7 @@ func compileAndRun(data []byte, inputFile string) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, nil, -1)
+	machine := runtime.NewVM(bytecode, nil, nil, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -165,7 +165,7 @@ func runCompiled(data []byte) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, nil, -1)
+	machine := runtime.NewVM(bytecode, nil, nil, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -216,7 +216,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		bytecode := c.Bytecode()
 
-		machine := runtime.NewVM(bytecode, globals, nil, nil, -1)
+		machine := runtime.NewVM(bytecode, globals, nil, -1)
 		if err := machine.Run(); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue

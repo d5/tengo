@@ -50,9 +50,9 @@ func main() {
 		return
 	}
 
-	bm = make(map[string]bool, len(stdlib.Modules))
-	builtinModules = make(map[string]objects.Object, len(stdlib.Modules))
-	for k, mod := range stdlib.Modules {
+	bm = make(map[string]bool, len(stdlib.BuiltinModules))
+	builtinModules = make(map[string]objects.Object, len(stdlib.BuiltinModules))
+	for k, mod := range stdlib.BuiltinModules {
 		bm[k] = true
 		builtinModules[k] = mod
 	}
@@ -158,7 +158,7 @@ func compileAndRun(data []byte, inputFile string) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
+	machine := runtime.NewVM(bytecode, nil, builtinModules, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -175,7 +175,7 @@ func runCompiled(data []byte) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
+	machine := runtime.NewVM(bytecode, nil, builtinModules, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -226,7 +226,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		bytecode := c.Bytecode()
 
-		machine := runtime.NewVM(bytecode, globals, nil, builtinModules, -1)
+		machine := runtime.NewVM(bytecode, globals, builtinModules, -1)
 		if err := machine.Run(); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
