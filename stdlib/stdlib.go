@@ -1,20 +1,25 @@
 package stdlib
 
+//go:generate go run genmods.go
+
 import "github.com/d5/tengo/objects"
 
-// Modules contain the standard modules.
-var Modules = map[string]*objects.ImmutableMap{
-	"math":  &objects.ImmutableMap{Value: mathModule},
-	"os":    &objects.ImmutableMap{Value: osModule},
-	"text":  &objects.ImmutableMap{Value: textModule},
-	"times": &objects.ImmutableMap{Value: timesModule},
-	"rand":  &objects.ImmutableMap{Value: randModule},
+// BuiltinModules are builtin module standard libraries.
+var BuiltinModules = map[string]*objects.ImmutableMap{
+	"math":  {Value: mathModule},
+	"os":    {Value: osModule},
+	"text":  {Value: textModule},
+	"times": {Value: timesModule},
+	"rand":  {Value: randModule},
 }
 
 // AllModuleNames returns a list of all default module names.
 func AllModuleNames() []string {
 	var names []string
-	for name := range Modules {
+	for name := range BuiltinModules {
+		names = append(names, name)
+	}
+	for name := range CompiledModules {
 		names = append(names, name)
 	}
 	return names
