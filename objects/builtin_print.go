@@ -42,7 +42,8 @@ func builtinPrintln(args ...Object) (Object, error) {
 		return nil, err
 	}
 
-	_, _ = fmt.Println(printArgs...)
+	printArgs = append(printArgs, "\n")
+	_, _ = fmt.Print(printArgs...)
 
 	return nil, nil
 }
