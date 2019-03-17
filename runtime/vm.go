@@ -43,6 +43,7 @@ type VM struct {
 	errOffset      int
 }
 
+//Options represents VM options
 type Options struct {
 	Globals        []objects.Object
 	BuiltinFuncs   []objects.Object

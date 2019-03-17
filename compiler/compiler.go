@@ -30,6 +30,7 @@ type Compiler struct {
 	indent          int
 }
 
+//Options represents compiler options
 type Options struct {
 	SymbolTable    *SymbolTable
 	Constants      []objects.Object
