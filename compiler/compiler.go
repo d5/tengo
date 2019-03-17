@@ -49,6 +49,10 @@ func NewCompiler(file *source.File, options *Options) *Compiler {
 		sourceMap:  make(map[int]source.Pos),
 	}
 
+	if options == nil {
+		options = &Options{}
+	}
+
 	// symbol table
 	if options.SymbolTable == nil {
 		options.SymbolTable = NewSymbolTable()

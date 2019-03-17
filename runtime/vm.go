@@ -52,6 +52,12 @@ type Options struct {
 
 // NewVM creates a VM.
 func NewVM(bytecode *compiler.Bytecode, options *Options) *VM {
+	if options == nil {
+		options = &Options{
+			MaxAllocs: -1,
+		}
+	}
+
 	if options.Globals == nil {
 		options.Globals = make([]objects.Object, GlobalsSize)
 	}
