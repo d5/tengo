@@ -9,7 +9,7 @@ import (
 	"regexp"
 )
 
-var tengoModFileRE = regexp.MustCompile(`^mod_(\w+).tengo$`)
+var tengoModFileRE = regexp.MustCompile(`^srcmod_(\w+).tengo$`)
 
 func main() {
 	modules := make(map[string]string)
@@ -34,18 +34,20 @@ func main() {
 	}
 
 	var out bytes.Buffer
-	out.WriteString(`// Code generated using genmods.go; DO NOT EDIT.
+	out.WriteString(`// Code generated using gensrcmods.go; DO NOT EDIT.
 
 package stdlib
 
-// CompiledModules are Tengo-written standard libraries.
-var CompiledModules = map[string]string{` + "\n")
+import "github.com/d5/tengo/objects"
+
+// SourceModules are source type standard library modules.
+var SourceModules = map[string]*objects.SourceModule{` + "\n")
 	for modName, modSrc := range modules {
-		out.WriteString("\t\"" + modName + "\": `" + modSrc + "`,\n")
+		out.WriteString("\t\"" + modName + "\": {Src: []byte(`" + modSrc + "`)},\n")
 	}
 	out.WriteString("}\n")
 
-	const target = "compiled_modules.go"
+	const target = "source_modules.go"
 	if err := ioutil.WriteFile(target, out.Bytes(), 0644); err != nil {
 		log.Fatal(err)
 	}

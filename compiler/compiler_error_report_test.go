@@ -3,7 +3,7 @@ package compiler_test
 import "testing"
 
 func TestCompilerErrorReport(t *testing.T) {
-	expectError(t, `import("user1")`, "Compile Error: module file read error: open user1.tengo: no such file or directory\n\tat test:1:1")
+	expectError(t, `import("user1")`, "Compile Error: module 'user1' not found\n\tat test:1:1")
 
 	expectError(t, `a = 1`, "Compile Error: unresolved reference 'a'\n\tat test:1:1")
 	expectError(t, `a, b := 1, 2`, "Compile Error: tuple assignment not allowed\n\tat test:1:1")

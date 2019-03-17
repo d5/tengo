@@ -45,8 +45,8 @@ for i:=1; i<=d; i++ {
 
 e := mod1.double(s)
 `)
-	mod1 := &objects.ImmutableMap{
-		Value: map[string]objects.Object{
+	mod1 := &objects.BuiltinModule{
+		Attrs: map[string]objects.Object{
 			"double": &objects.UserFunction{
 				Value: func(args ...objects.Object) (ret objects.Object, err error) {
 					arg0, _ := objects.ToInt64(args[0])
@@ -61,7 +61,7 @@ e := mod1.double(s)
 	_ = scr.Add("a", 0)
 	_ = scr.Add("b", 0)
 	_ = scr.Add("c", 0)
-	scr.SetBuiltinModules(map[string]*objects.ImmutableMap{
+	scr.SetImports(map[string]objects.Importable{
 		"mod1": mod1,
 	})
 	compiled, err := scr.Compile()

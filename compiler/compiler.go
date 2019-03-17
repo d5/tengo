@@ -3,7 +3,10 @@ package compiler
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
+	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler/ast"
@@ -16,14 +19,14 @@ import (
 type Compiler struct {
 	file            *source.File
 	parent          *Compiler
-	moduleName      string
+	modulePath      string
 	constants       []objects.Object
 	symbolTable     *SymbolTable
 	scopes          []CompilationScope
 	scopeIndex      int
-	moduleLoader    ModuleLoader
-	builtinModules  map[string]bool
+	importModules   map[string]objects.Importable
 	compiledModules map[string]*objects.CompiledFunction
+	allowFileImport bool
 	loops           []*Loop
 	loopIndex       int
 	trace           io.Writer
@@ -31,7 +34,7 @@ type Compiler struct {
 }
 
 // NewCompiler creates a Compiler.
-func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []objects.Object, builtinModules map[string]bool, trace io.Writer) *Compiler {
+func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []objects.Object, importModules map[string]objects.Importable, trace io.Writer) *Compiler {
 	mainScope := CompilationScope{
 		symbolInit: make(map[string]bool),
 		sourceMap:  make(map[int]source.Pos),
@@ -48,8 +51,8 @@ func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []object
 	}
 
 	// builtin modules
-	if builtinModules == nil {
-		builtinModules = make(map[string]bool)
+	if importModules == nil {
+		importModules = make(map[string]objects.Importable)
 	}
 
 	return &Compiler{
@@ -60,7 +63,7 @@ func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []object
 		scopeIndex:      0,
 		loopIndex:       -1,
 		trace:           trace,
-		builtinModules:  builtinModules,
+		importModules:   importModules,
 		compiledModules: make(map[string]*objects.CompiledFunction),
 	}
 }
@@ -506,21 +509,53 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.emit(node, OpCall, len(node.Args))
 
 	case *ast.ImportExpr:
-		if c.builtinModules[node.ModuleName] {
-			if len(node.ModuleName) > tengo.MaxStringLen {
-				return c.error(node, objects.ErrStringLimit)
-			}
-
-			c.emit(node, OpConstant, c.addConstant(&objects.String{Value: node.ModuleName}))
-			c.emit(node, OpGetBuiltinModule)
-		} else {
-			userMod, err := c.compileModule(node)
+		if mod, ok := c.importModules[node.ModuleName]; ok {
+			v, err := mod.Import(node.ModuleName)
 			if err != nil {
 				return err
 			}
 
-			c.emit(node, OpConstant, c.addConstant(userMod))
+			switch v := v.(type) {
+			case []byte: // module written in Tengo
+				compiled, err := c.compileModule(node, node.ModuleName, node.ModuleName, v)
+				if err != nil {
+					return err
+				}
+				c.emit(node, OpConstant, c.addConstant(compiled))
+				c.emit(node, OpCall, 0)
+			case objects.Object: // builtin module
+				c.emit(node, OpConstant, c.addConstant(v))
+			default:
+				panic(fmt.Errorf("invalid import value type: %T", v))
+			}
+		} else if c.allowFileImport {
+			moduleName := node.ModuleName
+			if !strings.HasSuffix(moduleName, ".tengo") {
+				moduleName += ".tengo"
+			}
+
+			modulePath, err := filepath.Abs(moduleName)
+			if err != nil {
+				return c.errorf(node, "module file path error: %s", err.Error())
+			}
+
+			if err := c.checkCyclicImports(node, modulePath); err != nil {
+				return err
+			}
+
+			moduleSrc, err := ioutil.ReadFile(moduleName)
+			if err != nil {
+				return c.errorf(node, "module file read error: %s", err.Error())
+			}
+
+			compiled, err := c.compileModule(node, moduleName, modulePath, moduleSrc)
+			if err != nil {
+				return err
+			}
+			c.emit(node, OpConstant, c.addConstant(compiled))
 			c.emit(node, OpCall, 0)
+		} else {
+			return c.errorf(node, "module '%s' not found", node.ModuleName)
 		}
 
 	case *ast.ExportStmt:
@@ -598,18 +633,16 @@ func (c *Compiler) Bytecode() *Bytecode {
 	}
 }
 
-// SetModuleLoader sets or replaces the current module loader.
-// Note that the module loader is used for user modules,
-// not for the standard modules.
-func (c *Compiler) SetModuleLoader(moduleLoader ModuleLoader) {
-	c.moduleLoader = moduleLoader
+// EnableFileImport enables or disables module loading from local files.
+// Local file modules are disabled by default.
+func (c *Compiler) EnableFileImport(enable bool) {
+	c.allowFileImport = enable
 }
 
-func (c *Compiler) fork(file *source.File, moduleName string, symbolTable *SymbolTable) *Compiler {
-	child := NewCompiler(file, symbolTable, nil, c.builtinModules, c.trace)
-	child.moduleName = moduleName       // name of the module to compile
-	child.parent = c                    // parent to set to current compiler
-	child.moduleLoader = c.moduleLoader // share module loader
+func (c *Compiler) fork(file *source.File, modulePath string, symbolTable *SymbolTable) *Compiler {
+	child := NewCompiler(file, symbolTable, nil, c.importModules, c.trace)
+	child.modulePath = modulePath // module file path
+	child.parent = c              // parent to set to current compiler
 
 	return child
 }

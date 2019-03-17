@@ -13,12 +13,11 @@ import (
 
 // Script can simplify compilation and execution of embedded scripts.
 type Script struct {
-	variables        map[string]*Variable
-	builtinModules   map[string]objects.Object
-	userModuleLoader compiler.ModuleLoader
-	input            []byte
-	maxAllocs        int64
-	maxConstObjects  int
+	variables       map[string]*Variable
+	importModules   map[string]objects.Importable
+	input           []byte
+	maxAllocs       int64
+	maxConstObjects int
 }
 
 // New creates a Script instance with an input script.
@@ -58,21 +57,17 @@ func (s *Script) Remove(name string) bool {
 	return true
 }
 
-// SetBuiltinModules allows to define builtin modules.
-func (s *Script) SetBuiltinModules(modules map[string]*objects.ImmutableMap) {
-	if modules != nil {
-		s.builtinModules = make(map[string]objects.Object, len(modules))
-		for k, mod := range modules {
-			s.builtinModules[k] = mod
-		}
-	} else {
-		s.builtinModules = map[string]objects.Object{}
+// SetImports sets import modules.
+func (s *Script) SetImports(modules map[string]objects.Importable) {
+	if modules == nil {
+		s.importModules = map[string]objects.Importable{}
+		return
 	}
-}
 
-// SetUserModuleLoader sets the user module loader for the compiler.
-func (s *Script) SetUserModuleLoader(loader compiler.ModuleLoader) {
-	s.userModuleLoader = loader
+	s.importModules = make(map[string]objects.Importable, len(modules))
+	for k, mod := range modules {
+		s.importModules[k] = mod
+	}
 }
 
 // SetMaxAllocs sets the maximum number of objects allocations during the run time.
@@ -88,7 +83,7 @@ func (s *Script) SetMaxConstObjects(n int) {
 
 // Compile compiles the script with all the defined variables, and, returns Compiled object.
 func (s *Script) Compile() (*Compiled, error) {
-	symbolTable, builtinModules, globals, err := s.prepCompile()
+	symbolTable, globals, err := s.prepCompile()
 	if err != nil {
 		return nil, err
 	}
@@ -102,12 +97,7 @@ func (s *Script) Compile() (*Compiled, error) {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(srcFile, symbolTable, nil, builtinModules, nil)
-
-	if s.userModuleLoader != nil {
-		c.SetModuleLoader(s.userModuleLoader)
-	}
-
+	c := compiler.NewCompiler(srcFile, symbolTable, nil, s.importModules, nil)
 	if err := c.Compile(file); err != nil {
 		return nil, err
 	}
@@ -137,11 +127,10 @@ func (s *Script) Compile() (*Compiled, error) {
 	}
 
 	return &Compiled{
-		globalIndexes:  globalIndexes,
-		bytecode:       bytecode,
-		globals:        globals,
-		builtinModules: s.builtinModules,
-		maxAllocs:      s.maxAllocs,
+		globalIndexes: globalIndexes,
+		bytecode:      bytecode,
+		globals:       globals,
+		maxAllocs:     s.maxAllocs,
 	}, nil
 }
 
@@ -170,7 +159,7 @@ func (s *Script) RunContext(ctx context.Context) (compiled *Compiled, err error)
 	return
 }
 
-func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, builtinModules map[string]bool, globals []objects.Object, err error) {
+func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, globals []objects.Object, err error) {
 	var names []string
 	for name := range s.variables {
 		names = append(names, name)
@@ -181,13 +170,8 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, builtinModule
 		symbolTable.DefineBuiltin(idx, fn.Name)
 	}
 
-	if s.builtinModules == nil {
-		s.builtinModules = make(map[string]objects.Object)
-	}
-
-	builtinModules = make(map[string]bool)
-	for name := range s.builtinModules {
-		builtinModules[name] = true
+	if s.importModules == nil {
+		s.importModules = make(map[string]objects.Importable)
 	}
 
 	globals = make([]objects.Object, runtime.GlobalsSize)

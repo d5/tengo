@@ -9,20 +9,25 @@ import (
 )
 
 func TestBuiltin(t *testing.T) {
-
-	mathModule := map[string]objects.Object{
-		"math": &objects.ImmutableMap{Value: map[string]objects.Object{
-			"abs": &objects.UserFunction{Name: "abs", Value: func(args ...objects.Object) (ret objects.Object, err error) {
-				v, _ := objects.ToFloat64(args[0])
-				return &objects.Float{Value: math.Abs(v)}, nil
-			}},
-		}},
+	mods := map[string]objects.Importable{
+		"math": &objects.BuiltinModule{
+			Attrs: map[string]objects.Object{
+				"abs": &objects.UserFunction{
+					Name: "abs",
+					Value: func(args ...objects.Object) (ret objects.Object, err error) {
+						v, _ := objects.ToFloat64(args[0])
+						return &objects.Float{Value: math.Abs(v)}, nil
+					},
+				},
+			},
+		},
 	}
+
 	// builtin
-	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(1)`, 1.0, mathModule)
-	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(-1)`, 1.0, mathModule)
-	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(1.0)`, 1.0, mathModule)
-	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(-1.0)`, 1.0, mathModule)
+	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(1)`, 1.0, mods)
+	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(-1)`, 1.0, mods)
+	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(1.0)`, 1.0, mods)
+	expectWithBuiltinModules(t, `math := import("math"); out = math.abs(-1.0)`, 1.0, mods)
 }
 
 func TestUserModules(t *testing.T) {
@@ -187,13 +192,18 @@ export func(a) {
 }
 
 func TestModuleBlockScopes(t *testing.T) {
-	randModule := map[string]objects.Object{
-		"rand": &objects.ImmutableMap{Value: map[string]objects.Object{
-			"intn": &objects.UserFunction{Name: "abs", Value: func(args ...objects.Object) (ret objects.Object, err error) {
-				v, _ := objects.ToInt64(args[0])
-				return &objects.Int{Value: rand.Int63n(v)}, nil
-			}},
-		}},
+	mods := map[string]objects.Importable{
+		"rand": &objects.BuiltinModule{
+			Attrs: map[string]objects.Object{
+				"intn": &objects.UserFunction{
+					Name: "abs",
+					Value: func(args ...objects.Object) (ret objects.Object, err error) {
+						v, _ := objects.ToInt64(args[0])
+						return &objects.Int{Value: rand.Int63n(v)}, nil
+					},
+				},
+			},
+		},
 	}
 
 	// block scopes in module
@@ -206,7 +216,7 @@ func TestModuleBlockScopes(t *testing.T) {
 		return foo()
 	}
 	`,
-	}, randModule)
+	}, mods)
 
 	expectWithUserAndBuiltinModules(t, `out = import("mod1")()`, 10, map[string]string{
 		"mod1": `
@@ -218,7 +228,7 @@ export func() {
 	return 10
 }
 `,
-	}, randModule)
+	}, mods)
 
 	expectWithUserAndBuiltinModules(t, `out = import("mod1")()`, 10, map[string]string{
 		"mod1": `
@@ -230,5 +240,5 @@ export func() {
 		return 10
 	}
 	`,
-	}, randModule)
+	}, mods)
 }

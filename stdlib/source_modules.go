@@ -1,10 +1,12 @@
-// Code generated using genmods.go; DO NOT EDIT.
+// Code generated using gensrcmods.go; DO NOT EDIT.
 
 package stdlib
 
-// CompiledModules are Tengo-written standard libraries.
-var CompiledModules = map[string]string{
-	"enum": `export {
+import "github.com/d5/tengo/objects"
+
+// SourceModules are source type standard library modules.
+var SourceModules = map[string]*objects.SourceModule{
+	"enum": {Src: []byte(`export {
   each: func(x, f) {
     for k, v in x {
       f(k, v)
@@ -25,7 +27,7 @@ var CompiledModules = map[string]string{
       }
     }
     return false
-  },
+  }
 }
-`,
+`)},
 }

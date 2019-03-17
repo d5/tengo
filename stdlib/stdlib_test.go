@@ -18,11 +18,8 @@ type IMAP map[string]interface{}
 
 func TestAllModuleNames(t *testing.T) {
 	names := stdlib.AllModuleNames()
-	if !assert.Equal(t, len(stdlib.BuiltinModules), len(names)) {
+	if !assert.Equal(t, len(stdlib.BuiltinModules)+len(stdlib.SourceModules), len(names)) {
 		return
-	}
-	for _, name := range names {
-		assert.NotNil(t, stdlib.BuiltinModules[name], "name: %s", name)
 	}
 }
 
@@ -100,7 +97,7 @@ func TestGetModules(t *testing.T) {
 
 type callres struct {
 	t *testing.T
-	o objects.Object
+	o interface{}
 	e error
 }
 
@@ -109,29 +106,44 @@ func (c callres) call(funcName string, args ...interface{}) callres {
 		return c
 	}
 
-	imap, ok := c.o.(*objects.ImmutableMap)
-	if !ok {
-		return c
-	}
-
-	m, ok := imap.Value[funcName]
-	if !ok {
-		return callres{t: c.t, e: fmt.Errorf("function not found: %s", funcName)}
-	}
-
-	f, ok := m.(*objects.UserFunction)
-	if !ok {
-		return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
-	}
-
 	var oargs []objects.Object
 	for _, v := range args {
 		oargs = append(oargs, object(v))
 	}
 
-	res, err := f.Value(oargs...)
+	switch o := c.o.(type) {
+	case *objects.BuiltinModule:
+		m, ok := o.Attrs[funcName]
+		if !ok {
+			return callres{t: c.t, e: fmt.Errorf("function not found: %s", funcName)}
+		}
 
-	return callres{t: c.t, o: res, e: err}
+		f, ok := m.(*objects.UserFunction)
+		if !ok {
+			return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
+		}
+
+		res, err := f.Value(oargs...)
+		return callres{t: c.t, o: res, e: err}
+	case *objects.UserFunction:
+		res, err := o.Value(oargs...)
+		return callres{t: c.t, o: res, e: err}
+	case *objects.ImmutableMap:
+		m, ok := o.Value[funcName]
+		if !ok {
+			return callres{t: c.t, e: fmt.Errorf("function not found: %s", funcName)}
+		}
+
+		f, ok := m.(*objects.UserFunction)
+		if !ok {
+			return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
+		}
+
+		res, err := f.Value(oargs...)
+		return callres{t: c.t, o: res, e: err}
+	default:
+		panic(fmt.Errorf("unexpected object: %v (%T)", o, o))
+	}
 }
 
 func (c callres) expect(expected interface{}, msgAndArgs ...interface{}) bool {
@@ -219,7 +231,7 @@ func object(v interface{}) objects.Object {
 
 func expect(t *testing.T, input string, expected interface{}) {
 	s := script.New([]byte(input))
-	s.SetBuiltinModules(stdlib.BuiltinModules)
+	s.SetImports(stdlib.GetModules(stdlib.AllModuleNames()...))
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)

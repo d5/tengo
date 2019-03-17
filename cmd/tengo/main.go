@@ -23,7 +23,7 @@ func init() {
 }
 
 func main() {
-	builtinModules := make(map[string]objects.Object, len(stdlib.BuiltinModules))
+	builtinModules := make(map[string]objects.Importable, len(stdlib.BuiltinModules))
 	for k, mod := range stdlib.BuiltinModules {
 		builtinModules[k] = mod
 	}

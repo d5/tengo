@@ -874,7 +874,7 @@ func() {
 				intObject(1),
 				intObject(1))))
 
-	expectError(t, `import("user1")`, "no such file or directory") // unknown module name
+	expectError(t, `import("user1")`, "module 'user1' not found") // unknown module name
 
 	expectError(t, `
 r["x"] = {

@@ -16,6 +16,7 @@ func (b *Bytecode) RemoveDuplicates() {
 	strings := make(map[string]int)
 	floats := make(map[float64]int)
 	chars := make(map[rune]int)
+	immutableMaps := make(map[string]int) // for modules
 
 	for curIdx, c := range b.Constants {
 		switch c := c.(type) {
@@ -23,7 +24,17 @@ func (b *Bytecode) RemoveDuplicates() {
 			// add to deduped list
 			indexMap[curIdx] = len(deduped)
 			deduped = append(deduped, c)
-			continue
+		case *objects.ImmutableMap:
+			modName := c.Value["__module_name__"].(*objects.String).Value
+			newIdx, ok := immutableMaps[modName]
+			if modName != "" && ok {
+				indexMap[curIdx] = newIdx
+			} else {
+				newIdx = len(deduped)
+				immutableMaps[modName] = newIdx
+				indexMap[curIdx] = newIdx
+				deduped = append(deduped, c)
+			}
 		case *objects.Int:
 			if newIdx, ok := ints[c.Value]; ok {
 				indexMap[curIdx] = newIdx

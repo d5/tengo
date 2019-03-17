@@ -23,33 +23,32 @@ const (
 	replPrompt    = ">> "
 )
 
-//Options represent REPL options
+// Options represent CLI options
 type Options struct {
-	//Compile output file
+	// Compile output file
 	CompileOutput string
 
-	//Show help flag
+	// Show help flag
 	ShowHelp bool
 
-	//Show version flag
+	// Show version flag
 	ShowVersion bool
 
-	//Input file
+	// Input file
 	InputFile string
 
-	//Version
+	// Version
 	Version string
 
-	//Builtin modules
-	BuiltinModules map[string]objects.Object
+	// Builtin modules
+	BuiltinModules map[string]objects.Importable
 }
 
 var (
-	bm             map[string]bool
-	builtinModules map[string]objects.Object
+	builtinModules map[string]objects.Importable
 )
 
-//Run REPL
+// Run CLI
 func Run(options *Options) {
 	if options.ShowHelp {
 		doHelp()
@@ -60,10 +59,6 @@ func Run(options *Options) {
 	}
 
 	builtinModules = options.BuiltinModules
-	bm = make(map[string]bool, len(builtinModules))
-	for k := range builtinModules {
-		bm[k] = true
-	}
 
 	if options.InputFile == "" {
 		// REPL
@@ -165,7 +160,7 @@ func compileAndRun(data []byte, inputFile string) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, builtinModules, -1)
+	machine := runtime.NewVM(bytecode, nil, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -182,7 +177,7 @@ func runCompiled(data []byte) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, builtinModules, -1)
+	machine := runtime.NewVM(bytecode, nil, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -225,7 +220,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		file = addPrints(file)
 
-		c := compiler.NewCompiler(srcFile, symbolTable, constants, bm, nil)
+		c := compiler.NewCompiler(srcFile, symbolTable, constants, builtinModules, nil)
 		if err := c.Compile(file); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
@@ -233,7 +228,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		bytecode := c.Bytecode()
 
-		machine := runtime.NewVM(bytecode, globals, builtinModules, -1)
+		machine := runtime.NewVM(bytecode, globals, -1)
 		if err := machine.Run(); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
@@ -253,7 +248,9 @@ func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(srcFile, nil, nil, bm, nil)
+	c := compiler.NewCompiler(srcFile, nil, nil, builtinModules, nil)
+	c.EnableFileImport(true)
+
 	if err := c.Compile(file); err != nil {
 		return nil, err
 	}
