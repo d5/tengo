@@ -27,7 +27,12 @@ func (c *Compiled) Run() error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	v := runtime.NewVM(c.bytecode, c.globals, c.builtinFunctions, c.builtinModules, c.maxAllocs)
+	v := runtime.NewVM(c.bytecode, &runtime.Options{
+		Globals:        c.globals,
+		BuiltinFuncs:   c.builtinFunctions,
+		BuiltinModules: c.builtinModules,
+		MaxAllocs:      c.maxAllocs,
+	})
 
 	return v.Run()
 }
@@ -37,7 +42,12 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	v := runtime.NewVM(c.bytecode, c.globals, c.builtinFunctions, c.builtinModules, c.maxAllocs)
+	v := runtime.NewVM(c.bytecode, &runtime.Options{
+		Globals:        c.globals,
+		BuiltinFuncs:   c.builtinFunctions,
+		BuiltinModules: c.builtinModules,
+		MaxAllocs:      c.maxAllocs,
+	})
 
 	ch := make(chan error, 1)
 

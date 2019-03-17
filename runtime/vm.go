@@ -43,20 +43,27 @@ type VM struct {
 	errOffset      int
 }
 
+type Options struct {
+	Globals        []objects.Object
+	BuiltinFuncs   []objects.Object
+	BuiltinModules map[string]objects.Object
+	MaxAllocs      int64
+}
+
 // NewVM creates a VM.
-func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, builtinFuncs []objects.Object, builtinModules map[string]objects.Object, maxAllocs int64) *VM {
-	if globals == nil {
-		globals = make([]objects.Object, GlobalsSize)
+func NewVM(bytecode *compiler.Bytecode, options *Options) *VM {
+	if options.Globals == nil {
+		options.Globals = make([]objects.Object, GlobalsSize)
 	}
 
-	if builtinModules == nil {
-		builtinModules = make(map[string]objects.Object)
+	if options.BuiltinModules == nil {
+		options.BuiltinModules = make(map[string]objects.Object)
 	}
 
-	if builtinFuncs == nil {
-		builtinFuncs = make([]objects.Object, len(objects.Builtins))
+	if options.BuiltinFuncs == nil {
+		options.BuiltinFuncs = make([]objects.Object, len(objects.Builtins))
 		for idx, fn := range objects.Builtins {
-			builtinFuncs[idx] = &objects.BuiltinFunction{
+			options.BuiltinFuncs[idx] = &objects.BuiltinFunction{
 				Name:  fn.Name,
 				Value: fn.Value,
 			}
@@ -71,7 +78,7 @@ func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, builtinFuncs [
 		constants:      bytecode.Constants,
 		stack:          make([]objects.Object, StackSize),
 		sp:             0,
-		globals:        globals,
+		globals:        options.Globals,
 		fileSet:        bytecode.FileSet,
 		frames:         frames,
 		framesIndex:    1,
@@ -79,9 +86,9 @@ func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, builtinFuncs [
 		curInsts:       frames[0].fn.Instructions,
 		curIPLimit:     len(frames[0].fn.Instructions) - 1,
 		ip:             -1,
-		builtinFuncs:   builtinFuncs,
-		builtinModules: builtinModules,
-		maxAllocs:      maxAllocs,
+		builtinFuncs:   options.BuiltinFuncs,
+		builtinModules: options.BuiltinModules,
+		maxAllocs:      options.MaxAllocs,
 	}
 }
 

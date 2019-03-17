@@ -191,7 +191,11 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(file.InputFile, symTable, nil, bm, tr)
+	c := compiler.NewCompiler(file.InputFile, &compiler.Options{
+		SymbolTable:    symTable,
+		BuiltinModules: bm,
+		Trace:          tr,
+	})
 	c.SetModuleLoader(func(moduleName string) ([]byte, error) {
 		if src, ok := userModules[moduleName]; ok {
 			return []byte(src), nil
@@ -210,7 +214,11 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	trace = append(trace, fmt.Sprintf("\n[Compiled Constants]\n\n%s", strings.Join(bytecode.FormatConstants(), "\n")))
 	trace = append(trace, fmt.Sprintf("\n[Compiled Instructions]\n\n%s\n", strings.Join(bytecode.FormatInstructions(), "\n")))
 
-	v = runtime.NewVM(bytecode, globals, nil, builtinModules, maxAllocs)
+	v = runtime.NewVM(bytecode, &runtime.Options{
+		Globals:        globals,
+		BuiltinModules: builtinModules,
+		MaxAllocs:      maxAllocs,
+	})
 
 	err = v.Run()
 	{

@@ -30,41 +30,48 @@ type Compiler struct {
 	indent          int
 }
 
+type Options struct {
+	SymbolTable    *SymbolTable
+	Constants      []objects.Object
+	BuiltinModules map[string]bool
+	Trace          io.Writer
+}
+
 // NewCompiler creates a Compiler.
 // User can optionally provide the symbol table if one wants to add or remove
 // some global- or builtin- scope symbols. If not (nil), Compile will create
 // a new symbol table and use the default builtin functions. Likewise, standard
 // modules can be explicitly provided if user wants to add or remove some modules.
 // By default, Compile will use all the standard modules otherwise.
-func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []objects.Object, builtinModules map[string]bool, trace io.Writer) *Compiler {
+func NewCompiler(file *source.File, options *Options) *Compiler {
 	mainScope := CompilationScope{
 		symbolInit: make(map[string]bool),
 		sourceMap:  make(map[int]source.Pos),
 	}
 
 	// symbol table
-	if symbolTable == nil {
-		symbolTable = NewSymbolTable()
+	if options.SymbolTable == nil {
+		options.SymbolTable = NewSymbolTable()
 
 		for idx, fn := range objects.Builtins {
-			symbolTable.DefineBuiltin(idx, fn.Name)
+			options.SymbolTable.DefineBuiltin(idx, fn.Name)
 		}
 	}
 
 	// builtin modules
-	if builtinModules == nil {
-		builtinModules = make(map[string]bool)
+	if options.BuiltinModules == nil {
+		options.BuiltinModules = make(map[string]bool)
 	}
 
 	return &Compiler{
 		file:            file,
-		symbolTable:     symbolTable,
-		constants:       constants,
+		symbolTable:     options.SymbolTable,
+		constants:       options.Constants,
 		scopes:          []CompilationScope{mainScope},
 		scopeIndex:      0,
 		loopIndex:       -1,
-		trace:           trace,
-		builtinModules:  builtinModules,
+		trace:           options.Trace,
+		builtinModules:  options.BuiltinModules,
 		compiledModules: make(map[string]*objects.CompiledFunction),
 	}
 }
@@ -610,7 +617,11 @@ func (c *Compiler) SetModuleLoader(moduleLoader ModuleLoader) {
 }
 
 func (c *Compiler) fork(file *source.File, moduleName string, symbolTable *SymbolTable) *Compiler {
-	child := NewCompiler(file, symbolTable, nil, c.builtinModules, c.trace)
+	child := NewCompiler(file, &Options{
+		SymbolTable:    symbolTable,
+		BuiltinModules: c.builtinModules,
+		Trace:          c.trace,
+	})
 	child.moduleName = moduleName       // name of the module to compile
 	child.parent = c                    // parent to set to current compiler
 	child.moduleLoader = c.moduleLoader // share module loader

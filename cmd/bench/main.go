@@ -194,7 +194,7 @@ func compileFile(file *ast.File) (time.Duration, *compiler.Bytecode, error) {
 
 	start := time.Now()
 
-	c := compiler.NewCompiler(file.InputFile, symTable, nil, nil, nil)
+	c := compiler.NewCompiler(file.InputFile, &compiler.Options{SymbolTable: symTable})
 	if err := c.Compile(file); err != nil {
 		return time.Since(start), nil, err
 	}
@@ -210,7 +210,11 @@ func runVM(bytecode *compiler.Bytecode) (time.Duration, objects.Object, error) {
 
 	start := time.Now()
 
-	v := runtime.NewVM(bytecode, globals, nil, nil, -1)
+	v := runtime.NewVM(bytecode, &runtime.Options{
+		Globals:   globals,
+		MaxAllocs: -1,
+	})
+
 	if err := v.Run(); err != nil {
 		return time.Since(start), nil, err
 	}

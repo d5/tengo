@@ -165,7 +165,10 @@ func compileAndRun(data []byte, inputFile string) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
+	machine := runtime.NewVM(bytecode, &runtime.Options{
+		BuiltinModules: builtinModules,
+		MaxAllocs:      -1,
+	})
 
 	err = machine.Run()
 	if err != nil {
@@ -182,7 +185,10 @@ func runCompiled(data []byte) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
+	machine := runtime.NewVM(bytecode, &runtime.Options{
+		BuiltinModules: builtinModules,
+		MaxAllocs:      -1,
+	})
 
 	err = machine.Run()
 	if err != nil {
@@ -225,7 +231,11 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		file = addPrints(file)
 
-		c := compiler.NewCompiler(srcFile, symbolTable, constants, bm, nil)
+		c := compiler.NewCompiler(srcFile, &compiler.Options{
+			SymbolTable:    symbolTable,
+			Constants:      constants,
+			BuiltinModules: bm,
+		})
 		if err := c.Compile(file); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
@@ -233,7 +243,12 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		bytecode := c.Bytecode()
 
-		machine := runtime.NewVM(bytecode, globals, nil, builtinModules, -1)
+		machine := runtime.NewVM(bytecode, &runtime.Options{
+			Globals:        globals,
+			BuiltinModules: builtinModules,
+			MaxAllocs:      -1,
+		})
+
 		if err := machine.Run(); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
@@ -253,7 +268,10 @@ func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(srcFile, nil, nil, bm, nil)
+	c := compiler.NewCompiler(srcFile, &compiler.Options{
+		BuiltinModules: bm,
+	})
+
 	if err := c.Compile(file); err != nil {
 		return nil, err
 	}

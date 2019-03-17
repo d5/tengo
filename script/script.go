@@ -115,7 +115,10 @@ func (s *Script) Compile() (*Compiled, error) {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(srcFile, symbolTable, nil, builtinModules, nil)
+	c := compiler.NewCompiler(srcFile, &compiler.Options{
+		SymbolTable:    symbolTable,
+		BuiltinModules: builtinModules,
+	})
 
 	if s.userModuleLoader != nil {
 		c.SetModuleLoader(s.userModuleLoader)

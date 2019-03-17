@@ -997,7 +997,10 @@ func traceCompile(input string, symbols map[string]objects.Object) (res *compile
 	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(file, symTable, nil, nil, tr)
+	c := compiler.NewCompiler(file, &compiler.Options{
+		SymbolTable: symTable,
+		Trace:       tr,
+	})
 	parsed, err := p.ParseFile()
 	if err != nil {
 		return
