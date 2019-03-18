@@ -119,63 +119,32 @@ Users can add and use a custom user type in Tengo code by implementing [Object](
 
 To securely compile and execute _potentially_ unsafe script code, you can use the following Script functions.
 
-#### Script.SetBuiltinFunctions(funcs []*objects.BuiltinFunction)
+#### Script.SetImports(modules map[string]objects.Importable)
 
-SetBuiltinFunctions resets all builtin functions in the compiler to the ones provided in the input parameter. Compiler will report a compile-time error if the a function not set is referenced. Passing `nil` will disable all builtin functions. All builtin functions **are included by default** unless `SetBuiltinFunctions` is called.
-
-```golang
-s := script.New([]byte(`print([1, 2, 3])`))
-
-_, err := s.Run() // prints [1, 2, 3]
-
-s.SetBuiltinFunctions(nil)
-
-_, err := s.Run() // compile error
-
-s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[0]})
-
-_, err := s.Run() // prints [1, 2, 3]
-```
-
-#### Script.SetBuiltinModules(modules map[string]*objects.ImmutableMap)
-
-SetBuiltinModules adds builtin modules provided in the input parameter. This can be used to add [standard library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) modules into the compiler and VM. Compiler will report a compile-time error if the code tries to import a module that hasn't been included. Passing `nil` will disable all builtin modules. No standard library modules are included by default unless `SetBuiltinModules` is called.
+SetImports sets the import modules with corresponding names. Script **does not** include any modules by default. You can use this function to include the [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md).
 
 ```golang
 s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
 
-_, err := s.Run() // compile error
-
-s.SetBuiltinModules(stdlib.Modules)
-
-_, err := s.Run() // a = 19.84
-
-s.SetBuiltinModules(nil)
-
-_, err := s.Run() // compile error
-
-s.SetBuiltinModules(map[string]*objects.ImmutableMap{"math": stdlib.Modules["math"]})
-
-_, err := s.Run() // a = 19.84
+s.SetImports(map[string]objects.Importable{
+    "math": stdlib.BuiltinModules["math"],
+})
+// or
+s.SetImports(stdlib.GetModules("math"))
+// or, to include all stdlib at once
+s.SetImports(stdlib.GetModules(stdlib.AllModuleNames()...))
 ```
 
-#### Script.SetUserModuleLoader(loader compiler.ModuleLoader)
-
-SetUserModuleLoader replaces the default user-module loader of the compiler, which tries to read the source from a local file.  
+You can also include Tengo's written module using `objects.SourceModule` (which implements `objects.Importable`).
 
 ```golang
-s := script.New([]byte(`math := import("mod1"); a := math.foo()`))
- 
-s.SetUserModuleLoader(func(moduleName string) ([]byte, error) {
-    if moduleName == "mod1" {
-        return []byte(`foo := func() { return 5 }`), nil
-    }
+s := script.New([]byte(`double := import("double"); a := double(20)`))
 
-    return nil, errors.New("module not found")
+s.SetImports(map[string]objects.Importable{
+    "double": &objects.SourceModule{Src: []byte(`export func(x) { return x * 2 }`)},
 })
 ```
 
-Note that when a script is being added to another script as a module (via `Script.AddModule`), it does not inherit the module loader from the main script.
 
 #### Script.SetMaxAllocs(n int64)
 

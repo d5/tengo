@@ -5,3 +5,5 @@
 - [math](https://github.com/d5/tengo/blob/master/docs/stdlib-math.md): mathematical constants and functions
 - [times](https://github.com/d5/tengo/blob/master/docs/stdlib-times.md): time-related functions
 - [rand](https://github.com/d5/tengo/blob/master/docs/stdlib-rand.md): random functions
+- [fmt](https://github.com/d5/tengo/blob/master/docs/stdlib-fmt.md): formatting functions
+- [json](https://github.com/d5/tengo/blob/master/docs/stdlib-json.md): JSON functions
