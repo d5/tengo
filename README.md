@@ -7,7 +7,6 @@
 [![GoDoc](https://godoc.org/github.com/d5/tengo?status.svg)](https://godoc.org/github.com/d5/tengo/script)
 [![Go Report Card](https://goreportcard.com/badge/github.com/d5/tengo)](https://goreportcard.com/report/github.com/d5/tengo)
 [![Build Status](https://travis-ci.org/d5/tengo.svg?branch=master)](https://travis-ci.org/d5/tengo)
-[![](https://img.shields.io/badge/Support%20Tengo-%241-brightgreen.svg)](https://www.patreon.com/tengolang)
 
 **Tengo is a small, dynamic, fast, secure script language for Go.** 
 
@@ -25,11 +24,11 @@ sum := func(init, seq) {
     return init
 }
 
-n := sum(0, [1, 2, 3])   // == 6
-s := sum("", [1, 2, 3])  // == "123"
+println(sum(0, [1, 2, 3]))   // "6"
+println(sum("", [1, 2, 3]))  // "123"
 ```
 
-> Run this code in the [Playground](https://tengolang.com/?s=d01cf9ed81daba939e26618530eb171f7397d9c9)
+> Run this code in the [Playground](https://tengolang.com/?s=3243fd27cd518aef287d16d59349e15a474fd76c)
 
 ## Features
 
@@ -41,6 +40,7 @@ s := sum("", [1, 2, 3])  // == "123"
 - [Securely Embeddable](https://github.com/d5/tengo/blob/master/docs/interoperability.md) and [Extensible](https://github.com/d5/tengo/blob/master/docs/objects.md)
 - Compiler/runtime written in native Go _(no external deps or cgo)_
 - Executable as a [standalone](https://github.com/d5/tengo/blob/master/docs/tengo-cli.md) language / REPL
+- Use cases: rules engine, [state machine](https://github.com/d5/go-fsm), [gaming](https://github.com/d5/pbr), data pipeline, [transpiler](https://github.com/d5/tengo2lua)
 
 ## Benchmark
 
