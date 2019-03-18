@@ -22,53 +22,81 @@ type IARR []interface{}
 type IMAP map[string]interface{}
 type MAP = map[string]interface{}
 type ARR = []interface{}
-type SYM = map[string]objects.Object
 
-func expect(t *testing.T, input string, expected interface{}) {
-	runVM(t, input, expected, nil, nil, nil, -1, false)
+type testopts struct {
+	modules     map[string]objects.Importable
+	symbols     map[string]objects.Object
+	maxAllocs   int64
+	skip2ndPass bool
 }
 
-func expectAllocsLimit(t *testing.T, input string, maxAllocs int64, expected interface{}) {
-	runVM(t, input, expected, nil, nil, nil, maxAllocs, true)
+func Opts() *testopts {
+	return &testopts{
+		modules:     make(map[string]objects.Importable),
+		symbols:     make(map[string]objects.Object),
+		maxAllocs:   -1,
+		skip2ndPass: false,
+	}
 }
 
-func expectNoMod(t *testing.T, input string, expected interface{}) {
-	runVM(t, input, expected, nil, nil, nil, -1, true)
+func (o *testopts) copy() *testopts {
+	c := &testopts{
+		modules:     make(map[string]objects.Importable),
+		symbols:     make(map[string]objects.Object),
+		maxAllocs:   o.maxAllocs,
+		skip2ndPass: o.skip2ndPass,
+	}
+	for k, v := range o.modules {
+		c.modules[k] = v
+	}
+	for k, v := range o.symbols {
+		c.symbols[k] = v
+	}
+	return c
 }
 
-func expectWithSymbols(t *testing.T, input string, expected interface{}, symbols map[string]objects.Object) {
-	runVM(t, input, expected, symbols, nil, nil, -1, true)
+func (o *testopts) Module(name string, mod interface{}) *testopts {
+	c := o.copy()
+	switch mod := mod.(type) {
+	case objects.Importable:
+		c.modules[name] = mod
+	case string:
+		c.modules[name] = &objects.SourceModule{Src: []byte(mod)}
+	case []byte:
+		c.modules[name] = &objects.SourceModule{Src: mod}
+	default:
+		panic(fmt.Errorf("invalid module type: %T", mod))
+	}
+	return c
 }
 
-func expectWithUserModules(t *testing.T, input string, expected interface{}, userModules map[string]string) {
-	runVM(t, input, expected, nil, userModules, nil, -1, false)
+func (o *testopts) Symbol(name string, value objects.Object) *testopts {
+	c := o.copy()
+	c.symbols[name] = value
+	return c
 }
 
-func expectWithBuiltinModules(t *testing.T, input string, expected interface{}, builtinModules map[string]objects.Object) {
-	runVM(t, input, expected, nil, nil, builtinModules, -1, false)
+func (o *testopts) MaxAllocs(limit int64) *testopts {
+	c := o.copy()
+	c.maxAllocs = limit
+	return c
 }
 
-func expectWithUserAndBuiltinModules(t *testing.T, input string, expected interface{}, userModules map[string]string, builtinModules map[string]objects.Object) {
-	runVM(t, input, expected, nil, userModules, builtinModules, -1, false)
+func (o *testopts) Skip2ndPass() *testopts {
+	c := o.copy()
+	c.skip2ndPass = true
+	return c
 }
 
-func expectError(t *testing.T, input, expected string) {
-	runVMError(t, input, nil, nil, nil, -1, expected)
-}
+func expect(t *testing.T, input string, opts *testopts, expected interface{}) {
+	if opts == nil {
+		opts = Opts()
+	}
 
-func expectErrorAllocsLimit(t *testing.T, input string, maxAllocs int64, expected string) {
-	runVMError(t, input, nil, nil, nil, maxAllocs, expected)
-}
+	symbols := opts.symbols
+	modules := opts.modules
+	maxAllocs := opts.maxAllocs
 
-func expectErrorWithUserModules(t *testing.T, input string, userModules map[string]string, expected string) {
-	runVMError(t, input, nil, userModules, nil, -1, expected)
-}
-
-func expectErrorWithSymbols(t *testing.T, input string, symbols map[string]objects.Object, expected string) {
-	runVMError(t, input, symbols, nil, nil, -1, expected)
-}
-
-func runVM(t *testing.T, input string, expected interface{}, symbols map[string]objects.Object, userModules map[string]string, builtinModules map[string]objects.Object, maxAllocs int64, skipModuleTest bool) {
 	expectedObj := toObject(expected)
 
 	if symbols == nil {
@@ -85,7 +113,7 @@ func runVM(t *testing.T, input string, expected interface{}, symbols map[string]
 		}
 
 		// compiler/VM
-		res, trace, err := traceCompileRun(file, symbols, userModules, builtinModules, maxAllocs)
+		res, trace, err := traceCompileRun(file, symbols, modules, maxAllocs)
 		if !assert.NoError(t, err) ||
 			!assert.Equal(t, expectedObj, res[testOut]) {
 			t.Log("\n" + strings.Join(trace, "\n"))
@@ -93,7 +121,7 @@ func runVM(t *testing.T, input string, expected interface{}, symbols map[string]
 	}
 
 	// second pass: run the code as import module
-	if !skipModuleTest {
+	if !opts.skip2ndPass {
 		file := parse(t, `out = import("__code__")`)
 		if file == nil {
 			return
@@ -107,12 +135,11 @@ func runVM(t *testing.T, input string, expected interface{}, symbols map[string]
 			expectedObj = &objects.ImmutableMap{Value: eo.Value}
 		}
 
-		if userModules == nil {
-			userModules = make(map[string]string)
+		modules["__code__"] = &objects.SourceModule{
+			Src: []byte(fmt.Sprintf("out := undefined; %s; export out", input)),
 		}
-		userModules["__code__"] = fmt.Sprintf("out := undefined; %s; export out", input)
 
-		res, trace, err := traceCompileRun(file, symbols, userModules, builtinModules, maxAllocs)
+		res, trace, err := traceCompileRun(file, symbols, modules, maxAllocs)
 		if !assert.NoError(t, err) ||
 			!assert.Equal(t, expectedObj, res[testOut]) {
 			t.Log("\n" + strings.Join(trace, "\n"))
@@ -120,7 +147,15 @@ func runVM(t *testing.T, input string, expected interface{}, symbols map[string]
 	}
 }
 
-func runVMError(t *testing.T, input string, symbols map[string]objects.Object, userModules map[string]string, builtinModules map[string]objects.Object, maxAllocs int64, expected string) {
+func expectError(t *testing.T, input string, opts *testopts, expected string) {
+	if opts == nil {
+		opts = Opts()
+	}
+
+	symbols := opts.symbols
+	modules := opts.modules
+	maxAllocs := opts.maxAllocs
+
 	expected = strings.TrimSpace(expected)
 	if expected == "" {
 		panic("expected must not be empty")
@@ -133,7 +168,7 @@ func runVMError(t *testing.T, input string, symbols map[string]objects.Object, u
 	}
 
 	// compiler/VM
-	_, trace, err := traceCompileRun(program, symbols, userModules, builtinModules, maxAllocs)
+	_, trace, err := traceCompileRun(program, symbols, modules, maxAllocs)
 	if !assert.Error(t, err) ||
 		!assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
 		t.Log("\n" + strings.Join(trace, "\n"))
@@ -149,7 +184,7 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModules map[string]string, builtinModules map[string]objects.Object, maxAllocs int64) (res map[string]objects.Object, trace []string, err error) {
+func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules map[string]objects.Importable, maxAllocs int64) (res map[string]objects.Object, trace []string, err error) {
 	var v *runtime.VM
 
 	defer func() {
@@ -185,20 +220,8 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 		symTable.DefineBuiltin(idx, fn.Name)
 	}
 
-	bm := make(map[string]bool)
-	for k := range builtinModules {
-		bm[k] = true
-	}
-
 	tr := &tracer{}
-	c := compiler.NewCompiler(file.InputFile, symTable, nil, bm, tr)
-	c.SetModuleLoader(func(moduleName string) ([]byte, error) {
-		if src, ok := userModules[moduleName]; ok {
-			return []byte(src), nil
-		}
-
-		return nil, fmt.Errorf("module '%s' not found", moduleName)
-	})
+	c := compiler.NewCompiler(file.InputFile, symTable, nil, modules, tr)
 	err = c.Compile(file)
 	trace = append(trace, fmt.Sprintf("\n[Compiler Trace]\n\n%s", strings.Join(tr.Out, "")))
 	if err != nil {
@@ -210,7 +233,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, userModu
 	trace = append(trace, fmt.Sprintf("\n[Compiled Constants]\n\n%s", strings.Join(bytecode.FormatConstants(), "\n")))
 	trace = append(trace, fmt.Sprintf("\n[Compiled Instructions]\n\n%s\n", strings.Join(bytecode.FormatInstructions(), "\n")))
 
-	v = runtime.NewVM(bytecode, globals, nil, builtinModules, maxAllocs)
+	v = runtime.NewVM(bytecode, globals, maxAllocs)
 
 	err = v.Run()
 	{

@@ -43,8 +43,8 @@ func TestEquality(t *testing.T) {
 func testEquality(t *testing.T, lhs, rhs string, expected bool) {
 	// 1. equality is commutative
 	// 2. equality and inequality must be always opposite
-	expect(t, fmt.Sprintf("out = %s == %s", lhs, rhs), expected)
-	expect(t, fmt.Sprintf("out = %s == %s", rhs, lhs), expected)
-	expect(t, fmt.Sprintf("out = %s != %s", lhs, rhs), !expected)
-	expect(t, fmt.Sprintf("out = %s != %s", rhs, lhs), !expected)
+	expect(t, fmt.Sprintf("out = %s == %s", lhs, rhs), nil, expected)
+	expect(t, fmt.Sprintf("out = %s == %s", rhs, lhs), nil, expected)
+	expect(t, fmt.Sprintf("out = %s != %s", lhs, rhs), nil, !expected)
+	expect(t, fmt.Sprintf("out = %s != %s", rhs, lhs), nil, !expected)
 }

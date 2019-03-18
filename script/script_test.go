@@ -1,13 +1,12 @@
 package script_test
 
 import (
-	"errors"
-	"math"
 	"testing"
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/script"
+	"github.com/d5/tengo/stdlib"
 )
 
 func TestScript_Add(t *testing.T) {
@@ -52,71 +51,42 @@ func TestScript_Run(t *testing.T) {
 	compiledGet(t, c, "a", int64(5))
 }
 
-func TestScript_SetBuiltinFunctions(t *testing.T) {
-	s := script.New([]byte(`a := len([1, 2, 3])`))
+func TestScript_BuiltinModules(t *testing.T) {
+	s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
+	s.SetImports(map[string]objects.Importable{"math": stdlib.BuiltinModules["math"]})
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
-	compiledGet(t, c, "a", int64(3))
+	compiledGet(t, c, "a", 19.84)
 
-	s = script.New([]byte(`a := len([1, 2, 3])`))
-	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[4]})
 	c, err = s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
-	compiledGet(t, c, "a", int64(3))
+	compiledGet(t, c, "a", 19.84)
 
-	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[0]})
+	s.SetImports(map[string]objects.Importable{"os": &objects.BuiltinModule{Attrs: map[string]objects.Object{}}})
 	_, err = s.Run()
 	assert.Error(t, err)
 
-	s.SetBuiltinFunctions(nil)
+	s.SetImports(nil)
 	_, err = s.Run()
 	assert.Error(t, err)
-
-	s = script.New([]byte(`a := import("b")`))
-	s.SetUserModuleLoader(func(name string) ([]byte, error) {
-		if name == "b" {
-			return []byte(`export import("c")`), nil
-		} else if name == "c" {
-			return []byte("export len([1, 2, 3])"), nil
-		}
-		return nil, errors.New("module not found")
-	})
-	s.SetBuiltinFunctions([]*objects.BuiltinFunction{&objects.Builtins[4]})
-	c, err = s.Run()
-	assert.NoError(t, err)
-	assert.NotNil(t, c)
-	compiledGet(t, c, "a", int64(3))
 }
 
-func TestScript_SetBuiltinModules(t *testing.T) {
-	s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
-	s.SetBuiltinModules(map[string]*objects.ImmutableMap{
-		"math": objectPtr(&objects.ImmutableMap{
-			Value: map[string]objects.Object{
-				"abs": &objects.UserFunction{Name: "abs", Value: func(args ...objects.Object) (ret objects.Object, err error) {
-					v, _ := objects.ToFloat64(args[0])
-					return &objects.Float{Value: math.Abs(v)}, nil
-				}},
-			},
-		}),
-	})
+func TestScript_SourceModules(t *testing.T) {
+	s := script.New([]byte(`
+enum := import("enum")
+a := enum.all([1,2,3], func(_, v) { 
+	return v > 0 
+})
+`))
+	s.SetImports(stdlib.GetModules("enum"))
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
-	compiledGet(t, c, "a", 19.84)
+	compiledGet(t, c, "a", true)
 
-	c, err = s.Run()
-	assert.NoError(t, err)
-	assert.NotNil(t, c)
-	compiledGet(t, c, "a", 19.84)
-
-	s.SetBuiltinModules(map[string]*objects.ImmutableMap{"os": objectPtr(&objects.ImmutableMap{Value: map[string]objects.Object{}})})
-	_, err = s.Run()
-	assert.Error(t, err)
-
-	s.SetBuiltinModules(nil)
+	s.SetImports(nil)
 	_, err = s.Run()
 	assert.Error(t, err)
 }
@@ -153,8 +123,4 @@ func TestScript_SetMaxConstObjects(t *testing.T) {
 	s = script.New([]byte(`a := 1 + 2 + 3 + 4 + 5`))
 	_, err = s.Compile()
 	assert.NoError(t, err)
-}
-
-func objectPtr(o objects.Object) *objects.ImmutableMap {
-	return o.(*objects.ImmutableMap)
 }

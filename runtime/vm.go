@@ -23,44 +23,28 @@ const (
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
-	constants      []objects.Object
-	stack          []objects.Object
-	sp             int
-	globals        []objects.Object
-	fileSet        *source.FileSet
-	frames         []Frame
-	framesIndex    int
-	curFrame       *Frame
-	curInsts       []byte
-	curIPLimit     int
-	ip             int
-	aborting       int64
-	builtinFuncs   []objects.Object
-	builtinModules map[string]objects.Object
-	maxAllocs      int64
-	allocs         int64
-	err            error
-	errOffset      int
+	constants   []objects.Object
+	stack       []objects.Object
+	sp          int
+	globals     []objects.Object
+	fileSet     *source.FileSet
+	frames      []Frame
+	framesIndex int
+	curFrame    *Frame
+	curInsts    []byte
+	curIPLimit  int
+	ip          int
+	aborting    int64
+	maxAllocs   int64
+	allocs      int64
+	err         error
+	errOffset   int
 }
 
 // NewVM creates a VM.
-func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, builtinFuncs []objects.Object, builtinModules map[string]objects.Object, maxAllocs int64) *VM {
+func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, maxAllocs int64) *VM {
 	if globals == nil {
 		globals = make([]objects.Object, GlobalsSize)
-	}
-
-	if builtinModules == nil {
-		builtinModules = make(map[string]objects.Object)
-	}
-
-	if builtinFuncs == nil {
-		builtinFuncs = make([]objects.Object, len(objects.Builtins))
-		for idx, fn := range objects.Builtins {
-			builtinFuncs[idx] = &objects.BuiltinFunction{
-				Name:  fn.Name,
-				Value: fn.Value,
-			}
-		}
 	}
 
 	frames := make([]Frame, MaxFrames)
@@ -68,20 +52,18 @@ func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, builtinFuncs [
 	frames[0].ip = -1
 
 	return &VM{
-		constants:      bytecode.Constants,
-		stack:          make([]objects.Object, StackSize),
-		sp:             0,
-		globals:        globals,
-		fileSet:        bytecode.FileSet,
-		frames:         frames,
-		framesIndex:    1,
-		curFrame:       &(frames[0]),
-		curInsts:       frames[0].fn.Instructions,
-		curIPLimit:     len(frames[0].fn.Instructions) - 1,
-		ip:             -1,
-		builtinFuncs:   builtinFuncs,
-		builtinModules: builtinModules,
-		maxAllocs:      maxAllocs,
+		constants:   bytecode.Constants,
+		stack:       make([]objects.Object, StackSize),
+		sp:          0,
+		globals:     globals,
+		fileSet:     bytecode.FileSet,
+		frames:      frames,
+		framesIndex: 1,
+		curFrame:    &(frames[0]),
+		curInsts:    frames[0].fn.Instructions,
+		curIPLimit:  len(frames[0].fn.Instructions) - 1,
+		ip:          -1,
+		maxAllocs:   maxAllocs,
 	}
 }
 
@@ -997,28 +979,7 @@ func (v *VM) run() {
 				return
 			}
 
-			v.stack[v.sp] = v.builtinFuncs[builtinIndex]
-			v.sp++
-
-		case compiler.OpGetBuiltinModule:
-			val := v.stack[v.sp-1]
-			v.sp--
-
-			moduleName := val.(*objects.String).Value
-
-			module, ok := v.builtinModules[moduleName]
-			if !ok {
-				v.errOffset = 3
-				v.err = fmt.Errorf("module '%s' not found", moduleName)
-				return
-			}
-
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
-			v.stack[v.sp] = module
+			v.stack[v.sp] = objects.Builtins[builtinIndex]
 			v.sp++
 
 		case compiler.OpClosure:

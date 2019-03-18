@@ -33,7 +33,7 @@ b += c
 a += b * 2
 
 arr := [a, b, c]
-arrstr := stringify(arr)
+arrstr := string(arr)
 map := {a: a, b: b, c: c}
 
 d := a + b + c
@@ -45,8 +45,8 @@ for i:=1; i<=d; i++ {
 
 e := mod1.double(s)
 `)
-	mod1 := &objects.ImmutableMap{
-		Value: map[string]objects.Object{
+	mod1 := &objects.BuiltinModule{
+		Attrs: map[string]objects.Object{
 			"double": &objects.UserFunction{
 				Value: func(args ...objects.Object) (ret objects.Object, err error) {
 					arg0, _ := objects.ToInt64(args[0])
@@ -61,17 +61,8 @@ e := mod1.double(s)
 	_ = scr.Add("a", 0)
 	_ = scr.Add("b", 0)
 	_ = scr.Add("c", 0)
-	scr.SetBuiltinModules(map[string]*objects.ImmutableMap{
+	scr.SetImports(map[string]objects.Importable{
 		"mod1": mod1,
-	})
-	scr.SetBuiltinFunctions([]*objects.BuiltinFunction{
-		{
-			Name: "stringify",
-			Value: func(args ...objects.Object) (ret objects.Object, err error) {
-				ret = &objects.String{Value: args[0].String()}
-				return
-			},
-		},
 	})
 	compiled, err := scr.Compile()
 	assert.NoError(t, err)

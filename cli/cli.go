@@ -23,33 +23,28 @@ const (
 	replPrompt    = ">> "
 )
 
-//Options represent REPL options
+// Options represent CLI options
 type Options struct {
-	//Compile output file
+	// Compile output file
 	CompileOutput string
 
-	//Show help flag
+	// Show help flag
 	ShowHelp bool
 
-	//Show version flag
+	// Show version flag
 	ShowVersion bool
 
-	//Input file
+	// Input file
 	InputFile string
 
-	//Version
+	// Version
 	Version string
 
-	//Builtin modules
-	BuiltinModules map[string]objects.Object
+	// Import modules
+	Modules map[string]objects.Importable
 }
 
-var (
-	bm             map[string]bool
-	builtinModules map[string]objects.Object
-)
-
-//Run REPL
+// Run CLI
 func Run(options *Options) {
 	if options.ShowHelp {
 		doHelp()
@@ -59,15 +54,9 @@ func Run(options *Options) {
 		return
 	}
 
-	builtinModules = options.BuiltinModules
-	bm = make(map[string]bool, len(builtinModules))
-	for k := range builtinModules {
-		bm[k] = true
-	}
-
 	if options.InputFile == "" {
 		// REPL
-		runREPL(os.Stdin, os.Stdout)
+		runREPL(options.Modules, os.Stdin, os.Stdout)
 		return
 	}
 
@@ -78,12 +67,12 @@ func Run(options *Options) {
 	}
 
 	if options.CompileOutput != "" {
-		if err := compileOnly(inputData, options.InputFile, options.CompileOutput); err != nil {
+		if err := compileOnly(options.Modules, inputData, options.InputFile, options.CompileOutput); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 	} else if filepath.Ext(options.InputFile) == sourceFileExt {
-		if err := compileAndRun(inputData, options.InputFile); err != nil {
+		if err := compileAndRun(options.Modules, inputData, options.InputFile); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
@@ -127,8 +116,8 @@ func doHelp() {
 	fmt.Println()
 }
 
-func compileOnly(data []byte, inputFile, outputFile string) (err error) {
-	bytecode, err := compileSrc(data, filepath.Base(inputFile))
+func compileOnly(modules map[string]objects.Importable, data []byte, inputFile, outputFile string) (err error) {
+	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
 	if err != nil {
 		return
 	}
@@ -159,13 +148,13 @@ func compileOnly(data []byte, inputFile, outputFile string) (err error) {
 	return
 }
 
-func compileAndRun(data []byte, inputFile string) (err error) {
-	bytecode, err := compileSrc(data, filepath.Base(inputFile))
+func compileAndRun(modules map[string]objects.Importable, data []byte, inputFile string) (err error) {
+	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
 	if err != nil {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
+	machine := runtime.NewVM(bytecode, nil, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -182,7 +171,7 @@ func runCompiled(data []byte) (err error) {
 		return
 	}
 
-	machine := runtime.NewVM(bytecode, nil, nil, builtinModules, -1)
+	machine := runtime.NewVM(bytecode, nil, -1)
 
 	err = machine.Run()
 	if err != nil {
@@ -192,7 +181,7 @@ func runCompiled(data []byte) (err error) {
 	return
 }
 
-func runREPL(in io.Reader, out io.Writer) {
+func runREPL(modules map[string]objects.Importable, in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
 
 	fileSet := source.NewFileSet()
@@ -201,6 +190,28 @@ func runREPL(in io.Reader, out io.Writer) {
 	symbolTable := compiler.NewSymbolTable()
 	for idx, fn := range objects.Builtins {
 		symbolTable.DefineBuiltin(idx, fn.Name)
+	}
+
+	// embed println function
+	symbol := symbolTable.Define("__repl_println__")
+	globals[symbol.Index] = &objects.UserFunction{
+		Name: "println",
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			var printArgs []interface{}
+			for _, arg := range args {
+				if _, isUndefined := arg.(*objects.Undefined); isUndefined {
+					printArgs = append(printArgs, "<undefined>")
+				} else {
+					s, _ := objects.ToString(arg)
+					printArgs = append(printArgs, s)
+				}
+			}
+
+			printArgs = append(printArgs, "\n")
+			_, _ = fmt.Print(printArgs...)
+
+			return
+		},
 	}
 
 	var constants []objects.Object
@@ -225,7 +236,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		file = addPrints(file)
 
-		c := compiler.NewCompiler(srcFile, symbolTable, constants, bm, nil)
+		c := compiler.NewCompiler(srcFile, symbolTable, constants, modules, nil)
 		if err := c.Compile(file); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
@@ -233,7 +244,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		bytecode := c.Bytecode()
 
-		machine := runtime.NewVM(bytecode, globals, nil, builtinModules, -1)
+		machine := runtime.NewVM(bytecode, globals, -1)
 		if err := machine.Run(); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
@@ -243,7 +254,7 @@ func runREPL(in io.Reader, out io.Writer) {
 	}
 }
 
-func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
+func compileSrc(modules map[string]objects.Importable, src []byte, filename string) (*compiler.Bytecode, error) {
 	fileSet := source.NewFileSet()
 	srcFile := fileSet.AddFile(filename, -1, len(src))
 
@@ -253,7 +264,9 @@ func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(srcFile, nil, nil, bm, nil)
+	c := compiler.NewCompiler(srcFile, nil, nil, modules, nil)
+	c.EnableFileImport(true)
+
 	if err := c.Compile(file); err != nil {
 		return nil, err
 	}
@@ -266,14 +279,13 @@ func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
 
 func addPrints(file *ast.File) *ast.File {
 	var stmts []ast.Stmt
+
 	for _, s := range file.Stmts {
 		switch s := s.(type) {
 		case *ast.ExprStmt:
 			stmts = append(stmts, &ast.ExprStmt{
 				Expr: &ast.CallExpr{
-					Func: &ast.Ident{
-						Name: "print",
-					},
+					Func: &ast.Ident{Name: "__repl_println__"},
 					Args: []ast.Expr{s.Expr},
 				},
 			})
@@ -284,7 +296,7 @@ func addPrints(file *ast.File) *ast.File {
 			stmts = append(stmts, &ast.ExprStmt{
 				Expr: &ast.CallExpr{
 					Func: &ast.Ident{
-						Name: "print",
+						Name: "__repl_println__",
 					},
 					Args: s.LHS,
 				},

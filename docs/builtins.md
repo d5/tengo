@@ -1,45 +1,5 @@
 # Builtin Functions
 
-## print
-
-Prints a string representation of the given variable to the standard output. No spaces are added between the operands.
-
-```golang
-v := [1, 2, 3]
-print(v)  // "[1, 2, 3]"
-
-print(1, 2, 3)  // "123"
-```
-
-## println
-
-Prints a string representation of the given variable to the standard output with a newline appended. No spaces are added between the operands.
-
-```golang
-v := [1, 2, 3]
-println(v)  // "[1, 2, 3]"
-
-println(1, 2, 3)  // "123" newline
-```
-
-## printf
-
-Prints a formatted string to the standard output. It does not append the newline character at the end. The first argument must a String object. It's same as Go's `fmt.Printf`.
-
-```golang
-a := [1, 2, 3]
-printf("foo %v", a)  // "foo [1, 2, 3]"
-```
-
-## sprintf
-
-Returns a formatted string. The first argument must be a String object. It's the same as Go's `fmt.Sprintf`.
-
-```golang
-a := [1, 2, 3]
-b := sprintp("foo %v", a)  // b == "foo [1, 2, 3]" 
-```
-
 ## len
 
 Returns the number of elements if the given variable is array, string, map, or module map.
@@ -69,26 +29,6 @@ Appends object(s) to an array (first argument) and returns a new array object. (
 ```golang
 v := [1]
 v = append(v, 2, 3) // v == [1, 2, 3]
-```
-
-## to_json
-
-Returns the JSON encoding of an object.
-
-```golang
-print(to_json([1, 2, 3]))  // [1, 2, 3]
-print(to_json(4))          // 4
-print(to_json("five"))     // "five"
-```
-
-## from_json
-
-Parses the JSON-encoded data and returns an object.
-
-```golang
-arr := from_json(`[1, 2, 3]`)
-four := from_json(`4`)
-five := from_json(`"five"`)
 ```
 
 ## string

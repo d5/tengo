@@ -12,7 +12,7 @@ func TestFor(t *testing.T) {
 		if out == 5 {
 			break
 		}
-	}`, 5)
+	}`, nil, 5)
 
 	expect(t, `
 	out = 0
@@ -21,7 +21,7 @@ func TestFor(t *testing.T) {
 		if out == 5 {
 			break
 		}
-	}`, 5)
+	}`, nil, 5)
 
 	expect(t, `
 	out = 0
@@ -31,7 +31,7 @@ func TestFor(t *testing.T) {
 		if a == 3 { continue }
 		if a == 5 { break }
 		out += a
-	}`, 7) // 1 + 2 + 4
+	}`, nil, 7) // 1 + 2 + 4
 
 	expect(t, `
 	out = 0
@@ -41,7 +41,7 @@ func TestFor(t *testing.T) {
 		if a == 3 { continue }
 		out += a
 		if a == 5 { break }
-	}`, 12) // 1 + 2 + 4 + 5
+	}`, nil, 12) // 1 + 2 + 4 + 5
 
 	expect(t, `
 	out = 0
@@ -50,7 +50,7 @@ func TestFor(t *testing.T) {
 		if out == 5 {
 			break
 		}
-	}`, 5)
+	}`, nil, 5)
 
 	expect(t, `
 	a := 0
@@ -60,7 +60,7 @@ func TestFor(t *testing.T) {
 			break
 		}
 	}
-	out = a`, 5)
+	out = a`, nil, 5)
 
 	expect(t, `
 	out = 0
@@ -70,7 +70,7 @@ func TestFor(t *testing.T) {
 		if a == 3 { continue }
 		if a == 5 { break }
 		out += a
-	}`, 7) // 1 + 2 + 4
+	}`, nil, 7) // 1 + 2 + 4
 
 	expect(t, `
 	out = 0
@@ -80,7 +80,7 @@ func TestFor(t *testing.T) {
 		if a == 3 { continue }
 		out += a
 		if a == 5 { break }
-	}`, 12) // 1 + 2 + 4 + 5
+	}`, nil, 12) // 1 + 2 + 4 + 5
 
 	expect(t, `
 	out = 0
@@ -91,13 +91,13 @@ func TestFor(t *testing.T) {
 				return
 			}
 		}
-	}()`, 5)
+	}()`, nil, 5)
 
 	expect(t, `
 	out = 0
 	for a:=1; a<=10; a++ {
 		out += a
-	}`, 55)
+	}`, nil, 55)
 
 	expect(t, `
 	out = 0
@@ -105,7 +105,7 @@ func TestFor(t *testing.T) {
 		for b:=3; b<=6; b++ {
 			out += b
 		}
-	}`, 54)
+	}`, nil, 54)
 
 	expect(t, `
 	out = 0
@@ -116,7 +116,7 @@ func TestFor(t *testing.T) {
 				break
 			}
 		}
-	}()`, 5)
+	}()`, nil, 5)
 
 	expect(t, `
 	out = 0
@@ -127,7 +127,7 @@ func TestFor(t *testing.T) {
 				break
 			}
 		}
-	}()`, 5)
+	}()`, nil, 5)
 
 	expect(t, `
 	out = func() {
@@ -139,7 +139,7 @@ func TestFor(t *testing.T) {
 			}
 		}
 		return a
-	}()`, 5)
+	}()`, nil, 5)
 
 	expect(t, `
 	out = func() {
@@ -151,7 +151,7 @@ func TestFor(t *testing.T) {
 			}
 		}
 		return a
-	}()`, 5)
+	}()`, nil, 5)
 
 	expect(t, `
 	out = func() {
@@ -165,7 +165,7 @@ func TestFor(t *testing.T) {
 			}
 		}()
 		return a
-	}()`, 5)
+	}()`, nil, 5)
 
 	expect(t, `
 	out = func() {
@@ -179,7 +179,7 @@ func TestFor(t *testing.T) {
 			}
 		}()
 		return a
-	}()`, 5)
+	}()`, nil, 5)
 
 	expect(t, `
 	out = func() {
@@ -188,7 +188,7 @@ func TestFor(t *testing.T) {
 			sum += a
 		}
 		return sum
-	}()`, 55)
+	}()`, nil, 55)
 
 	expect(t, `
 	out = func() {
@@ -199,7 +199,7 @@ func TestFor(t *testing.T) {
 			}
 		}
 		return sum
-	}()`, 48) // (3+4+5) * 4
+	}()`, nil, 48) // (3+4+5) * 4
 
 	expect(t, `
 	a := 1
@@ -208,7 +208,7 @@ func TestFor(t *testing.T) {
 			break
 		}
 	}
-	out = a`, 5)
+	out = a`, nil, 5)
 
 	expect(t, `
 	out = 0
@@ -220,7 +220,7 @@ func TestFor(t *testing.T) {
 		if a == 5 {
 			break
 		}
-	}`, 12) // 1 + 2 + 4 + 5
+	}`, nil, 12) // 1 + 2 + 4 + 5
 
 	expect(t, `
 	out = 0
@@ -234,5 +234,5 @@ func TestFor(t *testing.T) {
 			break
 		}
 		a++
-	}`, 12) // 1 + 2 + 4 + 5
+	}`, nil, 12) // 1 + 2 + 4 + 5
 }

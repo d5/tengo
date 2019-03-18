@@ -8,16 +8,16 @@ import (
 
 func TestFunction(t *testing.T) {
 	// function with no "return" statement returns "invalid" value.
-	expect(t, `f1 := func() {}; out = f1();`, objects.UndefinedValue)
-	expect(t, `f1 := func() {}; f2 := func() { return f1(); }; f1(); out = f2();`, objects.UndefinedValue)
-	expect(t, `f := func(x) { x; }; out = f(5);`, objects.UndefinedValue)
+	expect(t, `f1 := func() {}; out = f1();`, nil, objects.UndefinedValue)
+	expect(t, `f1 := func() {}; f2 := func() { return f1(); }; f1(); out = f2();`, nil, objects.UndefinedValue)
+	expect(t, `f := func(x) { x; }; out = f(5);`, nil, objects.UndefinedValue)
 
-	expect(t, `f := func(x) { return x; }; out = f(5);`, 5)
-	expect(t, `f := func(x) { return x * 2; }; out = f(5);`, 10)
-	expect(t, `f := func(x, y) { return x + y; }; out = f(5, 5);`, 10)
-	expect(t, `f := func(x, y) { return x + y; }; out = f(5 + 5, f(5, 5));`, 20)
-	expect(t, `out = func(x) { return x; }(5)`, 5)
-	expect(t, `x := 10; f := func(x) { return x; }; f(5); out = x;`, 10)
+	expect(t, `f := func(x) { return x; }; out = f(5);`, nil, 5)
+	expect(t, `f := func(x) { return x * 2; }; out = f(5);`, nil, 10)
+	expect(t, `f := func(x, y) { return x + y; }; out = f(5, 5);`, nil, 10)
+	expect(t, `f := func(x, y) { return x + y; }; out = f(5 + 5, f(5, 5));`, nil, 20)
+	expect(t, `out = func(x) { return x; }(5)`, nil, 5)
+	expect(t, `x := 10; f := func(x) { return x; }; f(5); out = x;`, nil, 10)
 
 	expect(t, `
 	f2 := func(a) {
@@ -29,7 +29,7 @@ func TestFunction(t *testing.T) {
 	};
 	
 	out = f2(10);
-	`, 60)
+	`, nil, 60)
 
 	// closures
 	expect(t, `
@@ -39,7 +39,7 @@ func TestFunction(t *testing.T) {
 	
 		add2 := newAdder(2);
 		out = add2(5);
-		`, 7)
+		`, nil, 7)
 
 	// function as a argument
 	expect(t, `
@@ -48,17 +48,17 @@ func TestFunction(t *testing.T) {
 	applyFunc := func(a, b, f) { return f(a, b) };
 	
 	out = applyFunc(applyFunc(2, 2, add), 3, sub);
-	`, 1)
+	`, nil, 1)
 
-	expect(t, `f1 := func() { return 5 + 10; }; out = f1();`, 15)
-	expect(t, `f1 := func() { return 1 }; f2 := func() { return 2 }; out = f1() + f2()`, 3)
-	expect(t, `f1 := func() { return 1 }; f2 := func() { return f1() + 2 }; f3 := func() { return f2() + 3 }; out = f3()`, 6)
-	expect(t, `f1 := func() { return 99; 100 }; out = f1();`, 99)
-	expect(t, `f1 := func() { return 99; return 100 }; out = f1();`, 99)
-	expect(t, `f1 := func() { return 33; }; f2 := func() { return f1 }; out = f2()();`, 33)
-	expect(t, `one := func() { one = 1; return one }; out = one()`, 1)
-	expect(t, `three := func() { one := 1; two := 2; return one + two }; out = three()`, 3)
-	expect(t, `three := func() { one := 1; two := 2; return one + two }; seven := func() { three := 3; four := 4; return three + four }; out = three() + seven()`, 10)
+	expect(t, `f1 := func() { return 5 + 10; }; out = f1();`, nil, 15)
+	expect(t, `f1 := func() { return 1 }; f2 := func() { return 2 }; out = f1() + f2()`, nil, 3)
+	expect(t, `f1 := func() { return 1 }; f2 := func() { return f1() + 2 }; f3 := func() { return f2() + 3 }; out = f3()`, nil, 6)
+	expect(t, `f1 := func() { return 99; 100 }; out = f1();`, nil, 99)
+	expect(t, `f1 := func() { return 99; return 100 }; out = f1();`, nil, 99)
+	expect(t, `f1 := func() { return 33; }; f2 := func() { return f1 }; out = f2()();`, nil, 33)
+	expect(t, `one := func() { one = 1; return one }; out = one()`, nil, 1)
+	expect(t, `three := func() { one := 1; two := 2; return one + two }; out = three()`, nil, 3)
+	expect(t, `three := func() { one := 1; two := 2; return one + two }; seven := func() { three := 3; four := 4; return three + four }; out = three() + seven()`, nil, 10)
 	expect(t, `
 	foo1 := func() {
 		foo := 50
@@ -68,7 +68,7 @@ func TestFunction(t *testing.T) {
 		foo := 100
 		return foo
 	}
-	out = foo1() + foo2()`, 150)
+	out = foo1() + foo2()`, nil, 150)
 	expect(t, `
 	g := 50;
 	minusOne := func() {
@@ -80,35 +80,35 @@ func TestFunction(t *testing.T) {
 		return g - n;
 	};
 	out = minusOne() + minusTwo()
-	`, 97)
+	`, nil, 97)
 	expect(t, `
 	f1 := func() {
 		f2 := func() { return 1; }
 		return f2
 	};
 	out = f1()()
-	`, 1)
+	`, nil, 1)
 
 	expect(t, `
 	f1 := func(a) { return a; };
-	out = f1(4)`, 4)
+	out = f1(4)`, nil, 4)
 	expect(t, `
 	f1 := func(a, b) { return a + b; };
-	out = f1(1, 2)`, 3)
+	out = f1(1, 2)`, nil, 3)
 
 	expect(t, `
 	sum := func(a, b) {
 		c := a + b;
 		return c;
 	};
-	out = sum(1, 2);`, 3)
+	out = sum(1, 2);`, nil, 3)
 
 	expect(t, `
 	sum := func(a, b) {
 		c := a + b;
 		return c;
 	};
-	out = sum(1, 2) + sum(3, 4);`, 10)
+	out = sum(1, 2) + sum(3, 4);`, nil, 10)
 
 	expect(t, `
 	sum := func(a, b) {
@@ -118,7 +118,7 @@ func TestFunction(t *testing.T) {
 	outer := func() {
 		return sum(1, 2) + sum(3, 4)
 	};
-	out = outer();`, 10)
+	out = outer();`, nil, 10)
 
 	expect(t, `
 	g := 10;
@@ -133,11 +133,11 @@ func TestFunction(t *testing.T) {
 	}
 	
 	out = outer() + g
-	`, 50)
+	`, nil, 50)
 
-	expectError(t, `func() { return 1; }(1)`, "wrong number of arguments")
-	expectError(t, `func(a) { return a; }()`, "wrong number of arguments")
-	expectError(t, `func(a, b) { return a + b; }(1)`, "wrong number of arguments")
+	expectError(t, `func() { return 1; }(1)`, nil, "wrong number of arguments")
+	expectError(t, `func(a) { return a; }()`, nil, "wrong number of arguments")
+	expectError(t, `func(a, b) { return a + b; }(1)`, nil, "wrong number of arguments")
 
 	expect(t, `
 		f1 := func(a) {
@@ -145,7 +145,7 @@ func TestFunction(t *testing.T) {
 		};
 		f2 := f1(99);
 		out = f2()
-		`, 99)
+		`, nil, 99)
 
 	expect(t, `
 		f1 := func(a, b) {
@@ -154,7 +154,7 @@ func TestFunction(t *testing.T) {
 	
 		f2 := f1(1, 2);
 		out = f2(8);
-		`, 11)
+		`, nil, 11)
 	expect(t, `
 		f1 := func(a, b) {
 			c := a + b;
@@ -162,7 +162,7 @@ func TestFunction(t *testing.T) {
 		};
 		f2 := f1(1, 2);
 		out = f2(8);
-		`, 11)
+		`, nil, 11)
 	expect(t, `
 		f1 := func(a, b) {
 			c := a + b;
@@ -174,7 +174,7 @@ func TestFunction(t *testing.T) {
 		f2 := f1(1, 2);
 		f3 := f2(3);
 		out = f3(8);
-		`, 14)
+		`, nil, 14)
 	expect(t, `
 		a := 1;
 		f1 := func(b) {
@@ -185,7 +185,7 @@ func TestFunction(t *testing.T) {
 		f2 := f1(2);
 		f3 := f2(3);
 		out = f3(8);
-		`, 14)
+		`, nil, 14)
 	expect(t, `
 		f1 := func(a, b) {
 			one := func() { return a; };
@@ -194,7 +194,7 @@ func TestFunction(t *testing.T) {
 		};
 		f2 := f1(9, 90);
 		out = f2();
-		`, 99)
+		`, nil, 99)
 
 	// global function recursion
 	expect(t, `
@@ -207,7 +207,7 @@ func TestFunction(t *testing.T) {
 				return fib(x-1) + fib(x-2)
 			}
 		}
-		out = fib(15)`, 610)
+		out = fib(15)`, nil, 610)
 
 	// local function recursion
 	expect(t, `
@@ -216,9 +216,9 @@ out = func() {
 		return x == 0 ? 0 : x + sum(x-1)
 	}
 	return sum(5)
-}()`, 15)
+}()`, nil, 15)
 
-	expectError(t, `return 5`, "return not allowed outside function")
+	expectError(t, `return 5`, nil, "return not allowed outside function")
 
 	// closure and block scopes
 	expect(t, `
@@ -230,7 +230,7 @@ func() {
 			out = a + 5
 		}
 	}()
-}()`, 15)
+}()`, nil, 15)
 	expect(t, `
 func() {
 	a := 10
@@ -240,7 +240,7 @@ func() {
 			out = a + b()
 		}
 	}()
-}()`, 15)
+}()`, nil, 15)
 	expect(t, `
 func() {
 	a := 10
@@ -252,5 +252,5 @@ func() {
 			}
 		}()
 	}()
-}()`, 15)
+}()`, nil, 15)
 }

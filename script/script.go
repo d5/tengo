@@ -14,12 +14,11 @@ import (
 // Script can simplify compilation and execution of embedded scripts.
 type Script struct {
 	variables        map[string]*Variable
-	builtinFuncs     []objects.Object
-	builtinModules   map[string]objects.Object
-	userModuleLoader compiler.ModuleLoader
+	importModules    map[string]objects.Importable
 	input            []byte
 	maxAllocs        int64
 	maxConstObjects  int
+	enableFileImport bool
 }
 
 // New creates a Script instance with an input script.
@@ -59,33 +58,9 @@ func (s *Script) Remove(name string) bool {
 	return true
 }
 
-// SetBuiltinFunctions allows to define builtin functions.
-func (s *Script) SetBuiltinFunctions(funcs []*objects.BuiltinFunction) {
-	if funcs != nil {
-		s.builtinFuncs = make([]objects.Object, len(funcs))
-		for idx, fn := range funcs {
-			s.builtinFuncs[idx] = fn
-		}
-	} else {
-		s.builtinFuncs = []objects.Object{}
-	}
-}
-
-// SetBuiltinModules allows to define builtin modules.
-func (s *Script) SetBuiltinModules(modules map[string]*objects.ImmutableMap) {
-	if modules != nil {
-		s.builtinModules = make(map[string]objects.Object, len(modules))
-		for k, mod := range modules {
-			s.builtinModules[k] = mod
-		}
-	} else {
-		s.builtinModules = map[string]objects.Object{}
-	}
-}
-
-// SetUserModuleLoader sets the user module loader for the compiler.
-func (s *Script) SetUserModuleLoader(loader compiler.ModuleLoader) {
-	s.userModuleLoader = loader
+// SetImports sets import modules.
+func (s *Script) SetImports(modules map[string]objects.Importable) {
+	s.importModules = modules
 }
 
 // SetMaxAllocs sets the maximum number of objects allocations during the run time.
@@ -99,9 +74,15 @@ func (s *Script) SetMaxConstObjects(n int) {
 	s.maxConstObjects = n
 }
 
+// EnableFileImport enables or disables module loading from local files.
+// Local file modules are disabled by default.
+func (s *Script) EnableFileImport(enable bool) {
+	s.enableFileImport = enable
+}
+
 // Compile compiles the script with all the defined variables, and, returns Compiled object.
 func (s *Script) Compile() (*Compiled, error) {
-	symbolTable, builtinModules, globals, err := s.prepCompile()
+	symbolTable, globals, err := s.prepCompile()
 	if err != nil {
 		return nil, err
 	}
@@ -115,12 +96,8 @@ func (s *Script) Compile() (*Compiled, error) {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(srcFile, symbolTable, nil, builtinModules, nil)
-
-	if s.userModuleLoader != nil {
-		c.SetModuleLoader(s.userModuleLoader)
-	}
-
+	c := compiler.NewCompiler(srcFile, symbolTable, nil, s.importModules, nil)
+	c.EnableFileImport(s.enableFileImport)
 	if err := c.Compile(file); err != nil {
 		return nil, err
 	}
@@ -150,12 +127,10 @@ func (s *Script) Compile() (*Compiled, error) {
 	}
 
 	return &Compiled{
-		globalIndexes:    globalIndexes,
-		bytecode:         bytecode,
-		globals:          globals,
-		builtinFunctions: s.builtinFuncs,
-		builtinModules:   s.builtinModules,
-		maxAllocs:        s.maxAllocs,
+		globalIndexes: globalIndexes,
+		bytecode:      bytecode,
+		globals:       globals,
+		maxAllocs:     s.maxAllocs,
 	}, nil
 }
 
@@ -184,36 +159,15 @@ func (s *Script) RunContext(ctx context.Context) (compiled *Compiled, err error)
 	return
 }
 
-func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, builtinModules map[string]bool, globals []objects.Object, err error) {
+func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, globals []objects.Object, err error) {
 	var names []string
 	for name := range s.variables {
 		names = append(names, name)
 	}
 
 	symbolTable = compiler.NewSymbolTable()
-
-	if s.builtinFuncs == nil {
-		s.builtinFuncs = make([]objects.Object, len(objects.Builtins))
-		for idx, fn := range objects.Builtins {
-			s.builtinFuncs[idx] = &objects.BuiltinFunction{
-				Name:  fn.Name,
-				Value: fn.Value,
-			}
-		}
-	}
-
-	if s.builtinModules == nil {
-		s.builtinModules = make(map[string]objects.Object)
-	}
-
-	for idx, fn := range s.builtinFuncs {
-		f := fn.(*objects.BuiltinFunction)
-		symbolTable.DefineBuiltin(idx, f.Name)
-	}
-
-	builtinModules = make(map[string]bool)
-	for name := range s.builtinModules {
-		builtinModules[name] = true
+	for idx, fn := range objects.Builtins {
+		symbolTable.DefineBuiltin(idx, fn.Name)
 	}
 
 	globals = make([]objects.Object, runtime.GlobalsSize)

@@ -695,7 +695,7 @@ func TestCompiler_Compile(t *testing.T) {
 	expect(t, `len([]);`,
 		bytecode(
 			concat(
-				compiler.MakeInstruction(compiler.OpGetBuiltin, 4),
+				compiler.MakeInstruction(compiler.OpGetBuiltin, 0),
 				compiler.MakeInstruction(compiler.OpArray, 0),
 				compiler.MakeInstruction(compiler.OpCall, 1),
 				compiler.MakeInstruction(compiler.OpPop)),
@@ -708,7 +708,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				compiledFunction(0, 0,
-					compiler.MakeInstruction(compiler.OpGetBuiltin, 4),
+					compiler.MakeInstruction(compiler.OpGetBuiltin, 0),
 					compiler.MakeInstruction(compiler.OpArray, 0),
 					compiler.MakeInstruction(compiler.OpCall, 1),
 					compiler.MakeInstruction(compiler.OpReturnValue)))))
@@ -874,7 +874,7 @@ func() {
 				intObject(1),
 				intObject(1))))
 
-	expectError(t, `import("user1")`, "no such file or directory") // unknown module name
+	expectError(t, `import("user1")`, "module 'user1' not found") // unknown module name
 
 	expectError(t, `
 r["x"] = {

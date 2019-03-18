@@ -226,7 +226,7 @@ Main script:
 ```golang
 sum := import("./sum")   // assuming sum.tengo file exists in the current directory 
                          // same as 'import("./sum.tengo")' or 'import("sum")'
-print(sum(10))           // module function 
+fmt.print(sum(10))       // module function 
 ```
 
 `sum.tengo` file:
