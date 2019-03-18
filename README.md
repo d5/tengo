@@ -15,6 +15,8 @@ Tengo is **[fast](#benchmark)** and secure because it's compiled/executed as byt
 ```golang
 /* The Tengo Language */
 
+fmt := import("fmt")
+
 each := func(seq, fn) {
     for x in seq { fn(x) }
 }
@@ -24,11 +26,11 @@ sum := func(init, seq) {
     return init
 }
 
-println(sum(0, [1, 2, 3]))   // "6"
-println(sum("", [1, 2, 3]))  // "123"
+fmt.println(sum(0, [1, 2, 3]))   // "6"
+fmt.println(sum("", [1, 2, 3]))  // "123"
 ```
 
-> Run this code in the [Playground](https://tengolang.com/?s=3243fd27cd518aef287d16d59349e15a474fd76c)
+> Run this code in the [Playground](https://tengolang.com/?s=0c8d5d0d88f2795a7093d7f35ae12c3afa17bea3)
 
 ## Features
 
