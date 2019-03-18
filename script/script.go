@@ -13,11 +13,12 @@ import (
 
 // Script can simplify compilation and execution of embedded scripts.
 type Script struct {
-	variables       map[string]*Variable
-	importModules   map[string]objects.Importable
-	input           []byte
-	maxAllocs       int64
-	maxConstObjects int
+	variables        map[string]*Variable
+	importModules    map[string]objects.Importable
+	input            []byte
+	maxAllocs        int64
+	maxConstObjects  int
+	enableFileImport bool
 }
 
 // New creates a Script instance with an input script.
@@ -59,15 +60,7 @@ func (s *Script) Remove(name string) bool {
 
 // SetImports sets import modules.
 func (s *Script) SetImports(modules map[string]objects.Importable) {
-	if modules == nil {
-		s.importModules = map[string]objects.Importable{}
-		return
-	}
-
-	s.importModules = make(map[string]objects.Importable, len(modules))
-	for k, mod := range modules {
-		s.importModules[k] = mod
-	}
+	s.importModules = modules
 }
 
 // SetMaxAllocs sets the maximum number of objects allocations during the run time.
@@ -79,6 +72,12 @@ func (s *Script) SetMaxAllocs(n int64) {
 // SetMaxConstObjects sets the maximum number of objects in the compiled constants.
 func (s *Script) SetMaxConstObjects(n int) {
 	s.maxConstObjects = n
+}
+
+// EnableFileImport enables or disables module loading from local files.
+// Local file modules are disabled by default.
+func (s *Script) EnableFileImport(enable bool) {
+	s.enableFileImport = enable
 }
 
 // Compile compiles the script with all the defined variables, and, returns Compiled object.
@@ -98,6 +97,7 @@ func (s *Script) Compile() (*Compiled, error) {
 	}
 
 	c := compiler.NewCompiler(srcFile, symbolTable, nil, s.importModules, nil)
+	c.EnableFileImport(s.enableFileImport)
 	if err := c.Compile(file); err != nil {
 		return nil, err
 	}
@@ -168,10 +168,6 @@ func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, globals []obj
 	symbolTable = compiler.NewSymbolTable()
 	for idx, fn := range objects.Builtins {
 		symbolTable.DefineBuiltin(idx, fn.Name)
-	}
-
-	if s.importModules == nil {
-		s.importModules = make(map[string]objects.Importable)
 	}
 
 	globals = make([]objects.Object, runtime.GlobalsSize)
