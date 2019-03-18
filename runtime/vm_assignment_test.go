@@ -5,17 +5,17 @@ import (
 )
 
 func TestAssignment(t *testing.T) {
-	expect(t, `a := 1; a = 2; out = a`, 2)
-	expect(t, `a := 1; a = 2; out = a`, 2)
-	expect(t, `a := 1; a = a + 4; out = a`, 5)
-	expect(t, `a := 1; f1 := func() { a = 2; return a }; out = f1()`, 2)
-	expect(t, `a := 1; f1 := func() { a := 3; a = 2; return a }; out = f1()`, 2)
+	expect(t, `a := 1; a = 2; out = a`, nil, 2)
+	expect(t, `a := 1; a = 2; out = a`, nil, 2)
+	expect(t, `a := 1; a = a + 4; out = a`, nil, 5)
+	expect(t, `a := 1; f1 := func() { a = 2; return a }; out = f1()`, nil, 2)
+	expect(t, `a := 1; f1 := func() { a := 3; a = 2; return a }; out = f1()`, nil, 2)
 
-	expect(t, `a := 1; out = a`, 1)
-	expect(t, `a := 1; a = 2; out = a`, 2)
-	expect(t, `a := 1; func() { a = 2 }(); out = a`, 2)
-	expect(t, `a := 1; func() { a := 2 }(); out = a`, 1) // "a := 2" defines a new local variable 'a'
-	expect(t, `a := 1; func() { b := 2; out = b }()`, 2)
+	expect(t, `a := 1; out = a`, nil, 1)
+	expect(t, `a := 1; a = 2; out = a`, nil, 2)
+	expect(t, `a := 1; func() { a = 2 }(); out = a`, nil, 2)
+	expect(t, `a := 1; func() { a := 2 }(); out = a`, nil, 1) // "a := 2" defines a new local variable 'a'
+	expect(t, `a := 1; func() { b := 2; out = b }()`, nil, 2)
 	expect(t, `
 out = func() { 
 	a := 2
@@ -24,7 +24,7 @@ out = func() {
 	}()
 	return a
 }()
-`, 3)
+`, nil, 3)
 
 	expect(t, `
 func() {
@@ -33,25 +33,25 @@ func() {
 		a := 4						
 		return a
 	}()
-}()`, 4)
+}()`, nil, 4)
 
-	expectError(t, `a := 1; a := 2`, "redeclared")              // redeclared in the same scope
-	expectError(t, `func() { a := 1; a := 2 }()`, "redeclared") // redeclared in the same scope
+	expectError(t, `a := 1; a := 2`, nil, "redeclared")              // redeclared in the same scope
+	expectError(t, `func() { a := 1; a := 2 }()`, nil, "redeclared") // redeclared in the same scope
 
-	expect(t, `a := 1; a += 2; out = a`, 3)
-	expect(t, `a := 1; a += 4 - 2;; out = a`, 3)
-	expect(t, `a := 3; a -= 1;; out = a`, 2)
-	expect(t, `a := 3; a -= 5 - 4;; out = a`, 2)
-	expect(t, `a := 2; a *= 4;; out = a`, 8)
-	expect(t, `a := 2; a *= 1 + 3;; out = a`, 8)
-	expect(t, `a := 10; a /= 2;; out = a`, 5)
-	expect(t, `a := 10; a /= 5 - 3;; out = a`, 5)
+	expect(t, `a := 1; a += 2; out = a`, nil, 3)
+	expect(t, `a := 1; a += 4 - 2;; out = a`, nil, 3)
+	expect(t, `a := 3; a -= 1;; out = a`, nil, 2)
+	expect(t, `a := 3; a -= 5 - 4;; out = a`, nil, 2)
+	expect(t, `a := 2; a *= 4;; out = a`, nil, 8)
+	expect(t, `a := 2; a *= 1 + 3;; out = a`, nil, 8)
+	expect(t, `a := 10; a /= 2;; out = a`, nil, 5)
+	expect(t, `a := 10; a /= 5 - 3;; out = a`, nil, 5)
 
 	// compound assignment operator does not define new variable
-	expectError(t, `a += 4`, "unresolved reference")
-	expectError(t, `a -= 4`, "unresolved reference")
-	expectError(t, `a *= 4`, "unresolved reference")
-	expectError(t, `a /= 4`, "unresolved reference")
+	expectError(t, `a += 4`, nil, "unresolved reference")
+	expectError(t, `a -= 4`, nil, "unresolved reference")
+	expectError(t, `a *= 4`, nil, "unresolved reference")
+	expectError(t, `a /= 4`, nil, "unresolved reference")
 
 	expect(t, `
 f1 := func() { 
@@ -64,16 +64,16 @@ f1 := func() {
 	return f2(); 
 }; 
 
-out = f1();`, 3)
-	expect(t, `f1 := func() { f2 := func() { a := 1; a += 4 - 2; return a }; return f2(); }; out = f1()`, 3)
-	expect(t, `f1 := func() { f2 := func() { a := 3; a -= 1; return a }; return f2(); }; out = f1()`, 2)
-	expect(t, `f1 := func() { f2 := func() { a := 3; a -= 5 - 4; return a }; return f2(); }; out = f1()`, 2)
-	expect(t, `f1 := func() { f2 := func() { a := 2; a *= 4; return a }; return f2(); }; out = f1()`, 8)
-	expect(t, `f1 := func() { f2 := func() { a := 2; a *= 1 + 3; return a }; return f2(); }; out = f1()`, 8)
-	expect(t, `f1 := func() { f2 := func() { a := 10; a /= 2; return a }; return f2(); }; out = f1()`, 5)
-	expect(t, `f1 := func() { f2 := func() { a := 10; a /= 5 - 3; return a }; return f2(); }; out = f1()`, 5)
+out = f1();`, nil, 3)
+	expect(t, `f1 := func() { f2 := func() { a := 1; a += 4 - 2; return a }; return f2(); }; out = f1()`, nil, 3)
+	expect(t, `f1 := func() { f2 := func() { a := 3; a -= 1; return a }; return f2(); }; out = f1()`, nil, 2)
+	expect(t, `f1 := func() { f2 := func() { a := 3; a -= 5 - 4; return a }; return f2(); }; out = f1()`, nil, 2)
+	expect(t, `f1 := func() { f2 := func() { a := 2; a *= 4; return a }; return f2(); }; out = f1()`, nil, 8)
+	expect(t, `f1 := func() { f2 := func() { a := 2; a *= 1 + 3; return a }; return f2(); }; out = f1()`, nil, 8)
+	expect(t, `f1 := func() { f2 := func() { a := 10; a /= 2; return a }; return f2(); }; out = f1()`, nil, 5)
+	expect(t, `f1 := func() { f2 := func() { a := 10; a /= 5 - 3; return a }; return f2(); }; out = f1()`, nil, 5)
 
-	expect(t, `a := 1; f1 := func() { f2 := func() { a += 2; return a }; return f2(); }; out = f1()`, 3)
+	expect(t, `a := 1; f1 := func() { f2 := func() { a += 2; return a }; return f2(); }; out = f1()`, nil, 3)
 
 	expect(t, `
 	f1 := func(a) {
@@ -85,7 +85,7 @@ out = f1();`, 3)
 	}
 	
 	out = f1(3)(4)
-	`, 11)
+	`, nil, 11)
 
 	expect(t, `
 	out = func() {
@@ -101,7 +101,7 @@ out = f1();`, 3)
 		}()
 		return a
 	}()
-	`, 3)
+	`, nil, 3)
 
 	// write on free variables
 	expect(t, `
@@ -114,7 +114,7 @@ out = f1();`, 3)
 		}()
 	}
 	out = f1()
-	`, 8)
+	`, nil, 8)
 
 	expect(t, `
     out = func() {
@@ -127,7 +127,7 @@ out = f1();`, 3)
         }
         return f1()
     }()()
-    `, 20)
+    `, nil, 20)
 
 	expect(t, `
 		it := func(seq, fn) {
@@ -145,7 +145,7 @@ out = f1();`, 3)
 		}
 	
 		out = foo(2)
-		`, 5)
+		`, nil, 5)
 
 	expect(t, `
 		it := func(seq, fn) {
@@ -163,7 +163,7 @@ out = f1();`, 3)
 		}
 	
 		out = foo(2)
-		`, 12)
+		`, nil, 12)
 
 	expect(t, `
 out = func() {
@@ -173,7 +173,7 @@ out = func() {
 	}()
 	return a
 }()
-`, 2)
+`, nil, 2)
 
 	expect(t, `
 f := func() {
@@ -188,7 +188,7 @@ m := f()
 m.b()
 m.c()
 out = m.d()
-`, 6)
+`, nil, 6)
 
 	expect(t, `
 each := func(s, x) { for i:=0; i<len(s); i++ { x(s[i]) } }
@@ -203,11 +203,11 @@ out = func() {
 		return a + b
 	}
 }()(20)
-`, 136)
+`, nil, 136)
 
 	// assigning different type value
-	expect(t, `a := 1; a = "foo"; out = a`, "foo")              // global
-	expect(t, `func() { a := 1; a = "foo"; out = a }()`, "foo") // local
+	expect(t, `a := 1; a = "foo"; out = a`, nil, "foo")                                                 // global
+	expect(t, `func() { a := 1; a = "foo"; out = a }()`, nil, "foo")                                    // local
 	expect(t, `
 out = func() { 
 	a := 5
@@ -215,19 +215,19 @@ out = func() {
 		a = "foo"
 		return a
 	}()
-}()`, "foo") // free
+}()`, nil, "foo") // free
 
 	// variables declared in if/for blocks
-	expect(t, `for a:=0; a<5; a++ {}; a := "foo"; out = a`, "foo")
-	expect(t, `func() { for a:=0; a<5; a++ {}; a := "foo"; out = a }()`, "foo")
+	expect(t, `for a:=0; a<5; a++ {}; a := "foo"; out = a`, nil, "foo")
+	expect(t, `func() { for a:=0; a<5; a++ {}; a := "foo"; out = a }()`, nil, "foo")
 
 	// selectors
-	expect(t, `a:=[1,2,3]; a[1] = 5; out = a[1]`, 5)
-	expect(t, `a:=[1,2,3]; a[1] += 5; out = a[1]`, 7)
-	expect(t, `a:={b:1,c:2}; a.b = 5; out = a.b`, 5)
-	expect(t, `a:={b:1,c:2}; a.b += 5; out = a.b`, 6)
-	expect(t, `a:={b:1,c:2}; a.b += a.c; out = a.b`, 3)
-	expect(t, `a:={b:1,c:2}; a.b += a.c; out = a.c`, 2)
+	expect(t, `a:=[1,2,3]; a[1] = 5; out = a[1]`, nil, 5)
+	expect(t, `a:=[1,2,3]; a[1] += 5; out = a[1]`, nil, 7)
+	expect(t, `a:={b:1,c:2}; a.b = 5; out = a.b`, nil, 5)
+	expect(t, `a:={b:1,c:2}; a.b += 5; out = a.b`, nil, 6)
+	expect(t, `a:={b:1,c:2}; a.b += a.c; out = a.b`, nil, 3)
+	expect(t, `a:={b:1,c:2}; a.b += a.c; out = a.c`, nil, 2)
 	expect(t, `
 a := {
 	b: [1, 2, 3],
@@ -239,7 +239,7 @@ a := {
 }
 a.c.f[1] += 2
 out = a["c"]["f"][1]
-`, 10)
+`, nil, 10)
 
 	expect(t, `
 a := {
@@ -252,7 +252,7 @@ a := {
 }
 a.c.h = "bar"
 out = a.c.h
-`, "bar")
+`, nil, "bar")
 
 	expectError(t, `
 a := {
@@ -263,9 +263,5 @@ a := {
 		f: [9, 8]
 	}
 }
-a.x.e = "bar"`, "not index-assignable")
-
-	// multi-variables
-	//expect(t, `a, b = 1, 2; out = a + b`, 3)
-	//expect(t, `a, b = 1, 2; a, b = 2, 3; out = a + b`, 5)
+a.x.e = "bar"`, nil, "not index-assignable")
 }

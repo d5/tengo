@@ -36,5 +36,5 @@ export {
       idx += size
     }
     return res
-  },
+  }
 }

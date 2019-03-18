@@ -65,6 +65,13 @@ func TestMap(t *testing.T) {
 					mapElementLit("key3", p(5, 2), p(5, 6), boolLit(true, p(5, 8))))))
 	})
 
+	expectError(t, `
+{
+	key1: 1,
+	key2: "2",
+	key3: true,
+}`) // unlike Go, trailing comma for the last element is illegal
+
 	expectError(t, `{ key1: 1, }`)
 	expectError(t, `{
 key1: 1,

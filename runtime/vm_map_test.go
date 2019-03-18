@@ -12,7 +12,7 @@ out = {
 	one: 10 - 9,
 	two: 1 + 1,
 	three: 6 / 2
-}`, MAP{
+}`, nil, MAP{
 		"one":   1,
 		"two":   2,
 		"three": 3,
@@ -23,16 +23,16 @@ out = {
 	"one": 10 - 9,
 	"two": 1 + 1,
 	"three": 6 / 2
-}`, MAP{
+}`, nil, MAP{
 		"one":   1,
 		"two":   2,
 		"three": 3,
 	})
 
-	expect(t, `out = {foo: 5}["foo"]`, 5)
-	expect(t, `out = {foo: 5}["bar"]`, objects.UndefinedValue)
-	expect(t, `key := "foo"; out = {foo: 5}[key]`, 5)
-	expect(t, `out = {}["foo"]`, objects.UndefinedValue)
+	expect(t, `out = {foo: 5}["foo"]`, nil, 5)
+	expect(t, `out = {foo: 5}["bar"]`, nil, objects.UndefinedValue)
+	expect(t, `key := "foo"; out = {foo: 5}[key]`, nil, 5)
+	expect(t, `out = {}["foo"]`, nil, objects.UndefinedValue)
 
 	expect(t, `
 m := {
@@ -41,11 +41,11 @@ m := {
 	}
 }
 out = m["foo"](2) + m["foo"](3)
-`, 10)
+`, nil, 10)
 
 	// map assignment is copy-by-reference
-	expect(t, `m1 := {k1: 1, k2: "foo"}; m2 := m1; m1.k1 = 5; out = m2.k1`, 5)
-	expect(t, `m1 := {k1: 1, k2: "foo"}; m2 := m1; m2.k1 = 3; out = m1.k1`, 3)
-	expect(t, `func() { m1 := {k1: 1, k2: "foo"}; m2 := m1; m1.k1 = 5; out = m2.k1 }()`, 5)
-	expect(t, `func() { m1 := {k1: 1, k2: "foo"}; m2 := m1; m2.k1 = 3; out = m1.k1 }()`, 3)
+	expect(t, `m1 := {k1: 1, k2: "foo"}; m2 := m1; m1.k1 = 5; out = m2.k1`, nil, 5)
+	expect(t, `m1 := {k1: 1, k2: "foo"}; m2 := m1; m2.k1 = 3; out = m1.k1`, nil, 3)
+	expect(t, `func() { m1 := {k1: 1, k2: "foo"}; m2 := m1; m1.k1 = 5; out = m2.k1 }()`, nil, 5)
+	expect(t, `func() { m1 := {k1: 1, k2: "foo"}; m2 := m1; m2.k1 = 3; out = m1.k1 }()`, nil, 3)
 }

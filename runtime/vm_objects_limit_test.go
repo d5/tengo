@@ -37,13 +37,13 @@ f()
 }
 
 func testAllocsLimit(t *testing.T, src string, limit int64) {
-	expectOpts(t, src, Opts().Skip2ndPass(), objects.UndefinedValue) // no limit
-	expectOpts(t, src, Opts().MaxAllocs(limit).Skip2ndPass(), objects.UndefinedValue)
-	expectOpts(t, src, Opts().MaxAllocs(limit+1).Skip2ndPass(), objects.UndefinedValue)
+	expect(t, src, Opts().Skip2ndPass(), objects.UndefinedValue) // no limit
+	expect(t, src, Opts().MaxAllocs(limit).Skip2ndPass(), objects.UndefinedValue)
+	expect(t, src, Opts().MaxAllocs(limit+1).Skip2ndPass(), objects.UndefinedValue)
 	if limit > 1 {
-		expectErrorOpts(t, src, Opts().MaxAllocs(limit-1).Skip2ndPass(), "allocation limit exceeded")
+		expectError(t, src, Opts().MaxAllocs(limit-1).Skip2ndPass(), "allocation limit exceeded")
 	}
 	if limit > 2 {
-		expectErrorOpts(t, src, Opts().MaxAllocs(limit-2).Skip2ndPass(), "allocation limit exceeded")
+		expectError(t, src, Opts().MaxAllocs(limit-2).Skip2ndPass(), "allocation limit exceeded")
 	}
 }

@@ -44,7 +44,7 @@ var SourceModules = map[string]*objects.SourceModule{
       idx += size
     }
     return res
-  },
+  }
 }
 `)},
 }

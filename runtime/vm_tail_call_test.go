@@ -10,7 +10,7 @@ func TestTailCall(t *testing.T) {
 		}
 		return fac(n-1, n*a)
 	}
-	out = fac(5, 1)`, 120)
+	out = fac(5, 1)`, nil, 120)
 
 	expect(t, `
 	fac := func(n, a) {
@@ -20,7 +20,7 @@ func TestTailCall(t *testing.T) {
 		x := {foo: fac} // indirection for test
 		return x.foo(n-1, n*a)
 	}
-	out = fac(5, 1)`, 120)
+	out = fac(5, 1)`, nil, 120)
 
 	expect(t, `
 	fib := func(x, s) {
@@ -31,7 +31,7 @@ func TestTailCall(t *testing.T) {
 		}
 		return fib(x-1, fib(x-2, s))
 	}
-	out = fib(15, 0)`, 610)
+	out = fib(15, 0)`, nil, 610)
 
 	expect(t, `
 	fib := func(n, a, b) {
@@ -42,7 +42,7 @@ func TestTailCall(t *testing.T) {
 		}
 		return fib(n-1, b, a + b)
 	}
-	out = fib(15, 0, 1)`, 610)
+	out = fib(15, 0, 1)`, nil, 610)
 
 	// global variable and no return value
 	expect(t, `
@@ -54,7 +54,7 @@ func TestTailCall(t *testing.T) {
 			   out += a
 			   foo(a-1)
 			}
-			foo(10)`, 55)
+			foo(10)`, nil, 55)
 
 	expect(t, `
 	f1 := func() {
@@ -65,7 +65,7 @@ func TestTailCall(t *testing.T) {
 		}
 		return f2(5, 0)
 	}
-	out = f1()`, 15)
+	out = f1()`, nil, 15)
 
 	// tail-call replacing loop
 	// without tail-call optimization, this code will cause stack overflow
@@ -78,7 +78,7 @@ iter := func(n, max) {
 	return iter(n+1, max)
 }
 out = iter(0, 9999)
-`, 9999)
+`, nil, 9999)
 	expect(t, `
 c := 0
 iter := func(n, max) {
@@ -91,7 +91,7 @@ iter := func(n, max) {
 }
 iter(0, 9999)
 out = c 
-`, 9999)
+`, nil, 9999)
 }
 
 // tail call with free vars
@@ -107,5 +107,5 @@ func() {
 		return f2(n-1, n+s)
 	}
 	out = f2(5, 0)
-}()`, 25)
+}()`, nil, 25)
 }

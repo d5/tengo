@@ -22,7 +22,6 @@ type IARR []interface{}
 type IMAP map[string]interface{}
 type MAP = map[string]interface{}
 type ARR = []interface{}
-type SYM = map[string]objects.Object
 
 type testopts struct {
 	modules     map[string]objects.Importable
@@ -89,43 +88,21 @@ func (o *testopts) Skip2ndPass() *testopts {
 	return c
 }
 
-func expect(t *testing.T, input string, expected interface{}) {
-	runVM(t, input, expected, nil, nil, nil, -1, false)
-}
-
-func expectOpts(t *testing.T, input string, opts *testopts, expected interface{}) {
+func expect(t *testing.T, input string, opts *testopts, expected interface{}) {
 	if opts == nil {
 		opts = Opts()
 	}
-	runVM(t, input, expected, opts.symbols, nil, opts.modules, opts.maxAllocs, opts.skip2ndPass)
-}
 
-func expectError(t *testing.T, input, expected string) {
-	runVMError(t, input, nil, nil, nil, -1, expected)
-}
+	symbols := opts.symbols
+	modules := opts.modules
+	maxAllocs := opts.maxAllocs
 
-func expectErrorOpts(t *testing.T, input string, opts *testopts, expected string) {
-	if opts == nil {
-		opts = Opts()
-	}
-	runVMError(t, input, opts.symbols, nil, opts.modules, opts.maxAllocs, expected)
-}
-
-func runVM(t *testing.T, input string, expected interface{}, symbols map[string]objects.Object, sourceModules map[string]string, builtinModules map[string]objects.Importable, maxAllocs int64, skipModuleTest bool) {
 	expectedObj := toObject(expected)
 
 	if symbols == nil {
 		symbols = make(map[string]objects.Object)
 	}
 	symbols[testOut] = objectZeroCopy(expectedObj)
-
-	importModules := make(map[string]objects.Importable)
-	for name, mod := range builtinModules {
-		importModules[name] = mod
-	}
-	for name, src := range sourceModules {
-		importModules[name] = &objects.SourceModule{Src: []byte(src)}
-	}
 
 	// first pass: run the code normally
 	{
@@ -136,7 +113,7 @@ func runVM(t *testing.T, input string, expected interface{}, symbols map[string]
 		}
 
 		// compiler/VM
-		res, trace, err := traceCompileRun(file, symbols, importModules, maxAllocs)
+		res, trace, err := traceCompileRun(file, symbols, modules, maxAllocs)
 		if !assert.NoError(t, err) ||
 			!assert.Equal(t, expectedObj, res[testOut]) {
 			t.Log("\n" + strings.Join(trace, "\n"))
@@ -144,7 +121,7 @@ func runVM(t *testing.T, input string, expected interface{}, symbols map[string]
 	}
 
 	// second pass: run the code as import module
-	if !skipModuleTest {
+	if !opts.skip2ndPass {
 		file := parse(t, `out = import("__code__")`)
 		if file == nil {
 			return
@@ -158,11 +135,11 @@ func runVM(t *testing.T, input string, expected interface{}, symbols map[string]
 			expectedObj = &objects.ImmutableMap{Value: eo.Value}
 		}
 
-		importModules["__code__"] = &objects.SourceModule{
+		modules["__code__"] = &objects.SourceModule{
 			Src: []byte(fmt.Sprintf("out := undefined; %s; export out", input)),
 		}
 
-		res, trace, err := traceCompileRun(file, symbols, importModules, maxAllocs)
+		res, trace, err := traceCompileRun(file, symbols, modules, maxAllocs)
 		if !assert.NoError(t, err) ||
 			!assert.Equal(t, expectedObj, res[testOut]) {
 			t.Log("\n" + strings.Join(trace, "\n"))
@@ -170,7 +147,15 @@ func runVM(t *testing.T, input string, expected interface{}, symbols map[string]
 	}
 }
 
-func runVMError(t *testing.T, input string, symbols map[string]objects.Object, sourceModules map[string]string, builtinModules map[string]objects.Importable, maxAllocs int64, expected string) {
+func expectError(t *testing.T, input string, opts *testopts, expected string) {
+	if opts == nil {
+		opts = Opts()
+	}
+
+	symbols := opts.symbols
+	modules := opts.modules
+	maxAllocs := opts.maxAllocs
+
 	expected = strings.TrimSpace(expected)
 	if expected == "" {
 		panic("expected must not be empty")
@@ -182,16 +167,8 @@ func runVMError(t *testing.T, input string, symbols map[string]objects.Object, s
 		return
 	}
 
-	importModules := make(map[string]objects.Importable)
-	for name, mod := range builtinModules {
-		importModules[name] = mod
-	}
-	for name, src := range sourceModules {
-		importModules[name] = &objects.SourceModule{Src: []byte(src)}
-	}
-
 	// compiler/VM
-	_, trace, err := traceCompileRun(program, symbols, importModules, maxAllocs)
+	_, trace, err := traceCompileRun(program, symbols, modules, maxAllocs)
 	if !assert.Error(t, err) ||
 		!assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
 		t.Log("\n" + strings.Join(trace, "\n"))
@@ -207,7 +184,7 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func traceCompileRun(file *ast.File, symbols map[string]objects.Object, importModules map[string]objects.Importable, maxAllocs int64) (res map[string]objects.Object, trace []string, err error) {
+func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules map[string]objects.Importable, maxAllocs int64) (res map[string]objects.Object, trace []string, err error) {
 	var v *runtime.VM
 
 	defer func() {
@@ -244,7 +221,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, importMo
 	}
 
 	tr := &tracer{}
-	c := compiler.NewCompiler(file.InputFile, symTable, nil, importModules, tr)
+	c := compiler.NewCompiler(file.InputFile, symTable, nil, modules, tr)
 	err = c.Compile(file)
 	trace = append(trace, fmt.Sprintf("\n[Compiler Trace]\n\n%s", strings.Join(tr.Out, "")))
 	if err != nil {

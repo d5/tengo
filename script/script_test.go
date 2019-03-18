@@ -1,7 +1,6 @@
 package script_test
 
 import (
-	"math"
 	"testing"
 
 	"github.com/d5/tengo/assert"
@@ -54,16 +53,7 @@ func TestScript_Run(t *testing.T) {
 
 func TestScript_BuiltinModules(t *testing.T) {
 	s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
-	s.SetImports(map[string]objects.Importable{
-		"math": &objects.BuiltinModule{
-			Attrs: map[string]objects.Object{
-				"abs": &objects.UserFunction{Name: "abs", Value: func(args ...objects.Object) (ret objects.Object, err error) {
-					v, _ := objects.ToFloat64(args[0])
-					return &objects.Float{Value: math.Abs(v)}, nil
-				}},
-			},
-		},
-	})
+	s.SetImports(map[string]objects.Importable{"math": stdlib.BuiltinModules["math"]})
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
@@ -86,16 +76,15 @@ func TestScript_BuiltinModules(t *testing.T) {
 func TestScript_SourceModules(t *testing.T) {
 	s := script.New([]byte(`
 enum := import("enum")
-a := 0
-enum.each([1,2,3], func(_, v) { 
-	a += v
+a := enum.all([1,2,3], func(_, v) { 
+	return v > 0 
 })
 `))
 	s.SetImports(stdlib.GetModules("enum"))
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
-	compiledGet(t, c, "a", int64(6))
+	compiledGet(t, c, "a", true)
 
 	s.SetImports(nil)
 	_, err = s.Run()
