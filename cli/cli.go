@@ -192,6 +192,28 @@ func runREPL(modules map[string]objects.Importable, in io.Reader, out io.Writer)
 		symbolTable.DefineBuiltin(idx, fn.Name)
 	}
 
+	// embed println function
+	symbol := symbolTable.Define("__repl_println__")
+	globals[symbol.Index] = &objects.UserFunction{
+		Name: "println",
+		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			var printArgs []interface{}
+			for _, arg := range args {
+				if _, isUndefined := arg.(*objects.Undefined); isUndefined {
+					printArgs = append(printArgs, "<undefined>")
+				} else {
+					s, _ := objects.ToString(arg)
+					printArgs = append(printArgs, s)
+				}
+			}
+
+			printArgs = append(printArgs, "\n")
+			_, _ = fmt.Print(printArgs...)
+
+			return
+		},
+	}
+
 	var constants []objects.Object
 
 	for {
@@ -257,14 +279,13 @@ func compileSrc(modules map[string]objects.Importable, src []byte, filename stri
 
 func addPrints(file *ast.File) *ast.File {
 	var stmts []ast.Stmt
+
 	for _, s := range file.Stmts {
 		switch s := s.(type) {
 		case *ast.ExprStmt:
 			stmts = append(stmts, &ast.ExprStmt{
 				Expr: &ast.CallExpr{
-					Func: &ast.Ident{
-						Name: "print",
-					},
+					Func: &ast.Ident{Name: "__repl_println__"},
 					Args: []ast.Expr{s.Expr},
 				},
 			})
@@ -275,7 +296,7 @@ func addPrints(file *ast.File) *ast.File {
 			stmts = append(stmts, &ast.ExprStmt{
 				Expr: &ast.CallExpr{
 					Func: &ast.Ident{
-						Name: "print",
+						Name: "__repl_println__",
 					},
 					Args: s.LHS,
 				},
