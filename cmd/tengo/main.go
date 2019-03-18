@@ -4,7 +4,6 @@ import (
 	"flag"
 
 	"github.com/d5/tengo/cli"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/stdlib"
 )
 
@@ -23,17 +22,12 @@ func init() {
 }
 
 func main() {
-	builtinModules := make(map[string]objects.Importable, len(stdlib.BuiltinModules))
-	for k, mod := range stdlib.BuiltinModules {
-		builtinModules[k] = mod
-	}
-
 	cli.Run(&cli.Options{
-		ShowHelp:       showHelp,
-		ShowVersion:    showVersion,
-		Version:        version,
-		CompileOutput:  compileOutput,
-		BuiltinModules: builtinModules,
-		InputFile:      flag.Arg(0),
+		ShowHelp:      showHelp,
+		ShowVersion:   showVersion,
+		Version:       version,
+		CompileOutput: compileOutput,
+		Modules:       stdlib.GetModules(stdlib.AllModuleNames()...),
+		InputFile:     flag.Arg(0),
 	})
 }

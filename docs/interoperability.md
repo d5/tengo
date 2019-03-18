@@ -150,6 +150,9 @@ s.SetImports(map[string]objects.Importable{
 
 SetMaxAllocs sets the maximum number of object allocations. Note this is a cumulative metric that tracks only the object creations. Set this to a negative number (e.g. `-1`) if you don't need to limit the number of allocations.
    
+#### Script.EnableFileImport(enable bool)
+
+EnableFileImport enables or disables module loading from the local files. It's disabled by default. 
 
 #### tengo.MaxStringLen
 

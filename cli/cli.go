@@ -40,13 +40,9 @@ type Options struct {
 	// Version
 	Version string
 
-	// Builtin modules
-	BuiltinModules map[string]objects.Importable
+	// Import modules
+	Modules map[string]objects.Importable
 }
-
-var (
-	builtinModules map[string]objects.Importable
-)
 
 // Run CLI
 func Run(options *Options) {
@@ -58,11 +54,9 @@ func Run(options *Options) {
 		return
 	}
 
-	builtinModules = options.BuiltinModules
-
 	if options.InputFile == "" {
 		// REPL
-		runREPL(os.Stdin, os.Stdout)
+		runREPL(options.Modules, os.Stdin, os.Stdout)
 		return
 	}
 
@@ -73,12 +67,12 @@ func Run(options *Options) {
 	}
 
 	if options.CompileOutput != "" {
-		if err := compileOnly(inputData, options.InputFile, options.CompileOutput); err != nil {
+		if err := compileOnly(options.Modules, inputData, options.InputFile, options.CompileOutput); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 	} else if filepath.Ext(options.InputFile) == sourceFileExt {
-		if err := compileAndRun(inputData, options.InputFile); err != nil {
+		if err := compileAndRun(options.Modules, inputData, options.InputFile); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
@@ -122,8 +116,8 @@ func doHelp() {
 	fmt.Println()
 }
 
-func compileOnly(data []byte, inputFile, outputFile string) (err error) {
-	bytecode, err := compileSrc(data, filepath.Base(inputFile))
+func compileOnly(modules map[string]objects.Importable, data []byte, inputFile, outputFile string) (err error) {
+	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
 	if err != nil {
 		return
 	}
@@ -154,8 +148,8 @@ func compileOnly(data []byte, inputFile, outputFile string) (err error) {
 	return
 }
 
-func compileAndRun(data []byte, inputFile string) (err error) {
-	bytecode, err := compileSrc(data, filepath.Base(inputFile))
+func compileAndRun(modules map[string]objects.Importable, data []byte, inputFile string) (err error) {
+	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
 	if err != nil {
 		return
 	}
@@ -187,7 +181,7 @@ func runCompiled(data []byte) (err error) {
 	return
 }
 
-func runREPL(in io.Reader, out io.Writer) {
+func runREPL(modules map[string]objects.Importable, in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
 
 	fileSet := source.NewFileSet()
@@ -220,7 +214,7 @@ func runREPL(in io.Reader, out io.Writer) {
 
 		file = addPrints(file)
 
-		c := compiler.NewCompiler(srcFile, symbolTable, constants, builtinModules, nil)
+		c := compiler.NewCompiler(srcFile, symbolTable, constants, modules, nil)
 		if err := c.Compile(file); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
@@ -238,7 +232,7 @@ func runREPL(in io.Reader, out io.Writer) {
 	}
 }
 
-func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
+func compileSrc(modules map[string]objects.Importable, src []byte, filename string) (*compiler.Bytecode, error) {
 	fileSet := source.NewFileSet()
 	srcFile := fileSet.AddFile(filename, -1, len(src))
 
@@ -248,7 +242,7 @@ func compileSrc(src []byte, filename string) (*compiler.Bytecode, error) {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(srcFile, nil, nil, builtinModules, nil)
+	c := compiler.NewCompiler(srcFile, nil, nil, modules, nil)
 	c.EnableFileImport(true)
 
 	if err := c.Compile(file); err != nil {
