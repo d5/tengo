@@ -38,7 +38,7 @@ func (o *StringArray) Iterate() objects.Iterator {
 func TestIterable(t *testing.T) {
 	strArr := func() *StringArray { return &StringArray{Value: []string{"one", "two", "three"}} }
 
-	expectWithSymbols(t, `for i, s in arr { out += i }`, 3, SYM{"arr": strArr()})
-	expectWithSymbols(t, `for i, s in arr { out += s }`, "onetwothree", SYM{"arr": strArr()})
-	expectWithSymbols(t, `for i, s in arr { out += s + i }`, "one0two1three2", SYM{"arr": strArr()})
+	expectOpts(t, `for i, s in arr { out += i }`, Opts().Symbol("arr", strArr()).Skip2ndPass(), 3)
+	expectOpts(t, `for i, s in arr { out += s }`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "onetwothree")
+	expectOpts(t, `for i, s in arr { out += s + i }`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "one0two1three2")
 }

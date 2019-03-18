@@ -144,19 +144,19 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = is_function(1)`, false)
 	expect(t, `out = is_function(func() {})`, true)
 	expect(t, `out = is_function(func(x) { return x })`, true)
-	expect(t, `out = is_function(len)`, false)                                                                 // builtin function
-	expect(t, `a := func(x) { return func() { return x } }; out = is_function(a)`, true)                       // function
-	expect(t, `a := func(x) { return func() { return x } }; out = is_function(a(5))`, true)                    // closure
-	expectWithSymbols(t, `out = is_function(x)`, false, SYM{"x": &StringArray{Value: []string{"foo", "bar"}}}) // user object
+	expect(t, `out = is_function(len)`, false)                                                                                  // builtin function
+	expect(t, `a := func(x) { return func() { return x } }; out = is_function(a)`, true)                                        // function
+	expect(t, `a := func(x) { return func() { return x } }; out = is_function(a(5))`, true)                                     // closure
+	expectOpts(t, `out = is_function(x)`, Opts().Symbol("x", &StringArray{Value: []string{"foo", "bar"}}).Skip2ndPass(), false) // user object
 
 	// is_callable
 	expect(t, `out = is_callable(1)`, false)
 	expect(t, `out = is_callable(func() {})`, true)
 	expect(t, `out = is_callable(func(x) { return x })`, true)
-	expect(t, `out = is_callable(len)`, true)                                                                 // builtin function
-	expect(t, `a := func(x) { return func() { return x } }; out = is_callable(a)`, true)                      // function
-	expect(t, `a := func(x) { return func() { return x } }; out = is_callable(a(5))`, true)                   // closure
-	expectWithSymbols(t, `out = is_callable(x)`, true, SYM{"x": &StringArray{Value: []string{"foo", "bar"}}}) // user object
+	expect(t, `out = is_callable(len)`, true)                                                                                  // builtin function
+	expect(t, `a := func(x) { return func() { return x } }; out = is_callable(a)`, true)                                       // function
+	expect(t, `a := func(x) { return func() { return x } }; out = is_callable(a(5))`, true)                                    // closure
+	expectOpts(t, `out = is_callable(x)`, Opts().Symbol("x", &StringArray{Value: []string{"foo", "bar"}}).Skip2ndPass(), true) // user object
 }
 
 func TestBytesN(t *testing.T) {

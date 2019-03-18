@@ -225,44 +225,44 @@ func (o *StringArray) Call(args ...objects.Object) (ret objects.Object, err erro
 
 func TestIndexable(t *testing.T) {
 	dict := func() *StringDict { return &StringDict{Value: map[string]string{"a": "foo", "b": "bar"}} }
-	expectWithSymbols(t, `out = dict["a"]`, "foo", SYM{"dict": dict()})
-	expectWithSymbols(t, `out = dict["B"]`, "bar", SYM{"dict": dict()})
-	expectWithSymbols(t, `out = dict["x"]`, objects.UndefinedValue, SYM{"dict": dict()})
-	expectErrorWithSymbols(t, `dict[0]`, SYM{"dict": dict()}, "invalid index type")
+	expectOpts(t, `out = dict["a"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), "foo")
+	expectOpts(t, `out = dict["B"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), "bar")
+	expectOpts(t, `out = dict["x"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), objects.UndefinedValue)
+	expectErrorOpts(t, `dict[0]`, Opts().Symbol("dict", dict()).Skip2ndPass(), "invalid index type")
 
 	strCir := func() *StringCircle { return &StringCircle{Value: []string{"one", "two", "three"}} }
-	expectWithSymbols(t, `out = cir[0]`, "one", SYM{"cir": strCir()})
-	expectWithSymbols(t, `out = cir[1]`, "two", SYM{"cir": strCir()})
-	expectWithSymbols(t, `out = cir[-1]`, "three", SYM{"cir": strCir()})
-	expectWithSymbols(t, `out = cir[-2]`, "two", SYM{"cir": strCir()})
-	expectWithSymbols(t, `out = cir[3]`, "one", SYM{"cir": strCir()})
-	expectErrorWithSymbols(t, `cir["a"]`, SYM{"cir": strCir()}, "invalid index type")
+	expectOpts(t, `out = cir[0]`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "one")
+	expectOpts(t, `out = cir[1]`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "two")
+	expectOpts(t, `out = cir[-1]`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "three")
+	expectOpts(t, `out = cir[-2]`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "two")
+	expectOpts(t, `out = cir[3]`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "one")
+	expectErrorOpts(t, `cir["a"]`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "invalid index type")
 
 	strArr := func() *StringArray { return &StringArray{Value: []string{"one", "two", "three"}} }
-	expectWithSymbols(t, `out = arr["one"]`, 0, SYM{"arr": strArr()})
-	expectWithSymbols(t, `out = arr["three"]`, 2, SYM{"arr": strArr()})
-	expectWithSymbols(t, `out = arr["four"]`, objects.UndefinedValue, SYM{"arr": strArr()})
-	expectWithSymbols(t, `out = arr[0]`, "one", SYM{"arr": strArr()})
-	expectWithSymbols(t, `out = arr[1]`, "two", SYM{"arr": strArr()})
-	expectErrorWithSymbols(t, `arr[-1]`, SYM{"arr": strArr()}, "index out of bounds")
+	expectOpts(t, `out = arr["one"]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), 0)
+	expectOpts(t, `out = arr["three"]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), 2)
+	expectOpts(t, `out = arr["four"]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), objects.UndefinedValue)
+	expectOpts(t, `out = arr[0]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "one")
+	expectOpts(t, `out = arr[1]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "two")
+	expectErrorOpts(t, `arr[-1]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "index out of bounds")
 }
 
 func TestIndexAssignable(t *testing.T) {
 	dict := func() *StringDict { return &StringDict{Value: map[string]string{"a": "foo", "b": "bar"}} }
-	expectWithSymbols(t, `dict["a"] = "1984"; out = dict["a"]`, "1984", SYM{"dict": dict()})
-	expectWithSymbols(t, `dict["c"] = "1984"; out = dict["c"]`, "1984", SYM{"dict": dict()})
-	expectWithSymbols(t, `dict["c"] = 1984; out = dict["C"]`, "1984", SYM{"dict": dict()})
-	expectErrorWithSymbols(t, `dict[0] = "1984"`, SYM{"dict": dict()}, "invalid index type")
+	expectOpts(t, `dict["a"] = "1984"; out = dict["a"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), "1984")
+	expectOpts(t, `dict["c"] = "1984"; out = dict["c"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), "1984")
+	expectOpts(t, `dict["c"] = 1984; out = dict["C"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), "1984")
+	expectErrorOpts(t, `dict[0] = "1984"`, Opts().Symbol("dict", dict()).Skip2ndPass(), "invalid index type")
 
 	strCir := func() *StringCircle { return &StringCircle{Value: []string{"one", "two", "three"}} }
-	expectWithSymbols(t, `cir[0] = "ONE"; out = cir[0]`, "ONE", SYM{"cir": strCir()})
-	expectWithSymbols(t, `cir[1] = "TWO"; out = cir[1]`, "TWO", SYM{"cir": strCir()})
-	expectWithSymbols(t, `cir[-1] = "THREE"; out = cir[2]`, "THREE", SYM{"cir": strCir()})
-	expectWithSymbols(t, `cir[0] = "ONE"; out = cir[3]`, "ONE", SYM{"cir": strCir()})
-	expectErrorWithSymbols(t, `cir["a"] = "ONE"`, SYM{"cir": strCir()}, "invalid index type")
+	expectOpts(t, `cir[0] = "ONE"; out = cir[0]`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "ONE")
+	expectOpts(t, `cir[1] = "TWO"; out = cir[1]`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "TWO")
+	expectOpts(t, `cir[-1] = "THREE"; out = cir[2]`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "THREE")
+	expectOpts(t, `cir[0] = "ONE"; out = cir[3]`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "ONE")
+	expectErrorOpts(t, `cir["a"] = "ONE"`, Opts().Symbol("cir", strCir()).Skip2ndPass(), "invalid index type")
 
 	strArr := func() *StringArray { return &StringArray{Value: []string{"one", "two", "three"}} }
-	expectWithSymbols(t, `arr[0] = "ONE"; out = arr[0]`, "ONE", SYM{"arr": strArr()})
-	expectWithSymbols(t, `arr[1] = "TWO"; out = arr[1]`, "TWO", SYM{"arr": strArr()})
-	expectErrorWithSymbols(t, `arr["one"] = "ONE"`, SYM{"arr": strArr()}, "invalid index type")
+	expectOpts(t, `arr[0] = "ONE"; out = arr[0]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "ONE")
+	expectOpts(t, `arr[1] = "TWO"; out = arr[1]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "TWO")
+	expectErrorOpts(t, `arr["one"] = "ONE"`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "invalid index type")
 }

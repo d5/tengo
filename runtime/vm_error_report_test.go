@@ -24,25 +24,26 @@ a := func() {
 a()`,
 		"Runtime Error: invalid operation: int + string\n\tat test:4:2")
 
-	expectErrorWithUserModules(t, `a := 5
-	a + import("mod1")`, map[string]string{
-		"mod1": `export "foo"`,
-	}, ": invalid operation: int + string\n\tat test:2:2")
+	expectErrorOpts(t, `a := 5
+a + import("mod1")`, Opts().Module(
+		"mod1", `export "foo"`,
+	), ": invalid operation: int + string\n\tat test:2:1")
 
-	expectErrorWithUserModules(t, `a := import("mod1")()`, map[string]string{
-		"mod1": `
+	expectErrorOpts(t, `a := import("mod1")()`,
+		Opts().Module(
+			"mod1", `
 export func() {
 	b := 5
 	return b + "foo"
-}`,
-	}, "Runtime Error: invalid operation: int + string\n\tat mod1:4:9")
+}`), "Runtime Error: invalid operation: int + string\n\tat mod1:4:9")
 
-	expectErrorWithUserModules(t, `a := import("mod1")()`, map[string]string{
-		"mod1": `export import("mod2")()`,
-		"mod2": `
+	expectErrorOpts(t, `a := import("mod1")()`,
+		Opts().Module(
+			"mod1", `export import("mod2")()`).
+			Module(
+				"mod2", `
 export func() {
 	b := 5
 	return b + "foo"
-}`,
-	}, "Runtime Error: invalid operation: int + string\n\tat mod2:4:9")
+}`), "Runtime Error: invalid operation: int + string\n\tat mod2:4:9")
 }
