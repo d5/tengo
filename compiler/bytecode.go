@@ -17,27 +17,6 @@ type Bytecode struct {
 	Constants    []objects.Object
 }
 
-// Decode reads Bytecode data from the reader.
-func (b *Bytecode) Decode(r io.Reader) error {
-	dec := gob.NewDecoder(r)
-
-	if err := dec.Decode(&b.FileSet); err != nil {
-		return err
-	}
-	// TODO: files in b.FileSet.File does not have their 'set' field properly set to b.FileSet
-	// as it's private field and not serialized by gob encoder/decoder.
-
-	if err := dec.Decode(&b.MainFunction); err != nil {
-		return err
-	}
-
-	if err := dec.Decode(&b.Constants); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Encode writes Bytecode data to the writer.
 func (b *Bytecode) Encode(w io.Writer) error {
 	enc := gob.NewEncoder(w)
@@ -92,9 +71,20 @@ func (b *Bytecode) FormatConstants() (output []string) {
 func init() {
 	gob.Register(&source.FileSet{})
 	gob.Register(&source.File{})
+	gob.Register(&objects.Array{})
+	gob.Register(&objects.Bool{})
+	gob.Register(&objects.Bytes{})
 	gob.Register(&objects.Char{})
+	gob.Register(&objects.Closure{})
 	gob.Register(&objects.CompiledFunction{})
+	gob.Register(&objects.Error{})
 	gob.Register(&objects.Float{})
+	gob.Register(&objects.ImmutableArray{})
+	gob.Register(&objects.ImmutableMap{})
 	gob.Register(&objects.Int{})
+	gob.Register(&objects.Map{})
 	gob.Register(&objects.String{})
+	gob.Register(&objects.Time{})
+	gob.Register(&objects.Undefined{})
+	gob.Register(&objects.UserFunction{})
 }

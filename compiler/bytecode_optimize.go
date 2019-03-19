@@ -25,7 +25,7 @@ func (b *Bytecode) RemoveDuplicates() {
 			indexMap[curIdx] = len(deduped)
 			deduped = append(deduped, c)
 		case *objects.ImmutableMap:
-			modName := c.Value["__module_name__"].(*objects.String).Value
+			modName := moduleName(c)
 			newIdx, ok := immutableMaps[modName]
 			if modName != "" && ok {
 				indexMap[curIdx] = newIdx
@@ -72,7 +72,7 @@ func (b *Bytecode) RemoveDuplicates() {
 				deduped = append(deduped, c)
 			}
 		default:
-			panic(fmt.Errorf("invalid constant type: %s", c.TypeName()))
+			panic(fmt.Errorf("unsupported top-level constant type: %s", c.TypeName()))
 		}
 	}
 
@@ -118,4 +118,12 @@ func updateConstIndexes(insts []byte, indexMap map[int]int) {
 
 		i += 1 + read
 	}
+}
+
+func moduleName(mod *objects.ImmutableMap) string {
+	if modName, ok := mod.Value["__module_name__"].(*objects.String); ok {
+		return modName.Value
+	}
+
+	return ""
 }
