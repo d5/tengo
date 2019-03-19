@@ -3,6 +3,7 @@ package compiler_test
 import (
 	"bytes"
 	"testing"
+	"time"
 
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler"
@@ -38,10 +39,64 @@ func TestBytecode(t *testing.T) {
 			compiler.MakeInstruction(compiler.OpConstant, 6),
 			compiler.MakeInstruction(compiler.OpPop)),
 		objectsArray(
-			intObject(55),
-			intObject(66),
-			intObject(77),
-			intObject(88),
+			&objects.Int{Value: 55},
+			&objects.Int{Value: 66},
+			&objects.Int{Value: 77},
+			&objects.Int{Value: 88},
+			&objects.ImmutableMap{
+				Value: map[string]objects.Object{
+					"array": &objects.ImmutableArray{
+						Value: []objects.Object{
+							&objects.Int{Value: 1},
+							&objects.Int{Value: 2},
+							&objects.Int{Value: 3},
+							objects.TrueValue,
+							objects.FalseValue,
+							objects.UndefinedValue,
+						},
+					},
+					"true":  objects.TrueValue,
+					"false": objects.FalseValue,
+					"bytes": &objects.Bytes{Value: make([]byte, 16)},
+					"char":  &objects.Char{Value: 'Y'},
+					"error": &objects.Error{Value: &objects.String{Value: "some error"}},
+					"float": &objects.Float{Value: -19.84},
+					"immutable_array": &objects.ImmutableArray{
+						Value: []objects.Object{
+							&objects.Int{Value: 1},
+							&objects.Int{Value: 2},
+							&objects.Int{Value: 3},
+							objects.TrueValue,
+							objects.FalseValue,
+							objects.UndefinedValue,
+						},
+					},
+					"immutable_map": &objects.ImmutableMap{
+						Value: map[string]objects.Object{
+							"a": &objects.Int{Value: 1},
+							"b": &objects.Int{Value: 2},
+							"c": &objects.Int{Value: 3},
+							"d": objects.TrueValue,
+							"e": objects.FalseValue,
+							"f": objects.UndefinedValue,
+						},
+					},
+					"int": &objects.Int{Value: 91},
+					"map": &objects.Map{
+						Value: map[string]objects.Object{
+							"a": &objects.Int{Value: 1},
+							"b": &objects.Int{Value: 2},
+							"c": &objects.Int{Value: 3},
+							"d": objects.TrueValue,
+							"e": objects.FalseValue,
+							"f": objects.UndefinedValue,
+						},
+					},
+					"string":    &objects.String{Value: "foo bar"},
+					"time":      &objects.Time{Value: time.Now()},
+					"undefined": objects.UndefinedValue,
+				},
+			},
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 3),
 				compiler.MakeInstruction(compiler.OpSetLocal, 0),
@@ -179,10 +234,10 @@ func TestBytecode_CountObjects(t *testing.T) {
 	b := bytecode(
 		concat(),
 		objectsArray(
-			intObject(55),
-			intObject(66),
-			intObject(77),
-			intObject(88),
+			&objects.Int{Value: 55},
+			&objects.Int{Value: 66},
+			&objects.Int{Value: 77},
+			&objects.Int{Value: 88},
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 3),
 				compiler.MakeInstruction(compiler.OpReturnValue)),
