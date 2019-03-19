@@ -509,6 +509,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.emit(node, OpCall, len(node.Args))
 
 	case *ast.ImportExpr:
+		if node.ModuleName == "" {
+			return c.errorf(node, "empty module name")
+		}
+
 		if mod, ok := c.importModules[node.ModuleName]; ok {
 			v, err := mod.Import(node.ModuleName)
 			if err != nil {

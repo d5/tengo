@@ -891,6 +891,8 @@ r["x"] = {
     @k:1
 }
 `, "Parse Error: illegal character U+0040 '@'\n\tat test:3:5 (and 10 more errors)") // too many errors
+
+	expectError(t, `import("")`, "empty module name")
 }
 
 func concat(instructions ...[]byte) []byte {
