@@ -94,6 +94,7 @@ func init() {
 	gob.Register(&source.File{})
 	gob.Register(&objects.Char{})
 	gob.Register(&objects.CompiledFunction{})
+	gob.Register(&objects.ImmutableMap{})
 	gob.Register(&objects.Float{})
 	gob.Register(&objects.Int{})
 	gob.Register(&objects.String{})
