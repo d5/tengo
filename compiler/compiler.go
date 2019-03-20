@@ -24,7 +24,7 @@ type Compiler struct {
 	symbolTable     *SymbolTable
 	scopes          []CompilationScope
 	scopeIndex      int
-	importModules   map[string]objects.Importable
+	modules         *objects.ModuleMap
 	compiledModules map[string]*objects.CompiledFunction
 	allowFileImport bool
 	loops           []*Loop
@@ -34,7 +34,7 @@ type Compiler struct {
 }
 
 // NewCompiler creates a Compiler.
-func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []objects.Object, importModules map[string]objects.Importable, trace io.Writer) *Compiler {
+func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []objects.Object, modules *objects.ModuleMap, trace io.Writer) *Compiler {
 	mainScope := CompilationScope{
 		symbolInit: make(map[string]bool),
 		sourceMap:  make(map[int]source.Pos),
@@ -51,8 +51,8 @@ func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []object
 	}
 
 	// builtin modules
-	if importModules == nil {
-		importModules = make(map[string]objects.Importable)
+	if modules == nil {
+		modules = objects.NewModuleMap()
 	}
 
 	return &Compiler{
@@ -63,7 +63,7 @@ func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []object
 		scopeIndex:      0,
 		loopIndex:       -1,
 		trace:           trace,
-		importModules:   importModules,
+		modules:         modules,
 		compiledModules: make(map[string]*objects.CompiledFunction),
 	}
 }
@@ -513,8 +513,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return c.errorf(node, "empty module name")
 		}
 
-		if mod, ok := c.importModules[node.ModuleName]; ok {
-			v, err := mod.Import()
+		if mod := c.modules.Get(node.ModuleName); mod != nil {
+			v, err := mod.Import(node.ModuleName)
 			if err != nil {
 				return err
 			}
@@ -644,7 +644,7 @@ func (c *Compiler) EnableFileImport(enable bool) {
 }
 
 func (c *Compiler) fork(file *source.File, modulePath string, symbolTable *SymbolTable) *Compiler {
-	child := NewCompiler(file, symbolTable, nil, c.importModules, c.trace)
+	child := NewCompiler(file, symbolTable, nil, c.modules, c.trace)
 	child.modulePath = modulePath // module file path
 	child.parent = c              // parent to set to current compiler
 

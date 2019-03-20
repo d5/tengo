@@ -9,7 +9,11 @@ import (
 )
 
 // Decode reads Bytecode data from the reader.
-func (b *Bytecode) Decode(r io.Reader, builtinModules map[string]objects.Importable) error {
+func (b *Bytecode) Decode(r io.Reader, modules *objects.ModuleMap) error {
+	if modules == nil {
+		modules = objects.NewModuleMap()
+	}
+
 	dec := gob.NewDecoder(r)
 
 	if err := dec.Decode(&b.FileSet); err != nil {
@@ -26,7 +30,7 @@ func (b *Bytecode) Decode(r io.Reader, builtinModules map[string]objects.Importa
 		return err
 	}
 	for i, v := range b.Constants {
-		fv, err := fixDecoded(v, builtinModules)
+		fv, err := fixDecoded(v, modules)
 		if err != nil {
 			return err
 		}
@@ -36,7 +40,7 @@ func (b *Bytecode) Decode(r io.Reader, builtinModules map[string]objects.Importa
 	return nil
 }
 
-func fixDecoded(o objects.Object, builtinModules map[string]objects.Importable) (objects.Object, error) {
+func fixDecoded(o objects.Object, modules *objects.ModuleMap) (objects.Object, error) {
 	switch o := o.(type) {
 	case *objects.Bool:
 		if o.IsFalsy() {
@@ -47,7 +51,7 @@ func fixDecoded(o objects.Object, builtinModules map[string]objects.Importable) 
 		return objects.UndefinedValue, nil
 	case *objects.Array:
 		for i, v := range o.Value {
-			fv, err := fixDecoded(v, builtinModules)
+			fv, err := fixDecoded(v, modules)
 			if err != nil {
 				return nil, err
 			}
@@ -55,7 +59,7 @@ func fixDecoded(o objects.Object, builtinModules map[string]objects.Importable) 
 		}
 	case *objects.ImmutableArray:
 		for i, v := range o.Value {
-			fv, err := fixDecoded(v, builtinModules)
+			fv, err := fixDecoded(v, modules)
 			if err != nil {
 				return nil, err
 			}
@@ -63,7 +67,7 @@ func fixDecoded(o objects.Object, builtinModules map[string]objects.Importable) 
 		}
 	case *objects.Map:
 		for k, v := range o.Value {
-			fv, err := fixDecoded(v, builtinModules)
+			fv, err := fixDecoded(v, modules)
 			if err != nil {
 				return nil, err
 			}
@@ -71,8 +75,8 @@ func fixDecoded(o objects.Object, builtinModules map[string]objects.Importable) 
 		}
 	case *objects.ImmutableMap:
 		modName := moduleName(o)
-		if mod, ok := builtinModules[modName].(*objects.BuiltinModule); ok {
-			return mod.AsImmutableMap(), nil
+		if mod := modules.GetBuiltinModule(modName); mod != nil {
+			return mod.AsImmutableMap(modName), nil
 		}
 
 		for k, v := range o.Value {
@@ -81,7 +85,7 @@ func fixDecoded(o objects.Object, builtinModules map[string]objects.Importable) 
 				return nil, fmt.Errorf("user function not decodable")
 			}
 
-			fv, err := fixDecoded(v, builtinModules)
+			fv, err := fixDecoded(v, modules)
 			if err != nil {
 				return nil, err
 			}

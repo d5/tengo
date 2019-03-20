@@ -41,7 +41,7 @@ type Options struct {
 	Version string
 
 	// Import modules
-	Modules map[string]objects.Importable
+	Modules *objects.ModuleMap
 }
 
 // Run CLI
@@ -117,7 +117,7 @@ func doHelp() {
 }
 
 // CompileOnly compiles the source code and writes the compiled binary into outputFile.
-func CompileOnly(modules map[string]objects.Importable, data []byte, inputFile, outputFile string) (err error) {
+func CompileOnly(modules *objects.ModuleMap, data []byte, inputFile, outputFile string) (err error) {
 	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
 	if err != nil {
 		return
@@ -150,7 +150,7 @@ func CompileOnly(modules map[string]objects.Importable, data []byte, inputFile, 
 }
 
 // CompileAndRun compiles the source code and executes it.
-func CompileAndRun(modules map[string]objects.Importable, data []byte, inputFile string) (err error) {
+func CompileAndRun(modules *objects.ModuleMap, data []byte, inputFile string) (err error) {
 	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
 	if err != nil {
 		return
@@ -167,7 +167,7 @@ func CompileAndRun(modules map[string]objects.Importable, data []byte, inputFile
 }
 
 // RunCompiled reads the compiled binary from file and executes it.
-func RunCompiled(modules map[string]objects.Importable, data []byte) (err error) {
+func RunCompiled(modules *objects.ModuleMap, data []byte) (err error) {
 	bytecode := &compiler.Bytecode{}
 	err = bytecode.Decode(bytes.NewReader(data), modules)
 	if err != nil {
@@ -185,7 +185,7 @@ func RunCompiled(modules map[string]objects.Importable, data []byte) (err error)
 }
 
 // RunREPL starts REPL.
-func RunREPL(modules map[string]objects.Importable, in io.Reader, out io.Writer) {
+func RunREPL(modules *objects.ModuleMap, in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
 
 	fileSet := source.NewFileSet()
@@ -258,7 +258,7 @@ func RunREPL(modules map[string]objects.Importable, in io.Reader, out io.Writer)
 	}
 }
 
-func compileSrc(modules map[string]objects.Importable, src []byte, filename string) (*compiler.Bytecode, error) {
+func compileSrc(modules *objects.ModuleMap, src []byte, filename string) (*compiler.Bytecode, error) {
 	fileSet := source.NewFileSet()
 	srcFile := fileSet.AddFile(filename, -1, len(src))
 

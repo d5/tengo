@@ -75,24 +75,24 @@ if !is_error(cmd) {
 
 func TestGetModules(t *testing.T) {
 	mods := stdlib.GetModules()
-	assert.Equal(t, 0, len(mods))
+	assert.Equal(t, 0, mods.Len())
 
 	mods = stdlib.GetModules("os")
-	assert.Equal(t, 1, len(mods))
-	assert.NotNil(t, mods["os"])
+	assert.Equal(t, 1, mods.Len())
+	assert.NotNil(t, mods.Get("os"))
 
 	mods = stdlib.GetModules("os", "rand")
-	assert.Equal(t, 2, len(mods))
-	assert.NotNil(t, mods["os"])
-	assert.NotNil(t, mods["rand"])
+	assert.Equal(t, 2, mods.Len())
+	assert.NotNil(t, mods.Get("os"))
+	assert.NotNil(t, mods.Get("rand"))
 
 	mods = stdlib.GetModules("text", "text")
-	assert.Equal(t, 1, len(mods))
-	assert.NotNil(t, mods["text"])
+	assert.Equal(t, 1, mods.Len())
+	assert.NotNil(t, mods.Get("text"))
 
 	mods = stdlib.GetModules("nonexisting", "text")
-	assert.Equal(t, 1, len(mods))
-	assert.NotNil(t, mods["text"])
+	assert.Equal(t, 1, mods.Len())
+	assert.NotNil(t, mods.Get("text"))
 }
 
 type callres struct {
@@ -156,8 +156,8 @@ func (c callres) expectError() bool {
 }
 
 func module(t *testing.T, moduleName string) callres {
-	mod, ok := stdlib.BuiltinModules[moduleName]
-	if !ok {
+	mod := stdlib.GetModules(moduleName).GetBuiltinModule(moduleName)
+	if mod == nil {
 		return callres{t: t, e: fmt.Errorf("module not found: %s", moduleName)}
 	}
 

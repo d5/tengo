@@ -18,14 +18,15 @@ func AllModuleNames() []string {
 
 // GetModules returns the modules for the given names.
 // Duplicate names and invalid names are ignore.
-func GetModules(names ...string) map[string]objects.Importable {
-	modules := make(map[string]objects.Importable)
+func GetModules(names ...string) *objects.ModuleMap {
+	modules := objects.NewModuleMap()
+
 	for _, name := range names {
 		if mod := BuiltinModules[name]; mod != nil {
-			modules[name] = mod
+			modules.AddBuiltinModule(name, mod)
 		}
-		if mod := SourceModules[name]; mod != nil {
-			modules[name] = mod
+		if mod := SourceModules[name]; mod != "" {
+			modules.AddSourceModule(name, []byte(mod))
 		}
 	}
 
