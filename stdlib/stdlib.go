@@ -16,16 +16,17 @@ func AllModuleNames() []string {
 	return names
 }
 
-// GetModules returns the modules for the given names.
-// Duplicate names and invalid names are ignore.
-func GetModules(names ...string) map[string]objects.Importable {
-	modules := make(map[string]objects.Importable)
+// GetModuleMap returns the module map that includes all modules
+// for the given module names.
+func GetModuleMap(names ...string) *objects.ModuleMap {
+	modules := objects.NewModuleMap()
+
 	for _, name := range names {
 		if mod := BuiltinModules[name]; mod != nil {
-			modules[name] = mod
+			modules.AddBuiltinModule(name, mod)
 		}
-		if mod := SourceModules[name]; mod != nil {
-			modules[name] = mod
+		if mod := SourceModules[name]; mod != "" {
+			modules.AddSourceModule(name, []byte(mod))
 		}
 	}
 

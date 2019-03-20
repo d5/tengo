@@ -38,12 +38,10 @@ func main() {
 
 package stdlib
 
-import "github.com/d5/tengo/objects"
-
 // SourceModules are source type standard library modules.
-var SourceModules = map[string]*objects.SourceModule{` + "\n")
+var SourceModules = map[string]string{` + "\n")
 	for modName, modSrc := range modules {
-		out.WriteString("\t\"" + modName + "\": {Src: []byte(`" + modSrc + "`)},\n")
+		out.WriteString("\t\"" + modName + "\": `" + modSrc + "`,\n")
 	}
 	out.WriteString("}\n")
 

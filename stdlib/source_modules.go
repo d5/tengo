@@ -2,11 +2,9 @@
 
 package stdlib
 
-import "github.com/d5/tengo/objects"
-
 // SourceModules are source type standard library modules.
-var SourceModules = map[string]*objects.SourceModule{
-	"enum": {Src: []byte(`export {
+var SourceModules = map[string]string{
+	"enum": `export {
   // all returns true if the given function fn evaluates to a truthy value on
   // all of the items in the enumerable.
   all: func(enumerable, fn) {
@@ -46,5 +44,5 @@ var SourceModules = map[string]*objects.SourceModule{
     return res
   }
 }
-`)},
+`,
 }

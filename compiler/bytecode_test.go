@@ -280,7 +280,7 @@ func testBytecodeSerialization(t *testing.T, b *compiler.Bytecode) {
 	assert.NoError(t, err)
 
 	r := &compiler.Bytecode{}
-	err = r.Decode(bytes.NewReader(buf.Bytes()))
+	err = r.Decode(bytes.NewReader(buf.Bytes()), nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, b.FileSet, r.FileSet)

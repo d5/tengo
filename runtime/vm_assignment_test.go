@@ -206,8 +206,8 @@ out = func() {
 `, nil, 136)
 
 	// assigning different type value
-	expect(t, `a := 1; a = "foo"; out = a`, nil, "foo")                                                 // global
-	expect(t, `func() { a := 1; a = "foo"; out = a }()`, nil, "foo")                                    // local
+	expect(t, `a := 1; a = "foo"; out = a`, nil, "foo")              // global
+	expect(t, `func() { a := 1; a = "foo"; out = a }()`, nil, "foo") // local
 	expect(t, `
 out = func() { 
 	a := 5

@@ -24,7 +24,7 @@ type MAP = map[string]interface{}
 type ARR = []interface{}
 
 type testopts struct {
-	modules     map[string]objects.Importable
+	modules     *objects.ModuleMap
 	symbols     map[string]objects.Object
 	maxAllocs   int64
 	skip2ndPass bool
@@ -32,7 +32,7 @@ type testopts struct {
 
 func Opts() *testopts {
 	return &testopts{
-		modules:     make(map[string]objects.Importable),
+		modules:     objects.NewModuleMap(),
 		symbols:     make(map[string]objects.Object),
 		maxAllocs:   -1,
 		skip2ndPass: false,
@@ -41,13 +41,10 @@ func Opts() *testopts {
 
 func (o *testopts) copy() *testopts {
 	c := &testopts{
-		modules:     make(map[string]objects.Importable),
+		modules:     o.modules.Copy(),
 		symbols:     make(map[string]objects.Object),
 		maxAllocs:   o.maxAllocs,
 		skip2ndPass: o.skip2ndPass,
-	}
-	for k, v := range o.modules {
-		c.modules[k] = v
 	}
 	for k, v := range o.symbols {
 		c.symbols[k] = v
@@ -59,11 +56,11 @@ func (o *testopts) Module(name string, mod interface{}) *testopts {
 	c := o.copy()
 	switch mod := mod.(type) {
 	case objects.Importable:
-		c.modules[name] = mod
+		c.modules.Add(name, mod)
 	case string:
-		c.modules[name] = &objects.SourceModule{Src: []byte(mod)}
+		c.modules.AddSourceModule(name, []byte(mod))
 	case []byte:
-		c.modules[name] = &objects.SourceModule{Src: mod}
+		c.modules.AddSourceModule(name, mod)
 	default:
 		panic(fmt.Errorf("invalid module type: %T", mod))
 	}
@@ -135,9 +132,7 @@ func expect(t *testing.T, input string, opts *testopts, expected interface{}) {
 			expectedObj = &objects.ImmutableMap{Value: eo.Value}
 		}
 
-		modules["__code__"] = &objects.SourceModule{
-			Src: []byte(fmt.Sprintf("out := undefined; %s; export out", input)),
-		}
+		modules.AddSourceModule("__code__", []byte(fmt.Sprintf("out := undefined; %s; export out", input)))
 
 		res, trace, err := traceCompileRun(file, symbols, modules, maxAllocs)
 		if !assert.NoError(t, err) ||
@@ -184,7 +179,7 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules map[string]objects.Importable, maxAllocs int64) (res map[string]objects.Object, trace []string, err error) {
+func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules *objects.ModuleMap, maxAllocs int64) (res map[string]objects.Object, trace []string, err error) {
 	var v *runtime.VM
 
 	defer func() {

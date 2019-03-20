@@ -14,7 +14,7 @@ import (
 // Script can simplify compilation and execution of embedded scripts.
 type Script struct {
 	variables        map[string]*Variable
-	importModules    map[string]objects.Importable
+	modules          *objects.ModuleMap
 	input            []byte
 	maxAllocs        int64
 	maxConstObjects  int
@@ -59,8 +59,8 @@ func (s *Script) Remove(name string) bool {
 }
 
 // SetImports sets import modules.
-func (s *Script) SetImports(modules map[string]objects.Importable) {
-	s.importModules = modules
+func (s *Script) SetImports(modules *objects.ModuleMap) {
+	s.modules = modules
 }
 
 // SetMaxAllocs sets the maximum number of objects allocations during the run time.
@@ -96,7 +96,7 @@ func (s *Script) Compile() (*Compiled, error) {
 		return nil, err
 	}
 
-	c := compiler.NewCompiler(srcFile, symbolTable, nil, s.importModules, nil)
+	c := compiler.NewCompiler(srcFile, symbolTable, nil, s.modules, nil)
 	c.EnableFileImport(s.enableFileImport)
 	if err := c.Compile(file); err != nil {
 		return nil, err
