@@ -28,6 +28,11 @@ func (m *ModuleMap) AddSourceModule(name string, src []byte) {
 	m.m[name] = &SourceModule{Src: src}
 }
 
+// Remove removes a named module.
+func (m *ModuleMap) Remove(name string) {
+	delete(m.m, name)
+}
+
 // Get returns an import module identified by name.
 // It returns if the name is not found.
 func (m *ModuleMap) Get(name string) Importable {
