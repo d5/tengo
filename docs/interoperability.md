@@ -119,17 +119,13 @@ Users can add and use a custom user type in Tengo code by implementing [Object](
 
 To securely compile and execute _potentially_ unsafe script code, you can use the following Script functions.
 
-#### Script.SetImports(modules map[string]objects.Importable)
+#### Script.SetImports(modules *objects.ModuleMap)
 
 SetImports sets the import modules with corresponding names. Script **does not** include any modules by default. You can use this function to include the [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md).
 
 ```golang
 s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
 
-s.SetImports(map[string]objects.Importable{
-    "math": stdlib.BuiltinModules["math"],
-})
-// or
 s.SetImports(stdlib.GetModules("math"))
 // or, to include all stdlib at once
 s.SetImports(stdlib.GetModules(stdlib.AllModuleNames()...))
@@ -140,9 +136,9 @@ You can also include Tengo's written module using `objects.SourceModule` (which 
 ```golang
 s := script.New([]byte(`double := import("double"); a := double(20)`))
 
-s.SetImports(map[string]objects.Importable{
-    "double": &objects.SourceModule{Src: []byte(`export func(x) { return x * 2 }`)},
-})
+mods := objects.NewModuleMap()
+mods.AddSourceModule("double", []byte(`export func(x) { return x * 2 }`))
+s.SetImports(mods)
 ```
 
 
