@@ -27,7 +27,7 @@ func main() {
 		ShowVersion:   showVersion,
 		Version:       version,
 		CompileOutput: compileOutput,
-		Modules:       stdlib.GetModules(stdlib.AllModuleNames()...),
+		Modules:       stdlib.GetModuleMap(stdlib.AllModuleNames()...),
 		InputFile:     flag.Arg(0),
 	})
 }

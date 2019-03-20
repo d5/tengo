@@ -16,9 +16,9 @@ func AllModuleNames() []string {
 	return names
 }
 
-// GetModules returns the modules for the given names.
-// Duplicate names and invalid names are ignore.
-func GetModules(names ...string) *objects.ModuleMap {
+// GetModuleMap returns the module map that includes all modules
+// for the given module names.
+func GetModuleMap(names ...string) *objects.ModuleMap {
 	modules := objects.NewModuleMap()
 
 	for _, name := range names {

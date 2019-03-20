@@ -53,7 +53,7 @@ func TestScript_Run(t *testing.T) {
 
 func TestScript_BuiltinModules(t *testing.T) {
 	s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
-	s.SetImports(stdlib.GetModules("math"))
+	s.SetImports(stdlib.GetModuleMap("math"))
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)
@@ -64,7 +64,7 @@ func TestScript_BuiltinModules(t *testing.T) {
 	assert.NotNil(t, c)
 	compiledGet(t, c, "a", 19.84)
 
-	s.SetImports(stdlib.GetModules("os"))
+	s.SetImports(stdlib.GetModuleMap("os"))
 	_, err = s.Run()
 	assert.Error(t, err)
 
@@ -80,7 +80,7 @@ a := enum.all([1,2,3], func(_, v) {
 	return v > 0 
 })
 `))
-	s.SetImports(stdlib.GetModules("enum"))
+	s.SetImports(stdlib.GetModuleMap("enum"))
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)

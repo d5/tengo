@@ -74,23 +74,23 @@ if !is_error(cmd) {
 }
 
 func TestGetModules(t *testing.T) {
-	mods := stdlib.GetModules()
+	mods := stdlib.GetModuleMap()
 	assert.Equal(t, 0, mods.Len())
 
-	mods = stdlib.GetModules("os")
+	mods = stdlib.GetModuleMap("os")
 	assert.Equal(t, 1, mods.Len())
 	assert.NotNil(t, mods.Get("os"))
 
-	mods = stdlib.GetModules("os", "rand")
+	mods = stdlib.GetModuleMap("os", "rand")
 	assert.Equal(t, 2, mods.Len())
 	assert.NotNil(t, mods.Get("os"))
 	assert.NotNil(t, mods.Get("rand"))
 
-	mods = stdlib.GetModules("text", "text")
+	mods = stdlib.GetModuleMap("text", "text")
 	assert.Equal(t, 1, mods.Len())
 	assert.NotNil(t, mods.Get("text"))
 
-	mods = stdlib.GetModules("nonexisting", "text")
+	mods = stdlib.GetModuleMap("nonexisting", "text")
 	assert.Equal(t, 1, mods.Len())
 	assert.NotNil(t, mods.Get("text"))
 }
@@ -156,7 +156,7 @@ func (c callres) expectError() bool {
 }
 
 func module(t *testing.T, moduleName string) callres {
-	mod := stdlib.GetModules(moduleName).GetBuiltinModule(moduleName)
+	mod := stdlib.GetModuleMap(moduleName).GetBuiltinModule(moduleName)
 	if mod == nil {
 		return callres{t: t, e: fmt.Errorf("module not found: %s", moduleName)}
 	}
@@ -231,7 +231,7 @@ func object(v interface{}) objects.Object {
 
 func expect(t *testing.T, input string, expected interface{}) {
 	s := script.New([]byte(input))
-	s.SetImports(stdlib.GetModules(stdlib.AllModuleNames()...))
+	s.SetImports(stdlib.GetModuleMap(stdlib.AllModuleNames()...))
 	c, err := s.Run()
 	assert.NoError(t, err)
 	assert.NotNil(t, c)

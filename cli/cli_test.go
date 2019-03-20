@@ -37,7 +37,7 @@ file.write_string("random number is " + rand_num())
 file.close()
 `)
 
-	mods := stdlib.GetModules(stdlib.AllModuleNames()...)
+	mods := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
 
 	err := cli.CompileOnly(mods, src, "src", binFile)
 	if !assert.NoError(t, err) {
