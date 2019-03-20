@@ -6,6 +6,6 @@ type SourceModule struct {
 }
 
 // Import returns a module source code.
-func (m *SourceModule) Import(_ string) (interface{}, error) {
+func (m *SourceModule) Import() (interface{}, error) {
 	return m.Src, nil
 }

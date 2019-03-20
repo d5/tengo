@@ -56,7 +56,7 @@ func Run(options *Options) {
 
 	if options.InputFile == "" {
 		// REPL
-		runREPL(options.Modules, os.Stdin, os.Stdout)
+		RunREPL(options.Modules, os.Stdin, os.Stdout)
 		return
 	}
 
@@ -67,17 +67,17 @@ func Run(options *Options) {
 	}
 
 	if options.CompileOutput != "" {
-		if err := compileOnly(options.Modules, inputData, options.InputFile, options.CompileOutput); err != nil {
+		if err := CompileOnly(options.Modules, inputData, options.InputFile, options.CompileOutput); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 	} else if filepath.Ext(options.InputFile) == sourceFileExt {
-		if err := compileAndRun(options.Modules, inputData, options.InputFile); err != nil {
+		if err := CompileAndRun(options.Modules, inputData, options.InputFile); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 	} else {
-		if err := runCompiled(inputData); err != nil {
+		if err := RunCompiled(options.Modules, inputData); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
@@ -116,7 +116,8 @@ func doHelp() {
 	fmt.Println()
 }
 
-func compileOnly(modules map[string]objects.Importable, data []byte, inputFile, outputFile string) (err error) {
+// CompileOnly compiles the source code and writes the compiled binary into outputFile.
+func CompileOnly(modules map[string]objects.Importable, data []byte, inputFile, outputFile string) (err error) {
 	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
 	if err != nil {
 		return
@@ -148,7 +149,8 @@ func compileOnly(modules map[string]objects.Importable, data []byte, inputFile, 
 	return
 }
 
-func compileAndRun(modules map[string]objects.Importable, data []byte, inputFile string) (err error) {
+// CompileAndRun compiles the source code and executes it.
+func CompileAndRun(modules map[string]objects.Importable, data []byte, inputFile string) (err error) {
 	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
 	if err != nil {
 		return
@@ -164,9 +166,17 @@ func compileAndRun(modules map[string]objects.Importable, data []byte, inputFile
 	return
 }
 
-func runCompiled(data []byte) (err error) {
+// RunCompiled reads the compiled binary from file and executes it.
+func RunCompiled(modules map[string]objects.Importable, data []byte) (err error) {
+	builtinModules := make(map[string]*objects.BuiltinModule)
+	for name, mod := range modules {
+		if builtinMod, ok := mod.(*objects.BuiltinModule); ok {
+			builtinModules[name] = builtinMod
+		}
+	}
+
 	bytecode := &compiler.Bytecode{}
-	err = bytecode.Decode(bytes.NewReader(data))
+	err = bytecode.Decode(bytes.NewReader(data), builtinModules)
 	if err != nil {
 		return
 	}
@@ -181,7 +191,8 @@ func runCompiled(data []byte) (err error) {
 	return
 }
 
-func runREPL(modules map[string]objects.Importable, in io.Reader, out io.Writer) {
+// RunREPL starts REPL.
+func RunREPL(modules map[string]objects.Importable, in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
 
 	fileSet := source.NewFileSet()

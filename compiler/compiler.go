@@ -514,7 +514,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		if mod, ok := c.importModules[node.ModuleName]; ok {
-			v, err := mod.Import(node.ModuleName)
+			v, err := mod.Import()
 			if err != nil {
 				return err
 			}
