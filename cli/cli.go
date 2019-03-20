@@ -168,15 +168,8 @@ func CompileAndRun(modules map[string]objects.Importable, data []byte, inputFile
 
 // RunCompiled reads the compiled binary from file and executes it.
 func RunCompiled(modules map[string]objects.Importable, data []byte) (err error) {
-	builtinModules := make(map[string]*objects.BuiltinModule)
-	for name, mod := range modules {
-		if builtinMod, ok := mod.(*objects.BuiltinModule); ok {
-			builtinModules[name] = builtinMod
-		}
-	}
-
 	bytecode := &compiler.Bytecode{}
-	err = bytecode.Decode(bytes.NewReader(data), builtinModules)
+	err = bytecode.Decode(bytes.NewReader(data), modules)
 	if err != nil {
 		return
 	}

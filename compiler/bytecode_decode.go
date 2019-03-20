@@ -9,7 +9,7 @@ import (
 )
 
 // Decode reads Bytecode data from the reader.
-func (b *Bytecode) Decode(r io.Reader, builtinModules map[string]*objects.BuiltinModule) error {
+func (b *Bytecode) Decode(r io.Reader, builtinModules map[string]objects.Importable) error {
 	dec := gob.NewDecoder(r)
 
 	if err := dec.Decode(&b.FileSet); err != nil {
@@ -36,7 +36,7 @@ func (b *Bytecode) Decode(r io.Reader, builtinModules map[string]*objects.Builti
 	return nil
 }
 
-func fixDecoded(o objects.Object, builtinModules map[string]*objects.BuiltinModule) (objects.Object, error) {
+func fixDecoded(o objects.Object, builtinModules map[string]objects.Importable) (objects.Object, error) {
 	switch o := o.(type) {
 	case *objects.Bool:
 		if o.IsFalsy() {
@@ -71,7 +71,7 @@ func fixDecoded(o objects.Object, builtinModules map[string]*objects.BuiltinModu
 		}
 	case *objects.ImmutableMap:
 		modName := moduleName(o)
-		if mod, ok := builtinModules[modName]; ok {
+		if mod, ok := builtinModules[modName].(*objects.BuiltinModule); ok {
 			return mod.AsImmutableMap(), nil
 		}
 
