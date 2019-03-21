@@ -125,8 +125,8 @@ func (v *VM) run() {
 
 		switch v.curInsts[v.ip] {
 		case compiler.OpConstant:
-			cidx := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
+			cidx := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
 			if v.sp >= StackSize {
 				v.err = ErrStackOverflow
@@ -945,8 +945,8 @@ func (v *VM) run() {
 			}
 
 		case compiler.OpGetLocal:
-			localIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			localIndex := int(v.curInsts[v.ip])
 
 			val := v.stack[v.curFrame.basePointer+localIndex]
 
@@ -963,8 +963,8 @@ func (v *VM) run() {
 			v.sp++
 
 		case compiler.OpGetBuiltin:
-			builtinIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			builtinIndex := int(v.curInsts[v.ip])
 
 			if v.sp >= StackSize {
 				v.err = ErrStackOverflow
@@ -975,9 +975,9 @@ func (v *VM) run() {
 			v.sp++
 
 		case compiler.OpClosure:
-			constIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
-			numFree := int(v.curInsts[v.ip+3])
 			v.ip += 3
+			constIndex := int(v.curInsts[v.ip-1]) | int(v.curInsts[v.ip-2])<<8
+			numFree := int(v.curInsts[v.ip])
 
 			fn, ok := v.constants[constIndex].(*objects.CompiledFunction)
 			if !ok {
@@ -1018,8 +1018,8 @@ func (v *VM) run() {
 			v.sp++
 
 		case compiler.OpGetFreePtr:
-			freeIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			freeIndex := int(v.curInsts[v.ip])
 
 			val := v.curFrame.freeVars[freeIndex]
 
@@ -1032,8 +1032,8 @@ func (v *VM) run() {
 			v.sp++
 
 		case compiler.OpGetFree:
-			freeIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			freeIndex := int(v.curInsts[v.ip])
 
 			val := *v.curFrame.freeVars[freeIndex].Value
 
@@ -1046,16 +1046,16 @@ func (v *VM) run() {
 			v.sp++
 
 		case compiler.OpSetFree:
-			freeIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			freeIndex := int(v.curInsts[v.ip])
 
 			*v.curFrame.freeVars[freeIndex].Value = v.stack[v.sp-1]
 
 			v.sp--
 
 		case compiler.OpGetLocalPtr:
-			localIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			localIndex := int(v.curInsts[v.ip])
 
 			sp := v.curFrame.basePointer + localIndex
 			val := v.stack[sp]
@@ -1077,9 +1077,9 @@ func (v *VM) run() {
 			v.sp++
 
 		case compiler.OpSetSelFree:
-			freeIndex := int(v.curInsts[v.ip+1])
-			numSelectors := int(v.curInsts[v.ip+2])
 			v.ip += 2
+			freeIndex := int(v.curInsts[v.ip-1])
+			numSelectors := int(v.curInsts[v.ip])
 
 			// selectors and RHS value
 			selectors := make([]objects.Object, numSelectors)
