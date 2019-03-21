@@ -108,7 +108,19 @@ func (v *VM) Run() (err error) {
 }
 
 func (v *VM) run() {
-	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
+	defer func() {
+		if r := recover(); r != nil {
+			if v.ip < v.curIPLimit {
+				if err, ok := r.(error); ok {
+					v.err = err
+				} else {
+					v.err = fmt.Errorf("panic: %v", r)
+				}
+			}
+		}
+	}()
+
+	for atomic.LoadInt64(&v.aborting) == 0 {
 		v.ip++
 
 		switch v.curInsts[v.ip] {
@@ -138,7 +150,8 @@ func (v *VM) run() {
 			right := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 
-			res, e := left.BinaryOp(compiler.BinaryOpTokens[v.curInsts[v.ip]], right)
+			tok := compiler.BinaryOpTokens[v.curInsts[v.ip]]
+			res, e := left.BinaryOp(tok, right)
 			if e != nil {
 				v.sp -= 2
 
@@ -1166,7 +1179,8 @@ func (v *VM) run() {
 			v.sp++
 
 		default:
-			panic(fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip]))
+			v.err = fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])
+			return
 		}
 	}
 }
