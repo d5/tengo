@@ -150,8 +150,7 @@ func (v *VM) run() {
 			right := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 
-			tok := compiler.BinaryOpTokens[v.curInsts[v.ip]]
-			res, e := left.BinaryOp(tok, right)
+			res, e := left.BinaryOp(compiler.BinaryOpTokens[v.curInsts[v.ip]], right)
 			if e != nil {
 				v.sp -= 2
 
@@ -314,36 +313,31 @@ func (v *VM) run() {
 			}
 
 		case compiler.OpJumpFalsy:
-			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
-
-			condition := v.stack[v.sp-1]
 			v.sp--
-
-			if condition.IsFalsy() {
+			if v.stack[v.sp].IsFalsy() {
+				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 				v.ip = pos - 1
 			}
 
 		case compiler.OpAndJump:
-			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
 
-			condition := v.stack[v.sp-1]
-			if condition.IsFalsy() {
+			if v.stack[v.sp-1].IsFalsy() {
+				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 				v.ip = pos - 1
 			} else {
 				v.sp--
 			}
 
 		case compiler.OpOrJump:
-			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
 
-			condition := v.stack[v.sp-1]
-			if !condition.IsFalsy() {
-				v.ip = pos - 1
-			} else {
+			if v.stack[v.sp-1].IsFalsy() {
 				v.sp--
+			} else {
+				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
+				v.ip = pos - 1
 			}
 
 		case compiler.OpJump:
@@ -351,17 +345,16 @@ func (v *VM) run() {
 			v.ip = pos - 1
 
 		case compiler.OpSetGlobal:
-			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
-
 			v.sp--
 
+			globalIndex := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 			v.globals[globalIndex] = v.stack[v.sp]
 
 		case compiler.OpSetSelGlobal:
-			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
-			numSelectors := int(v.curInsts[v.ip+3])
 			v.ip += 3
+			globalIndex := int(v.curInsts[v.ip-1]) | int(v.curInsts[v.ip-2])<<8
+			numSelectors := int(v.curInsts[v.ip])
 
 			// selectors and RHS value
 			selectors := make([]objects.Object, numSelectors)
@@ -379,8 +372,8 @@ func (v *VM) run() {
 			}
 
 		case compiler.OpGetGlobal:
-			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
+			globalIndex := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
 			val := v.globals[globalIndex]
 
@@ -393,8 +386,8 @@ func (v *VM) run() {
 			v.sp++
 
 		case compiler.OpArray:
-			numElements := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
+			numElements := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
 			var elements []objects.Object
 			for i := v.sp - numElements; i < v.sp; i++ {
@@ -419,8 +412,8 @@ func (v *VM) run() {
 			v.sp++
 
 		case compiler.OpMap:
-			numElements := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
+			numElements := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
 			kv := make(map[string]objects.Object)
 			for i := v.sp - numElements; i < v.sp; i += 2 {
@@ -873,14 +866,13 @@ func (v *VM) run() {
 			//v.sp--
 
 			v.framesIndex--
-			lastFrame := v.frames[v.framesIndex]
 			v.curFrame = &v.frames[v.framesIndex-1]
 			v.curInsts = v.curFrame.fn.Instructions
 			v.curIPLimit = len(v.curInsts) - 1
 			v.ip = v.curFrame.ip
 
 			//v.sp = lastFrame.basePointer - 1
-			v.sp = lastFrame.basePointer
+			v.sp = v.frames[v.framesIndex].basePointer
 
 			// skip stack overflow check because (newSP) <= (oldSP)
 			v.stack[v.sp-1] = retVal
@@ -888,14 +880,13 @@ func (v *VM) run() {
 
 		case compiler.OpReturn:
 			v.framesIndex--
-			lastFrame := v.frames[v.framesIndex]
 			v.curFrame = &v.frames[v.framesIndex-1]
 			v.curInsts = v.curFrame.fn.Instructions
 			v.curIPLimit = len(v.curInsts) - 1
 			v.ip = v.curFrame.ip
 
 			//v.sp = lastFrame.basePointer - 1
-			v.sp = lastFrame.basePointer
+			v.sp = v.frames[v.framesIndex].basePointer
 
 			// skip stack overflow check because (newSP) <= (oldSP)
 			v.stack[v.sp-1] = objects.UndefinedValue
