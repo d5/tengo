@@ -51,26 +51,37 @@ func (c *Compiler) compileAssign(node ast.Node, lhs, rhs []ast.Expr, op token.To
 
 	switch op {
 	case token.AddAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpAdd)
 	case token.SubAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpSub)
 	case token.MulAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpMul)
 	case token.QuoAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpDiv)
 	case token.RemAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpRem)
 	case token.AndAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpBAnd)
 	case token.OrAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpBOr)
 	case token.AndNotAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpBAndNot)
 	case token.XorAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpBXor)
 	case token.ShlAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpBShiftLeft)
 	case token.ShrAssign:
+		c.emit(node, OpBinaryOp)
 		c.emit(node, OpBShiftRight)
 	}
 

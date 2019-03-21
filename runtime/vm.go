@@ -21,6 +21,23 @@ const (
 	MaxFrames = 1024
 )
 
+// OpcodeTokens is the mapping of opcodes to tokens.
+var opcodeTokens = []token.Token{
+	compiler.OpAdd:              token.Add,
+	compiler.OpSub:              token.Sub,
+	compiler.OpMul:              token.Mul,
+	compiler.OpDiv:              token.Quo,
+	compiler.OpRem:              token.Rem,
+	compiler.OpBAnd:             token.And,
+	compiler.OpBOr:              token.Or,
+	compiler.OpBXor:             token.Xor,
+	compiler.OpBAndNot:          token.AndNot,
+	compiler.OpBShiftLeft:       token.Shl,
+	compiler.OpBShiftRight:      token.Shr,
+	compiler.OpGreaterThan:      token.Greater,
+	compiler.OpGreaterThanEqual: token.GreaterEq,
+}
+
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
 	constants   []objects.Object
@@ -134,44 +151,34 @@ func (v *VM) run() {
 			v.stack[v.sp] = objects.UndefinedValue
 			v.sp++
 
-		case compiler.OpAdd:
-			v.binaryOp(token.Add)
+		case compiler.OpBinaryOp:
+			v.ip++
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
 
-		case compiler.OpSub:
-			v.binaryOp(token.Sub)
+			res, e := left.BinaryOp(opcodeTokens[v.curInsts[v.ip]], right)
+			if e != nil {
+				v.sp -= 2
+				atomic.StoreInt64(&v.aborting, 1)
 
-		case compiler.OpMul:
-			v.binaryOp(token.Mul)
+				if e == objects.ErrInvalidOperator {
+					v.err = fmt.Errorf("invalid operation: %s + %s",
+						left.TypeName(), right.TypeName())
+					return
+				}
 
-		case compiler.OpDiv:
-			v.binaryOp(token.Quo)
+				v.err = e
+				return
+			}
 
-		case compiler.OpRem:
-			v.binaryOp(token.Rem)
+			v.allocs--
+			if v.allocs == 0 {
+				v.err = ErrObjectAllocLimit
+				return
+			}
 
-		case compiler.OpBAnd:
-			v.binaryOp(token.And)
-
-		case compiler.OpBOr:
-			v.binaryOp(token.Or)
-
-		case compiler.OpBXor:
-			v.binaryOp(token.Xor)
-
-		case compiler.OpBAndNot:
-			v.binaryOp(token.AndNot)
-
-		case compiler.OpBShiftLeft:
-			v.binaryOp(token.Shl)
-
-		case compiler.OpBShiftRight:
-			v.binaryOp(token.Shr)
-
-		case compiler.OpGreaterThan:
-			v.binaryOp(token.Greater)
-
-		case compiler.OpGreaterThanEqual:
-			v.binaryOp(token.GreaterEq)
+			v.stack[v.sp-2] = res
+			v.sp--
 
 		case compiler.OpEqual:
 			right := v.stack[v.sp-1]
@@ -1223,33 +1230,4 @@ func indexAssign(dst, src objects.Object, selectors []objects.Object) error {
 	}
 
 	return nil
-}
-
-func (v *VM) binaryOp(tok token.Token) {
-	right := v.stack[v.sp-1]
-	left := v.stack[v.sp-2]
-
-	res, e := left.BinaryOp(tok, right)
-	if e != nil {
-		v.sp -= 2
-		atomic.StoreInt64(&v.aborting, 1)
-
-		if e == objects.ErrInvalidOperator {
-			v.err = fmt.Errorf("invalid operation: %s + %s",
-				left.TypeName(), right.TypeName())
-			return
-		}
-
-		v.err = e
-		return
-	}
-
-	v.allocs--
-	if v.allocs == 0 {
-		v.err = ErrObjectAllocLimit
-		return
-	}
-
-	v.stack[v.sp-2] = res
-	v.sp--
 }
