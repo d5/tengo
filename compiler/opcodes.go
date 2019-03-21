@@ -1,5 +1,9 @@
 package compiler
 
+import (
+	"github.com/d5/tengo/compiler/token"
+)
+
 // Opcode represents a single byte operation code.
 type Opcode = byte
 
@@ -178,6 +182,23 @@ var OpcodeOperands = [...][]int{
 	OpIteratorKey:      {},
 	OpIteratorValue:    {},
 	OpBinaryOp:         {},
+}
+
+// BinaryOpTokens is the mapping of opcodes to tokens.
+var BinaryOpTokens = [...]token.Token{
+	OpAdd:              token.Add,
+	OpSub:              token.Sub,
+	OpMul:              token.Mul,
+	OpDiv:              token.Quo,
+	OpRem:              token.Rem,
+	OpBAnd:             token.And,
+	OpBOr:              token.Or,
+	OpBXor:             token.Xor,
+	OpBAndNot:          token.AndNot,
+	OpBShiftLeft:       token.Shl,
+	OpBShiftRight:      token.Shr,
+	OpGreaterThan:      token.Greater,
+	OpGreaterThanEqual: token.GreaterEq,
 }
 
 // ReadOperands reads operands from the bytecode.

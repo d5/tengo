@@ -6,7 +6,6 @@ import (
 
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
 )
 
@@ -20,23 +19,6 @@ const (
 	// MaxFrames is the maximum number of function frames.
 	MaxFrames = 1024
 )
-
-// OpcodeTokens is the mapping of opcodes to tokens.
-var opcodeTokens = []token.Token{
-	compiler.OpAdd:              token.Add,
-	compiler.OpSub:              token.Sub,
-	compiler.OpMul:              token.Mul,
-	compiler.OpDiv:              token.Quo,
-	compiler.OpRem:              token.Rem,
-	compiler.OpBAnd:             token.And,
-	compiler.OpBOr:              token.Or,
-	compiler.OpBXor:             token.Xor,
-	compiler.OpBAndNot:          token.AndNot,
-	compiler.OpBShiftLeft:       token.Shl,
-	compiler.OpBShiftRight:      token.Shr,
-	compiler.OpGreaterThan:      token.Greater,
-	compiler.OpGreaterThanEqual: token.GreaterEq,
-}
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
@@ -156,10 +138,9 @@ func (v *VM) run() {
 			right := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 
-			res, e := left.BinaryOp(opcodeTokens[v.curInsts[v.ip]], right)
+			res, e := left.BinaryOp(compiler.BinaryOpTokens[v.curInsts[v.ip]], right)
 			if e != nil {
 				v.sp -= 2
-				atomic.StoreInt64(&v.aborting, 1)
 
 				if e == objects.ErrInvalidOperator {
 					v.err = fmt.Errorf("invalid operation: %s + %s",
