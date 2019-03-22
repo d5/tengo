@@ -131,6 +131,14 @@ If you pass an int to `bytes()` function, it will create a new byte object with 
 v := bytes(100)
 ```
 
+## time
+
+Tries to convert an object to time value.
+
+```golang
+v := time(1257894000) // 2009-11-10 23:00:00 +0000 UTC
+```
+
 ## is_string
 
 Returns `true` if the object's type is string. Or it returns `false`.
