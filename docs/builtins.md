@@ -31,14 +31,6 @@ v := [1]
 v = append(v, 2, 3) // v == [1, 2, 3]
 ```
 
-## string
-
-Tries to convert an object to string object. See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on type conversion.
-
-```golang
-x := string(123) //  v == "123"
-```
-
 ## type_name
 
 Returns the type_name of an object.
@@ -55,6 +47,14 @@ Optionally it can take the second argument, which will be returned if the first 
 ```golang
 v = string(undefined, "foo")  // v == "foo"
 v = string(undefined, false)  // v == false 
+```
+
+## string
+
+Tries to convert an object to string object. See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on type conversion.
+
+```golang
+x := string(123) //  v == "123"
 ```
 
 ## int
@@ -131,6 +131,14 @@ If you pass an int to `bytes()` function, it will create a new byte object with 
 v := bytes(100)
 ```
 
+## time
+
+Tries to convert an object to time value.
+
+```golang
+v := time(1257894000) // 2009-11-10 23:00:00 +0000 UTC
+```
+
 ## is_string
 
 Returns `true` if the object's type is string. Or it returns `false`.
@@ -170,3 +178,23 @@ Returns `true` if the object's type is function or closure. Or it returns `false
 ## is_callable
 
 Returns `true` if the object is callable (e.g. function, closure, builtin function, or user-provided callable objects). Or it returns `false`.
+
+## is_array
+
+Returns `true` if the object's type is array. Or it returns `false`.
+
+## is_immutable_array
+
+Returns `true` if the object's type is immutable array. Or it returns `false`.
+
+## is_map
+
+Returns `true` if the object's type is map. Or it returns `false`.
+
+## is_immutable_map
+
+Returns `true` if the object's type is immutable map. Or it returns `false`.
+
+## is_time
+
+Returns `true` if the object's type is time. Or it returns `false`.
