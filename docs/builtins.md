@@ -170,3 +170,23 @@ Returns `true` if the object's type is function or closure. Or it returns `false
 ## is_callable
 
 Returns `true` if the object is callable (e.g. function, closure, builtin function, or user-provided callable objects). Or it returns `false`.
+
+## is_array
+
+Returns `true` if the object's type is array. Or it returns `false`.
+
+## is_immutable_array
+
+Returns `true` if the object's type is immutable array. Or it returns `false`.
+
+## is_map
+
+Returns `true` if the object's type is map. Or it returns `false`.
+
+## is_immutable_map
+
+Returns `true` if the object's type is immutable map. Or it returns `false`.
+
+## is_time
+
+Returns `true` if the object's type is time. Or it returns `false`.
