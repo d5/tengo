@@ -84,19 +84,9 @@ func TestCompiled_RunContext(t *testing.T) {
 	assert.NoError(t, err)
 	compiledGet(t, c, "a", int64(5))
 
-	// cancelled
-	c = compile(t, `for true {}`, nil)
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		time.Sleep(1 * time.Millisecond)
-		cancel()
-	}()
-	err = c.RunContext(ctx)
-	assert.Equal(t, context.Canceled, err)
-
 	// timeout
 	c = compile(t, `for true {}`, nil)
-	ctx, cancel = context.WithTimeout(context.Background(), 1*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 	defer cancel()
 	err = c.RunContext(ctx)
 	assert.Equal(t, context.DeadlineExceeded, err)
