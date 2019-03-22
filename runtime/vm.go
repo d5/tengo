@@ -24,21 +24,19 @@ const (
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
 	constants   []objects.Object
-	stack       []objects.Object
+	stack       [StackSize]objects.Object
 	sp          int
 	globals     []objects.Object
 	fileSet     *source.FileSet
-	frames      []Frame
+	frames      [MaxFrames]Frame
 	framesIndex int
 	curFrame    *Frame
 	curInsts    []byte
-	curIPLimit  int
 	ip          int
 	aborting    int64
 	maxAllocs   int64
 	allocs      int64
 	err         error
-	errOffset   int
 }
 
 // NewVM creates a VM.
@@ -47,24 +45,22 @@ func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, maxAllocs int6
 		globals = make([]objects.Object, GlobalsSize)
 	}
 
-	frames := make([]Frame, MaxFrames)
-	frames[0].fn = bytecode.MainFunction
-	frames[0].ip = -1
-
-	return &VM{
+	v := &VM{
 		constants:   bytecode.Constants,
-		stack:       make([]objects.Object, StackSize),
 		sp:          0,
 		globals:     globals,
 		fileSet:     bytecode.FileSet,
-		frames:      frames,
 		framesIndex: 1,
-		curFrame:    &(frames[0]),
-		curInsts:    frames[0].fn.Instructions,
-		curIPLimit:  len(frames[0].fn.Instructions) - 1,
 		ip:          -1,
 		maxAllocs:   maxAllocs,
 	}
+
+	v.frames[0].fn = bytecode.MainFunction
+	v.frames[0].ip = -1
+	v.curFrame = &v.frames[0]
+	v.curInsts = v.curFrame.fn.Instructions
+
+	return v
 }
 
 // Abort aborts the execution.
@@ -78,7 +74,6 @@ func (v *VM) Run() (err error) {
 	v.sp = 0
 	v.curFrame = &(v.frames[0])
 	v.curInsts = v.curFrame.fn.Instructions
-	v.curIPLimit = len(v.curInsts) - 1
 	v.framesIndex = 1
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
@@ -88,13 +83,13 @@ func (v *VM) Run() (err error) {
 
 	err = v.err
 	if err != nil {
-		filePos := v.fileSet.Position(v.curFrame.fn.SourceMap[v.ip-v.errOffset])
+		filePos := v.fileSet.Position(v.curFrame.fn.SourcePos(v.ip - 1))
 		err = fmt.Errorf("Runtime Error: %s\n\tat %s", err.Error(), filePos)
 		for v.framesIndex > 1 {
 			v.framesIndex--
 			v.curFrame = &v.frames[v.framesIndex-1]
 
-			filePos = v.fileSet.Position(v.curFrame.fn.SourceMap[v.curFrame.ip-1])
+			filePos = v.fileSet.Position(v.curFrame.fn.SourcePos(v.curFrame.ip - 1))
 			err = fmt.Errorf("%s\n\tat %s", err.Error(), filePos)
 		}
 		return err
@@ -109,79 +104,71 @@ func (v *VM) Run() (err error) {
 }
 
 func (v *VM) run() {
-	for v.ip < v.curIPLimit && (atomic.LoadInt64(&v.aborting) == 0) {
+	defer func() {
+		if r := recover(); r != nil {
+			if v.sp >= StackSize || v.framesIndex >= MaxFrames {
+				v.err = ErrStackOverflow
+				return
+			}
+
+			if v.ip < len(v.curInsts)-1 {
+				if err, ok := r.(error); ok {
+					v.err = err
+				} else {
+					v.err = fmt.Errorf("panic: %v", r)
+				}
+			}
+		}
+	}()
+
+	for atomic.LoadInt64(&v.aborting) == 0 {
 		v.ip++
 
 		switch v.curInsts[v.ip] {
 		case compiler.OpConstant:
-			cidx := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
-
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
+			cidx := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
 			v.stack[v.sp] = v.constants[cidx]
 			v.sp++
 
 		case compiler.OpNull:
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			v.stack[v.sp] = objects.UndefinedValue
 			v.sp++
 
-		case compiler.OpAdd:
-			v.binaryOp(token.Add)
+		case compiler.OpBinaryOp:
+			v.ip++
+			right := v.stack[v.sp-1]
+			left := v.stack[v.sp-2]
 
-		case compiler.OpSub:
-			v.binaryOp(token.Sub)
+			tok := token.Token(v.curInsts[v.ip])
+			res, e := left.BinaryOp(tok, right)
+			if e != nil {
+				v.sp -= 2
 
-		case compiler.OpMul:
-			v.binaryOp(token.Mul)
+				if e == objects.ErrInvalidOperator {
+					v.err = fmt.Errorf("invalid operation: %s %s %s",
+						left.TypeName(), tok.String(), right.TypeName())
+					return
+				}
 
-		case compiler.OpDiv:
-			v.binaryOp(token.Quo)
+				v.err = e
+				return
+			}
 
-		case compiler.OpRem:
-			v.binaryOp(token.Rem)
+			v.allocs--
+			if v.allocs == 0 {
+				v.err = ErrObjectAllocLimit
+				return
+			}
 
-		case compiler.OpBAnd:
-			v.binaryOp(token.And)
-
-		case compiler.OpBOr:
-			v.binaryOp(token.Or)
-
-		case compiler.OpBXor:
-			v.binaryOp(token.Xor)
-
-		case compiler.OpBAndNot:
-			v.binaryOp(token.AndNot)
-
-		case compiler.OpBShiftLeft:
-			v.binaryOp(token.Shl)
-
-		case compiler.OpBShiftRight:
-			v.binaryOp(token.Shr)
-
-		case compiler.OpGreaterThan:
-			v.binaryOp(token.Greater)
-
-		case compiler.OpGreaterThanEqual:
-			v.binaryOp(token.GreaterEq)
+			v.stack[v.sp-2] = res
+			v.sp--
 
 		case compiler.OpEqual:
 			right := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 			v.sp -= 2
-
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
 
 			if left.Equals(right) {
 				v.stack[v.sp] = objects.TrueValue
@@ -195,11 +182,6 @@ func (v *VM) run() {
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			if left.Equals(right) {
 				v.stack[v.sp] = objects.FalseValue
 			} else {
@@ -211,31 +193,16 @@ func (v *VM) run() {
 			v.sp--
 
 		case compiler.OpTrue:
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			v.stack[v.sp] = objects.TrueValue
 			v.sp++
 
 		case compiler.OpFalse:
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			v.stack[v.sp] = objects.FalseValue
 			v.sp++
 
 		case compiler.OpLNot:
 			operand := v.stack[v.sp-1]
 			v.sp--
-
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
 
 			if operand.IsFalsy() {
 				v.stack[v.sp] = objects.TrueValue
@@ -250,11 +217,6 @@ func (v *VM) run() {
 
 			switch x := operand.(type) {
 			case *objects.Int:
-				if v.sp >= StackSize {
-					v.err = ErrStackOverflow
-					return
-				}
-
 				var res objects.Object = &objects.Int{Value: ^x.Value}
 
 				v.allocs--
@@ -276,11 +238,6 @@ func (v *VM) run() {
 
 			switch x := operand.(type) {
 			case *objects.Int:
-				if v.sp >= StackSize {
-					v.err = ErrStackOverflow
-					return
-				}
-
 				var res objects.Object = &objects.Int{Value: -x.Value}
 
 				v.allocs--
@@ -292,11 +249,6 @@ func (v *VM) run() {
 				v.stack[v.sp] = res
 				v.sp++
 			case *objects.Float:
-				if v.sp >= StackSize {
-					v.err = ErrStackOverflow
-					return
-				}
-
 				var res objects.Object = &objects.Float{Value: -x.Value}
 
 				v.allocs--
@@ -313,36 +265,31 @@ func (v *VM) run() {
 			}
 
 		case compiler.OpJumpFalsy:
-			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
-
-			condition := v.stack[v.sp-1]
 			v.sp--
-
-			if condition.IsFalsy() {
+			if v.stack[v.sp].IsFalsy() {
+				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 				v.ip = pos - 1
 			}
 
 		case compiler.OpAndJump:
-			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
 
-			condition := v.stack[v.sp-1]
-			if condition.IsFalsy() {
+			if v.stack[v.sp-1].IsFalsy() {
+				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 				v.ip = pos - 1
 			} else {
 				v.sp--
 			}
 
 		case compiler.OpOrJump:
-			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
 
-			condition := v.stack[v.sp-1]
-			if !condition.IsFalsy() {
-				v.ip = pos - 1
-			} else {
+			if v.stack[v.sp-1].IsFalsy() {
 				v.sp--
+			} else {
+				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
+				v.ip = pos - 1
 			}
 
 		case compiler.OpJump:
@@ -350,17 +297,16 @@ func (v *VM) run() {
 			v.ip = pos - 1
 
 		case compiler.OpSetGlobal:
-			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
-
 			v.sp--
 
+			globalIndex := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 			v.globals[globalIndex] = v.stack[v.sp]
 
 		case compiler.OpSetSelGlobal:
-			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
-			numSelectors := int(v.curInsts[v.ip+3])
 			v.ip += 3
+			globalIndex := int(v.curInsts[v.ip-1]) | int(v.curInsts[v.ip-2])<<8
+			numSelectors := int(v.curInsts[v.ip])
 
 			// selectors and RHS value
 			selectors := make([]objects.Object, numSelectors)
@@ -372,28 +318,22 @@ func (v *VM) run() {
 			v.sp -= numSelectors + 1
 
 			if e := indexAssign(v.globals[globalIndex], val, selectors); e != nil {
-				v.errOffset = 3
 				v.err = e
 				return
 			}
 
 		case compiler.OpGetGlobal:
-			globalIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
+			globalIndex := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
 			val := v.globals[globalIndex]
-
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
 
 			v.stack[v.sp] = val
 			v.sp++
 
 		case compiler.OpArray:
-			numElements := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
+			numElements := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
 			var elements []objects.Object
 			for i := v.sp - numElements; i < v.sp; i++ {
@@ -409,17 +349,12 @@ func (v *VM) run() {
 				return
 			}
 
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			v.stack[v.sp] = arr
 			v.sp++
 
 		case compiler.OpMap:
-			numElements := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip += 2
+			numElements := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
 			kv := make(map[string]objects.Object)
 			for i := v.sp - numElements; i < v.sp; i += 2 {
@@ -434,11 +369,6 @@ func (v *VM) run() {
 			v.allocs--
 			if v.allocs == 0 {
 				v.err = ErrObjectAllocLimit
-				return
-			}
-
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
 				return
 			}
 
@@ -512,11 +442,6 @@ func (v *VM) run() {
 					val = objects.UndefinedValue
 				}
 
-				if v.sp >= StackSize {
-					v.err = ErrStackOverflow
-					return
-				}
-
 				v.stack[v.sp] = val
 				v.sp++
 
@@ -524,11 +449,6 @@ func (v *VM) run() {
 				key, ok := index.(*objects.String)
 				if !ok || key.Value != "value" {
 					v.err = fmt.Errorf("invalid index on error")
-					return
-				}
-
-				if v.sp >= StackSize {
-					v.err = ErrStackOverflow
 					return
 				}
 
@@ -586,11 +506,6 @@ func (v *VM) run() {
 					highIdx = numElements
 				}
 
-				if v.sp >= StackSize {
-					v.err = ErrStackOverflow
-					return
-				}
-
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
@@ -629,11 +544,6 @@ func (v *VM) run() {
 					highIdx = 0
 				} else if highIdx > numElements {
 					highIdx = numElements
-				}
-
-				if v.sp >= StackSize {
-					v.err = ErrStackOverflow
-					return
 				}
 
 				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
@@ -676,11 +586,6 @@ func (v *VM) run() {
 					highIdx = numElements
 				}
 
-				if v.sp >= StackSize {
-					v.err = ErrStackOverflow
-					return
-				}
-
 				var val objects.Object = &objects.String{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
@@ -721,11 +626,6 @@ func (v *VM) run() {
 					highIdx = numElements
 				}
 
-				if v.sp >= StackSize {
-					v.err = ErrStackOverflow
-					return
-				}
-
 				var val objects.Object = &objects.Bytes{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
@@ -747,7 +647,6 @@ func (v *VM) run() {
 			switch callee := value.(type) {
 			case *objects.Closure:
 				if numArgs != callee.Fn.NumParameters {
-					v.errOffset = 1
 					v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
 						callee.Fn.NumParameters, numArgs)
 					return
@@ -756,7 +655,7 @@ func (v *VM) run() {
 				// test if it's tail-call
 				if callee.Fn == v.curFrame.fn { // recursion
 					nextOp := v.curInsts[v.ip+1]
-					if nextOp == compiler.OpReturnValue ||
+					if nextOp == compiler.OpReturn ||
 						(nextOp == compiler.OpPop && compiler.OpReturn == v.curInsts[v.ip+2]) {
 						for p := 0; p < numArgs; p++ {
 							v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
@@ -775,13 +674,11 @@ func (v *VM) run() {
 				v.curFrame.basePointer = v.sp - numArgs
 				v.curInsts = callee.Fn.Instructions
 				v.ip = -1
-				v.curIPLimit = len(v.curInsts) - 1
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.Fn.NumLocals
 
 			case *objects.CompiledFunction:
 				if numArgs != callee.NumParameters {
-					v.errOffset = 1
 					v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
 						callee.NumParameters, numArgs)
 					return
@@ -790,7 +687,7 @@ func (v *VM) run() {
 				// test if it's tail-call
 				if callee == v.curFrame.fn { // recursion
 					nextOp := v.curInsts[v.ip+1]
-					if nextOp == compiler.OpReturnValue ||
+					if nextOp == compiler.OpReturn ||
 						(nextOp == compiler.OpPop && compiler.OpReturn == v.curInsts[v.ip+2]) {
 						for p := 0; p < numArgs; p++ {
 							v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
@@ -809,7 +706,6 @@ func (v *VM) run() {
 				v.curFrame.basePointer = v.sp - numArgs
 				v.curInsts = callee.Instructions
 				v.ip = -1
-				v.curIPLimit = len(v.curInsts) - 1
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.NumLocals
 
@@ -824,8 +720,6 @@ func (v *VM) run() {
 
 				// runtime error
 				if e != nil {
-					v.errOffset = 1
-
 					if e == objects.ErrWrongNumArguments {
 						v.err = fmt.Errorf("wrong number of arguments in call to '%s'",
 							value.TypeName())
@@ -853,56 +747,39 @@ func (v *VM) run() {
 					return
 				}
 
-				if v.sp >= StackSize {
-					v.err = ErrStackOverflow
-					return
-				}
-
 				v.stack[v.sp] = ret
 				v.sp++
 
 			default:
-				v.errOffset = 1
 				v.err = fmt.Errorf("not callable: %s", callee.TypeName())
 				return
 			}
 
-		case compiler.OpReturnValue:
-			retVal := v.stack[v.sp-1]
+		case compiler.OpReturn:
+			v.ip++
+			var retVal objects.Object
+			if int(v.curInsts[v.ip]) == 1 {
+				retVal = v.stack[v.sp-1]
+			} else {
+				retVal = objects.UndefinedValue
+			}
 			//v.sp--
 
 			v.framesIndex--
-			lastFrame := v.frames[v.framesIndex]
 			v.curFrame = &v.frames[v.framesIndex-1]
 			v.curInsts = v.curFrame.fn.Instructions
-			v.curIPLimit = len(v.curInsts) - 1
 			v.ip = v.curFrame.ip
 
 			//v.sp = lastFrame.basePointer - 1
-			v.sp = lastFrame.basePointer
+			v.sp = v.frames[v.framesIndex].basePointer
 
 			// skip stack overflow check because (newSP) <= (oldSP)
 			v.stack[v.sp-1] = retVal
 			//v.sp++
 
-		case compiler.OpReturn:
-			v.framesIndex--
-			lastFrame := v.frames[v.framesIndex]
-			v.curFrame = &v.frames[v.framesIndex-1]
-			v.curInsts = v.curFrame.fn.Instructions
-			v.curIPLimit = len(v.curInsts) - 1
-			v.ip = v.curFrame.ip
-
-			//v.sp = lastFrame.basePointer - 1
-			v.sp = lastFrame.basePointer
-
-			// skip stack overflow check because (newSP) <= (oldSP)
-			v.stack[v.sp-1] = objects.UndefinedValue
-			//v.sp++
-
 		case compiler.OpDefineLocal:
-			localIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			localIndex := int(v.curInsts[v.ip])
 
 			sp := v.curFrame.basePointer + localIndex
 
@@ -947,14 +824,13 @@ func (v *VM) run() {
 			sp := v.curFrame.basePointer + localIndex
 
 			if e := indexAssign(v.stack[sp], val, selectors); e != nil {
-				v.errOffset = 2
 				v.err = e
 				return
 			}
 
 		case compiler.OpGetLocal:
-			localIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			localIndex := int(v.curInsts[v.ip])
 
 			val := v.stack[v.curFrame.basePointer+localIndex]
 
@@ -962,34 +838,23 @@ func (v *VM) run() {
 				val = *obj.Value
 			}
 
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			v.stack[v.sp] = val
 			v.sp++
 
 		case compiler.OpGetBuiltin:
-			builtinIndex := int(v.curInsts[v.ip+1])
 			v.ip++
-
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
+			builtinIndex := int(v.curInsts[v.ip])
 
 			v.stack[v.sp] = objects.Builtins[builtinIndex]
 			v.sp++
 
 		case compiler.OpClosure:
-			constIndex := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
-			numFree := int(v.curInsts[v.ip+3])
 			v.ip += 3
+			constIndex := int(v.curInsts[v.ip-1]) | int(v.curInsts[v.ip-2])<<8
+			numFree := int(v.curInsts[v.ip])
 
 			fn, ok := v.constants[constIndex].(*objects.CompiledFunction)
 			if !ok {
-				v.errOffset = 3
 				v.err = fmt.Errorf("not function: %s", fn.TypeName())
 				return
 			}
@@ -1006,11 +871,6 @@ func (v *VM) run() {
 
 			v.sp -= numFree
 
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			var cl = &objects.Closure{
 				Fn:   fn,
 				Free: free,
@@ -1026,44 +886,34 @@ func (v *VM) run() {
 			v.sp++
 
 		case compiler.OpGetFreePtr:
-			freeIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			freeIndex := int(v.curInsts[v.ip])
 
 			val := v.curFrame.freeVars[freeIndex]
-
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
 
 			v.stack[v.sp] = val
 			v.sp++
 
 		case compiler.OpGetFree:
-			freeIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			freeIndex := int(v.curInsts[v.ip])
 
 			val := *v.curFrame.freeVars[freeIndex].Value
-
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
 
 			v.stack[v.sp] = val
 			v.sp++
 
 		case compiler.OpSetFree:
-			freeIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			freeIndex := int(v.curInsts[v.ip])
 
 			*v.curFrame.freeVars[freeIndex].Value = v.stack[v.sp-1]
 
 			v.sp--
 
 		case compiler.OpGetLocalPtr:
-			localIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			localIndex := int(v.curInsts[v.ip])
 
 			sp := v.curFrame.basePointer + localIndex
 			val := v.stack[sp]
@@ -1076,18 +926,13 @@ func (v *VM) run() {
 				v.stack[sp] = freeVar
 			}
 
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			v.stack[v.sp] = freeVar
 			v.sp++
 
 		case compiler.OpSetSelFree:
-			freeIndex := int(v.curInsts[v.ip+1])
-			numSelectors := int(v.curInsts[v.ip+2])
 			v.ip += 2
+			freeIndex := int(v.curInsts[v.ip-1])
+			numSelectors := int(v.curInsts[v.ip])
 
 			// selectors and RHS value
 			selectors := make([]objects.Object, numSelectors)
@@ -1098,7 +943,6 @@ func (v *VM) run() {
 			v.sp -= numSelectors + 1
 
 			if e := indexAssign(*v.curFrame.freeVars[freeIndex].Value, val, selectors); e != nil {
-				v.errOffset = 2
 				v.err = e
 				return
 			}
@@ -1123,11 +967,6 @@ func (v *VM) run() {
 				return
 			}
 
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			v.stack[v.sp] = iterator
 			v.sp++
 
@@ -1136,11 +975,6 @@ func (v *VM) run() {
 			v.sp--
 
 			hasMore := iterator.(objects.Iterator).Next()
-
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
 
 			if hasMore {
 				v.stack[v.sp] = objects.TrueValue
@@ -1155,11 +989,6 @@ func (v *VM) run() {
 
 			val := iterator.(objects.Iterator).Key()
 
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			v.stack[v.sp] = val
 			v.sp++
 
@@ -1169,16 +998,12 @@ func (v *VM) run() {
 
 			val := iterator.(objects.Iterator).Value()
 
-			if v.sp >= StackSize {
-				v.err = ErrStackOverflow
-				return
-			}
-
 			v.stack[v.sp] = val
 			v.sp++
 
 		default:
-			panic(fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip]))
+			v.err = fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])
+			return
 		}
 	}
 }
@@ -1223,33 +1048,4 @@ func indexAssign(dst, src objects.Object, selectors []objects.Object) error {
 	}
 
 	return nil
-}
-
-func (v *VM) binaryOp(tok token.Token) {
-	right := v.stack[v.sp-1]
-	left := v.stack[v.sp-2]
-
-	res, e := left.BinaryOp(tok, right)
-	if e != nil {
-		v.sp -= 2
-		atomic.StoreInt64(&v.aborting, 1)
-
-		if e == objects.ErrInvalidOperator {
-			v.err = fmt.Errorf("invalid operation: %s + %s",
-				left.TypeName(), right.TypeName())
-			return
-		}
-
-		v.err = e
-		return
-	}
-
-	v.allocs--
-	if v.allocs == 0 {
-		v.err = ErrObjectAllocLimit
-		return
-	}
-
-	v.stack[v.sp-2] = res
-	v.sp--
 }

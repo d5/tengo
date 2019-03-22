@@ -21,25 +21,25 @@ func TestInstructions_String(t *testing.T) {
 
 	assertInstructionString(t,
 		[][]byte{
-			compiler.MakeInstruction(compiler.OpAdd),
+			compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 			compiler.MakeInstruction(compiler.OpConstant, 2),
 			compiler.MakeInstruction(compiler.OpConstant, 65535),
 		},
-		`0000 ADD    
-0001 CONST   2    
-0004 CONST   65535`)
+		`0000 BINARYOP 11   
+0002 CONST   2    
+0005 CONST   65535`)
 
 	assertInstructionString(t,
 		[][]byte{
-			compiler.MakeInstruction(compiler.OpAdd),
+			compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 			compiler.MakeInstruction(compiler.OpGetLocal, 1),
 			compiler.MakeInstruction(compiler.OpConstant, 2),
 			compiler.MakeInstruction(compiler.OpConstant, 65535),
 		},
-		`0000 ADD    
-0001 GETL    1    
-0003 CONST   2    
-0006 CONST   65535`)
+		`0000 BINARYOP 11   
+0002 GETL    1    
+0004 CONST   2    
+0007 CONST   65535`)
 }
 
 func TestMakeInstruction(t *testing.T) {
@@ -49,10 +49,6 @@ func TestMakeInstruction(t *testing.T) {
 	makeInstruction(t, []byte{byte(compiler.OpPop)}, compiler.OpPop)
 	makeInstruction(t, []byte{byte(compiler.OpTrue)}, compiler.OpTrue)
 	makeInstruction(t, []byte{byte(compiler.OpFalse)}, compiler.OpFalse)
-	makeInstruction(t, []byte{byte(compiler.OpAdd)}, compiler.OpAdd)
-	makeInstruction(t, []byte{byte(compiler.OpSub)}, compiler.OpSub)
-	makeInstruction(t, []byte{byte(compiler.OpMul)}, compiler.OpMul)
-	makeInstruction(t, []byte{byte(compiler.OpDiv)}, compiler.OpDiv)
 }
 
 func assertInstructionString(t *testing.T, instructions [][]byte, expected string) {

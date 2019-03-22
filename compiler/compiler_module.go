@@ -50,7 +50,7 @@ func (c *Compiler) compileModule(node ast.Node, moduleName, modulePath string, s
 	}
 
 	// add OpReturn (== export undefined) if export is missing
-	if !moduleCompiler.lastInstructionIs(OpReturnValue) {
+	if !moduleCompiler.lastInstructionIs(OpReturn) {
 		moduleCompiler.emit(nil, OpReturn)
 	}
 
