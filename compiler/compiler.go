@@ -119,8 +119,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpGreaterThan)
+			c.emit(node, OpBinaryOp, int(token.Greater))
 
 			return nil
 		} else if node.Token == token.LessEq {
@@ -131,8 +130,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 				return err
 			}
 
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpGreaterThanEqual)
+			c.emit(node, OpBinaryOp, int(token.GreaterEq))
 
 			return nil
 		}
@@ -146,48 +144,35 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		switch node.Token {
 		case token.Add:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpAdd)
+			c.emit(node, OpBinaryOp, int(token.Add))
 		case token.Sub:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpSub)
+			c.emit(node, OpBinaryOp, int(token.Sub))
 		case token.Mul:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpMul)
+			c.emit(node, OpBinaryOp, int(token.Mul))
 		case token.Quo:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpDiv)
+			c.emit(node, OpBinaryOp, int(token.Quo))
 		case token.Rem:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpRem)
+			c.emit(node, OpBinaryOp, int(token.Rem))
 		case token.Greater:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpGreaterThan)
+			c.emit(node, OpBinaryOp, int(token.Greater))
 		case token.GreaterEq:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpGreaterThanEqual)
+			c.emit(node, OpBinaryOp, int(token.GreaterEq))
 		case token.Equal:
 			c.emit(node, OpEqual)
 		case token.NotEqual:
 			c.emit(node, OpNotEqual)
 		case token.And:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpBAnd)
+			c.emit(node, OpBinaryOp, int(token.And))
 		case token.Or:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpBOr)
+			c.emit(node, OpBinaryOp, int(token.Or))
 		case token.Xor:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpBXor)
+			c.emit(node, OpBinaryOp, int(token.Xor))
 		case token.AndNot:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpBAndNot)
+			c.emit(node, OpBinaryOp, int(token.AndNot))
 		case token.Shl:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpBShiftLeft)
+			c.emit(node, OpBinaryOp, int(token.Shl))
 		case token.Shr:
-			c.emit(node, OpBinaryOp)
-			c.emit(node, OpBShiftRight)
+			c.emit(node, OpBinaryOp, int(token.Shr))
 		default:
 			return c.errorf(node, "invalid binary operator: %s", node.Token.String())
 		}

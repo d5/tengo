@@ -18,8 +18,7 @@ func TestCompiler_Compile(t *testing.T) {
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpAdd),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(1),
@@ -41,8 +40,7 @@ func TestCompiler_Compile(t *testing.T) {
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpSub),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 12),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(1),
@@ -53,8 +51,7 @@ func TestCompiler_Compile(t *testing.T) {
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpMul),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 13),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(1),
@@ -65,8 +62,7 @@ func TestCompiler_Compile(t *testing.T) {
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpDiv),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 14),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(2),
@@ -91,8 +87,7 @@ func TestCompiler_Compile(t *testing.T) {
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpGreaterThan),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 39),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(1),
@@ -103,8 +98,29 @@ func TestCompiler_Compile(t *testing.T) {
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpGreaterThan),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 39),
+				compiler.MakeInstruction(compiler.OpPop)),
+			objectsArray(
+				intObject(2),
+				intObject(1))))
+
+	expect(t, `1 >= 2`,
+		bytecode(
+			concat(
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 44),
+				compiler.MakeInstruction(compiler.OpPop)),
+			objectsArray(
+				intObject(1),
+				intObject(2))))
+
+	expect(t, `1 <= 2`,
+		bytecode(
+			concat(
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 44),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(2),
@@ -210,8 +226,7 @@ func TestCompiler_Compile(t *testing.T) {
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpAdd),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				stringObject("ka"),
@@ -226,8 +241,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpSetGlobal, 1),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 1),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpAdd),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 				compiler.MakeInstruction(compiler.OpSetGlobal, 0)),
 			objectsArray(
 				intObject(1),
@@ -242,8 +256,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpSetGlobal, 1),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 1),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpDiv),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 14),
 				compiler.MakeInstruction(compiler.OpSetGlobal, 0)),
 			objectsArray(
 				intObject(1),
@@ -274,16 +287,13 @@ func TestCompiler_Compile(t *testing.T) {
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpAdd),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 				compiler.MakeInstruction(compiler.OpConstant, 2),
 				compiler.MakeInstruction(compiler.OpConstant, 3),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpSub),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 12),
 				compiler.MakeInstruction(compiler.OpConstant, 4),
 				compiler.MakeInstruction(compiler.OpConstant, 5),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpMul),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 13),
 				compiler.MakeInstruction(compiler.OpArray, 3),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
@@ -326,13 +336,11 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpConstant, 2),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpAdd),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 				compiler.MakeInstruction(compiler.OpConstant, 3),
 				compiler.MakeInstruction(compiler.OpConstant, 4),
 				compiler.MakeInstruction(compiler.OpConstant, 5),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpMul),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 13),
 				compiler.MakeInstruction(compiler.OpMap, 4),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
@@ -352,8 +360,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpArray, 3),
 				compiler.MakeInstruction(compiler.OpConstant, 3),
 				compiler.MakeInstruction(compiler.OpConstant, 4),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpAdd),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 				compiler.MakeInstruction(compiler.OpIndex),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
@@ -371,8 +378,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpMap, 2),
 				compiler.MakeInstruction(compiler.OpConstant, 2),
 				compiler.MakeInstruction(compiler.OpConstant, 3),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpSub),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 12),
 				compiler.MakeInstruction(compiler.OpIndex),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
@@ -460,8 +466,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiledFunction(0, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 0),
 					compiler.MakeInstruction(compiler.OpConstant, 1),
-					compiler.MakeInstruction(compiler.OpBinaryOp),
-					compiler.MakeInstruction(compiler.OpAdd),
+					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpReturnValue)))))
 
 	expect(t, `func() { 5 + 10 }`,
@@ -475,8 +480,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiledFunction(0, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 0),
 					compiler.MakeInstruction(compiler.OpConstant, 1),
-					compiler.MakeInstruction(compiler.OpBinaryOp),
-					compiler.MakeInstruction(compiler.OpAdd),
+					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpPop),
 					compiler.MakeInstruction(compiler.OpReturn)))))
 
@@ -654,8 +658,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpDefineLocal, 1),
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetLocal, 1),
-					compiler.MakeInstruction(compiler.OpBinaryOp),
-					compiler.MakeInstruction(compiler.OpAdd),
+					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpReturnValue)))))
 
 	expect(t, `f1 := func(a) { return a }; f1(24);`,
@@ -741,8 +744,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiledFunction(1, 1,
 					compiler.MakeInstruction(compiler.OpGetFree, 0),
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
-					compiler.MakeInstruction(compiler.OpBinaryOp),
-					compiler.MakeInstruction(compiler.OpAdd),
+					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpReturnValue)),
 				compiledFunction(1, 1,
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
@@ -766,11 +768,9 @@ func(a) {
 				compiledFunction(1, 1,
 					compiler.MakeInstruction(compiler.OpGetFree, 0),
 					compiler.MakeInstruction(compiler.OpGetFree, 1),
-					compiler.MakeInstruction(compiler.OpBinaryOp),
-					compiler.MakeInstruction(compiler.OpAdd),
+					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
-					compiler.MakeInstruction(compiler.OpBinaryOp),
-					compiler.MakeInstruction(compiler.OpAdd),
+					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpReturnValue)),
 				compiledFunction(1, 1,
 					compiler.MakeInstruction(compiler.OpGetFreePtr, 0),
@@ -814,14 +814,11 @@ func() {
 					compiler.MakeInstruction(compiler.OpDefineLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetGlobal, 0),
 					compiler.MakeInstruction(compiler.OpGetFree, 0),
-					compiler.MakeInstruction(compiler.OpBinaryOp),
-					compiler.MakeInstruction(compiler.OpAdd),
+					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpGetFree, 1),
-					compiler.MakeInstruction(compiler.OpBinaryOp),
-					compiler.MakeInstruction(compiler.OpAdd),
+					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
-					compiler.MakeInstruction(compiler.OpBinaryOp),
-					compiler.MakeInstruction(compiler.OpAdd),
+					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpReturnValue)),
 				compiledFunction(1, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 2),
@@ -844,13 +841,11 @@ func() {
 				compiler.MakeInstruction(compiler.OpSetGlobal, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpGreaterThan),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 39),
 				compiler.MakeInstruction(compiler.OpJumpFalsy, 31),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 2),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpAdd),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 				compiler.MakeInstruction(compiler.OpSetGlobal, 0),
 				compiler.MakeInstruction(compiler.OpJump, 6)),
 			objectsArray(
@@ -893,8 +888,7 @@ func() {
 				compiler.MakeInstruction(compiler.OpOrJump, 34),
 				compiler.MakeInstruction(compiler.OpConstant, 3),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
-				compiler.MakeInstruction(compiler.OpBinaryOp),
-				compiler.MakeInstruction(compiler.OpGreaterThan),
+				compiler.MakeInstruction(compiler.OpBinaryOp, 39),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(0),

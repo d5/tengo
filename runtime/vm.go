@@ -6,6 +6,7 @@ import (
 
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/source"
+	"github.com/d5/tengo/compiler/token"
 	"github.com/d5/tengo/objects"
 )
 
@@ -140,13 +141,14 @@ func (v *VM) run() {
 			right := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 
-			res, e := left.BinaryOp(compiler.BinaryOpTokens[v.curInsts[v.ip]], right)
+			tok := token.Token(v.curInsts[v.ip])
+			res, e := left.BinaryOp(tok, right)
 			if e != nil {
 				v.sp -= 2
 
 				if e == objects.ErrInvalidOperator {
-					v.err = fmt.Errorf("invalid operation: %s + %s",
-						left.TypeName(), right.TypeName())
+					v.err = fmt.Errorf("invalid operation: %s %s %s",
+						left.TypeName(), tok.String(), right.TypeName())
 					return
 				}
 
