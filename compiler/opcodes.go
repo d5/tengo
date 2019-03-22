@@ -27,7 +27,6 @@ const (
 	OpSliceIndex                  // Slice operation
 	OpCall                        // Call function
 	OpReturn                      // Return
-	OpReturnValue                 // Return value
 	OpGetGlobal                   // Get global variable
 	OpSetGlobal                   // Set global variable
 	OpSetSelGlobal                // Set global variable using selectors
@@ -76,7 +75,6 @@ var OpcodeNames = [...]string{
 	OpSliceIndex:    "SLICE",
 	OpCall:          "CALL",
 	OpReturn:        "RET",
-	OpReturnValue:   "RETVAL",
 	OpGetLocal:      "GETL",
 	OpSetLocal:      "SETL",
 	OpDefineLocal:   "DEFL",
@@ -121,8 +119,7 @@ var OpcodeOperands = [...][]int{
 	OpIndex:         {},
 	OpSliceIndex:    {},
 	OpCall:          {1},
-	OpReturn:        {},
-	OpReturnValue:   {},
+	OpReturn:        {1},
 	OpGetLocal:      {1},
 	OpSetLocal:      {1},
 	OpDefineLocal:   {1},

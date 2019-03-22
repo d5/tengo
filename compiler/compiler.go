@@ -405,8 +405,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		// add OpReturn if function returns nothing
-		if !c.lastInstructionIs(OpReturnValue) && !c.lastInstructionIs(OpReturn) {
-			c.emit(node, OpReturn)
+		if !c.lastInstructionIs(OpReturn) {
+			c.emit(node, OpReturn, 0)
 		}
 
 		freeSymbols := c.symbolTable.FreeSymbols()
@@ -486,13 +486,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		if node.Result == nil {
-			c.emit(node, OpReturn)
+			c.emit(node, OpReturn, 0)
 		} else {
 			if err := c.Compile(node.Result); err != nil {
 				return err
 			}
 
-			c.emit(node, OpReturnValue)
+			c.emit(node, OpReturn, 1)
 		}
 
 	case *ast.CallExpr:
@@ -578,7 +578,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(node, OpImmutable)
-		c.emit(node, OpReturnValue)
+		c.emit(node, OpReturn, 1)
 
 	case *ast.ErrorExpr:
 		if err := c.Compile(node.Expr); err != nil {

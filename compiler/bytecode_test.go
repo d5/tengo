@@ -107,20 +107,20 @@ func TestBytecode(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 				compiler.MakeInstruction(compiler.OpGetLocal, 0),
 				compiler.MakeInstruction(compiler.OpBinaryOp, 11),
-				compiler.MakeInstruction(compiler.OpReturnValue)),
+				compiler.MakeInstruction(compiler.OpReturn, 1)),
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 2),
 				compiler.MakeInstruction(compiler.OpSetLocal, 0),
 				compiler.MakeInstruction(compiler.OpGetFree, 0),
 				compiler.MakeInstruction(compiler.OpGetLocal, 0),
 				compiler.MakeInstruction(compiler.OpClosure, 4, 2),
-				compiler.MakeInstruction(compiler.OpReturnValue)),
+				compiler.MakeInstruction(compiler.OpReturn, 1)),
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpSetLocal, 0),
 				compiler.MakeInstruction(compiler.OpGetLocal, 0),
 				compiler.MakeInstruction(compiler.OpClosure, 5, 1),
-				compiler.MakeInstruction(compiler.OpReturnValue))),
+				compiler.MakeInstruction(compiler.OpReturn, 1))),
 		fileSet(srcfile{name: "file1", size: 100}, srcfile{name: "file2", size: 200})))
 }
 
@@ -240,13 +240,13 @@ func TestBytecode_CountObjects(t *testing.T) {
 			&objects.Int{Value: 88},
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 3),
-				compiler.MakeInstruction(compiler.OpReturnValue)),
+				compiler.MakeInstruction(compiler.OpReturn, 1)),
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 2),
-				compiler.MakeInstruction(compiler.OpReturnValue)),
+				compiler.MakeInstruction(compiler.OpReturn, 1)),
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 1),
-				compiler.MakeInstruction(compiler.OpReturnValue))))
+				compiler.MakeInstruction(compiler.OpReturn, 1))))
 	assert.Equal(t, 7, b.CountObjects())
 }
 

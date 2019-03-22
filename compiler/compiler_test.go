@@ -467,7 +467,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpConstant, 0),
 					compiler.MakeInstruction(compiler.OpConstant, 1),
 					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
-					compiler.MakeInstruction(compiler.OpReturnValue)))))
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))
 
 	expect(t, `func() { 5 + 10 }`,
 		bytecode(
@@ -482,7 +482,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpConstant, 1),
 					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpPop),
-					compiler.MakeInstruction(compiler.OpReturn)))))
+					compiler.MakeInstruction(compiler.OpReturn, 0)))))
 
 	expect(t, `func() { 1; 2 }`,
 		bytecode(
@@ -497,7 +497,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpPop),
 					compiler.MakeInstruction(compiler.OpConstant, 1),
 					compiler.MakeInstruction(compiler.OpPop),
-					compiler.MakeInstruction(compiler.OpReturn)))))
+					compiler.MakeInstruction(compiler.OpReturn, 0)))))
 
 	expect(t, `func() { 1; return 2 }`,
 		bytecode(
@@ -511,7 +511,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpConstant, 0),
 					compiler.MakeInstruction(compiler.OpPop),
 					compiler.MakeInstruction(compiler.OpConstant, 1),
-					compiler.MakeInstruction(compiler.OpReturnValue)))))
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))
 
 	expect(t, `func() { if(true) { return 1 } else { return 2 } }`,
 		bytecode(
@@ -522,13 +522,13 @@ func TestCompiler_Compile(t *testing.T) {
 				intObject(1),
 				intObject(2),
 				compiledFunction(0, 0,
-					compiler.MakeInstruction(compiler.OpTrue),           // 0000
-					compiler.MakeInstruction(compiler.OpJumpFalsy, 11),  // 0001
-					compiler.MakeInstruction(compiler.OpConstant, 0),    // 0004
-					compiler.MakeInstruction(compiler.OpReturnValue),    // 0007
-					compiler.MakeInstruction(compiler.OpJump, 15),       // 0008
-					compiler.MakeInstruction(compiler.OpConstant, 1),    // 0011
-					compiler.MakeInstruction(compiler.OpReturnValue))))) // 0014
+					compiler.MakeInstruction(compiler.OpTrue),          // 0000
+					compiler.MakeInstruction(compiler.OpJumpFalsy, 12), // 0001
+					compiler.MakeInstruction(compiler.OpConstant, 0),   // 0004
+					compiler.MakeInstruction(compiler.OpReturn, 1),     // 0007
+					compiler.MakeInstruction(compiler.OpJump, 17),      // 0008
+					compiler.MakeInstruction(compiler.OpConstant, 1),   // 0011
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))  // 0014
 
 	expect(t, `func() { 1; if(true) { 2 } else { 3 }; 4 }`,
 		bytecode(
@@ -552,7 +552,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpPop),           // 0018
 					compiler.MakeInstruction(compiler.OpConstant, 3),   // 0019
 					compiler.MakeInstruction(compiler.OpPop),           // 0022
-					compiler.MakeInstruction(compiler.OpReturn)))))     // 0023
+					compiler.MakeInstruction(compiler.OpReturn, 0)))))  // 0023
 
 	expect(t, `func() { }`,
 		bytecode(
@@ -560,7 +560,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
-				compiledFunction(0, 0, compiler.MakeInstruction(compiler.OpReturn)))))
+				compiledFunction(0, 0, compiler.MakeInstruction(compiler.OpReturn, 0)))))
 
 	expect(t, `func() { 24 }()`,
 		bytecode(
@@ -573,7 +573,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiledFunction(0, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 0),
 					compiler.MakeInstruction(compiler.OpPop),
-					compiler.MakeInstruction(compiler.OpReturn)))))
+					compiler.MakeInstruction(compiler.OpReturn, 0)))))
 
 	expect(t, `func() { return 24 }()`,
 		bytecode(
@@ -585,7 +585,7 @@ func TestCompiler_Compile(t *testing.T) {
 				intObject(24),
 				compiledFunction(0, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 0),
-					compiler.MakeInstruction(compiler.OpReturnValue)))))
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))
 
 	expect(t, `noArg := func() { 24 }; noArg();`,
 		bytecode(
@@ -600,7 +600,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiledFunction(0, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 0),
 					compiler.MakeInstruction(compiler.OpPop),
-					compiler.MakeInstruction(compiler.OpReturn)))))
+					compiler.MakeInstruction(compiler.OpReturn, 0)))))
 
 	expect(t, `noArg := func() { return 24 }; noArg();`,
 		bytecode(
@@ -614,7 +614,7 @@ func TestCompiler_Compile(t *testing.T) {
 				intObject(24),
 				compiledFunction(0, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 0),
-					compiler.MakeInstruction(compiler.OpReturnValue)))))
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))
 
 	expect(t, `n := 55; func() { n };`,
 		bytecode(
@@ -628,7 +628,7 @@ func TestCompiler_Compile(t *testing.T) {
 				compiledFunction(0, 0,
 					compiler.MakeInstruction(compiler.OpGetGlobal, 0),
 					compiler.MakeInstruction(compiler.OpPop),
-					compiler.MakeInstruction(compiler.OpReturn)))))
+					compiler.MakeInstruction(compiler.OpReturn, 0)))))
 
 	expect(t, `func() { n := 55; return n }`,
 		bytecode(
@@ -641,7 +641,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpConstant, 0),
 					compiler.MakeInstruction(compiler.OpDefineLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
-					compiler.MakeInstruction(compiler.OpReturnValue)))))
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))
 
 	expect(t, `func() { a := 55; b := 77; return a + b }`,
 		bytecode(
@@ -659,7 +659,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetLocal, 1),
 					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
-					compiler.MakeInstruction(compiler.OpReturnValue)))))
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))
 
 	expect(t, `f1 := func(a) { return a }; f1(24);`,
 		bytecode(
@@ -673,7 +673,7 @@ func TestCompiler_Compile(t *testing.T) {
 			objectsArray(
 				compiledFunction(1, 1,
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
-					compiler.MakeInstruction(compiler.OpReturnValue)),
+					compiler.MakeInstruction(compiler.OpReturn, 1)),
 				intObject(24))))
 
 	expect(t, `f1 := func(a, b, c) { a; b; return c; }; f1(24, 25, 26);`,
@@ -694,7 +694,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpGetLocal, 1),
 					compiler.MakeInstruction(compiler.OpPop),
 					compiler.MakeInstruction(compiler.OpGetLocal, 2),
-					compiler.MakeInstruction(compiler.OpReturnValue)),
+					compiler.MakeInstruction(compiler.OpReturn, 1)),
 				intObject(24),
 				intObject(25),
 				intObject(26))))
@@ -713,7 +713,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpConstant, 1),
 					compiler.MakeInstruction(compiler.OpSetLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
-					compiler.MakeInstruction(compiler.OpReturnValue)))))
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))
 	expect(t, `len([]);`,
 		bytecode(
 			concat(
@@ -733,7 +733,7 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpGetBuiltin, 0),
 					compiler.MakeInstruction(compiler.OpArray, 0),
 					compiler.MakeInstruction(compiler.OpCall, 1),
-					compiler.MakeInstruction(compiler.OpReturnValue)))))
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))
 
 	expect(t, `func(a) { func(b) { return a + b } }`,
 		bytecode(
@@ -745,12 +745,12 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpGetFree, 0),
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
 					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
-					compiler.MakeInstruction(compiler.OpReturnValue)),
+					compiler.MakeInstruction(compiler.OpReturn, 1)),
 				compiledFunction(1, 1,
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 0, 1),
 					compiler.MakeInstruction(compiler.OpPop),
-					compiler.MakeInstruction(compiler.OpReturn)))))
+					compiler.MakeInstruction(compiler.OpReturn, 0)))))
 
 	expect(t, `
 func(a) {
@@ -771,16 +771,16 @@ func(a) {
 					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
 					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
-					compiler.MakeInstruction(compiler.OpReturnValue)),
+					compiler.MakeInstruction(compiler.OpReturn, 1)),
 				compiledFunction(1, 1,
 					compiler.MakeInstruction(compiler.OpGetFreePtr, 0),
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 0, 2),
-					compiler.MakeInstruction(compiler.OpReturnValue)),
+					compiler.MakeInstruction(compiler.OpReturn, 1)),
 				compiledFunction(1, 1,
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 1, 1),
-					compiler.MakeInstruction(compiler.OpReturnValue)))))
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))
 
 	expect(t, `
 g := 55;
@@ -819,20 +819,20 @@ func() {
 					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 					compiler.MakeInstruction(compiler.OpGetLocal, 0),
 					compiler.MakeInstruction(compiler.OpBinaryOp, 11),
-					compiler.MakeInstruction(compiler.OpReturnValue)),
+					compiler.MakeInstruction(compiler.OpReturn, 1)),
 				compiledFunction(1, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 2),
 					compiler.MakeInstruction(compiler.OpDefineLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetFreePtr, 0),
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 4, 2),
-					compiler.MakeInstruction(compiler.OpReturnValue)),
+					compiler.MakeInstruction(compiler.OpReturn, 1)),
 				compiledFunction(1, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 1),
 					compiler.MakeInstruction(compiler.OpDefineLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetLocalPtr, 0),
 					compiler.MakeInstruction(compiler.OpClosure, 5, 1),
-					compiler.MakeInstruction(compiler.OpReturnValue)))))
+					compiler.MakeInstruction(compiler.OpReturn, 1)))))
 
 	expect(t, `for i:=0; i<10; i++ {}`,
 		bytecode(

@@ -655,7 +655,7 @@ func (v *VM) run() {
 				// test if it's tail-call
 				if callee.Fn == v.curFrame.fn { // recursion
 					nextOp := v.curInsts[v.ip+1]
-					if nextOp == compiler.OpReturnValue ||
+					if nextOp == compiler.OpReturn ||
 						(nextOp == compiler.OpPop && compiler.OpReturn == v.curInsts[v.ip+2]) {
 						for p := 0; p < numArgs; p++ {
 							v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
@@ -687,7 +687,7 @@ func (v *VM) run() {
 				// test if it's tail-call
 				if callee == v.curFrame.fn { // recursion
 					nextOp := v.curInsts[v.ip+1]
-					if nextOp == compiler.OpReturnValue ||
+					if nextOp == compiler.OpReturn ||
 						(nextOp == compiler.OpPop && compiler.OpReturn == v.curInsts[v.ip+2]) {
 						for p := 0; p < numArgs; p++ {
 							v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
@@ -755,8 +755,14 @@ func (v *VM) run() {
 				return
 			}
 
-		case compiler.OpReturnValue:
-			retVal := v.stack[v.sp-1]
+		case compiler.OpReturn:
+			v.ip++
+			var retVal objects.Object
+			if int(v.curInsts[v.ip]) == 1 {
+				retVal = v.stack[v.sp-1]
+			} else {
+				retVal = objects.UndefinedValue
+			}
 			//v.sp--
 
 			v.framesIndex--
@@ -771,22 +777,9 @@ func (v *VM) run() {
 			v.stack[v.sp-1] = retVal
 			//v.sp++
 
-		case compiler.OpReturn:
-			v.framesIndex--
-			v.curFrame = &v.frames[v.framesIndex-1]
-			v.curInsts = v.curFrame.fn.Instructions
-			v.ip = v.curFrame.ip
-
-			//v.sp = lastFrame.basePointer - 1
-			v.sp = v.frames[v.framesIndex].basePointer
-
-			// skip stack overflow check because (newSP) <= (oldSP)
-			v.stack[v.sp-1] = objects.UndefinedValue
-			//v.sp++
-
 		case compiler.OpDefineLocal:
-			localIndex := int(v.curInsts[v.ip+1])
 			v.ip++
+			localIndex := int(v.curInsts[v.ip])
 
 			sp := v.curFrame.basePointer + localIndex
 
