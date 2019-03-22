@@ -49,10 +49,7 @@ func (c *Compiler) compileModule(node ast.Node, moduleName, modulePath string, s
 		return nil, err
 	}
 
-	// add OpReturn (== export undefined) if export is missing
-	if !moduleCompiler.lastInstructionIs(OpReturn) {
-		moduleCompiler.emit(nil, OpReturn)
-	}
+	moduleCompiler.fixReturn(node)
 
 	compiledFunc := moduleCompiler.Bytecode().MainFunction
 	compiledFunc.NumLocals = symbolTable.MaxSymbols()
