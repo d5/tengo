@@ -45,7 +45,7 @@ const (
 	OpIteratorNext                // Iterator next
 	OpIteratorKey                 // Iterator key
 	OpIteratorValue               // Iterator value
-	OpBinaryOp                    // Iterator value
+	OpBinaryOp                    // Binary Operation
 )
 
 // OpcodeNames is opcode names.
