@@ -48,17 +48,17 @@ fmt.println(sum("", [1, 2, 3]))  // "123"
 
 | | fib(35) | fibt(35) |  Type  |
 | :--- |    ---: |     ---: |  :---: |
-| Go | `67ms` | `4ms` | Go (native) |
-| [**Tengo**](https://github.com/d5/tengo) | `3,104ms` | `5ms` | VM on Go |
-| Lua | `1,754ms` | `3ms` | Lua (native) |
-| [go-lua](https://github.com/Shopify/go-lua) | `5,121ms` | `5ms` | Lua VM on Go |
-| [GopherLua](https://github.com/yuin/gopher-lua) | `5,499ms` | `5ms` | Lua VM on Go |
-| Python | `2,859ms` | `26ms` | Python (native) |
-| [starlark-go](https://github.com/google/starlark-go) | `16,846ms` | `5ms` | Python-like Interpreter on Go |
-| [gpython](https://github.com/go-python/gpython) | `18,638ms` | `6ms` | Python Interpreter on Go |
-| [goja](https://github.com/dop251/goja) | `6,626ms` | `5ms` | JS VM on Go |
-| [otto](https://github.com/robertkrimen/otto) | `88,489ms` | `13ms` | JS Interpreter on Go |
-| [Anko](https://github.com/mattn/anko) | `108,415ms` | `15ms` | Interpreter on Go |
+| Go | `65ms` | `4ms` | Go (native) |
+| [**Tengo**](https://github.com/d5/tengo) | `2,786ms` | `5ms` | VM on Go |
+| Lua | `1,775ms` | `3ms` | Lua (native) |
+| [go-lua](https://github.com/Shopify/go-lua) | `5,173ms` | `5ms` | Lua VM on Go |
+| [GopherLua](https://github.com/yuin/gopher-lua) | `5,392ms` | `5ms` | Lua VM on Go |
+| Python | `2,865ms` | `26ms` | Python (native) |
+| [starlark-go](https://github.com/google/starlark-go) | `16,716ms` | `11ms` | Python-like Interpreter on Go |
+| [gpython](https://github.com/go-python/gpython) | `18,709ms` | `6ms` | Python Interpreter on Go |
+| [goja](https://github.com/dop251/goja) | `6,773ms` | `13ms` | JS VM on Go |
+| [otto](https://github.com/robertkrimen/otto) | `87,592ms` | `13ms` | JS Interpreter on Go |
+| [Anko](https://github.com/mattn/anko) | `107,647ms` | `22ms` | Interpreter on Go |
 
 _* [fib(35)](https://github.com/d5/tengobench/blob/master/code/fib.tengo): Fibonacci(35)_  
 _* [fibt(35)](https://github.com/d5/tengobench/blob/master/code/fibtc.tengo): [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of Fibonacci(35)_  
