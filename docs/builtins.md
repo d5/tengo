@@ -31,14 +31,6 @@ v := [1]
 v = append(v, 2, 3) // v == [1, 2, 3]
 ```
 
-## string
-
-Tries to convert an object to string object. See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on type conversion.
-
-```golang
-x := string(123) //  v == "123"
-```
-
 ## type_name
 
 Returns the type_name of an object.
@@ -55,6 +47,14 @@ Optionally it can take the second argument, which will be returned if the first 
 ```golang
 v = string(undefined, "foo")  // v == "foo"
 v = string(undefined, false)  // v == false 
+```
+
+## string
+
+Tries to convert an object to string object. See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on type conversion.
+
+```golang
+x := string(123) //  v == "123"
 ```
 
 ## int
