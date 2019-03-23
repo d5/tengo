@@ -406,8 +406,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		// code optimization
-		c.removeUnreachable() // remove dead code
-		c.fixReturn(node)     // fix returns
+		c.optimizeFunc(node)
 
 		freeSymbols := c.symbolTable.FreeSymbols()
 		numLocals := c.symbolTable.MaxSymbols()
@@ -733,18 +732,12 @@ func (c *Compiler) changeOperand(opPos int, operand ...int) {
 	c.replaceInstruction(opPos, inst)
 }
 
-// removeUnreachable removes unreachable (dead code) instructions
-// from the current function instructions.
-func (c *Compiler) removeUnreachable() {
+// optimizeFunc performs some code-level optimization for the current function instructions
+// it removes unreachable (dead code) instructions and adds "returns" instruction if needed.
+func (c *Compiler) optimizeFunc(node ast.Node) {
 	// any instructions between RETURN and the function end
 	// or instructions between RETURN and jump target position
 	// are considered as unreachable.
-
-	// case #1: RETURN and function end
-	// ... RET ...unreachable... {END}
-
-	// case #2: RETURN and jump targets (jump destination)
-	// ... RET ...unreachable... JUMP_DST
 
 	// pass 1. identify all jump destinations
 	var dsts []int
@@ -785,17 +778,28 @@ func (c *Compiler) removeUnreachable() {
 
 	// pass 3. update jump positions
 	var lastOp Opcode
+	var appendReturn bool
+	endPos := len(newInsts)
 	iterateInstructions(newInsts, func(pos int, opcode Opcode, operands []int) bool {
 		switch opcode {
 		case OpJump, OpJumpFalsy, OpAndJump, OpOrJump:
-			if newDst, ok := posMap[operands[0]]; ok {
+			newDst, ok := posMap[operands[0]]
+			if ok {
 				copy(newInsts[pos:], MakeInstruction(opcode, newDst))
+			} else if endPos == operands[0] {
+				// there's a jump instruction that jumps to the end of function
+				// compiler should append "return".
+				appendReturn = true
+			} else {
+				panic(fmt.Errorf("invalid jump position: %d", newDst))
 			}
 		}
-
 		lastOp = opcode
 		return true
 	})
+	if lastOp != OpReturn {
+		appendReturn = true
+	}
 
 	// pass 4. update source map
 	newSourceMap := make(map[int]source.Pos)
@@ -806,43 +810,10 @@ func (c *Compiler) removeUnreachable() {
 		}
 	}
 
-	// TODO: temporary hack for fixReturn to work; remove this
-	c.scopes[c.scopeIndex].lastInstructions[0].Opcode = lastOp
-
 	c.scopes[c.scopeIndex].instructions = newInsts
 	c.scopes[c.scopeIndex].sourceMap = newSourceMap
-}
 
-// fixReturn appends "return" statement at the end of the function if
-// 1) the function does not have a "return" statement at the end.
-// 2) or, there are jump instructions that jump to the end of the function.
-func (c *Compiler) fixReturn(node ast.Node) {
-	var appendReturn bool
-
-	if !c.lastInstructionIs(OpReturn) {
-		appendReturn = true
-	} else {
-		var lastOp Opcode
-		insts := c.scopes[c.scopeIndex].instructions
-		endPos := len(insts)
-		iterateInstructions(insts, func(pos int, opcode Opcode, operands []int) bool {
-			defer func() { lastOp = opcode }()
-
-			switch opcode {
-			case OpJump, OpJumpFalsy, OpAndJump, OpOrJump:
-				dst := operands[0]
-				if dst == endPos && lastOp != OpReturn {
-					appendReturn = true
-					return false
-				} else if dst > endPos {
-					panic(fmt.Errorf("wrong jump position: %d (end: %d)", dst, endPos))
-				}
-			}
-
-			return true
-		})
-	}
-
+	// append "return"
 	if appendReturn {
 		c.emit(node, OpReturn, 0)
 	}

@@ -50,8 +50,7 @@ func (c *Compiler) compileModule(node ast.Node, moduleName, modulePath string, s
 	}
 
 	// code optimization
-	moduleCompiler.removeUnreachable() // remove dead code
-	moduleCompiler.fixReturn(node)     // fix returns
+	moduleCompiler.optimizeFunc(node)
 
 	compiledFunc := moduleCompiler.Bytecode().MainFunction
 	compiledFunc.NumLocals = symbolTable.MaxSymbols()
