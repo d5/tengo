@@ -689,33 +689,6 @@ func (c *Compiler) addInstruction(b []byte) int {
 	return posNewIns
 }
 
-func (c *Compiler) setLastInstruction(op Opcode, pos int) {
-	c.scopes[c.scopeIndex].lastInstructions[1] = c.scopes[c.scopeIndex].lastInstructions[0]
-
-	c.scopes[c.scopeIndex].lastInstructions[0].Opcode = op
-	c.scopes[c.scopeIndex].lastInstructions[0].Position = pos
-}
-
-func (c *Compiler) lastInstructionIs(op Opcode) bool {
-	if len(c.currentInstructions()) == 0 {
-		return false
-	}
-
-	return c.scopes[c.scopeIndex].lastInstructions[0].Opcode == op
-}
-
-func (c *Compiler) removeLastInstruction() {
-	lastPos := c.scopes[c.scopeIndex].lastInstructions[0].Position
-
-	if c.trace != nil {
-		c.printTrace(fmt.Sprintf("DELET %s",
-			FormatInstructions(c.scopes[c.scopeIndex].instructions[lastPos:], lastPos)[0]))
-	}
-
-	c.scopes[c.scopeIndex].instructions = c.currentInstructions()[:lastPos]
-	c.scopes[c.scopeIndex].lastInstructions[0] = c.scopes[c.scopeIndex].lastInstructions[1]
-}
-
 func (c *Compiler) replaceInstruction(pos int, inst []byte) {
 	copy(c.currentInstructions()[pos:], inst)
 
@@ -828,7 +801,6 @@ func (c *Compiler) emit(node ast.Node, opcode Opcode, operands ...int) int {
 	inst := MakeInstruction(opcode, operands...)
 	pos := c.addInstruction(inst)
 	c.scopes[c.scopeIndex].sourceMap[pos] = filePos
-	c.setLastInstruction(opcode, pos)
 
 	if c.trace != nil {
 		c.printTrace(fmt.Sprintf("EMIT  %s",
