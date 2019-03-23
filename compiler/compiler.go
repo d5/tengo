@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/d5/tengo"
@@ -404,8 +405,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
-		// add OpReturn if function returns nothing
-		c.fixReturn(node)
+		// code optimization
+		c.removeUnreachable() // remove dead code
+		c.fixReturn(node)     // fix returns
 
 		freeSymbols := c.symbolTable.FreeSymbols()
 		numLocals := c.symbolTable.MaxSymbols()
@@ -729,6 +731,86 @@ func (c *Compiler) changeOperand(opPos int, operand ...int) {
 	inst := MakeInstruction(op, operand...)
 
 	c.replaceInstruction(opPos, inst)
+}
+
+// removeUnreachable removes unreachable (dead code) instructions
+// from the current function instructions.
+func (c *Compiler) removeUnreachable() {
+	// any instructions between RETURN and the function end
+	// or instructions between RETURN and jump target position
+	// are considered as unreachable.
+
+	// case #1: RETURN and function end
+	// ... RET ...unreachable... {END}
+
+	// case #2: RETURN and jump targets (jump destination)
+	// ... RET ...unreachable... JUMP_DST
+
+	// pass 1. identify all jump destinations
+	var dsts []int
+	iterateInstructions(c.scopes[c.scopeIndex].instructions, func(pos int, opcode Opcode, operands []int) bool {
+		switch opcode {
+		case OpJump, OpJumpFalsy, OpAndJump, OpOrJump:
+			dsts = append(dsts, operands[0])
+		}
+
+		return true
+	})
+	sort.Ints(dsts) // sort jump positions
+
+	var newInsts []byte
+
+	// pass 2. eliminate dead code
+	posMap := make(map[int]int) // old position to new position
+	var dstIdx int
+	var deadCode bool
+	iterateInstructions(c.scopes[c.scopeIndex].instructions, func(pos int, opcode Opcode, operands []int) bool {
+		switch {
+		case opcode == OpReturn:
+			if deadCode {
+				return true
+			}
+			deadCode = true
+		case dstIdx < len(dsts) && pos == dsts[dstIdx]:
+			dstIdx++
+			deadCode = false
+		case deadCode:
+			return true
+		}
+
+		posMap[pos] = len(newInsts)
+		newInsts = append(newInsts, MakeInstruction(opcode, operands...)...)
+		return true
+	})
+
+	// pass 3. update jump positions
+	var lastOp Opcode
+	iterateInstructions(newInsts, func(pos int, opcode Opcode, operands []int) bool {
+		switch opcode {
+		case OpJump, OpJumpFalsy, OpAndJump, OpOrJump:
+			if newDst, ok := posMap[operands[0]]; ok {
+				copy(newInsts[pos:], MakeInstruction(opcode, newDst))
+			}
+		}
+
+		lastOp = opcode
+		return true
+	})
+
+	// pass 4. update source map
+	newSourceMap := make(map[int]source.Pos)
+	for pos, srcPos := range c.scopes[c.scopeIndex].sourceMap {
+		newPos, ok := posMap[pos]
+		if ok {
+			newSourceMap[newPos] = srcPos
+		}
+	}
+
+	// TODO: temporary hack for fixReturn to work; remove this
+	c.scopes[c.scopeIndex].lastInstructions[0].Opcode = lastOp
+
+	c.scopes[c.scopeIndex].instructions = newInsts
+	c.scopes[c.scopeIndex].sourceMap = newSourceMap
 }
 
 // fixReturn appends "return" statement at the end of the function if

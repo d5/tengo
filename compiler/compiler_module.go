@@ -49,7 +49,9 @@ func (c *Compiler) compileModule(node ast.Node, moduleName, modulePath string, s
 		return nil, err
 	}
 
-	moduleCompiler.fixReturn(node)
+	// code optimization
+	moduleCompiler.removeUnreachable() // remove dead code
+	moduleCompiler.fixReturn(node)     // fix returns
 
 	compiledFunc := moduleCompiler.Bytecode().MainFunction
 	compiledFunc.NumLocals = symbolTable.MaxSymbols()

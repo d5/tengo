@@ -358,17 +358,15 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpConstant, 2),
 				compiler.MakeInstruction(compiler.OpArray, 3),
-				compiler.MakeInstruction(compiler.OpConstant, 3),
-				compiler.MakeInstruction(compiler.OpConstant, 4),
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpBinaryOp, 11),
 				compiler.MakeInstruction(compiler.OpIndex),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(1),
 				intObject(2),
-				intObject(3),
-				intObject(1),
-				intObject(1))))
+				intObject(3))))
 
 	expect(t, `{a: 2}[2 - 1]`,
 		bytecode(
@@ -376,14 +374,13 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpMap, 2),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpConstant, 2),
-				compiler.MakeInstruction(compiler.OpConstant, 3),
 				compiler.MakeInstruction(compiler.OpBinaryOp, 12),
 				compiler.MakeInstruction(compiler.OpIndex),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				stringObject("a"),
-				intObject(2),
 				intObject(2),
 				intObject(1))))
 
@@ -411,15 +408,14 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpConstant, 2),
 				compiler.MakeInstruction(compiler.OpArray, 3),
 				compiler.MakeInstruction(compiler.OpConstant, 3),
-				compiler.MakeInstruction(compiler.OpConstant, 4),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpSliceIndex),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(1),
 				intObject(2),
 				intObject(3),
-				intObject(0),
-				intObject(2))))
+				intObject(0))))
 
 	expect(t, `[1, 2, 3][:2]`,
 		bytecode(
@@ -429,14 +425,13 @@ func TestCompiler_Compile(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpConstant, 2),
 				compiler.MakeInstruction(compiler.OpArray, 3),
 				compiler.MakeInstruction(compiler.OpNull),
-				compiler.MakeInstruction(compiler.OpConstant, 3),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpSliceIndex),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(1),
 				intObject(2),
-				intObject(3),
-				intObject(2))))
+				intObject(3))))
 
 	expect(t, `[1, 2, 3][0:]`,
 		bytecode(
@@ -522,13 +517,12 @@ func TestCompiler_Compile(t *testing.T) {
 				intObject(1),
 				intObject(2),
 				compiledFunction(0, 0,
-					compiler.MakeInstruction(compiler.OpTrue),          // 0000
-					compiler.MakeInstruction(compiler.OpJumpFalsy, 12), // 0001
-					compiler.MakeInstruction(compiler.OpConstant, 0),   // 0004
-					compiler.MakeInstruction(compiler.OpReturn, 1),     // 0007
-					compiler.MakeInstruction(compiler.OpJump, 17),      // 0008
-					compiler.MakeInstruction(compiler.OpConstant, 1),   // 0011
-					compiler.MakeInstruction(compiler.OpReturn, 1)))))  // 0014
+					compiler.MakeInstruction(compiler.OpTrue),         // 0000
+					compiler.MakeInstruction(compiler.OpJumpFalsy, 9), // 0001
+					compiler.MakeInstruction(compiler.OpConstant, 0),  // 0004
+					compiler.MakeInstruction(compiler.OpReturn, 1),    // 0007
+					compiler.MakeInstruction(compiler.OpConstant, 1),  // 0009
+					compiler.MakeInstruction(compiler.OpReturn, 1))))) // 0012
 
 	expect(t, `func() { 1; if(true) { 2 } else { 3 }; 4 }`,
 		bytecode(
@@ -879,21 +873,19 @@ func() {
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpSetGlobal, 0),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
-				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpEqual),
 				compiler.MakeInstruction(compiler.OpAndJump, 23),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
-				compiler.MakeInstruction(compiler.OpConstant, 2),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpNotEqual),
 				compiler.MakeInstruction(compiler.OpOrJump, 34),
-				compiler.MakeInstruction(compiler.OpConstant, 3),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
 				compiler.MakeInstruction(compiler.OpBinaryOp, 39),
 				compiler.MakeInstruction(compiler.OpPop)),
 			objectsArray(
 				intObject(0),
-				intObject(0),
-				intObject(1),
 				intObject(1))))
 
 	expectError(t, `import("user1")`, "module 'user1' not found") // unknown module name
@@ -1028,18 +1020,16 @@ func traceCompile(input string, symbols map[string]objects.Object) (res *compile
 	}
 
 	err = c.Compile(parsed)
+	res = c.Bytecode()
+	res.RemoveDuplicates()
 	{
 		trace = append(trace, fmt.Sprintf("Compiler Trace:\n%s", strings.Join(tr.Out, "")))
-
-		bytecode := c.Bytecode()
-		trace = append(trace, fmt.Sprintf("Compiled Constants:\n%s", strings.Join(bytecode.FormatConstants(), "\n")))
-		trace = append(trace, fmt.Sprintf("Compiled Instructions:\n%s\n", strings.Join(bytecode.FormatInstructions(), "\n")))
+		trace = append(trace, fmt.Sprintf("Compiled Constants:\n%s", strings.Join(res.FormatConstants(), "\n")))
+		trace = append(trace, fmt.Sprintf("Compiled Instructions:\n%s\n", strings.Join(res.FormatInstructions(), "\n")))
 	}
 	if err != nil {
 		return
 	}
-
-	res = c.Bytecode()
 
 	return
 }
