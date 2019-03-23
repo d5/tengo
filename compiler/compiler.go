@@ -405,9 +405,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		// add OpReturn if function returns nothing
-		if !c.lastInstructionIs(OpReturn) {
-			c.emit(node, OpReturn, 0)
-		}
+		c.fixReturn(node)
 
 		freeSymbols := c.symbolTable.FreeSymbols()
 		numLocals := c.symbolTable.MaxSymbols()
@@ -731,6 +729,41 @@ func (c *Compiler) changeOperand(opPos int, operand ...int) {
 	inst := MakeInstruction(op, operand...)
 
 	c.replaceInstruction(opPos, inst)
+}
+
+// fixReturn appends "return" statement at the end of the function if
+// 1) the function does not have a "return" statement at the end.
+// 2) or, there are jump instructions that jump to the end of the function.
+func (c *Compiler) fixReturn(node ast.Node) {
+	var appendReturn bool
+
+	if !c.lastInstructionIs(OpReturn) {
+		appendReturn = true
+	} else {
+		var lastOp Opcode
+		insts := c.scopes[c.scopeIndex].instructions
+		endPos := len(insts)
+		iterateInstructions(insts, func(pos int, opcode Opcode, operands []int) bool {
+			defer func() { lastOp = opcode }()
+
+			switch opcode {
+			case OpJump, OpJumpFalsy, OpAndJump, OpOrJump:
+				dst := operands[0]
+				if dst == endPos && lastOp != OpReturn {
+					appendReturn = true
+					return false
+				} else if dst > endPos {
+					panic(fmt.Errorf("wrong jump position: %d (end: %d)", dst, endPos))
+				}
+			}
+
+			return true
+		})
+	}
+
+	if appendReturn {
+		c.emit(node, OpReturn, 0)
+	}
 }
 
 func (c *Compiler) emit(node ast.Node, opcode Opcode, operands ...int) int {

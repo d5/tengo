@@ -61,4 +61,8 @@ func() {
 	out = a
 }()
 `, nil, 3)
+
+	// expression statement in init (should not leave objects on stack)
+	expect(t, `a := 1; if a; a { out = a }`, nil, 1)
+	expect(t, `a := 1; if a + 4; a { out = a }`, nil, 1)
 }

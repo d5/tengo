@@ -253,4 +253,15 @@ func() {
 		}()
 	}()
 }()`, nil, 15)
+
+	// function skipping return
+	expect(t, `out = func() {}()`, nil, objects.UndefinedValue)
+	expect(t, `out = func(v) { if v { return true } }(1)`, nil, true)
+	expect(t, `out = func(v) { if v { return true } }(0)`, nil, objects.UndefinedValue)
+	expect(t, `out = func(v) { if v { } else { return true } }(1)`, nil, objects.UndefinedValue)
+	expect(t, `out = func(v) { if v { return } }(1)`, nil, objects.UndefinedValue)
+	expect(t, `out = func(v) { if v { return } }(0)`, nil, objects.UndefinedValue)
+	expect(t, `out = func(v) { if v { } else { return } }(1)`, nil, objects.UndefinedValue)
+	expect(t, `out = func(v) { for ;;v++ { if v == 3 { return true } } }(1)`, nil, true)
+	expect(t, `out = func(v) { for ;;v++ { if v == 3 { break } } }(1)`, nil, objects.UndefinedValue)
 }

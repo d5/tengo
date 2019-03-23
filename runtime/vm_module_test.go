@@ -156,6 +156,14 @@ export func(a) {
    a()
 }
 `), "Runtime Error: not callable: int\n\tat mod1:3:4\n\tat test:4:1")
+
+	// module skipping export
+	expect(t, `out = import("mod0")`, Opts().Module("mod0", ``), objects.UndefinedValue)
+	expect(t, `out = import("mod0")`, Opts().Module("mod0", `if 1 { export true }`), true)
+	expect(t, `out = import("mod0")`, Opts().Module("mod0", `if 0 { export true }`), objects.UndefinedValue)
+	expect(t, `out = import("mod0")`, Opts().Module("mod0", `if 1 { } else { export true }`), objects.UndefinedValue)
+	expect(t, `out = import("mod0")`, Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { export true } } }`), true)
+	expect(t, `out = import("mod0")`, Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { break } } }`), objects.UndefinedValue)
 }
 
 func TestModuleBlockScopes(t *testing.T) {
