@@ -293,6 +293,15 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 	case *ast.BlockStmt:
+		if len(node.Stmts) == 0 {
+			return nil
+		}
+
+		c.symbolTable = c.symbolTable.Fork(true)
+		defer func() {
+			c.symbolTable = c.symbolTable.Parent(false)
+		}()
+
 		for _, stmt := range node.Stmts {
 			if err := c.Compile(stmt); err != nil {
 				return err

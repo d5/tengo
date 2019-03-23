@@ -83,12 +83,12 @@ func TestSymbolTable(t *testing.T) {
 	resolveExpect(t, global, "a", globalSymbol("a", 0), 0)
 	resolveExpect(t, local1, "d", localSymbol("d", 0), 0)
 	resolveExpect(t, local1, "a", globalSymbol("a", 0), 1)
-	resolveExpect(t, local3, "a", globalSymbol("a", 0), 2)
-	resolveExpect(t, local3, "d", freeSymbol("d", 0), 1)
+	resolveExpect(t, local3, "a", globalSymbol("a", 0), 3)
+	resolveExpect(t, local3, "d", freeSymbol("d", 0), 2)
 	resolveExpect(t, local3, "r", localSymbol("r", 1), 0)
 	resolveExpect(t, local2Block2, "k", localSymbol("k", 4), 0)
-	resolveExpect(t, local2Block2, "e", localSymbol("e", 0), 0)
-	resolveExpect(t, local2Block2, "b", globalSymbol("b", 1), 2)
+	resolveExpect(t, local2Block2, "e", localSymbol("e", 0), 1)
+	resolveExpect(t, local2Block2, "b", globalSymbol("b", 1), 3)
 }
 
 func symbol(name string, scope compiler.SymbolScope, index int) *compiler.Symbol {

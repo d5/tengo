@@ -39,7 +39,7 @@ func() {
 	} else {
 		return 4
 		c := 5  // dead code from here
-		d := a
+		d := c
 		return d
 	}
 }`, bytecode(
@@ -104,7 +104,7 @@ func() {
 	} else {
 		return 4
 		c := 5  // dead code from here
-		d := a
+		d := c
 		return d
 	}
 }`, bytecode(
