@@ -4,15 +4,7 @@ package stdlib
 
 // SourceModules are source type standard library modules.
 var SourceModules = map[string]string{
-	"enum": `is_enumerable := func(v) {
-    return is_array(v) || is_map(v) || is_string(v) || is_bytes(v) || is_immutable_array(v) || is_immutable_map(v)
-}
-
-is_sequence := func(v) {
-    return is_array(v) || is_string(v) || is_bytes(v) || is_immutable_array(v)
-}
-
-export {
+	"enum": `export {
   // all returns true if the given function fn evaluates to a truthy value on
   // all of the items in the enumerable.
   all: func(enumerable, fn) {
@@ -34,7 +26,7 @@ export {
   // remaining elements. It returns an empty array if the given argument is
   // not a sequence type.
   chunk: func(enumerable, size) {
-    if !is_sequence(enumerable) { return [] }
+    if !is_array_like(enumerable) { return [] }
 
     numElements := len(enumerable)
 
@@ -61,13 +53,23 @@ export {
     }
   },
   filter: func(enumerable, fn) {
-    if !is_sequence(enumerable) { return enumerable }
+    if !is_array_like(enumerable) { return enumerable }
 
     dst := []
     for k, v in enumerable {
       if fn(k, v) { dst = append(dst, v) }
     }
     return dst
+  },
+  find: func(enumerable, fn) {
+    for k, v in enumerable {
+      if fn(k, v) { return v }
+    }
+  },
+  find_index: func(enumerable, fn) {
+    for k, v in enumerable {
+      if fn(k, v) { return k }
+    }
   }
 }
 `,

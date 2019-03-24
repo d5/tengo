@@ -61,6 +61,7 @@ _* time.Unix(): use `time.Unix(v, 0)` to convert to Time_
 - `bytes(x)`: tries to convert `x` into bytes; returns `undefined` if failed
   - `bytes(N)`: as a special case this will create a Bytes variable with the given size `N` (only if `N` is int)
 - `time(x)`: tries to convert `x` into time; returns `undefined` if failed
+- See [Builtins](https://github.com/d5/tengo/blob/master/docs/builtins.md) for the full list of builtin functions.
 
 ## Type Checking Builtin Functions
 
@@ -77,3 +78,4 @@ _* time.Unix(): use `time.Unix(v, 0)` to convert to Time_
 - `is_time(x)`: return `true` if `x` is time; `false` otherwise
 - `is_error(x)`: returns `true` if `x` is error; `false` otherwise
 - `is_undefined(x)`: returns `true` if `x` is undefined; `false` otherwise
+- See [Builtins](https://github.com/d5/tengo/blob/master/docs/builtins.md) for the full list of builtin functions.
