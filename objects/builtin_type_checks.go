@@ -182,26 +182,13 @@ func builtinIsCallable(args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsEnumerable(args ...Object) (Object, error) {
+func builtinIsIterable(args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
 
 	switch args[0].(type) {
 	case *Array, *ImmutableArray, *String, *Bytes, *Map, *ImmutableMap:
-		return TrueValue, nil
-	}
-
-	return FalseValue, nil
-}
-
-func builtinIsArrayLike(args ...Object) (Object, error) {
-	if len(args) != 1 {
-		return nil, ErrWrongNumArguments
-	}
-
-	switch args[0].(type) {
-	case *Array, *ImmutableArray, *String, *Bytes:
 		return TrueValue, nil
 	}
 
