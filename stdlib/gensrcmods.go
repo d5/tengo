@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"regexp"
+	"strconv"
 )
 
 var tengoModFileRE = regexp.MustCompile(`^srcmod_(\w+).tengo$`)
@@ -41,7 +42,7 @@ package stdlib
 // SourceModules are source type standard library modules.
 var SourceModules = map[string]string{` + "\n")
 	for modName, modSrc := range modules {
-		out.WriteString("\t\"" + modName + "\": `" + modSrc + "`,\n")
+		out.WriteString("\t\"" + modName + "\": " + strconv.Quote(modSrc) + ",\n")
 	}
 	out.WriteString("}\n")
 
