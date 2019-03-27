@@ -187,8 +187,7 @@ func builtinIsIterable(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 
-	switch args[0].(type) {
-	case *Array, *ImmutableArray, *String, *Bytes, *Map, *ImmutableMap:
+	if _, ok := args[0].(Iterable); ok {
 		return TrueValue, nil
 	}
 
