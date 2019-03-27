@@ -68,3 +68,10 @@ func (m *ModuleMap) Copy() *ModuleMap {
 func (m *ModuleMap) Len() int {
 	return len(m.m)
 }
+
+// AddMap adds named modules from another module map.
+func (m *ModuleMap) AddMap(o *ModuleMap) {
+	for name, mod := range o.m {
+		m.m[name] = mod
+	}
+}

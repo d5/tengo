@@ -84,6 +84,10 @@ var Builtins = []*BuiltinFunction{
 		Value: builtinIsImmutableMap,
 	},
 	{
+		Name:  "is_iterable",
+		Value: builtinIsIterable,
+	},
+	{
 		Name:  "is_time",
 		Value: builtinIsTime,
 	},

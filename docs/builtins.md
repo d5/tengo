@@ -195,6 +195,10 @@ Returns `true` if the object's type is map. Or it returns `false`.
 
 Returns `true` if the object's type is immutable map. Or it returns `false`.
 
+## is_iterable
+
+Returns `true` if the object's type is iterable: array, immutable array, map, immutable map, string, and bytes are iterable types in Tengo.
+
 ## is_time
 
 Returns `true` if the object's type is time. Or it returns `false`.

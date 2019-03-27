@@ -14,6 +14,7 @@ import (
 	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/runtime"
+	"github.com/d5/tengo/stdlib"
 )
 
 const testOut = "out"
@@ -50,6 +51,11 @@ func (o *testopts) copy() *testopts {
 		c.symbols[k] = v
 	}
 	return c
+}
+
+func (o *testopts) Stdlib() *testopts {
+	o.modules.AddMap(stdlib.GetModuleMap(stdlib.AllModuleNames()...))
+	return o
 }
 
 func (o *testopts) Module(name string, mod interface{}) *testopts {
