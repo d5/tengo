@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
-	"sort"
 	"strings"
 
 	"github.com/d5/tengo"
@@ -722,16 +721,15 @@ func (c *Compiler) optimizeFunc(node ast.Node) {
 	// are considered as unreachable.
 
 	// pass 1. identify all jump destinations
-	var dsts []int
+	dsts := make(map[int]bool)
 	iterateInstructions(c.scopes[c.scopeIndex].instructions, func(pos int, opcode Opcode, operands []int) bool {
 		switch opcode {
 		case OpJump, OpJumpFalsy, OpAndJump, OpOrJump:
-			dsts = append(dsts, operands[0])
+			dsts[operands[0]] = true
 		}
 
 		return true
 	})
-	sort.Ints(dsts) // sort jump positions
 
 	var newInsts []byte
 
@@ -746,7 +744,7 @@ func (c *Compiler) optimizeFunc(node ast.Node) {
 				return true
 			}
 			deadCode = true
-		case dstIdx < len(dsts) && pos == dsts[dstIdx]:
+		case dsts[pos]:
 			dstIdx++
 			deadCode = false
 		case deadCode:
