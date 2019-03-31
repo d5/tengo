@@ -65,4 +65,39 @@ func() {
 	// expression statement in init (should not leave objects on stack)
 	expect(t, `a := 1; if a; a { out = a }`, nil, 1)
 	expect(t, `a := 1; if a + 4; a { out = a }`, nil, 1)
+
+	// dead code elimination
+	expect(t, `
+out = func() {
+	if false { return 1 }
+
+	a := undefined
+
+	a = 2
+	if !a {
+		b := func() {
+			return is_callable(a) ? a(8) : a
+		}()
+		if is_error(b) { 
+			return b 
+		} else if !is_undefined(b) { 
+			return immutable(b)
+		}
+	}
+	
+	a = 3
+	if a {
+		b := func() {
+			return is_callable(a) ? a(9) : a
+		}()
+		if is_error(b) { 
+			return b 
+		} else if !is_undefined(b) { 
+			return immutable(b)
+		}
+	}
+
+	return a
+}()
+`, nil, 3)
 }
