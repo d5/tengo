@@ -761,7 +761,7 @@ func (c *Compiler) optimizeFunc(node ast.Node) {
 	// pass 3. update jump positions
 	var lastOp Opcode
 	var appendReturn bool
-	endPos := len(newInsts)
+	endPos := len(c.scopes[c.scopeIndex].instructions)
 	iterateInstructions(newInsts, func(pos int, opcode Opcode, operands []int) bool {
 		switch opcode {
 		case OpJump, OpJumpFalsy, OpAndJump, OpOrJump:
