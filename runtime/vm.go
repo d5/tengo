@@ -1002,10 +1002,9 @@ func (v *VM) run() {
 	}
 }
 
-// StackObjects returns a slice of objects in the stack.
-// This function exists for the tests, and, should not be used to access stack objects.
-func (v *VM) StackObjects() []objects.Object {
-	return v.stack[:v.sp]
+// IsStackEmpty tests if the stack is empty or not.
+func (v *VM) IsStackEmpty() bool {
+	return v.sp == 0
 }
 
 func indexAssign(dst, src objects.Object, selectors []objects.Object) error {
