@@ -80,6 +80,8 @@ func (v *VM) Run() (err error) {
 
 	v.run()
 
+	atomic.StoreInt64(&v.aborting, 0)
+
 	err = v.err
 	if err != nil {
 		filePos := v.fileSet.Position(v.curFrame.fn.SourcePos(v.ip - 1))
@@ -115,7 +117,7 @@ func (v *VM) run() {
 		}
 	}()
 
-	for atomic.CompareAndSwapInt64(&v.aborting, 0, 0) {
+	for atomic.LoadInt64(&v.aborting) == 0 {
 		v.ip++
 
 		switch v.curInsts[v.ip] {
