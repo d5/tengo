@@ -250,8 +250,8 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules 
 		}
 		trace = append(trace, fmt.Sprintf("\n[Globals]\n\n%s", strings.Join(formatGlobals(globals), "\n")))
 	}
-	if err != nil {
-		return
+	if err == nil && len(v.StackObjects()) > 0 {
+		err = fmt.Errorf("non empty stack after execution: %d", len(v.StackObjects()))
 	}
 
 	return
