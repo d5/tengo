@@ -1,6 +1,7 @@
 package runtime_test
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	_runtime "runtime"
@@ -250,8 +251,8 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules 
 		}
 		trace = append(trace, fmt.Sprintf("\n[Globals]\n\n%s", strings.Join(formatGlobals(globals), "\n")))
 	}
-	if err != nil {
-		return
+	if err == nil && !v.IsStackEmpty() {
+		err = errors.New("non empty stack after execution")
 	}
 
 	return

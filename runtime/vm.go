@@ -77,7 +77,6 @@ func (v *VM) Run() (err error) {
 	v.framesIndex = 1
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
-	atomic.StoreInt64(&v.aborting, 0)
 
 	v.run()
 
@@ -93,11 +92,6 @@ func (v *VM) Run() (err error) {
 			err = fmt.Errorf("%s\n\tat %s", err.Error(), filePos)
 		}
 		return err
-	}
-
-	// check if stack still has some objects left
-	if v.sp > 0 && atomic.LoadInt64(&v.aborting) == 0 {
-		panic(fmt.Errorf("non empty stack after execution: %d", v.sp))
 	}
 
 	return nil
@@ -121,7 +115,7 @@ func (v *VM) run() {
 		}
 	}()
 
-	for atomic.LoadInt64(&v.aborting) == 0 {
+	for atomic.CompareAndSwapInt64(&v.aborting, 0, 0) {
 		v.ip++
 
 		switch v.curInsts[v.ip] {
@@ -1008,9 +1002,9 @@ func (v *VM) run() {
 	}
 }
 
-// Globals returns the global variables.
-func (v *VM) Globals() []objects.Object {
-	return v.globals
+// IsStackEmpty tests if the stack is empty or not.
+func (v *VM) IsStackEmpty() bool {
+	return v.sp == 0
 }
 
 func indexAssign(dst, src objects.Object, selectors []objects.Object) error {
