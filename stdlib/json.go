@@ -1,35 +1,38 @@
 package stdlib
 
 import (
-	"encoding/json"
+	"bytes"
+	gojson "encoding/json"
 
-	"github.com/d5/tengo"
 	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo/stdlib/json"
 )
 
 var jsonModule = map[string]objects.Object{
-	"parse":     &objects.UserFunction{Name: "parse", Value: jsonParse},
-	"stringify": &objects.UserFunction{Name: "stringify", Value: jsonStringify},
+	"decode":      &objects.UserFunction{Name: "decode", Value: jsonDecode},
+	"encode":      &objects.UserFunction{Name: "encode", Value: jsonEncode},
+	"indent":      &objects.UserFunction{Name: "encode", Value: jsonIndent},
+	"html_escape": &objects.UserFunction{Name: "html_escape", Value: jsonHTMLEscape},
 }
 
-func jsonParse(args ...objects.Object) (ret objects.Object, err error) {
+func jsonDecode(args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
 
-	var target interface{}
-
 	switch o := args[0].(type) {
 	case *objects.Bytes:
-		err := json.Unmarshal(o.Value, &target)
+		v, err := json.Decode(o.Value)
 		if err != nil {
 			return &objects.Error{Value: &objects.String{Value: err.Error()}}, nil
 		}
+		return v, nil
 	case *objects.String:
-		err := json.Unmarshal([]byte(o.Value), &target)
+		v, err := json.Decode([]byte(o.Value))
 		if err != nil {
 			return &objects.Error{Value: &objects.String{Value: err.Error()}}, nil
 		}
+		return v, nil
 	default:
 		return nil, objects.ErrInvalidArgumentType{
 			Name:     "first",
@@ -37,33 +40,87 @@ func jsonParse(args ...objects.Object) (ret objects.Object, err error) {
 			Found:    args[0].TypeName(),
 		}
 	}
-
-	res, err := objects.FromInterface(target)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
 }
 
-func jsonStringify(args ...objects.Object) (ret objects.Object, err error) {
+func jsonEncode(args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
 
-	v := objects.ToInterface(args[0])
-	if vErr, isErr := v.(error); isErr {
-		v = vErr.Error()
-	}
-
-	res, err := json.Marshal(v)
+	b, err := json.Encode(args[0])
 	if err != nil {
 		return &objects.Error{Value: &objects.String{Value: err.Error()}}, nil
 	}
 
-	if len(res) > tengo.MaxBytesLen {
-		return nil, objects.ErrBytesLimit
+	return &objects.Bytes{Value: b}, nil
+}
+
+func jsonIndent(args ...objects.Object) (ret objects.Object, err error) {
+	if len(args) != 3 {
+		return nil, objects.ErrWrongNumArguments
 	}
 
-	return &objects.String{Value: string(res)}, nil
+	prefix, ok := objects.ToString(args[1])
+	if !ok {
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "prefix",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
+	}
+
+	indent, ok := objects.ToString(args[2])
+	if !ok {
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "indent",
+			Expected: "string(compatible)",
+			Found:    args[2].TypeName(),
+		}
+	}
+
+	switch o := args[0].(type) {
+	case *objects.Bytes:
+		var dst bytes.Buffer
+		err := gojson.Indent(&dst, o.Value, prefix, indent)
+		if err != nil {
+			return &objects.Error{Value: &objects.String{Value: err.Error()}}, nil
+		}
+		return &objects.Bytes{Value: dst.Bytes()}, nil
+	case *objects.String:
+		var dst bytes.Buffer
+		err := gojson.Indent(&dst, []byte(o.Value), prefix, indent)
+		if err != nil {
+			return &objects.Error{Value: &objects.String{Value: err.Error()}}, nil
+		}
+		return &objects.Bytes{Value: dst.Bytes()}, nil
+	default:
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "bytes/string",
+			Found:    args[0].TypeName(),
+		}
+	}
+}
+
+func jsonHTMLEscape(args ...objects.Object) (ret objects.Object, err error) {
+	if len(args) != 1 {
+		return nil, objects.ErrWrongNumArguments
+	}
+
+	switch o := args[0].(type) {
+	case *objects.Bytes:
+		var dst bytes.Buffer
+		gojson.HTMLEscape(&dst, o.Value)
+		return &objects.Bytes{Value: dst.Bytes()}, nil
+	case *objects.String:
+		var dst bytes.Buffer
+		gojson.HTMLEscape(&dst, []byte(o.Value))
+		return &objects.Bytes{Value: dst.Bytes()}, nil
+	default:
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "bytes/string",
+			Found:    args[0].TypeName(),
+		}
+	}
 }
