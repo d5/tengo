@@ -50,6 +50,35 @@ func TestJSON(t *testing.T) {
 	testJSONEncodeDecode(t, MAP{"a": 0, "b": "bee", "arr": ARR{1, 2, 3, MAP{"a": false, "b": 109.4}}})
 }
 
+func TestDecode(t *testing.T) {
+	testDecodeError(t, `{`)
+	testDecodeError(t, `}`)
+	testDecodeError(t, `{}a`)
+	testDecodeError(t, `{{}`)
+	testDecodeError(t, `{}}`)
+	testDecodeError(t, `[`)
+	testDecodeError(t, `]`)
+	testDecodeError(t, `[]a`)
+	testDecodeError(t, `[[]`)
+	testDecodeError(t, `[]]`)
+	testDecodeError(t, `"`)
+	testDecodeError(t, `"abc`)
+	testDecodeError(t, `abc"`)
+	testDecodeError(t, `.123`)
+	testDecodeError(t, `123.`)
+	testDecodeError(t, `1.2.3`)
+	testDecodeError(t, `'a'`)
+	testDecodeError(t, `true, false`)
+	testDecodeError(t, `{"a:"b"}`)
+	testDecodeError(t, `{a":"b"}`)
+	testDecodeError(t, `{"a":"b":"c"}`)
+}
+
+func testDecodeError(t *testing.T, input string) {
+	_, err := json.Decode([]byte(input))
+	assert.Error(t, err)
+}
+
 func testJSONEncodeDecode(t *testing.T, v interface{}) bool {
 	o, err := objects.FromInterface(v)
 	if !assert.NoError(t, err) {
