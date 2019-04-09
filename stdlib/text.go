@@ -32,6 +32,7 @@ var textModule = map[string]objects.Object{
 	"last_index_any": &objects.UserFunction{Name: "last_index_any", Value: FuncASSRI(strings.LastIndexAny)}, // last_index_any(s, chars) => int
 	"repeat":         &objects.UserFunction{Name: "repeat", Value: textRepeat},                              // repeat(s, count) => string
 	"replace":        &objects.UserFunction{Name: "replace", Value: textReplace},                            // replace(s, old, new, n) => string
+	"substr":         &objects.UserFunction{Name: "substr", Value: textSubstring},                           // substring(s, lower, upper) => string
 	"split":          &objects.UserFunction{Name: "split", Value: FuncASSRSs(strings.Split)},                // split(s, sep) => [string]
 	"split_after":    &objects.UserFunction{Name: "split_after", Value: FuncASSRSs(strings.SplitAfter)},     // split_after(s, sep) => [string]
 	"split_after_n":  &objects.UserFunction{Name: "split_after_n", Value: FuncASSIRSs(strings.SplitAfterN)}, // split_after_n(s, sep, n) => [string]
@@ -372,6 +373,69 @@ func textReplace(args ...objects.Object) (ret objects.Object, err error) {
 	}
 
 	ret = &objects.String{Value: s}
+
+	return
+}
+
+func textSubstring(args ...objects.Object) (ret objects.Object, err error) {
+	argslen := len(args)
+	if argslen != 2 && argslen != 3 {
+		err = objects.ErrWrongNumArguments
+		return
+	}
+
+	s1, ok := objects.ToString(args[0])
+	if !ok {
+		err = objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
+		return
+	}
+
+	i2, ok := objects.ToInt(args[1])
+	if !ok {
+		err = objects.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int(compatible)",
+			Found:    args[1].TypeName(),
+		}
+		return
+	}
+
+	strlen := len(s1)
+	i3 := strlen
+	if argslen == 3 {
+		i3, ok = objects.ToInt(args[2])
+		if !ok {
+			err = objects.ErrInvalidArgumentType{
+				Name:     "third",
+				Expected: "int(compatible)",
+				Found:    args[2].TypeName(),
+			}
+			return
+		}
+	}
+
+	if i2 > i3 {
+		err = objects.ErrInvalidIndexType
+		return
+	}
+
+	if i2 < 0 {
+		i2 = 0
+	} else if i2 > strlen {
+		i2 = strlen
+	}
+
+	if i3 < 0 {
+		i3 = 0
+	} else if i3 > strlen {
+		i3 = strlen
+	}
+
+	ret = &objects.String{Value: s1[i2:i3]}
 
 	return
 }
