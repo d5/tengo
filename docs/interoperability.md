@@ -126,9 +126,9 @@ SetImports sets the import modules with corresponding names. Script **does not**
 ```golang
 s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
 
-s.SetImports(stdlib.GetModules("math"))
+s.SetImports(stdlib.GetModuleMap("math"))
 // or, to include all stdlib at once
-s.SetImports(stdlib.GetModules(stdlib.AllModuleNames()...))
+s.SetImports(stdlib.GetModuleMap(stdlib.AllModuleNames()...))
 ```
 
 You can also include Tengo's written module using `objects.SourceModule` (which implements `objects.Importable`).
