@@ -246,18 +246,20 @@ func TestTextRepeat(t *testing.T) {
 }
 
 func TestSubstr(t *testing.T) {
-	module(t, "text").call("substring", "", 0, 0).expect("")
-	module(t, "text").call("substring", "abcdef", 0, 3).expect("abc")
-	module(t, "text").call("substring", "abcdef", 0, 6).expect("abcdef")
-	module(t, "text").call("substring", "abcdef", 0, 10).expect("abcdef")
-	module(t, "text").call("substring", "abcdef", -10, 10).expect("abcdef")
+	module(t, "text").call("substr", "", 0, 0).expect("")
+	module(t, "text").call("substr", "abcdef", 0, 3).expect("abc")
+	module(t, "text").call("substr", "abcdef", 0, 6).expect("abcdef")
+	module(t, "text").call("substr", "abcdef", 0, 10).expect("abcdef")
+	module(t, "text").call("substr", "abcdef", -10, 10).expect("abcdef")
+	module(t, "text").call("substr", "abcdef", 0).expect("abcdef")
+	module(t, "text").call("substr", "abcdef", 3).expect("def")
 
-	module(t, "text").call("substring", "", 10, 0).expectError()
-	module(t, "text").call("substring", "", "10", 0).expectError()
-	module(t, "text").call("substring", "", 10, "0").expectError()
-	module(t, "text").call("substring", "", "10", "0").expectError()
+	module(t, "text").call("substr", "", 10, 0).expectError()
+	module(t, "text").call("substr", "", "10", 0).expectError()
+	module(t, "text").call("substr", "", 10, "0").expectError()
+	module(t, "text").call("substr", "", "10", "0").expectError()
 
-	module(t, "text").call("substring", 0, 0, 1).expect("0")
-	module(t, "text").call("substring", 123, 0, 1).expect("1")
-	module(t, "text").call("substring", 123.456, 4, 7).expect("456")
+	module(t, "text").call("substr", 0, 0, 1).expect("0")
+	module(t, "text").call("substr", 123, 0, 1).expect("1")
+	module(t, "text").call("substr", 123.456, 4, 7).expect("456")
 }
