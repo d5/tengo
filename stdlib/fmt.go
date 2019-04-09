@@ -47,7 +47,7 @@ func fmtPrintf(args ...objects.Object) (ret objects.Object, err error) {
 	formatArgs := make([]interface{}, numArgs-1, numArgs-1)
 	for idx, arg := range args[1:] {
 		switch arg := arg.(type) {
-		case *objects.Int, *objects.Float, *objects.Bool, *objects.Char, *objects.Time, *objects.String:
+		case *objects.Int, *objects.Float, *objects.Bool, *objects.Char, *objects.String, *objects.Bytes:
 			formatArgs[idx] = objects.ToInterface(arg)
 		default:
 			formatArgs[idx] = arg
@@ -92,7 +92,7 @@ func fmtSprintf(args ...objects.Object) (ret objects.Object, err error) {
 	formatArgs := make([]interface{}, numArgs-1, numArgs-1)
 	for idx, arg := range args[1:] {
 		switch arg := arg.(type) {
-		case *objects.Int, *objects.Float, *objects.Bool, *objects.Char, *objects.Time, *objects.String:
+		case *objects.Int, *objects.Float, *objects.Bool, *objects.Char, *objects.String, *objects.Bytes:
 			formatArgs[idx] = objects.ToInterface(arg)
 		default:
 			formatArgs[idx] = arg
