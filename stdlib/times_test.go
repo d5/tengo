@@ -30,7 +30,8 @@ func TestTimes(t *testing.T) {
 	module(t, "times").call("month_string", 12).expect("December")
 
 	module(t, "times").call("date", 1982, 9, 28, 19, 21, 44, 999).expect(time1)
-	assert.True(t, module(t, "times").call("now").o.(*objects.Time).Value.Sub(time.Now()).Nanoseconds() < 100000000) // within 100ms
+	nowD := time.Until(module(t, "times").call("now").o.(*objects.Time).Value).Nanoseconds()
+	assert.True(t, 0 > nowD && nowD > -100000000) // within 100ms
 	parsed, _ := time.Parse(time.RFC3339, "1982-09-28T19:21:44+07:00")
 	module(t, "times").call("parse", time.RFC3339, "1982-09-28T19:21:44+07:00").expect(parsed)
 	module(t, "times").call("unix", 1234325, 94493).expect(time.Unix(1234325, 94493))
