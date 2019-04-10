@@ -263,3 +263,10 @@ func TestSubstr(t *testing.T) {
 	module(t, "text").call("substr", 123, 0, 1).expect("1")
 	module(t, "text").call("substr", 123.456, 4, 7).expect("456")
 }
+
+func TestPadLeft(t *testing.T) {
+	module(t, "text").call("pad_left", "ab", 7, 0).expect("00000ab")
+	module(t, "text").call("pad_right", "ab", 7, 0).expect("ab00000")
+	module(t, "text").call("pad_left", "ab", 7, "+-").expect("-+-+-ab")
+	module(t, "text").call("pad_right", "ab", 7, "+-").expect("ab+-+-+")
+}
