@@ -24,7 +24,7 @@ func builtinFormat(args ...Object) (Object, error) {
 		return format, nil // okay to return 'format' directly as String is immutable
 	}
 
-	formatArgs := make([]interface{}, numArgs-1, numArgs-1)
+	formatArgs := make([]interface{}, numArgs-1)
 	for idx, arg := range args[1:] {
 		switch arg := arg.(type) {
 		case *Int, *Float, *Bool, *Char, *String, *Bytes:
