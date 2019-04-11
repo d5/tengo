@@ -587,7 +587,7 @@ func (f *formatter) fmtFloat(v float64, size int, verb rune, prec int) {
 		// If we're zero padding to the left we want the sign before the leading zeros.
 		// Achieve this by writing the sign out and then padding the unsigned number.
 		if f.zero && f.widPresent && f.wid > len(num) {
-			f.buf.WriteByte(num[0])
+			f.buf.WriteSingleByte(num[0])
 			f.writePadding(f.wid - len(num))
 			f.buf.Write(num[1:])
 			return
@@ -610,7 +610,7 @@ func (b *buffer) WriteString(s string) {
 	*b = append(*b, s...)
 }
 
-func (b *buffer) WriteByte(c byte) {
+func (b *buffer) WriteSingleByte(c byte) {
 	*b = append(*b, c)
 }
 
@@ -738,16 +738,16 @@ func (p *pp) badVerb(verb rune) {
 	p.erroring = true
 	p.buf.WriteString(percentBangString)
 	p.buf.WriteRune(verb)
-	p.buf.WriteByte('(')
+	p.buf.WriteSingleByte('(')
 	switch {
 	case p.arg != nil:
 		p.buf.WriteString(p.arg.String())
-		p.buf.WriteByte('=')
+		p.buf.WriteSingleByte('=')
 		p.printArg(p.arg, 'v')
 	default:
 		p.buf.WriteString(UndefinedValue.String())
 	}
-	p.buf.WriteByte(')')
+	p.buf.WriteSingleByte(')')
 	p.erroring = false
 }
 
@@ -850,23 +850,23 @@ func (p *pp) fmtBytes(v []byte, verb rune, typeString string) {
 				p.buf.WriteString(nilParenString)
 				return
 			}
-			p.buf.WriteByte('{')
+			p.buf.WriteSingleByte('{')
 			for i, c := range v {
 				if i > 0 {
 					p.buf.WriteString(commaSpaceString)
 				}
 				p.fmt0x64(uint64(c), true)
 			}
-			p.buf.WriteByte('}')
+			p.buf.WriteSingleByte('}')
 		} else {
-			p.buf.WriteByte('[')
+			p.buf.WriteSingleByte('[')
 			for i, c := range v {
 				if i > 0 {
-					p.buf.WriteByte(' ')
+					p.buf.WriteSingleByte(' ')
 				}
 				p.fmt.fmtInteger(uint64(c), 10, unsigned, verb, ldigits)
 			}
-			p.buf.WriteByte(']')
+			p.buf.WriteSingleByte(']')
 		}
 	case 's':
 		p.fmt.fmtBs(v)
@@ -1117,7 +1117,7 @@ formatLoop:
 
 		switch {
 		case verb == '%': // Percent does not absorb operands and ignores f.wid and f.prec.
-			p.buf.WriteByte('%')
+			p.buf.WriteSingleByte('%')
 		case !p.goodArgNum:
 			p.badArgNum(verb)
 		case argNum >= len(a): // No argument left over to print for the current verb.
@@ -1150,11 +1150,11 @@ formatLoop:
 				p.buf.WriteString(UndefinedValue.String())
 			} else {
 				p.buf.WriteString(arg.TypeName())
-				p.buf.WriteByte('=')
+				p.buf.WriteSingleByte('=')
 				p.printArg(arg, 'v')
 			}
 		}
-		p.buf.WriteByte(')')
+		p.buf.WriteSingleByte(')')
 	}
 }
 
