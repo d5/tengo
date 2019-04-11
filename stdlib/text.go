@@ -470,6 +470,10 @@ func textPadLeft(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
+	if i2 > tengo.MaxStringLen {
+		return nil, objects.ErrStringLimit
+	}
+
 	s3 := " "
 	if argslen == 3 {
 		s3, ok = objects.ToString(args[2])
@@ -523,6 +527,10 @@ func textPadRight(args ...objects.Object) (ret objects.Object, err error) {
 			Found:    args[1].TypeName(),
 		}
 		return
+	}
+
+	if i2 > tengo.MaxStringLen {
+		return nil, objects.ErrStringLimit
 	}
 
 	s3 := " "
