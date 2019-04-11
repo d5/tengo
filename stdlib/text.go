@@ -32,7 +32,7 @@ var textModule = map[string]objects.Object{
 	"last_index_any": &objects.UserFunction{Name: "last_index_any", Value: FuncASSRI(strings.LastIndexAny)}, // last_index_any(s, chars) => int
 	"repeat":         &objects.UserFunction{Name: "repeat", Value: textRepeat},                              // repeat(s, count) => string
 	"replace":        &objects.UserFunction{Name: "replace", Value: textReplace},                            // replace(s, old, new, n) => string
-	"substr":         &objects.UserFunction{Name: "substr", Value: textSubstring},                           // substring(s, lower, upper) => string
+	"substr":         &objects.UserFunction{Name: "substr", Value: textSubstring},                           // substr(s, lower, upper) => string
 	"split":          &objects.UserFunction{Name: "split", Value: FuncASSRSs(strings.Split)},                // split(s, sep) => [string]
 	"split_after":    &objects.UserFunction{Name: "split_after", Value: FuncASSRSs(strings.SplitAfter)},     // split_after(s, sep) => [string]
 	"split_after_n":  &objects.UserFunction{Name: "split_after_n", Value: FuncASSIRSs(strings.SplitAfterN)}, // split_after_n(s, sep, n) => [string]
@@ -474,6 +474,12 @@ func textPadLeft(args ...objects.Object) (ret objects.Object, err error) {
 		return nil, objects.ErrStringLimit
 	}
 
+	sLen := len(s1)
+	if sLen >= i2 {
+		ret = &objects.String{Value: s1}
+		return
+	}
+
 	s3 := " "
 	if argslen == 3 {
 		s3, ok = objects.ToString(args[2])
@@ -487,10 +493,8 @@ func textPadLeft(args ...objects.Object) (ret objects.Object, err error) {
 		}
 	}
 
-	sLen := len(s1)
 	padStrLen := len(s3)
-
-	if sLen >= i2 || padStrLen == 0 {
+	if padStrLen == 0 {
 		ret = &objects.String{Value: s1}
 		return
 	}
@@ -533,6 +537,12 @@ func textPadRight(args ...objects.Object) (ret objects.Object, err error) {
 		return nil, objects.ErrStringLimit
 	}
 
+	sLen := len(s1)
+	if sLen >= i2 {
+		ret = &objects.String{Value: s1}
+		return
+	}
+
 	s3 := " "
 	if argslen == 3 {
 		s3, ok = objects.ToString(args[2])
@@ -546,10 +556,8 @@ func textPadRight(args ...objects.Object) (ret objects.Object, err error) {
 		}
 	}
 
-	sLen := len(s1)
 	padStrLen := len(s3)
-
-	if sLen >= i2 || padStrLen == 0 {
+	if padStrLen == 0 {
 		ret = &objects.String{Value: s1}
 		return
 	}
