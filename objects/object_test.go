@@ -9,8 +9,7 @@ import (
 )
 
 func TestObject_TypeName(t *testing.T) {
-	var o objects.Object
-	o = &objects.Int{}
+	var o objects.Object = &objects.Int{}
 	assert.Equal(t, "int", o.TypeName())
 	o = &objects.Float{}
 	assert.Equal(t, "float", o.TypeName())
@@ -47,8 +46,7 @@ func TestObject_TypeName(t *testing.T) {
 }
 
 func TestObject_IsFalsy(t *testing.T) {
-	var o objects.Object
-	o = &objects.Int{Value: 0}
+	var o objects.Object = &objects.Int{Value: 0}
 	assert.True(t, o.IsFalsy())
 	o = &objects.Int{Value: 1}
 	assert.False(t, o.IsFalsy())
@@ -95,8 +93,7 @@ func TestObject_IsFalsy(t *testing.T) {
 }
 
 func TestObject_String(t *testing.T) {
-	var o objects.Object
-	o = &objects.Int{Value: 0}
+	var o objects.Object = &objects.Int{Value: 0}
 	assert.Equal(t, "0", o.String())
 	o = &objects.Int{Value: 1}
 	assert.Equal(t, "1", o.String())
@@ -135,8 +132,7 @@ func TestObject_String(t *testing.T) {
 }
 
 func TestObject_BinaryOp(t *testing.T) {
-	var o objects.Object
-	o = &objects.Char{}
+	var o objects.Object = &objects.Char{}
 	_, err := o.BinaryOp(token.Add, objects.UndefinedValue)
 	assert.Error(t, err)
 	o = &objects.Bool{}

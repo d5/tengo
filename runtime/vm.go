@@ -707,9 +707,7 @@ func (v *VM) run() {
 
 			case objects.Callable:
 				var args []objects.Object
-				for _, arg := range v.stack[v.sp-numArgs : v.sp] {
-					args = append(args, arg)
-				}
+				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 
 				ret, e := callee.Call(args...)
 				v.sp -= numArgs + 1

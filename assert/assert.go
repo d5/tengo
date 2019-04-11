@@ -106,7 +106,7 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 			return failExpectedActual(t, expected, actual, msg...)
 		}
 	case []byte:
-		if bytes.Compare(expected, actual.([]byte)) != 0 {
+		if !bytes.Equal(expected, actual.([]byte)) {
 			return failExpectedActual(t, string(expected), string(actual.([]byte)), msg...)
 		}
 	case []string:
@@ -156,7 +156,7 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 	case *objects.ImmutableArray:
 		return equalObjectSlice(t, expected.Value, actual.(*objects.ImmutableArray).Value, msg...)
 	case *objects.Bytes:
-		if bytes.Compare(expected.Value, actual.(*objects.Bytes).Value) != 0 {
+		if !bytes.Equal(expected.Value, actual.(*objects.Bytes).Value) {
 			return failExpectedActual(t, string(expected.Value), string(actual.(*objects.Bytes).Value), msg...)
 		}
 	case *objects.Map:
