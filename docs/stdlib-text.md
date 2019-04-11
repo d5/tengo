@@ -26,6 +26,7 @@ text := import("text")
 - `last_index_any(s string, chars string) => int`: returns the index of the last instance of any Unicode code point from chars in s, or -1 if no Unicode code point from chars is present in s.
 - `repeat(s string, count int) => string`: returns a new string consisting of count copies of the string s.
 - `replace(s string, old string, new string, n int) => string`: returns a copy of the string s with the first n non-overlapping instances of old replaced by new.
+- `substr(s string, lower int, upper int) => string => string`: returns a substring of the string s specified by the lower and upper parameters.
 - `split(s string, sep string) => [string]`: slices s into all substrings separated by sep and returns a slice of the substrings between those separators.
 - `split_after(s string, sep string) => [string]`: slices s into all substrings after each instance of sep and returns a slice of those substrings.
 - `split_after_n(s string, sep string, n int) => [string]`: slices s into substrings after each instance of sep and returns a slice of those substrings.
@@ -34,6 +35,9 @@ text := import("text")
 - `to_lower(s string) => string`: returns a copy of the string s with all Unicode letters mapped to their lower case.
 - `to_title(s string) => string`: returns a copy of the string s with all Unicode letters mapped to their title case.
 - `to_upper(s string) => string`: returns a copy of the string s with all Unicode letters mapped to their upper case.
+- `pad_left(s string, pad_len int, pad_with string) => string`: returns a copy of the string s padded on the left with the contents of the string pad_with to length pad_len. If pad_width is not specified, white space is used as the default padding.
+- `pad_right(s string, pad_len int, pad_with string) => string`: returns a copy of the string s padded on the right with the contents of the string pad_with to length pad_len. If pad_width is not specified, white space is used as the default padding.
+- `trim(s string, cutset string) => string`: returns a slice of the string s with all leading and trailing Unicode code points contained in cutset removed.
 - `trim_left(s string, cutset string) => string`: returns a slice of the string s with all leading Unicode code points contained in cutset removed.
 - `trim_prefix(s string, prefix string) => string`: returns s without the provided leading prefix string.
 - `trim_right(s string, cutset string) => string`: returns a slice of the string s, with all trailing Unicode code points contained in cutset removed.
