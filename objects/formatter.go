@@ -767,18 +767,18 @@ func parsenum(s string, start, end int) (num int, isnum bool, newi int) {
 
 func (p *pp) badVerb(verb rune) {
 	p.erroring = true
-	p.WriteString(percentBangString)
-	p.WriteRune(verb)
-	p.WriteSingleByte('(')
+	_, _ = p.WriteString(percentBangString)
+	_, _ = p.WriteRune(verb)
+	_, _ = p.WriteSingleByte('(')
 	switch {
 	case p.arg != nil:
-		p.WriteString(p.arg.String())
-		p.WriteSingleByte('=')
+		_, _ = p.WriteString(p.arg.String())
+		_, _ = p.WriteSingleByte('=')
 		p.printArg(p.arg, 'v')
 	default:
-		p.WriteString(UndefinedValue.String())
+		_, _ = p.WriteString(UndefinedValue.String())
 	}
-	p.WriteSingleByte(')')
+	_, _ = p.WriteSingleByte(')')
 	p.erroring = false
 }
 
@@ -876,28 +876,28 @@ func (p *pp) fmtBytes(v []byte, verb rune, typeString string) {
 	switch verb {
 	case 'v', 'd':
 		if p.fmt.sharpV {
-			p.WriteString(typeString)
+			_, _ = p.WriteString(typeString)
 			if v == nil {
-				p.WriteString(nilParenString)
+				_, _ = p.WriteString(nilParenString)
 				return
 			}
-			p.WriteSingleByte('{')
+			_, _ = p.WriteSingleByte('{')
 			for i, c := range v {
 				if i > 0 {
-					p.WriteString(commaSpaceString)
+					_, _ = p.WriteString(commaSpaceString)
 				}
 				p.fmt0x64(uint64(c), true)
 			}
-			p.WriteSingleByte('}')
+			_, _ = p.WriteSingleByte('}')
 		} else {
-			p.WriteSingleByte('[')
+			_, _ = p.WriteSingleByte('[')
 			for i, c := range v {
 				if i > 0 {
-					p.WriteSingleByte(' ')
+					_, _ = p.WriteSingleByte(' ')
 				}
 				p.fmt.fmtInteger(uint64(c), 10, unsigned, verb, ldigits)
 			}
-			p.WriteSingleByte(']')
+			_, _ = p.WriteSingleByte(']')
 		}
 	case 's':
 		p.fmt.fmtBs(v)
@@ -1003,15 +1003,15 @@ func (p *pp) argNumber(argNum int, format string, i int, numArgs int) (newArgNum
 }
 
 func (p *pp) badArgNum(verb rune) {
-	p.WriteString(percentBangString)
-	p.WriteRune(verb)
-	p.WriteString(badIndexString)
+	_, _ = p.WriteString(percentBangString)
+	_, _ = p.WriteRune(verb)
+	_, _ = p.WriteString(badIndexString)
 }
 
 func (p *pp) missingArg(verb rune) {
-	p.WriteString(percentBangString)
-	p.WriteRune(verb)
-	p.WriteString(missingString)
+	_, _ = p.WriteString(percentBangString)
+	_, _ = p.WriteRune(verb)
+	_, _ = p.WriteString(missingString)
 }
 
 func (p *pp) doFormat(format string, a []Object) (err error) {
@@ -1037,7 +1037,7 @@ formatLoop:
 			i++
 		}
 		if i > lasti {
-			p.WriteString(format[lasti:i])
+			_, _ = p.WriteString(format[lasti:i])
 		}
 		if i >= end {
 			// done processing format string
@@ -1095,7 +1095,7 @@ formatLoop:
 			p.fmt.wid, p.fmt.widPresent, argNum = intFromArg(a, argNum)
 
 			if !p.fmt.widPresent {
-				p.WriteString(badWidthString)
+				_, _ = p.WriteString(badWidthString)
 			}
 
 			// We have a negative width, so take its value and ensure
@@ -1129,7 +1129,7 @@ formatLoop:
 					p.fmt.precPresent = false
 				}
 				if !p.fmt.precPresent {
-					p.WriteString(badPrecString)
+					_, _ = p.WriteString(badPrecString)
 				}
 				afterIndex = false
 			} else {
@@ -1146,7 +1146,7 @@ formatLoop:
 		}
 
 		if i >= end {
-			p.WriteString(noVerbString)
+			_, _ = p.WriteString(noVerbString)
 			break
 		}
 
@@ -1158,7 +1158,7 @@ formatLoop:
 
 		switch {
 		case verb == '%': // Percent does not absorb operands and ignores f.wid and f.prec.
-			p.WriteSingleByte('%')
+			_, _ = p.WriteSingleByte('%')
 		case !p.goodArgNum:
 			p.badArgNum(verb)
 		case argNum >= len(a): // No argument left over to print for the current verb.
@@ -1182,20 +1182,20 @@ formatLoop:
 	// been used and arguably OK if they're not.
 	if !p.reordered && argNum < len(a) {
 		p.fmt.clearflags()
-		p.WriteString(extraString)
+		_, _ = p.WriteString(extraString)
 		for i, arg := range a[argNum:] {
 			if i > 0 {
-				p.WriteString(commaSpaceString)
+				_, _ = p.WriteString(commaSpaceString)
 			}
 			if arg == nil {
-				p.WriteString(UndefinedValue.String())
+				_, _ = p.WriteString(UndefinedValue.String())
 			} else {
-				p.WriteString(arg.TypeName())
-				p.WriteSingleByte('=')
+				_, _ = p.WriteString(arg.TypeName())
+				_, _ = p.WriteSingleByte('=')
 				p.printArg(arg, 'v')
 			}
 		}
-		p.WriteSingleByte(')')
+		_, _ = p.WriteSingleByte(')')
 	}
 
 	return nil
