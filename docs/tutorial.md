@@ -2,6 +2,8 @@
 
 Tengo's syntax is designed to be familiar to Go developers while being a bit simpler and more streamlined.
 
+**You can test the Tengo code in online [Playground](https://tengolang.com).**
+
 ## Comments
 
 Tengo supports line comments (`//...`) and block comments (`/* ... */`).
@@ -13,45 +15,55 @@ Tengo supports line comments (`//...`) and block comments (`/* ... */`).
 
 a := 5 // line comments
 ```
-> [Run in Playground](https://tengolang.com/?s=02e384399a0397b0a752f08604ccb244d1a6cb37)
 
-## Types and Assignment
+## Values and Variables
 
-Tengo is a dynamically typed language, and, you can initialize the variables using `:=` operator. 
-
-```golang
-a := 1984 		// int
-b := "aomame"		// string
-c := -9.22		// float
-d := true		// bool
-e := '九'		// char
-f := [1, false, "foo"]	// array
-g := {			// map
-    h: 439,
-    i: 12.34,
-    j: [0, 9, false]
-}
-k := func(l, m) {	// function
-    return l + m
-}
-```
-> [Run in Playground](https://tengolang.com/?s=f8626a711769502ce20e4560ace65c0e9c1279f4)
-
-After the variable is initialized, it can be re-assigned different value using `=` operator. 
+In Tengo, everything is a value. 
 
 ```golang
-a := 1928		// int
-a = "foo"		// string
-f := func() {
-    a := false		// 'a' is defined in the function scope
-    a = [1, 2, 3]	// and thus does not affect 'a' in global scope.
-}
-a == "foo" 		// still "foo"
+19 + 84                // int values
+"aomame" + `kawa`      // string values
+-9.22 + 1e10           // float values
+true || false          // bool values
+'九' > '9'              // char values
+[1, false, "foo"]      // array value
+{a: 12.34, b: "bar"}   // map value
+func() { /*...*/ }     // function value
 ```
-> [Run in Playground](https://tengolang.com/?s=1d39bc2af5c51417df82b32db47a0e6a156d48ec)
 
+_See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for the full list of Tengo runtime types._
 
-Type is not directly specified, but, you can use type-coercion functions to convert between types.
+And the values can be assigned to variables using `:=` and `=` operators.
+
+```golang
+a := 19.84              // 'a' has float value '19.84'
+a = "foo bar"           // 'a' now has string value "foo bar"
+f := func() { /*...*/ } // 'f' has a function value
+```
+
+In Tengo, all values have the underlying types, but, the variables are not directly associated with the types. Variables simply references the values, and, they can even be re-assigned values with different types.
+
+Symantic of `:=` and `=` operators are the same as Go. `:=` is used to define a new variable (symbol) in the current scope. `=` is used to re-assign value to an existing variable (symbol) defined in the current scope or its outer scopes.
+
+```golang
+a := 1234              // 'a' in global scope
+b := "foo"             // 'b' in global scope
+func() {
+    a = -1984          // 'a' from global scope is re-assigned different int value
+    b := "bar"         // a new 'b' variable is defined in the function scope
+}()
+```
+
+In Tengo, there's no declarations. Everything is assignment. 
+
+```golang
+var a                  // compile error
+func b { /*....*/ }    // compile error
+```
+
+## Type Coercion
+
+Tengo as a dynamically typed language, the type is not directly specified, but, you can use builtin functions to convert a value into a differen type:
 
 ```golang
 s1 := string(1984)  // "1984"
@@ -60,9 +72,8 @@ f3 := float(-51)    // -51.0
 b4 := bool(1)       // true
 c5 := char("X")     // 'X'
 ```
-> [Run in Playground](https://tengolang.com/?s=8d57905b82959eb244e9bbd2111e12ee04a33045)
 
-_See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) and [Operators](https://github.com/d5/tengo/blob/master/docs/operators.md) for more details on the value types._
+_See [Builtin Functions](https://github.com/d5/tengo/blob/master/docs/builtins.md) and [Operators](https://github.com/d5/tengo/blob/master/docs/operators.md) for more details on type coercions._
 
 ## Indexing
 
