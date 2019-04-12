@@ -54,12 +54,14 @@ func() {
 }()
 ```
 
-In Tengo, there's no declarations. Everything is assignment. 
+Unlike Go, there's no declarations in Tengo. Everything is assignment.
 
 ```golang
 var a                  // compile error
 func b { /*....*/ }    // compile error
 ```
+
+Also there's no pointers in Tengo.
 
 ## Type Coercion
 
@@ -92,8 +94,24 @@ _In Tengo, all values can be either [truthy or falsy](https://github.com/d5/teng
 
 | Operator | Usage | Types |
 | :---: | :---: | :---: |
-| `+`   |  | |
+| `==` | equal | all types |
+| `!=` | not equal | all types |
+| `+`   | add/concat | int, float, string, char, time, array |
+| `-`   | subtract | int, float, char, time |
+| `*`   | multiply | int, float |
+| `/`   | divide | int, float |
+| `&`   | bitwise AND | int |
+| `|`   | bitwise OR | int |
+| `^`   | bitwise XOR | int |
+| `&^`   | bitclear (AND NOT) | int |
+| `<<`   | shift left | int |
+| `>>`   | shift right | int |
+| `<`   | less than | int, float, char, time |
+| `<=`   | less than or equal to | int, float, char, time |
+| `>`   | greater than | int, float, char, time |
+| `>=`   | greater than or equal to | int, float, char, time |
 
+_See [Operators](https://github.com/d5/tengo/blob/d5-patch-1/docs/operators.md) for more details.
 
 ### Ternary Operators
 
@@ -107,18 +125,17 @@ a := b > 4 ? "big" : false
 
 Unary operators have the highest precedence, and, ternary operator has the lowest precendece. There are five precedence levels for binary operators. Multiplication operators bind strongest, followed by addition operators, comparison operators, && (logical AND), and finally || (logical OR):
 
-```
-Precedence    Operator
-    5             *  /  %  <<  >>  &  &^
-    4             +  -  |  ^
-    3             ==  !=  <  <=  >  >=
-    2             &&
-    1             ||
-```    
+|Precedence|Operator|
+| :---: | :---: |
+| 5 | `*`  `/`  `%`  `<<`  `>>`  `&`  `&^` |
+| 4 | `+`  `-`  `\|`  `^` |
+| 3 | `==`  `!=`  `<`  `<=`  `>`  `>=` |
+| 2 | `&&` |
+| 1 | `\|\|` |
 
 Just like Go, `++` and `--` operators form statements, not expressions, they fall outside the operator hierarchy. 
 
-## Indexing
+### Selector and Indexer
 
 You can use the dot selector (`.`) and indexer (`[]`) operator to read or write elements of arrays, strings, or maps.
 
