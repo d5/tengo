@@ -97,7 +97,6 @@ m["b"][5]                       // == undefined
 m["b"][5].d                     // == undefined
 //m.b[5] = 0			// but this is an error: index out of bounds
 ```
-> [Run in Playground](https://tengolang.com/?s=d510c75ed8f06ef1e22c1aaf8a7d4565c793514c)
 
 For sequence types (string, bytes, array), you can use slice operator (`[:]`) too.
 
@@ -108,7 +107,6 @@ c := [1, 2, 3, 4, 5][:3]	// == [1, 2, 3]
 d := "hello world"[2:10]	// == "llo worl"
 c := [1, 2, 3, 4, 5][-1:10]    // == [1, 2, 3, 4, 5]
 ```
-> [Run in Playground](https://tengolang.com/?s=214ab490bb24549578770984985f6b161aed915d)
 
 ## Conditional Expression
 
@@ -123,8 +121,6 @@ min := func(a, b) {
 b := min(5, 10)       // b == 5
 ```
 
-> [Run in Playground](https://tengolang.com/?s=24724cc03e8ef2e56b7851017f8c2a577897961e)
-
 ## Functions
 
 In Tengo, functions are first-class citizen, and, it also supports closures, functions that captures variables in outer scopes. In the following example, the function returned from `adder` is capturing `base` variable.
@@ -136,7 +132,6 @@ adder := func(base) {
 add5 := adder(5)
 nine := add5(4)		// == 9
 ```
-> [Run in Playground](https://tengolang.com/?s=fba79990473d5b38cc944dfa225d38580ddaf422)
 
 ## Flow Control
 
@@ -226,7 +221,6 @@ if is_error(err1) {     // 'is_error' builtin function
     err_val := err1.value   // get underlying value 
 }  
 ``` 
-> [Run in Playground](https://tengolang.com/?s=5eaba4289c9d284d97704dd09cb15f4f03ad05c1)
 
 ## Modules
 
