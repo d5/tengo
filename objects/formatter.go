@@ -86,6 +86,11 @@ func (f *formatter) writePadding(n int) {
 	buf := *f.buf
 	oldLen := len(buf)
 	newLen := oldLen + n
+
+	if newLen > tengo.MaxStringLen {
+		panic(ErrStringLimit)
+	}
+
 	// Make enough room for padding.
 	if newLen > cap(buf) {
 		buf = make(buffer, cap(buf)*2+n)
@@ -603,18 +608,34 @@ func (f *formatter) fmtFloat(v float64, size int, verb rune, prec int) {
 type buffer []byte
 
 func (b *buffer) Write(p []byte) {
+	if len(*b)+len(p) > tengo.MaxStringLen {
+		panic(ErrStringLimit)
+	}
+
 	*b = append(*b, p...)
 }
 
 func (b *buffer) WriteString(s string) {
+	if len(*b)+len(s) > tengo.MaxStringLen {
+		panic(ErrStringLimit)
+	}
+
 	*b = append(*b, s...)
 }
 
 func (b *buffer) WriteSingleByte(c byte) {
+	if len(*b) >= tengo.MaxStringLen {
+		panic(ErrStringLimit)
+	}
+
 	*b = append(*b, c)
 }
 
 func (b *buffer) WriteRune(r rune) {
+	if len(*b)+utf8.RuneLen(r) > tengo.MaxStringLen {
+		panic(ErrStringLimit)
+	}
+
 	if r < utf8.RuneSelf {
 		*b = append(*b, byte(r))
 		return
@@ -712,6 +733,16 @@ func (p *pp) WriteString(s string) (ret int, err error) {
 	return len(s), nil
 }
 
+func (p *pp) WriteRune(r rune) (ret int, err error) {
+	p.buf.WriteRune(r)
+	return utf8.RuneLen(r), nil
+}
+
+func (p *pp) WriteSingleByte(c byte) (ret int, err error) {
+	p.buf.WriteSingleByte(c)
+	return 1, nil
+}
+
 // tooLarge reports whether the magnitude of the integer is
 // too large to be used as a formatting width or precision.
 func tooLarge(x int) bool {
@@ -736,18 +767,18 @@ func parsenum(s string, start, end int) (num int, isnum bool, newi int) {
 
 func (p *pp) badVerb(verb rune) {
 	p.erroring = true
-	p.buf.WriteString(percentBangString)
-	p.buf.WriteRune(verb)
-	p.buf.WriteSingleByte('(')
+	p.WriteString(percentBangString)
+	p.WriteRune(verb)
+	p.WriteSingleByte('(')
 	switch {
 	case p.arg != nil:
-		p.buf.WriteString(p.arg.String())
-		p.buf.WriteSingleByte('=')
+		p.WriteString(p.arg.String())
+		p.WriteSingleByte('=')
 		p.printArg(p.arg, 'v')
 	default:
-		p.buf.WriteString(UndefinedValue.String())
+		p.WriteString(UndefinedValue.String())
 	}
-	p.buf.WriteSingleByte(')')
+	p.WriteSingleByte(')')
 	p.erroring = false
 }
 
@@ -845,28 +876,28 @@ func (p *pp) fmtBytes(v []byte, verb rune, typeString string) {
 	switch verb {
 	case 'v', 'd':
 		if p.fmt.sharpV {
-			p.buf.WriteString(typeString)
+			p.WriteString(typeString)
 			if v == nil {
-				p.buf.WriteString(nilParenString)
+				p.WriteString(nilParenString)
 				return
 			}
-			p.buf.WriteSingleByte('{')
+			p.WriteSingleByte('{')
 			for i, c := range v {
 				if i > 0 {
-					p.buf.WriteString(commaSpaceString)
+					p.WriteString(commaSpaceString)
 				}
 				p.fmt0x64(uint64(c), true)
 			}
-			p.buf.WriteSingleByte('}')
+			p.WriteSingleByte('}')
 		} else {
-			p.buf.WriteSingleByte('[')
+			p.WriteSingleByte('[')
 			for i, c := range v {
 				if i > 0 {
-					p.buf.WriteSingleByte(' ')
+					p.WriteSingleByte(' ')
 				}
 				p.fmt.fmtInteger(uint64(c), 10, unsigned, verb, ldigits)
 			}
-			p.buf.WriteSingleByte(']')
+			p.WriteSingleByte(']')
 		}
 	case 's':
 		p.fmt.fmtBs(v)
@@ -972,18 +1003,28 @@ func (p *pp) argNumber(argNum int, format string, i int, numArgs int) (newArgNum
 }
 
 func (p *pp) badArgNum(verb rune) {
-	p.buf.WriteString(percentBangString)
-	p.buf.WriteRune(verb)
-	p.buf.WriteString(badIndexString)
+	p.WriteString(percentBangString)
+	p.WriteRune(verb)
+	p.WriteString(badIndexString)
 }
 
 func (p *pp) missingArg(verb rune) {
-	p.buf.WriteString(percentBangString)
-	p.buf.WriteRune(verb)
-	p.buf.WriteString(missingString)
+	p.WriteString(percentBangString)
+	p.WriteRune(verb)
+	p.WriteString(missingString)
 }
 
-func (p *pp) doFormat(format string, a []Object) {
+func (p *pp) doFormat(format string, a []Object) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if e, ok := r.(error); ok && e == ErrStringLimit {
+				err = e
+				return
+			}
+			panic(r)
+		}
+	}()
+
 	end := len(format)
 	argNum := 0         // we process one argument per non-trivial format
 	afterIndex := false // previous item in format was an index like [3].
@@ -996,7 +1037,7 @@ formatLoop:
 			i++
 		}
 		if i > lasti {
-			p.buf.WriteString(format[lasti:i])
+			p.WriteString(format[lasti:i])
 		}
 		if i >= end {
 			// done processing format string
@@ -1054,7 +1095,7 @@ formatLoop:
 			p.fmt.wid, p.fmt.widPresent, argNum = intFromArg(a, argNum)
 
 			if !p.fmt.widPresent {
-				p.buf.WriteString(badWidthString)
+				p.WriteString(badWidthString)
 			}
 
 			// We have a negative width, so take its value and ensure
@@ -1088,7 +1129,7 @@ formatLoop:
 					p.fmt.precPresent = false
 				}
 				if !p.fmt.precPresent {
-					p.buf.WriteString(badPrecString)
+					p.WriteString(badPrecString)
 				}
 				afterIndex = false
 			} else {
@@ -1105,7 +1146,7 @@ formatLoop:
 		}
 
 		if i >= end {
-			p.buf.WriteString(noVerbString)
+			p.WriteString(noVerbString)
 			break
 		}
 
@@ -1117,7 +1158,7 @@ formatLoop:
 
 		switch {
 		case verb == '%': // Percent does not absorb operands and ignores f.wid and f.prec.
-			p.buf.WriteSingleByte('%')
+			p.WriteSingleByte('%')
 		case !p.goodArgNum:
 			p.badArgNum(verb)
 		case argNum >= len(a): // No argument left over to print for the current verb.
@@ -1141,33 +1182,31 @@ formatLoop:
 	// been used and arguably OK if they're not.
 	if !p.reordered && argNum < len(a) {
 		p.fmt.clearflags()
-		p.buf.WriteString(extraString)
+		p.WriteString(extraString)
 		for i, arg := range a[argNum:] {
 			if i > 0 {
-				p.buf.WriteString(commaSpaceString)
+				p.WriteString(commaSpaceString)
 			}
 			if arg == nil {
-				p.buf.WriteString(UndefinedValue.String())
+				p.WriteString(UndefinedValue.String())
 			} else {
-				p.buf.WriteString(arg.TypeName())
-				p.buf.WriteSingleByte('=')
+				p.WriteString(arg.TypeName())
+				p.WriteSingleByte('=')
 				p.printArg(arg, 'v')
 			}
 		}
-		p.buf.WriteSingleByte(')')
+		p.WriteSingleByte(')')
 	}
+
+	return nil
 }
 
 // Format formats according to a format specifier and returns the resulting string.
 func Format(format string, a ...Object) (string, error) {
 	p := newPrinter()
-	p.doFormat(format, a)
+	err := p.doFormat(format, a)
 	s := string(p.buf)
 	p.free()
 
-	if len(s) > tengo.MaxStringLen {
-		return "", ErrStringLimit
-	}
-
-	return s, nil
+	return s, err
 }

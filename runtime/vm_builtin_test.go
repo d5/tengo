@@ -157,6 +157,18 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `a := func(x) { return func() { return x } }; out = is_callable(a)`, nil, true)                              // function
 	expect(t, `a := func(x) { return func() { return x } }; out = is_callable(a(5))`, nil, true)                           // closure
 	expect(t, `out = is_callable(x)`, Opts().Symbol("x", &StringArray{Value: []string{"foo", "bar"}}).Skip2ndPass(), true) // user object
+
+	expect(t, `out = format("")`, nil, "")
+	expect(t, `out = format("foo")`, nil, "foo")
+	expect(t, `out = format("foo %d %v %s", 1, 2, "bar")`, nil, "foo 1 2 bar")
+	expect(t, `out = format("foo %v", [1, "bar", true])`, nil, `foo [1, "bar", true]`)
+	expect(t, `out = format("foo %v %d", [1, "bar", true], 19)`, nil, `foo [1, "bar", true] 19`)
+	expect(t, `out = format("foo %v", {"a": {"b": {"c": [1, 2, 3]}}})`, nil, `foo {a: {b: {c: [1, 2, 3]}}}`)
+	expect(t, `out = format("%v", [1, [2, [3, 4]]])`, nil, `[1, [2, [3, 4]]]`)
+
+	tengo.MaxStringLen = 9
+	expectError(t, `format("%s", "1234567890")`, nil, "exceeding string size limit")
+	tengo.MaxStringLen = 2147483647
 }
 
 func TestBytesN(t *testing.T) {
