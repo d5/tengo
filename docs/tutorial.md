@@ -41,7 +41,7 @@ a = "foo bar"           // 'a' now has string value "foo bar"
 f := func() { /*...*/ } // 'f' has a function value
 ```
 
-In Tengo, all values have the underlying types, but, the variables are not directly associated with the types. Variables simply references the values, and, they can even be re-assigned values with different types.
+In Tengo, all values have the underlying types, but, the variables are not directly associated with the types. Variables simply reference the values, and, they can even be re-assigned values with different types.
 
 Symantic of `:=` and `=` operators are the same as Go. `:=` is used to define a new variable (symbol) in the current scope. `=` is used to re-assign value to an existing variable (symbol) defined in the current scope or its outer scopes.
 
@@ -74,6 +74,49 @@ c5 := char("X")     // 'X'
 ```
 
 _See [Builtin Functions](https://github.com/d5/tengo/blob/master/docs/builtins.md) and [Operators](https://github.com/d5/tengo/blob/master/docs/operators.md) for more details on type coercions._
+
+## Operators
+
+### Unary Operators
+
+| Operator | Usage | Types |
+| :---: | :---: | :---: |
+| `+`   | same as `0 + x` | int, float |
+| `-`   | same as `0 - x` | int, float |
+| `!`   | logical NOT | all types* |
+| `^`   | bitwise complement | int |
+
+_In Tengo, all values can be either [truthy or falsy](https://github.com/d5/tengo/blob/d5-patch-1/docs/runtime-types.md#objectisfalsy)._
+
+### Binary Operators
+
+| Operator | Usage | Types |
+| :---: | :---: | :---: |
+| `+`   |  | |
+
+
+### Ternary Operators
+
+Unlike Go, Tengo has a ternary conditional operator `?:`.
+
+```golang
+a := b > 4 ? "big" : false
+```
+
+### Operator Precedences
+
+Unary operators have the highest precedence, and, ternary operator has the lowest precendece. There are five precedence levels for binary operators. Multiplication operators bind strongest, followed by addition operators, comparison operators, && (logical AND), and finally || (logical OR):
+
+```
+Precedence    Operator
+    5             *  /  %  <<  >>  &  &^
+    4             +  -  |  ^
+    3             ==  !=  <  <=  >  >=
+    2             &&
+    1             ||
+```    
+
+Just like Go, `++` and `--` operators form statements, not expressions, they fall outside the operator hierarchy. 
 
 ## Indexing
 
