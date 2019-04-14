@@ -1,5 +1,14 @@
 # Builtin Functions
 
+## format
+
+Returns a formatted string. The first argument must be a String object. See [this](https://github.com/d5/tengo/blob/master/docs/formatting.md) for more details on formatting.
+
+```golang
+a := [1, 2, 3]
+s := format("Foo: %v", a) // s == "Foo: [1, 2, 3]"
+```
+
 ## len
 
 Returns the number of elements if the given variable is array, string, map, or module map.
