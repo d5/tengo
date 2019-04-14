@@ -96,12 +96,14 @@ _In Tengo, all values can be either [truthy or falsy](https://github.com/d5/teng
 | :---: | :---: | :---: |
 | `==` | equal | all types |
 | `!=` | not equal | all types |
+| `&&` | logical AND | all types |
+| `\|\|` | logical OR | all types |
 | `+`   | add/concat | int, float, string, char, time, array |
 | `-`   | subtract | int, float, char, time |
 | `*`   | multiply | int, float |
 | `/`   | divide | int, float |
 | `&`   | bitwise AND | int |
-| `|`   | bitwise OR | int |
+| `\|`   | bitwise OR | int |
 | `^`   | bitwise XOR | int |
 | `&^`   | bitclear (AND NOT) | int |
 | `<<`   | shift left | int |
@@ -111,7 +113,7 @@ _In Tengo, all values can be either [truthy or falsy](https://github.com/d5/teng
 | `>`   | greater than | int, float, char, time |
 | `>=`   | greater than or equal to | int, float, char, time |
 
-_See [Operators](https://github.com/d5/tengo/blob/d5-patch-1/docs/operators.md) for more details.
+_See [Operators](https://github.com/d5/tengo/blob/d5-patch-1/docs/operators.md) for more details._
 
 ### Ternary Operators
 
@@ -120,6 +122,24 @@ Unlike Go, Tengo has a ternary conditional operator `?:`.
 ```golang
 a := b > 4 ? "big" : false
 ```
+
+### Assignment and Increment Operators
+
+| Operator | Usage |
+| :---: | :---: |
+| `+=` | `(lhs) = (lhs) + (rhs)` |
+| `-=` | `(lhs) = (lhs) - (rhs)` |
+| `*=` | `(lhs) = (lhs) * (rhs)` |
+| `/=` | `(lhs) = (lhs) / (rhs)` |
+| `%=` | `(lhs) = (lhs) % (rhs)` |
+| `&=` | `(lhs) = (lhs) & (rhs)` |
+| `\|=` | `(lhs) = (lhs) \| (rhs)` |
+| `&^=` | `(lhs) = (lhs) &^ (rhs)` |
+| `^=` | `(lhs) = (lhs) ^ (rhs)` |
+| `<<=` | `(lhs) = (lhs) << (rhs)` |
+| `>>=` | `(lhs) = (lhs) >> (rhs)` |
+| `++` | `(lhs) = (lhs) + 1` |
+| `--` | `(lhs) = (lhs) - 1` |
 
 ### Operator Precedences
 
@@ -133,7 +153,7 @@ Unary operators have the highest precedence, and, ternary operator has the lowes
 | 2 | `&&` |
 | 1 | `\|\|` |
 
-Just like Go, `++` and `--` operators form statements, not expressions, they fall outside the operator hierarchy. 
+Like Go, `++` and `--` operators form statements, not expressions, they fall outside the operator hierarchy. 
 
 ### Selector and Indexer
 
