@@ -1,13 +1,12 @@
 # Tengo Language Syntax
 
-Tengo language syntax is designed to be familiar to Go developers while being a bit simpler and more streamlined. The main difference from Go is that Tengo is a dynamic programming language. 
+Tengo's syntax is designed to be familiar to Go developers while being a bit simpler and more streamlined. 
 
 **You can test the Tengo code in online [Playground](https://tengolang.com).**
 
-## Values and Variables
+## Values and Value Types
 
-A value is associated with a type that is either a [runtime type](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) _(int, string, float, bool, char, bytes, array, immutable array, map, immutable map, time, error, undefined)_ or a [user-defined type](https://github.com/d5/tengo/blob/master/docs/objects.md).
- 
+Tengo supports several different value types.  
 
 ```golang
 19 + 84               // int values
@@ -20,23 +19,25 @@ true || false         // bool values
 func() { /*...*/ }    // function value
 ```
 
-### Runtime Value Types 
+All values have underlying types:
 
 | Tengo Type | Description | Equivalent Go Type |
 | :---: | :---: | :---: |
-| int | a signed 64-bit integer value | `int64` |
-| float | a 64-bit floating point value | `float64` |
-| bool | a boolean value | `bool` |
-| char | a unicode character | `rune` |
-| string | a unicode string | `string` | 
-| bytes | a byte array | `[]byte` |
-| error | an [error value](#error-values) | - |
-| time | a time value | `time.Time` |
-| array | a value array | `[]interface{}` |
-| immutable array | an [immutable](#immutable-values) array | - |
-| map | a map of values with string keys | `map[string]interface{}` |
-| immutable map | an [immutable](#immutable-values) map | - |
-| undefined | an [undefined](#undefined-values) value | - | 
+| int | signed 64-bit integer value | `int64` |
+| float | 64-bit floating point value | `float64` |
+| bool | boolean value | `bool` |
+| char | unicode character | `rune` |
+| string | unicode string | `string` | 
+| bytes | byte array | `[]byte` |
+| error | [error value](#error-values) | - |
+| time | time value | `time.Time` |
+| array | value array | `[]interface{}` |
+| immutable array | [immutable](#immutability) array | - |
+| map | value map with string keys | `map[string]interface{}` |
+| immutable map | [immutable](#immutability) map | - |
+| undefined | [undefined](#undefined-values) value | - |
+| function | callable value | - |  
+| _user-defined_ | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/objects.md) | - |
 
 #### Error Values
 
@@ -50,16 +51,21 @@ if is_error(err1) {      // 'is_error' builtin function
 }  
 ```
 
-### Immutable Values
+#### Immutability
 
-Basically, all values of the primitive types (Int, Float, String, Bytes, Char, Bool) are immutable.
+In Tengo, all values are immutable except for the following types:
+
+- Array
+- Map
+- User-defined types   
 
 ```golang
 s := "12345"
-s[1] = 'b'    // error: String is immutable
-s = "foo"    // ok: this is not mutating the value 
-        //  but updating reference 's' with another String value
+s[1] = 'b'    // illegal: String is immutable
+s = "foo"     // ok: assigning new value 
 ```
+
+_Note that re-assigning a new value to a variable is not mutating its value._ 
 
 The compound types (Array, Map) are mutable by default, but, you can make them immutable using `immutable` expression.
 
@@ -85,7 +91,20 @@ a.c[1] = 5    // error
 ```
 
 
-### Undefined Values
+#### References
+
+When assigning the value of a variable to another variable `a := b`:
+
+| Copy | Types |
+| :---: | :---: |
+| Value Copy | int, float, bool, char, string |
+| Reference Copy | _all other types_ |
+
+
+
+
+
+#### Undefined Values
  
 Tengo does not have `nil`, but, instead `undefined` is used in the following situations:
 
@@ -101,7 +120,7 @@ c := {a: "foo"}["b"]        // c == undefined
 d := int("foo")             // d == undefined
 ```
 
-### Array Values
+#### Array Values
 
 Array is an ordered list of values. An array may contain value(s) or any types:
 
@@ -116,59 +135,92 @@ An element can be accessed via an indexer operator `[]`.
 [1, 2, 3][3]       // == undefined
 ``` 
 
-### Map Values
+#### Map Values
 
-### Array and Map Values
+...
 
-- Array and Immutable Array
-- Map and Immutable Map
+#### Function Values
 
-### Indexing
-
-You can use the dot selector (`.`) and indexer (`[]`) operator to read or write elements of arrays, strings, or maps.
-
-Reading a nonexistent index returns `Undefined` value.
+Functions are just like other values
 
 ```golang
-["one", "two", "three"][1]  // == "two"
-
-m := {
-  a: 1,
-  b: [2, 3, 4],
-  c: func() { return 10 }
+adder := func(base) {
+  return func(x) { return base + x }  // capturing 'base'
 }
-m.a            // == 1
-m["b"][1]        // == 3
-m.c()          // == 10
-m.x = 5          // add 'x' to map 'm'
-m["b"][5]        // == undefined
-m["b"][5].d        // == undefined
-//m.b[5] = 0      // but this is an error: index out of bounds
+add5 := adder(5)
+nine := add5(4)    // == 9
 ```
+ 
 
-For sequence types (string, bytes, array), you can use slice operator (`[:]`) too.
+## Variables and Scopes
+
+A value can be assigned to a variable using assignment operator `:=` and `=`.
+
+- `:=` operator defines a new variable in the scope and assigns a value.
+- `=` operator assigns a new value to an existing variable in the scope. 
+
+Variables are defined either in global scope (defined outside function) or in local scope (defined inside function). 
 
 ```golang
-a := [1, 2, 3, 4, 5][1:3]  // == [2, 3]
-b := [1, 2, 3, 4, 5][3:]  // == [4, 5]
-c := [1, 2, 3, 4, 5][:3]  // == [1, 2, 3]
-d := "hello world"[2:10]  // == "llo worl"
-c := [1, 2, 3, 4, 5][-1:10]  // == [1, 2, 3, 4, 5]
+a := "foo"      // define 'a' in global scope
+
+func() {        // function scope A
+  b := 52       // define 'b' in function scope A
+  
+  func() {      // function scope B
+    c := 19.84  // define 'c' in function scope B
+    
+    a = "bee"   // ok: assign new value to 'a' from global scope 
+    b = 20      // ok: assign new value to 'b' from function scope A
+    
+    b := true   // ok: define new 'b' in function scope B 
+                //     (shadowing 'b' from function scope A)
+  }
+  
+  a = "bar"     // ok: assigne new value to 'a' from global scope
+  b = 10        // ok: assigne new value to 'b'
+  a := -100     // ok: define new 'a' in function scope A
+                //     (shadowing 'a' from global scope)
+  
+  c = -9.1      // illegal: 'c' is not defined
+  b := [1, 2]   // illegal: 'b' is already defined in the same scope
+}
+
+b = 25          // illegal: 'b' is not defined
+a := {d: 2}     // illegal: 'a' is already defined in the same scope
 ```
 
-   
-
-And the values can be assigned to variables using `:=` and `=` operators.
+Unlike Go, a variable can be assigned values of different types.
 
 ```golang
-a := 19.84        // 'a' has float value '19.84'
-a = "foo bar"      // 'a' now has string value "foo bar"
-f := func() { /*...*/ }  // 'f' has a function value
+a := 123        // int
+a = "123"       // string
+a = [1, 2, 3]   // array
 ```
+
+Unlike Go, Tengo does not have declarations.
+
+```golang
+var a int       // illegal: do 'a := 0' instead 
+func b() { }    // illegal: do 'b := func() {}' instead
+```
+
+## 
+
+
+## Modules
+
+## Values and Types
+
+A value is associated with a type that is either a [runtime type](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) or a [user-defined type](https://github.com/d5/tengo/blob/master/docs/objects.md).
+ 
+
+### Runtime Value Types 
+
+
+
 
 ### Variables
-
-In Tengo, a variable is  
 
 In Tengo, all values have the underlying types, but, the variables are not directly associated with the types. Variables simply reference the values, and, they can even be re-assigned values with different types.
 
@@ -275,6 +327,8 @@ b := min(5, 10)      // b == 5
 | `++` | `(lhs) = (lhs) + 1` |
 | `--` | `(lhs) = (lhs) - 1` |
 
+Like Go, increment and decrement operators 
+
 ### Operator Precedences
 
 Unary operators have the highest precedence, and, ternary operator has the lowest precendece. There are five precedence levels for binary operators. Multiplication operators bind strongest, followed by addition operators, comparison operators, && (logical AND), and finally || (logical OR):
@@ -289,20 +343,92 @@ Unary operators have the highest precedence, and, ternary operator has the lowes
 
 Like Go, `++` and `--` operators form statements, not expressions, they fall outside the operator hierarchy. 
 
+### Selector and Indexer
+
+You can use the dot selector (`.`) and indexer (`[]`) operator to read or write elements of arrays, strings, or maps.
+
+Reading a nonexistent index returns `Undefined` value.
+
+```golang
+["one", "two", "three"][1]  // == "two"
+
+m := {
+  a: 1,
+  b: [2, 3, 4],
+  c: func() { return 10 }
+}
+m.a            // == 1
+m["b"][1]        // == 3
+m.c()          // == 10
+m.x = 5          // add 'x' to map 'm'
+m["b"][5]        // == undefined
+m["b"][5].d        // == undefined
+//m.b[5] = 0      // but this is an error: index out of bounds
+```
+
+For sequence types (string, bytes, array), you can use slice operator (`[:]`) too.
+
+```golang
+a := [1, 2, 3, 4, 5][1:3]  // == [2, 3]
+b := [1, 2, 3, 4, 5][3:]  // == [4, 5]
+c := [1, 2, 3, 4, 5][:3]  // == [1, 2, 3]
+d := "hello world"[2:10]  // == "llo worl"
+c := [1, 2, 3, 4, 5][-1:10]  // == [1, 2, 3, 4, 5]
+```
+
+   
+
+And the values can be assigned to variables using `:=` and `=` operators.
+
+```golang
+a := 19.84        // 'a' has float value '19.84'
+a = "foo bar"      // 'a' now has string value "foo bar"
+f := func() { /*...*/ }  // 'f' has a function value
+```
+
 
 ## Functions
 
 In Tengo, functions are first-class citizen, and, it also supports closures, functions that captures variables in outer scopes. In the following example, the function returned from `adder` is capturing `base` variable.
 
+
+
+## Statements
+
+### If Statement
+
 ```golang
-adder := func(base) {
-  return func(x) { return base + x }  // capturing 'base'
+if a < 0 {
+  // execute if 'a' is negative 
+} else if a == 0 {
+  // execute if 'a' is zero
+} else {
+  // execute if 'a' is positive
 }
-add5 := adder(5)
-nine := add5(4)    // == 9
 ```
 
-## Flow Control
+```golang
+if a := foo(); a < 0 {
+  // execute if 'a' is negative
+}
+```
+
+### For Statement
+
+```golang
+```
+
+### For-In Statement
+
+```golang
+```
+
+### Other Statements
+
+- 
+- Assignment statement
+- Increment/decrement statement
+
 
 For flow control, Tengo currently supports **if-else**, **for**, **for-in** statements.
 
@@ -397,3 +523,19 @@ Tengo supports line comments (`//...`) and block comments (`/* ... */`).
 
 a := 5    // line comments
 ```
+
+## Tengo Does Not Have
+
+- Declarations
+- Imaginary values
+- Structs
+- Pointers
+- Channels
+- Goroutines
+- Tuple assignment
+- Variable parameters
+- Switch statement
+- Goto statement
+- Defer statement
+- Panic 
+- Type assertion
