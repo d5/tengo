@@ -646,16 +646,18 @@ func (v *VM) run() {
 				if callee.Fn.VarArgs {
 					passedArgs := numArgs
 					numArgs = 1
-
 					args := make([]objects.Object, 0, passedArgs)
-					for i := 0; i < passedArgs; i++ {
-						args = append(args, v.stack[v.sp-passedArgs+i])
-					}
 
-					v.stack[v.sp-passedArgs] = &objects.Array{Value: args}
+					if passedArgs == 0 {
+						v.stack[v.sp] = &objects.Array{Value: args}
+						v.sp++
+					} else {
+						for i := 0; i < passedArgs; i++ {
+							args = append(args, v.stack[v.sp-passedArgs+i])
+						}
 
-					for i := 1; i < passedArgs; i++ {
-						v.sp--
+						v.stack[v.sp-passedArgs] = &objects.Array{Value: args}
+						v.sp = v.sp - (passedArgs - 1)
 					}
 				}
 
@@ -695,16 +697,18 @@ func (v *VM) run() {
 				if callee.VarArgs {
 					passedArgs := numArgs
 					numArgs = 1
-
 					args := make([]objects.Object, 0, passedArgs)
-					for i := 0; i < passedArgs; i++ {
-						args = append(args, v.stack[v.sp-passedArgs+i])
-					}
 
-					v.stack[v.sp-passedArgs] = &objects.Array{Value: args}
+					if passedArgs == 0 {
+						v.stack[v.sp] = &objects.Array{Value: args}
+						v.sp++
+					} else {
+						for i := 0; i < passedArgs; i++ {
+							args = append(args, v.stack[v.sp-passedArgs+i])
+						}
 
-					for i := 1; i < passedArgs; i++ {
-						v.sp--
+						v.stack[v.sp-passedArgs] = &objects.Array{Value: args}
+						v.sp = v.sp - (passedArgs - 1)
 					}
 				}
 

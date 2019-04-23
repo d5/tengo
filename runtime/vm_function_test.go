@@ -18,6 +18,8 @@ func TestFunction(t *testing.T) {
 		&objects.Int{Value: 3},
 	}})
 
+	expect(t, `f := func(...x) { return x; }; out = f();`, nil, &objects.Array{Value: []objects.Object{}})
+
 	expect(t, `f := func(x) { return x; }; out = f(5);`, nil, 5)
 	expect(t, `f := func(x) { return x * 2; }; out = f(5);`, nil, 10)
 	expect(t, `f := func(x, y) { return x + y; }; out = f(5, 5);`, nil, 10)
