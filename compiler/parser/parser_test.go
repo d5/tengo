@@ -180,8 +180,8 @@ func ident(name string, pos source.Pos) *ast.Ident {
 	return &ast.Ident{Name: name, NamePos: pos}
 }
 
-func identList(opening, closing source.Pos, list ...*ast.Ident) *ast.IdentList {
-	return &ast.IdentList{List: list, LParen: opening, RParen: closing}
+func identList(opening, closing source.Pos, varArgs bool, list ...*ast.Ident) *ast.IdentList {
+	return &ast.IdentList{VarArgs: varArgs, List: list, LParen: opening, RParen: closing}
 }
 
 func binaryExpr(x, y ast.Expr, op token.Token, pos source.Pos) *ast.BinaryExpr {

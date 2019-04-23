@@ -550,7 +550,7 @@ func (p *Parser) parseFuncType() *ast.FuncType {
 	}
 
 	pos := p.expect(token.Func)
-	params := p.parseIdentList()
+	params := p.parseIdentList(true)
 
 	return &ast.FuncType{
 		FuncPos: pos,
@@ -603,26 +603,39 @@ func (p *Parser) parseIdent() *ast.Ident {
 	}
 }
 
-func (p *Parser) parseIdentList() *ast.IdentList {
+func (p *Parser) parseIdentList(allowVarArgs bool) *ast.IdentList {
 	if p.trace {
 		defer un(trace(p, "IdentList"))
 	}
 
 	var params []*ast.Ident
 	lparen := p.expect(token.LParen)
+	isVarArgs := false
 	if p.token != token.RParen {
+		if p.token == token.Ellipsis {
+			if !allowVarArgs {
+				p.error(p.pos, "variable arguments are not permitted")
+			}
+
+			isVarArgs = true
+		}
+		p.next()
+
 		params = append(params, p.parseIdent())
-		for p.token == token.Comma {
-			p.next()
-			params = append(params, p.parseIdent())
+		if !isVarArgs {
+			for p.token == token.Comma {
+				p.next()
+				params = append(params, p.parseIdent())
+			}
 		}
 	}
 	rparen := p.expect(token.RParen)
 
 	return &ast.IdentList{
-		LParen: lparen,
-		RParen: rparen,
-		List:   params,
+		LParen:  lparen,
+		RParen:  rparen,
+		VarArgs: isVarArgs,
+		List:    params,
 	}
 }
 
