@@ -46,7 +46,6 @@ const (
 	OpIteratorKey                 // Iterator key
 	OpIteratorValue               // Iterator value
 	OpBinaryOp                    // Binary Operation
-	OpVarArgs                     // Initialize VarArgs parameter in function body
 )
 
 // OpcodeNames is opcode names.
@@ -92,7 +91,6 @@ var OpcodeNames = [...]string{
 	OpIteratorKey:   "ITKEY",
 	OpIteratorValue: "ITVAL",
 	OpBinaryOp:      "BINARYOP",
-	OpVarArgs:       "VARARGS",
 }
 
 // OpcodeOperands is the number of operands.
@@ -138,7 +136,6 @@ var OpcodeOperands = [...][]int{
 	OpIteratorKey:   {},
 	OpIteratorValue: {},
 	OpBinaryOp:      {1},
-	OpVarArgs:       {1},
 }
 
 // ReadOperands reads operands from the bytecode.
