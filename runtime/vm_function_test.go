@@ -12,6 +12,12 @@ func TestFunction(t *testing.T) {
 	expect(t, `f1 := func() {}; f2 := func() { return f1(); }; f1(); out = f2();`, nil, objects.UndefinedValue)
 	expect(t, `f := func(x) { x; }; out = f(5);`, nil, objects.UndefinedValue)
 
+	expect(t, `f := func(...x) { return x; }; out = f(1,2,3);`, nil, &objects.Array{Value: []objects.Object{
+		&objects.Int{Value: 1},
+		&objects.Int{Value: 2},
+		&objects.Int{Value: 3},
+	}})
+
 	expect(t, `f := func(x) { return x; }; out = f(5);`, nil, 5)
 	expect(t, `f := func(x) { return x * 2; }; out = f(5);`, nil, 10)
 	expect(t, `f := func(x, y) { return x + y; }; out = f(5, 5);`, nil, 10)

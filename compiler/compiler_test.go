@@ -670,6 +670,23 @@ func TestCompiler_Compile(t *testing.T) {
 					compiler.MakeInstruction(compiler.OpReturn, 1)),
 				intObject(24))))
 
+	expect(t, `varTest := func(...a) { return a }; varTest(1,2,3);`,
+		bytecode(
+			concat(
+				compiler.MakeInstruction(compiler.OpConstant, 0),
+				compiler.MakeInstruction(compiler.OpSetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
+				compiler.MakeInstruction(compiler.OpConstant, 1),
+				compiler.MakeInstruction(compiler.OpConstant, 2),
+				compiler.MakeInstruction(compiler.OpConstant, 3),
+				compiler.MakeInstruction(compiler.OpCall, 3),
+				compiler.MakeInstruction(compiler.OpPop)),
+			objectsArray(
+				compiledFunction(1, 1,
+					compiler.MakeInstruction(compiler.OpGetLocal, 0),
+					compiler.MakeInstruction(compiler.OpReturn, 1)),
+				intObject(1), intObject(2), intObject(3))))
+
 	expect(t, `f1 := func(a, b, c) { a; b; return c; }; f1(24, 25, 26);`,
 		bytecode(
 			concat(

@@ -642,6 +642,23 @@ func (v *VM) run() {
 
 			switch callee := value.(type) {
 			case *objects.Closure:
+				// consolidate args into an array
+				if callee.Fn.VarArgs {
+					passedArgs := numArgs
+					numArgs = 1
+
+					args := make([]objects.Object, 0, passedArgs)
+					for i := 0; i < passedArgs; i++ {
+						args = append(args, v.stack[v.sp-passedArgs+i])
+					}
+
+					v.stack[v.sp-passedArgs] = &objects.Array{Value: args}
+
+					for i := 1; i < passedArgs; i++ {
+						v.sp--
+					}
+				}
+
 				if numArgs != callee.Fn.NumParameters {
 					v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
 						callee.Fn.NumParameters, numArgs)
@@ -674,6 +691,23 @@ func (v *VM) run() {
 				v.sp = v.sp - numArgs + callee.Fn.NumLocals
 
 			case *objects.CompiledFunction:
+				// consolidate args into an array
+				if callee.VarArgs {
+					passedArgs := numArgs
+					numArgs = 1
+
+					args := make([]objects.Object, 0, passedArgs)
+					for i := 0; i < passedArgs; i++ {
+						args = append(args, v.stack[v.sp-passedArgs+i])
+					}
+
+					v.stack[v.sp-passedArgs] = &objects.Array{Value: args}
+
+					for i := 1; i < passedArgs; i++ {
+						v.sp--
+					}
+				}
+
 				if numArgs != callee.NumParameters {
 					v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
 						callee.NumParameters, numArgs)

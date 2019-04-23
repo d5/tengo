@@ -618,8 +618,8 @@ func (p *Parser) parseIdentList(allowVarArgs bool) *ast.IdentList {
 			}
 
 			isVarArgs = true
+			p.next()
 		}
-		p.next()
 
 		params = append(params, p.parseIdent())
 		if !isVarArgs {
