@@ -30,13 +30,28 @@ func TestFunction(t *testing.T) {
 		},
 	}})
 
+	expect(t, `f := func(v) { x := 2; return func(a, ...b){ return [a, b, v+x]}; }; out = f(5)("a", "b");`, nil,
+		&objects.Array{Value: []objects.Object{
+			&objects.String{Value: "a"},
+			&objects.Array{Value: []objects.Object{&objects.String{Value: "b"}}},
+			&objects.Int{Value: 7},
+		}})
+
 	expect(t, `f := func(...x) { return x; }; out = f();`, nil, &objects.Array{Value: []objects.Object{}})
 
-	expect(t, `f := func(a, b, ...x) { return [a, b, x]; }; out = f(8, 9);`, nil, &objects.Array{Value: []objects.Object{
-		&objects.Int{Value: 8},
-		&objects.Int{Value: 9},
-		&objects.Array{Value: []objects.Object{}},
-	}})
+	expect(t, `f := func(a, b, ...x) { return [a, b, x]; }; out = f(8, 9);`, nil,
+		&objects.Array{Value: []objects.Object{
+			&objects.Int{Value: 8},
+			&objects.Int{Value: 9},
+			&objects.Array{Value: []objects.Object{}},
+		}})
+
+	expect(t, `f := func(v) { x := 2; return func(a, ...b){ return [a, b, v+x]}; }; out = f(5)("a");`, nil,
+		&objects.Array{Value: []objects.Object{
+			&objects.String{Value: "a"},
+			&objects.Array{Value: []objects.Object{}},
+			&objects.Int{Value: 7},
+		}})
 
 	expectError(t, `f := func(a, b, ...x) { return [a, b, x]; }; f();`, nil,
 		"Runtime Error: wrong number of arguments: want>=2, got=0\n\tat test:1:46")

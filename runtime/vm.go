@@ -642,22 +642,23 @@ func (v *VM) run() {
 
 			switch callee := value.(type) {
 			case *objects.Closure:
-				// consolidate args into an array
 				if callee.Fn.VarArgs {
+					// if the closure is variadic,
+					// roll up all variadic parameters into an array
 					realArgs := callee.Fn.NumParameters - 1
 					varArgs := numArgs - realArgs
-					numArgs = realArgs + 1
 					if varArgs < 0 {
 						goto wrongNumberOfParametersClosure
 					}
+					numArgs = realArgs + 1 // must come after varArgs check
 					args := make([]objects.Object, 0, varArgs)
-
-					for i := v.sp - varArgs; i < v.sp; i++ {
+					spStart := v.sp - varArgs
+					for i := spStart; i < v.sp; i++ {
 						args = append(args, v.stack[i])
 					}
 
-					v.stack[v.sp-varArgs] = &objects.Array{Value: args}
-					v.sp = v.sp - (varArgs - 1)
+					v.stack[spStart] = &objects.Array{Value: args}
+					v.sp = spStart + 1
 				}
 
 			wrongNumberOfParametersClosure:
@@ -698,23 +699,25 @@ func (v *VM) run() {
 				v.sp = v.sp - numArgs + callee.Fn.NumLocals
 
 			case *objects.CompiledFunction:
-				// consolidate args into an array
 				if callee.VarArgs {
+					// if the function is variadic,
+					// roll up all variadic parameters into an array
 					realArgs := callee.NumParameters - 1
 					varArgs := numArgs - realArgs
 					if varArgs < 0 {
 						goto wrongNumberOfParametersCompiledFunction
 					}
-					numArgs = realArgs + 1
+					numArgs = realArgs + 1 // has to come after the varArgs check
 					args := make([]objects.Object, 0, varArgs)
-
-					for i := v.sp - varArgs; i < v.sp; i++ {
+					spStart := v.sp - varArgs
+					for i := spStart; i < v.sp; i++ {
 						args = append(args, v.stack[i])
 					}
 
-					v.stack[v.sp-varArgs] = &objects.Array{Value: args}
-					v.sp = v.sp - (varArgs - 1)
+					v.stack[spStart] = &objects.Array{Value: args}
+					v.sp = spStart + 1
 				}
+
 			wrongNumberOfParametersCompiledFunction:
 				if numArgs != callee.NumParameters {
 					if callee.VarArgs {
