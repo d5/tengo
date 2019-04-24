@@ -644,26 +644,31 @@ func (v *VM) run() {
 			case *objects.Closure:
 				// consolidate args into an array
 				if callee.Fn.VarArgs {
-					passedArgs := numArgs
-					numArgs = 1
-					args := make([]objects.Object, 0, passedArgs)
-
-					if passedArgs == 0 {
-						v.stack[v.sp] = &objects.Array{Value: args}
-						v.sp++
-					} else {
-						for i := 0; i < passedArgs; i++ {
-							args = append(args, v.stack[v.sp-passedArgs+i])
-						}
-
-						v.stack[v.sp-passedArgs] = &objects.Array{Value: args}
-						v.sp = v.sp - (passedArgs - 1)
+					realArgs := callee.Fn.NumParameters - 1
+					varArgs := numArgs - realArgs
+					numArgs = realArgs + 1
+					if varArgs < 0 {
+						goto wrongNumberOfParametersClosure
 					}
+					args := make([]objects.Object, 0, varArgs)
+
+					for i := v.sp - varArgs; i < v.sp; i++ {
+						args = append(args, v.stack[i])
+					}
+
+					v.stack[v.sp-varArgs] = &objects.Array{Value: args}
+					v.sp = v.sp - (varArgs - 1)
 				}
 
+			wrongNumberOfParametersClosure:
 				if numArgs != callee.Fn.NumParameters {
-					v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
-						callee.Fn.NumParameters, numArgs)
+					if callee.Fn.VarArgs {
+						v.err = fmt.Errorf("wrong number of arguments: want>=%d, got=%d",
+							callee.Fn.NumParameters-1, numArgs)
+					} else {
+						v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
+							callee.Fn.NumParameters, numArgs)
+					}
 					return
 				}
 
@@ -695,26 +700,30 @@ func (v *VM) run() {
 			case *objects.CompiledFunction:
 				// consolidate args into an array
 				if callee.VarArgs {
-					passedArgs := numArgs
-					numArgs = 1
-					args := make([]objects.Object, 0, passedArgs)
-
-					if passedArgs == 0 {
-						v.stack[v.sp] = &objects.Array{Value: args}
-						v.sp++
-					} else {
-						for i := 0; i < passedArgs; i++ {
-							args = append(args, v.stack[v.sp-passedArgs+i])
-						}
-
-						v.stack[v.sp-passedArgs] = &objects.Array{Value: args}
-						v.sp = v.sp - (passedArgs - 1)
+					realArgs := callee.NumParameters - 1
+					varArgs := numArgs - realArgs
+					if varArgs < 0 {
+						goto wrongNumberOfParametersCompiledFunction
 					}
-				}
+					numArgs = realArgs + 1
+					args := make([]objects.Object, 0, varArgs)
 
+					for i := v.sp - varArgs; i < v.sp; i++ {
+						args = append(args, v.stack[i])
+					}
+
+					v.stack[v.sp-varArgs] = &objects.Array{Value: args}
+					v.sp = v.sp - (varArgs - 1)
+				}
+			wrongNumberOfParametersCompiledFunction:
 				if numArgs != callee.NumParameters {
-					v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
-						callee.NumParameters, numArgs)
+					if callee.VarArgs {
+						v.err = fmt.Errorf("wrong number of arguments: want>=%d, got=%d",
+							callee.NumParameters-1, numArgs)
+					} else {
+						v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
+							callee.NumParameters, numArgs)
+					}
 					return
 				}
 

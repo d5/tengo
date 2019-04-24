@@ -622,13 +622,24 @@ func (p *Parser) parseIdentList(allowVarArgs bool) *ast.IdentList {
 		}
 
 		params = append(params, p.parseIdent())
-		if !isVarArgs {
-			for p.token == token.Comma {
+		for !isVarArgs && p.token == token.Comma {
+			p.next()
+			if p.token == token.Ellipsis {
+				if !allowVarArgs {
+					p.error(p.pos, "variable arguments are not permitted")
+				}
+
+				isVarArgs = true
 				p.next()
-				params = append(params, p.parseIdent())
 			}
+			params = append(params, p.parseIdent())
 		}
 	}
+
+	if p.token == token.Comma {
+		p.error(p.pos, "variable argument must be last in list")
+	}
+
 	rparen := p.expect(token.RParen)
 
 	return &ast.IdentList{

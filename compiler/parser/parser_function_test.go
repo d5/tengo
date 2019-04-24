@@ -29,7 +29,7 @@ func TestFunction(t *testing.T) {
 }
 
 func TestVariableFunction(t *testing.T) {
-	expect(t, "a = func(...args) { return args[0] }", func(p pfn) []ast.Stmt {
+	expect(t, "a = func(...args) { return args }", func(p pfn) []ast.Stmt {
 		return stmts(
 			assignStmt(
 				exprs(
@@ -42,13 +42,9 @@ func TestVariableFunction(t *testing.T) {
 								true,
 								ident("args", p(1, 13)),
 							), p(1, 5)),
-						blockStmt(p(1, 19), p(1, 36),
+						blockStmt(p(1, 19), p(1, 33),
 							returnStmt(p(1, 21),
-								indexExpr(
-									ident("args", p(1, 28)),
-									intLit(0, p(1, 33)),
-									p(1, 32), p(1, 34),
-								),
+								ident("args", p(1, 28)),
 							),
 						),
 					),
@@ -56,4 +52,35 @@ func TestVariableFunction(t *testing.T) {
 				token.Assign,
 				p(1, 3)))
 	})
+}
+
+func TestVariableFunctionWithArgs(t *testing.T) {
+	expect(t, "a = func(x, y, ...z) { return z }", func(p pfn) []ast.Stmt {
+		return stmts(
+			assignStmt(
+				exprs(
+					ident("a", p(1, 1))),
+				exprs(
+					funcLit(
+						funcType(
+							identList(
+								p(1, 9), p(1, 20),
+								true,
+								ident("x", p(1, 10)),
+								ident("y", p(1, 13)),
+								ident("z", p(1, 19)),
+							), p(1, 5)),
+						blockStmt(p(1, 22), p(1, 33),
+							returnStmt(p(1, 24),
+								ident("z", p(1, 31)),
+							),
+						),
+					),
+				),
+				token.Assign,
+				p(1, 3)))
+	})
+
+	expectError(t, "a = func(x, y, ...z, invalid) { return z }")
+	expectError(t, "a = func(...args, invalid) { return args }")
 }

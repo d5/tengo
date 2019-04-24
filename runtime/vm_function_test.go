@@ -18,7 +18,31 @@ func TestFunction(t *testing.T) {
 		&objects.Int{Value: 3},
 	}})
 
+	expect(t, `f := func(a, b, ...x) { return [a, b, x]; }; out = f(8,9,1,2,3);`, nil, &objects.Array{Value: []objects.Object{
+		&objects.Int{Value: 8},
+		&objects.Int{Value: 9},
+		&objects.Array{
+			Value: []objects.Object{
+				&objects.Int{Value: 1},
+				&objects.Int{Value: 2},
+				&objects.Int{Value: 3},
+			},
+		},
+	}})
+
 	expect(t, `f := func(...x) { return x; }; out = f();`, nil, &objects.Array{Value: []objects.Object{}})
+
+	expect(t, `f := func(a, b, ...x) { return [a, b, x]; }; out = f(8, 9);`, nil, &objects.Array{Value: []objects.Object{
+		&objects.Int{Value: 8},
+		&objects.Int{Value: 9},
+		&objects.Array{Value: []objects.Object{}},
+	}})
+
+	expectError(t, `f := func(a, b, ...x) { return [a, b, x]; }; f();`, nil,
+		"Runtime Error: wrong number of arguments: want>=2, got=0\n\tat test:1:46")
+
+	expectError(t, `f := func(a, b, ...x) { return [a, b, x]; }; f(1);`, nil,
+		"Runtime Error: wrong number of arguments: want>=2, got=1\n\tat test:1:46")
 
 	expect(t, `f := func(x) { return x; }; out = f(5);`, nil, 5)
 	expect(t, `f := func(x) { return x * 2; }; out = f(5);`, nil, 10)
