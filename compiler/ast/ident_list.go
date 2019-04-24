@@ -52,9 +52,10 @@ func (n *IdentList) NumFields() int {
 func (n *IdentList) String() string {
 	var list []string
 	for i, e := range n.List {
-		list = append(list, e.String())
 		if n.VarArgs && i == len(n.List)-1 {
 			list = append(list, "..."+e.String())
+		} else {
+			list = append(list, e.String())
 		}
 	}
 
