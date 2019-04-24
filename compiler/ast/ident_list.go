@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/d5/tengo/compiler/source"
@@ -51,13 +50,12 @@ func (n *IdentList) NumFields() int {
 }
 
 func (n *IdentList) String() string {
-	if n.VarArgs {
-		return fmt.Sprintf("(...%s)", n.List[0].Name)
-	}
-
 	var list []string
-	for _, e := range n.List {
+	for i, e := range n.List {
 		list = append(list, e.String())
+		if n.VarArgs && i == len(n.List)-1 {
+			list = append(list, "..."+e.String())
+		}
 	}
 
 	return "(" + strings.Join(list, ", ") + ")"
