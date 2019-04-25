@@ -55,3 +55,13 @@ func (i *BytesIterator) Key() Object {
 func (i *BytesIterator) Value() Object {
 	return &Int{Value: int64(i.v[i.i-1])}
 }
+
+// IndexGet returns an element at a given index.
+func (i *BytesIterator) IndexGet(index Object) (Object, error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (i *BytesIterator) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}

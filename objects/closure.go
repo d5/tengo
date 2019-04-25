@@ -43,3 +43,13 @@ func (o *Closure) IsFalsy() bool {
 func (o *Closure) Equals(x Object) bool {
 	return false
 }
+
+// IndexGet returns an element at a given index.
+func (o *Closure) IndexGet(index Object) (Object, error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (o *Closure) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}

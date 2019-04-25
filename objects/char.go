@@ -117,3 +117,13 @@ func (o *Char) Equals(x Object) bool {
 
 	return o.Value == t.Value
 }
+
+// IndexGet returns an element at a given index.
+func (o *Char) IndexGet(index Object) (Object, error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (o *Char) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}

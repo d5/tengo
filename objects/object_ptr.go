@@ -39,3 +39,13 @@ func (o *ObjectPtr) IsFalsy() bool {
 func (o *ObjectPtr) Equals(x Object) bool {
 	return o == x
 }
+
+// IndexGet returns an element at a given index.
+func (o *ObjectPtr) IndexGet(index Object) (Object, error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (o *ObjectPtr) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}

@@ -64,6 +64,14 @@ func (o *Counter) Call(args ...objects.Object) (objects.Object, error) {
 	return &objects.Int{Value: o.value}, nil
 }
 
+func (o *Counter) IndexGet(index objects.Object) (objects.Object, error) {
+	return nil, objects.ErrNotIndexable
+}
+
+func (o *Counter) IndexSet(index, value objects.Object) error {
+	return objects.ErrNotIndexAssignable
+}
+
 func TestScript_CustomObjects(t *testing.T) {
 	c := compile(t, `a := c1(); s := string(c1); c2 := c1; c2++`, M{
 		"c1": &Counter{value: 5},

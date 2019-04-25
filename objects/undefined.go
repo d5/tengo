@@ -41,6 +41,11 @@ func (o *Undefined) IndexGet(index Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
+// IndexSet sets an element at a given index.
+func (o *Undefined) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}
+
 // Iterate creates a map iterator.
 func (o *Undefined) Iterate() Iterator {
 	return o

@@ -80,6 +80,11 @@ func (o *Bytes) IndexGet(index Object) (res Object, err error) {
 	return
 }
 
+// IndexSet sets an element at a given index.
+func (o *Bytes) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}
+
 // Iterate creates a bytes iterator.
 func (o *Bytes) Iterate() Iterator {
 	return &BytesIterator{

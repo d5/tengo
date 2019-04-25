@@ -45,3 +45,20 @@ func (o *Error) Copy() Object {
 func (o *Error) Equals(x Object) bool {
 	return o == x // pointer equality
 }
+
+// IndexGet returns an element at a given index.
+func (o *Error) IndexGet(index Object) (res Object, err error) {
+	strIdx, ok := ToString(index)
+	if !ok || strIdx != "value" {
+		err = ErrInvalidIndexOnError
+		return
+	}
+
+	res = o.Value
+	return
+}
+
+// IndexSet sets an element at a given index.
+func (o *Error) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}

@@ -421,40 +421,28 @@ func (v *VM) run() {
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			switch left := left.(type) {
-			case objects.Indexable:
-				val, e := left.IndexGet(index)
-				if e != nil {
-
-					if e == objects.ErrInvalidIndexType {
-						v.err = fmt.Errorf("invalid index type: %s", index.TypeName())
-						return
-					}
-
-					v.err = e
-					return
-				}
-				if val == nil {
-					val = objects.UndefinedValue
-				}
-
-				v.stack[v.sp] = val
-				v.sp++
-
-			case *objects.Error: // e.value
-				key, ok := index.(*objects.String)
-				if !ok || key.Value != "value" {
-					v.err = fmt.Errorf("invalid index on error")
+			val, e := left.IndexGet(index)
+			if e != nil {
+				if e == objects.ErrNotIndexable {
+					v.err = fmt.Errorf("not indexable: %s", index.TypeName())
 					return
 				}
 
-				v.stack[v.sp] = left.Value
-				v.sp++
+				if e == objects.ErrInvalidIndexType {
+					v.err = fmt.Errorf("invalid index type: %s", index.TypeName())
+					return
+				}
 
-			default:
-				v.err = fmt.Errorf("not indexable: %s", left.TypeName())
+				v.err = e
 				return
 			}
+
+			if val == nil {
+				val = objects.UndefinedValue
+			}
+
+			v.stack[v.sp] = val
+			v.sp++
 
 		case compiler.OpSliceIndex:
 			high := v.stack[v.sp-1]
@@ -1011,13 +999,12 @@ func indexAssign(dst, src objects.Object, selectors []objects.Object) error {
 	numSel := len(selectors)
 
 	for sidx := numSel - 1; sidx > 0; sidx-- {
-		indexable, ok := dst.(objects.Indexable)
-		if !ok {
-			return fmt.Errorf("not indexable: %s", dst.TypeName())
-		}
-
-		next, err := indexable.IndexGet(selectors[sidx])
+		next, err := dst.IndexGet(selectors[sidx])
 		if err != nil {
+			if err == objects.ErrNotIndexable {
+				return fmt.Errorf("not indexable: %s", dst.TypeName())
+			}
+
 			if err == objects.ErrInvalidIndexType {
 				return fmt.Errorf("invalid index type: %s", selectors[sidx].TypeName())
 			}
@@ -1028,12 +1015,11 @@ func indexAssign(dst, src objects.Object, selectors []objects.Object) error {
 		dst = next
 	}
 
-	indexAssignable, ok := dst.(objects.IndexAssignable)
-	if !ok {
-		return fmt.Errorf("not index-assignable: %s", dst.TypeName())
-	}
+	if err := dst.IndexSet(selectors[0], src); err != nil {
+		if err == objects.ErrNotIndexAssignable {
+			return fmt.Errorf("not index-assignable: %s", dst.TypeName())
+		}
 
-	if err := indexAssignable.IndexSet(selectors[0], src); err != nil {
 		if err == objects.ErrInvalidIndexValueType {
 			return fmt.Errorf("invaid index value type: %s", src.TypeName())
 		}

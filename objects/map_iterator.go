@@ -60,3 +60,13 @@ func (i *MapIterator) Value() Object {
 
 	return i.v[k]
 }
+
+// IndexGet returns an element at a given index.
+func (i *MapIterator) IndexGet(index Object) (Object, error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (i *MapIterator) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}

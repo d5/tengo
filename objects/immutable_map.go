@@ -55,12 +55,17 @@ func (o *ImmutableMap) IndexGet(index Object) (res Object, err error) {
 		return
 	}
 
-	val, ok := o.Value[strIdx]
+	res, ok = o.Value[strIdx]
 	if !ok {
-		val = UndefinedValue
+		res = UndefinedValue
 	}
 
-	return val, nil
+	return
+}
+
+// IndexSet sets an element at a given index.
+func (o *ImmutableMap) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
 }
 
 // Equals returns true if the value of the type

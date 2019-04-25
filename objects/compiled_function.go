@@ -58,3 +58,13 @@ func (o *CompiledFunction) SourcePos(ip int) source.Pos {
 	}
 	return source.NoPos
 }
+
+// IndexGet returns an element at a given index.
+func (o *CompiledFunction) IndexGet(index Object) (Object, error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (o *CompiledFunction) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}

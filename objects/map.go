@@ -82,12 +82,12 @@ func (o *Map) IndexGet(index Object) (res Object, err error) {
 		return
 	}
 
-	val, ok := o.Value[strIdx]
+	res, ok = o.Value[strIdx]
 	if !ok {
-		val = UndefinedValue
+		res = UndefinedValue
 	}
 
-	return val, nil
+	return
 }
 
 // IndexSet sets the value for the given key.

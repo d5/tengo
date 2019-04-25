@@ -27,4 +27,18 @@ type Object interface {
 	// Copy function will be used for copy() builtin function
 	// which is expected to deep-copy the values generally.
 	Copy() Object
+
+	// IndexGet should take an index Object and return a result Object or an error for indexable objects.
+	// Indexable is an object that can take an index and return an object.
+	// If error is returned, the runtime will treat it as a run-time error and ignore returned value.
+	// If Object is not indexable, ErrNotIndexable should be returned as error.
+	// If nil is returned as value, it will be converted to Undefined value by the runtime.
+	IndexGet(index Object) (value Object, err error)
+
+	// IndexSet should take an index Object and a value Object for index assignable objects.
+	// Index assignable is an object that can take an index and a value
+	// on the left-hand side of the assignment statement.
+	// If Object is not index assignable, ErrNotIndexAssignable should be returned as error.
+	// If an error is returned, it will be treated as a run-time error.
+	IndexSet(index, value Object) error
 }

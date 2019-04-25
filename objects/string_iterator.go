@@ -55,3 +55,13 @@ func (i *StringIterator) Key() Object {
 func (i *StringIterator) Value() Object {
 	return &Char{Value: i.v[i.i-1]}
 }
+
+// IndexGet returns an element at a given index.
+func (i *StringIterator) IndexGet(index Object) (Object, error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (i *StringIterator) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}

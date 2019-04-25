@@ -100,6 +100,11 @@ func (o *ImmutableArray) IndexGet(index Object) (res Object, err error) {
 	return
 }
 
+// IndexSet sets an element at a given index.
+func (o *ImmutableArray) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}
+
 // Iterate creates an array iterator.
 func (o *ImmutableArray) Iterate() Iterator {
 	return &ArrayIterator{

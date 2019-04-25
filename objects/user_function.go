@@ -46,3 +46,13 @@ func (o *UserFunction) Equals(x Object) bool {
 func (o *UserFunction) Call(args ...Object) (Object, error) {
 	return o.Value(args...)
 }
+
+// IndexGet returns an element at a given index.
+func (o *UserFunction) IndexGet(index Object) (Object, error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (o *UserFunction) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}

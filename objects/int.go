@@ -196,3 +196,13 @@ func (o *Int) Equals(x Object) bool {
 
 	return o.Value == t.Value
 }
+
+// IndexGet returns an element at a given index.
+func (o *Int) IndexGet(index Object) (Object, error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (o *Int) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}

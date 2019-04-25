@@ -62,3 +62,13 @@ func (o *Bool) GobEncode() (b []byte, err error) {
 
 	return
 }
+
+// IndexGet returns an element at a given index.
+func (o *Bool) IndexGet(index Object) (Object, error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (o *Bool) IndexSet(index, value Object) error {
+	return ErrNotIndexAssignable
+}
