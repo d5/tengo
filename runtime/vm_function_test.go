@@ -33,9 +33,9 @@ func TestFunction(t *testing.T) {
 
 	expect(t, `
 		f1 := func(f) {
-	        a := [undefined]
-            a[0] = func() { return f(a) }
-	        return a[0]()
+			a := [undefined]
+			a[0] = func() { return f(a) }
+			return a[0]()
 		}
 
 		out = f1(func(a) { return 2 })
