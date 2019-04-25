@@ -647,21 +647,18 @@ func (v *VM) run() {
 					// roll up all variadic parameters into an array
 					realArgs := callee.Fn.NumParameters - 1
 					varArgs := numArgs - realArgs
-					if varArgs < 0 {
-						goto wrongNumberOfParametersClosure
+					if varArgs >= 0 {
+						numArgs = realArgs + 1
+						args := make([]objects.Object, varArgs)
+						spStart := v.sp - varArgs
+						for i := spStart; i < v.sp; i++ {
+							args[i-spStart] = v.stack[i]
+						}
+						v.stack[spStart] = &objects.Array{Value: args}
+						v.sp = spStart + 1
 					}
-					numArgs = realArgs + 1 // must come after varArgs check
-					args := make([]objects.Object, 0, varArgs)
-					spStart := v.sp - varArgs
-					for i := spStart; i < v.sp; i++ {
-						args = append(args, v.stack[i])
-					}
-
-					v.stack[spStart] = &objects.Array{Value: args}
-					v.sp = spStart + 1
 				}
 
-			wrongNumberOfParametersClosure:
 				if numArgs != callee.Fn.NumParameters {
 					if callee.Fn.VarArgs {
 						v.err = fmt.Errorf("wrong number of arguments: want>=%d, got=%d",
@@ -700,25 +697,22 @@ func (v *VM) run() {
 
 			case *objects.CompiledFunction:
 				if callee.VarArgs {
-					// if the function is variadic,
+					// if the closure is variadic,
 					// roll up all variadic parameters into an array
 					realArgs := callee.NumParameters - 1
 					varArgs := numArgs - realArgs
-					if varArgs < 0 {
-						goto wrongNumberOfParametersCompiledFunction
+					if varArgs >= 0 {
+						numArgs = realArgs + 1
+						args := make([]objects.Object, varArgs)
+						spStart := v.sp - varArgs
+						for i := spStart; i < v.sp; i++ {
+							args[i-spStart] = v.stack[i]
+						}
+						v.stack[spStart] = &objects.Array{Value: args}
+						v.sp = spStart + 1
 					}
-					numArgs = realArgs + 1 // has to come after the varArgs check
-					args := make([]objects.Object, 0, varArgs)
-					spStart := v.sp - varArgs
-					for i := spStart; i < v.sp; i++ {
-						args = append(args, v.stack[i])
-					}
-
-					v.stack[spStart] = &objects.Array{Value: args}
-					v.sp = spStart + 1
 				}
 
-			wrongNumberOfParametersCompiledFunction:
 				if numArgs != callee.NumParameters {
 					if callee.VarArgs {
 						v.err = fmt.Errorf("wrong number of arguments: want>=%d, got=%d",

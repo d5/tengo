@@ -550,7 +550,7 @@ func (p *Parser) parseFuncType() *ast.FuncType {
 	}
 
 	pos := p.expect(token.Func)
-	params := p.parseIdentList(true)
+	params := p.parseIdentList()
 
 	return &ast.FuncType{
 		FuncPos: pos,
@@ -603,7 +603,7 @@ func (p *Parser) parseIdent() *ast.Ident {
 	}
 }
 
-func (p *Parser) parseIdentList(allowVarArgs bool) *ast.IdentList {
+func (p *Parser) parseIdentList() *ast.IdentList {
 	if p.trace {
 		defer un(trace(p, "IdentList"))
 	}
@@ -613,10 +613,6 @@ func (p *Parser) parseIdentList(allowVarArgs bool) *ast.IdentList {
 	isVarArgs := false
 	if p.token != token.RParen {
 		if p.token == token.Ellipsis {
-			if !allowVarArgs {
-				p.error(p.pos, "variable arguments are not permitted")
-			}
-
 			isVarArgs = true
 			p.next()
 		}
@@ -625,19 +621,11 @@ func (p *Parser) parseIdentList(allowVarArgs bool) *ast.IdentList {
 		for !isVarArgs && p.token == token.Comma {
 			p.next()
 			if p.token == token.Ellipsis {
-				if !allowVarArgs {
-					p.error(p.pos, "variable arguments are not permitted")
-				}
-
 				isVarArgs = true
 				p.next()
 			}
 			params = append(params, p.parseIdent())
 		}
-	}
-
-	if p.token == token.Comma {
-		p.error(p.pos, "variable argument must be last in list")
 	}
 
 	rparen := p.expect(token.RParen)

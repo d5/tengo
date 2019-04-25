@@ -154,6 +154,29 @@ func my_func(arg1, arg2) {  // illegal
 }
 ```
 
+Tengo also supports variadic functions/closures:
+
+```golang
+variadic := func (a, b, ...c) {
+  return [a, b, c]
+}
+variadic(1, 2, 3, 4) // [1, 2, [3, 4]]
+
+variadicClosure := func(a) {
+  return func(b, ...c) {
+    return [a, b, c]
+  }
+}
+variadicClosure(1)(2, 3, 4) // [1, 2, [3, 4]]
+```
+
+Only the last parameter can be variadic. The following code is also illegal:
+
+```golang
+// illegal, because a is variadic and is not the last parameter
+illegal := func(a..., b) { /*... */ }
+```
+
 ## Variables and Scopes
 
 A value can be assigned to a variable using assignment operator `:=` and `=`.
