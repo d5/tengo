@@ -421,9 +421,8 @@ func (v *VM) run() {
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			switch left := left.(type) {
-			case objects.Indexable:
-				val, e := left.IndexGet(index)
+			if indexable, ok := left.(objects.Indexable); ok {
+				val, e := indexable.IndexGet(index)
 				if e != nil {
 
 					if e == objects.ErrInvalidIndexType {
@@ -440,21 +439,11 @@ func (v *VM) run() {
 
 				v.stack[v.sp] = val
 				v.sp++
-
-			case *objects.Error: // e.value
-				key, ok := index.(*objects.String)
-				if !ok || key.Value != "value" {
-					v.err = fmt.Errorf("invalid index on error")
-					return
-				}
-
-				v.stack[v.sp] = left.Value
-				v.sp++
-
-			default:
-				v.err = fmt.Errorf("not indexable: %s", left.TypeName())
-				return
+				continue
 			}
+
+			v.err = fmt.Errorf("not indexable: %s", left.TypeName())
+			return
 
 		case compiler.OpSliceIndex:
 			high := v.stack[v.sp-1]

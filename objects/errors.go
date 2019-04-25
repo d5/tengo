@@ -14,6 +14,9 @@ var ErrInvalidIndexType = errors.New("invalid index type")
 // ErrInvalidIndexValueType represents an invalid index value type.
 var ErrInvalidIndexValueType = errors.New("invalid index value type")
 
+// ErrInvalidIndexOnError represents an invalid index on error.
+var ErrInvalidIndexOnError = errors.New("invalid index on error")
+
 // ErrInvalidOperator represents an error for invalid operator usage.
 var ErrInvalidOperator = errors.New("invalid operator")
 
