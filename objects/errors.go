@@ -29,10 +29,10 @@ var ErrBytesLimit = errors.New("exceeding bytes size limit")
 // ErrStringLimit represents an error where the size of string value exceeds the limit.
 var ErrStringLimit = errors.New("exceeding string size limit")
 
-// ErrNotIndexable is an error where a given index is out of the bounds.
+// ErrNotIndexable is an error where an Object is not indexable.
 var ErrNotIndexable = errors.New("not indexable")
 
-// ErrNotIndexable is an error where a given index is out of the bounds.
+// ErrNotIndexAssignable is an error where an Object is not index assignable.
 var ErrNotIndexAssignable = errors.New("not index-assignable")
 
 // ErrInvalidArgumentType represents an invalid argument value type error.
