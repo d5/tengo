@@ -113,3 +113,6 @@ func (o *ImmutableArray) Iterate() Iterator {
 func (o *ImmutableArray) CanIterate() bool {
 	return true
 }
+
+// Explode explodes the array into its vaues
+func (o *ImmutableArray) Explode() []Object { return o.Value }

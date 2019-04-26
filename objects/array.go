@@ -134,3 +134,6 @@ func (o *Array) Iterate() Iterator {
 func (o *Array) CanIterate() bool {
 	return true
 }
+
+// Explode explodes the array into its vaues
+func (o *Array) Explode() []Object { return o.Value }

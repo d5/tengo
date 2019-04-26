@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"errors"
 	"fmt"
 	"sync/atomic"
 
@@ -341,15 +340,7 @@ func (v *VM) run() {
 			for i := v.sp - numElements; i < v.sp; i++ {
 				elt := v.stack[i]
 				if exp, ok := elt.(exploded); ok {
-					switch real := exp.Object.(type) {
-					case *objects.Array:
-						elements = append(elements, real.Value...)
-					case *objects.ImmutableArray:
-						elements = append(elements, real.Value...)
-					default:
-						v.err = errors.New("panic: illegal explosion")
-						return
-					}
+					elements = append(elements, exp.Object.(objects.Explodable).Explode()...)
 				} else {
 					elements = append(elements, elt)
 				}
@@ -644,14 +635,12 @@ func (v *VM) run() {
 		case compiler.OpExplode:
 			sp := v.sp - 1
 			obj := v.stack[sp]
-			switch obj.(type) {
-			case *objects.Array:
-			case *objects.ImmutableArray:
-			default:
-				v.err = fmt.Errorf("cannot explode object of type %s", obj)
+			if _, ok := obj.(objects.Explodable); ok {
+				v.stack[sp] = exploded{obj}
+			} else {
+				v.err = fmt.Errorf("cannot explode object of type %s", obj.TypeName())
 				return
 			}
-			v.stack[sp] = exploded{obj}
 
 		case compiler.OpCall:
 			numArgs := int(v.curInsts[v.ip+1])
@@ -662,16 +651,7 @@ func (v *VM) run() {
 			// explode args that need it
 			for i := spBase + 1; i < v.sp; i++ {
 				if exp, ok := v.stack[i].(exploded); ok {
-					var list []objects.Object
-					switch real := exp.Object.(type) {
-					case *objects.Array:
-						list = real.Value
-					case *objects.ImmutableArray:
-						list = real.Value
-					default:
-						v.err = errors.New("panic: illegal explosion")
-						return
-					}
+					list := exp.Object.(objects.Explodable).Explode()
 					numExploded := len(list)
 					ebStart, ebEnd := i, i+numExploded
 					rxStart, rxEnd := i+1, spBase+numArgs+1
