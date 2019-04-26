@@ -52,6 +52,16 @@ func TestFunction(t *testing.T) {
 	out = f2(10);
 	`, nil, 60)
 
+	expect(t, `
+		f1 := func(f) {
+			a := [undefined]
+			a[0] = func() { return f(a) }
+			return a[0]()
+		}
+
+		out = f1(func(a) { return 2 })
+	`, nil, 2)
+
 	// closures
 	expect(t, `
 		newAdder := func(x) {

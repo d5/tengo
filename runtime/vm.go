@@ -859,9 +859,12 @@ func (v *VM) run() {
 			val := v.stack[v.sp-numSelectors-1]
 			v.sp -= numSelectors + 1
 
-			sp := v.curFrame.basePointer + localIndex
+			dst := v.stack[v.curFrame.basePointer+localIndex]
+			if obj, ok := dst.(*objects.ObjectPtr); ok {
+				dst = *obj.Value
+			}
 
-			if e := indexAssign(v.stack[sp], val, selectors); e != nil {
+			if e := indexAssign(dst, val, selectors); e != nil {
 				v.err = e
 				return
 			}
