@@ -21,11 +21,6 @@ const (
 	MaxFrames = 1024
 )
 
-// internal type used to handle explosion on the stack
-type exploded struct {
-	objects.Object
-}
-
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
 	constants   []objects.Object
@@ -339,8 +334,8 @@ func (v *VM) run() {
 			var elements []objects.Object
 			for i := v.sp - numElements; i < v.sp; i++ {
 				elt := v.stack[i]
-				if exp, ok := elt.(exploded); ok {
-					elements = append(elements, exp.Object.(objects.Explodable).Explode()...)
+				if exploded, ok := elt.(*objects.Exploded); ok {
+					elements = append(elements, exploded.Value...)
 				} else {
 					elements = append(elements, elt)
 				}
@@ -647,8 +642,8 @@ func (v *VM) run() {
 		case compiler.OpExplode:
 			sp := v.sp - 1
 			obj := v.stack[sp]
-			if _, ok := obj.(objects.Explodable); ok {
-				v.stack[sp] = exploded{obj}
+			if exploded, ok := obj.(objects.Explodable); ok {
+				v.stack[sp] = &objects.Exploded{Value: exploded.Explode()}
 			} else {
 				v.err = fmt.Errorf("cannot explode object of type %s", obj.TypeName())
 				return
@@ -662,8 +657,8 @@ func (v *VM) run() {
 
 			// explode args that need it
 			for i := spBase + 1; i < v.sp; i++ {
-				if exp, ok := v.stack[i].(exploded); ok {
-					list := exp.Object.(objects.Explodable).Explode()
+				if exploded, ok := v.stack[i].(*objects.Exploded); ok {
+					list := exploded.Value
 					numExploded := len(list)
 					ebStart, ebEnd := i, i+numExploded
 					rxStart, rxEnd := i+1, spBase+numArgs+1
