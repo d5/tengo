@@ -128,3 +128,6 @@ func (o *Array) Iterate() Iterator {
 		l: len(o.Value),
 	}
 }
+
+// Explode explodes the array into its vaues
+func (o *Array) Explode() []Object { return o.Value }
