@@ -12,6 +12,27 @@ func TestFunction(t *testing.T) {
 	expect(t, `f1 := func() {}; f2 := func() { return f1(); }; f1(); out = f2();`, nil, objects.UndefinedValue)
 	expect(t, `f := func(x) { x; }; out = f(5);`, nil, objects.UndefinedValue)
 
+	expect(t, `f := func(...x) { return x; }; out = f(1,2,3);`, nil, ARR{1, 2, 3})
+
+	expect(t, `f := func(a, b, ...x) { return [a, b, x]; }; out = f(8,9,1,2,3);`, nil, ARR{8, 9, ARR{1, 2, 3}})
+
+	expect(t, `f := func(v) { x := 2; return func(a, ...b){ return [a, b, v+x]}; }; out = f(5)("a", "b");`, nil,
+		ARR{"a", ARR{"b"}, 7})
+
+	expect(t, `f := func(...x) { return x; }; out = f();`, nil, &objects.Array{Value: []objects.Object{}})
+
+	expect(t, `f := func(a, b, ...x) { return [a, b, x]; }; out = f(8, 9);`, nil,
+		ARR{8, 9, ARR{}})
+
+	expect(t, `f := func(v) { x := 2; return func(a, ...b){ return [a, b, v+x]}; }; out = f(5)("a");`, nil,
+		ARR{"a", ARR{}, 7})
+
+	expectError(t, `f := func(a, b, ...x) { return [a, b, x]; }; f();`, nil,
+		"Runtime Error: wrong number of arguments: want>=2, got=0\n\tat test:1:46")
+
+	expectError(t, `f := func(a, b, ...x) { return [a, b, x]; }; f(1);`, nil,
+		"Runtime Error: wrong number of arguments: want>=2, got=1\n\tat test:1:46")
+
 	expect(t, `f := func(x) { return x; }; out = f(5);`, nil, 5)
 	expect(t, `f := func(x) { return x * 2; }; out = f(5);`, nil, 10)
 	expect(t, `f := func(x, y) { return x + y; }; out = f(5, 5);`, nil, 10)

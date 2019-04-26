@@ -642,9 +642,31 @@ func (v *VM) run() {
 
 			switch callee := value.(type) {
 			case *objects.Closure:
+				if callee.Fn.VarArgs {
+					// if the closure is variadic,
+					// roll up all variadic parameters into an array
+					realArgs := callee.Fn.NumParameters - 1
+					varArgs := numArgs - realArgs
+					if varArgs >= 0 {
+						numArgs = realArgs + 1
+						args := make([]objects.Object, varArgs)
+						spStart := v.sp - varArgs
+						for i := spStart; i < v.sp; i++ {
+							args[i-spStart] = v.stack[i]
+						}
+						v.stack[spStart] = &objects.Array{Value: args}
+						v.sp = spStart + 1
+					}
+				}
+
 				if numArgs != callee.Fn.NumParameters {
-					v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
-						callee.Fn.NumParameters, numArgs)
+					if callee.Fn.VarArgs {
+						v.err = fmt.Errorf("wrong number of arguments: want>=%d, got=%d",
+							callee.Fn.NumParameters-1, numArgs)
+					} else {
+						v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
+							callee.Fn.NumParameters, numArgs)
+					}
 					return
 				}
 
@@ -674,9 +696,31 @@ func (v *VM) run() {
 				v.sp = v.sp - numArgs + callee.Fn.NumLocals
 
 			case *objects.CompiledFunction:
+				if callee.VarArgs {
+					// if the closure is variadic,
+					// roll up all variadic parameters into an array
+					realArgs := callee.NumParameters - 1
+					varArgs := numArgs - realArgs
+					if varArgs >= 0 {
+						numArgs = realArgs + 1
+						args := make([]objects.Object, varArgs)
+						spStart := v.sp - varArgs
+						for i := spStart; i < v.sp; i++ {
+							args[i-spStart] = v.stack[i]
+						}
+						v.stack[spStart] = &objects.Array{Value: args}
+						v.sp = spStart + 1
+					}
+				}
+
 				if numArgs != callee.NumParameters {
-					v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
-						callee.NumParameters, numArgs)
+					if callee.VarArgs {
+						v.err = fmt.Errorf("wrong number of arguments: want>=%d, got=%d",
+							callee.NumParameters-1, numArgs)
+					} else {
+						v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
+							callee.NumParameters, numArgs)
+					}
 					return
 				}
 

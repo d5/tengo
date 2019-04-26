@@ -90,6 +90,7 @@ func TestCall(t *testing.T) {
 						funcType(
 							identList(
 								p(1, 5), p(1, 10),
+								false,
 								ident("a", p(1, 6)),
 								ident("b", p(1, 9))),
 							p(1, 1)),
