@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 	"sync/atomic"
 
@@ -20,6 +21,11 @@ const (
 	// MaxFrames is the maximum number of function frames.
 	MaxFrames = 1024
 )
+
+// internal type used to handle explosion on the stack
+type exploded struct {
+	objects.Object
+}
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
@@ -333,7 +339,20 @@ func (v *VM) run() {
 
 			var elements []objects.Object
 			for i := v.sp - numElements; i < v.sp; i++ {
-				elements = append(elements, v.stack[i])
+				elt := v.stack[i]
+				if exp, ok := elt.(exploded); ok {
+					switch real := exp.Object.(type) {
+					case *objects.Array:
+						elements = append(elements, real.Value...)
+					case *objects.ImmutableArray:
+						elements = append(elements, real.Value...)
+					default:
+						v.err = errors.New("panic: illegal explosion")
+						return
+					}
+				} else {
+					elements = append(elements, elt)
+				}
 			}
 			v.sp -= numElements
 
@@ -634,11 +653,47 @@ func (v *VM) run() {
 				v.sp++
 			}
 
+		case compiler.OpExplode:
+			sp := v.sp - 1
+			obj := v.stack[sp]
+			switch obj.(type) {
+			case *objects.Array:
+			case *objects.ImmutableArray:
+			default:
+				v.err = fmt.Errorf("cannot explode object of type %s", obj)
+				return
+			}
+			v.stack[sp] = exploded{obj}
+
 		case compiler.OpCall:
 			numArgs := int(v.curInsts[v.ip+1])
 			v.ip++
+			spBase := v.sp - 1 - numArgs
+			value := v.stack[spBase]
 
-			value := v.stack[v.sp-1-numArgs]
+			// explode args that need it
+			for i := spBase + 1; i < v.sp; i++ {
+				if exp, ok := v.stack[i].(exploded); ok {
+					var list []objects.Object
+					switch real := exp.Object.(type) {
+					case *objects.Array:
+						list = real.Value
+					case *objects.ImmutableArray:
+						list = real.Value
+					default:
+						v.err = errors.New("panic: illegal explosion")
+						return
+					}
+					numExploded := len(list)
+					ebStart, ebEnd := i, i+numExploded
+					rxStart, rxEnd := i+1, spBase+numArgs+1
+					rmStart, rmEnd := i+numExploded, spBase+numArgs+numExploded
+					copy(v.stack[rmStart:rmEnd], v.stack[rxStart:rxEnd])
+					copy(v.stack[ebStart:ebEnd], list)
+					numArgs += numExploded - 1
+					v.sp += numExploded - 1
+				}
+			}
 
 			switch callee := value.(type) {
 			case *objects.Closure:
