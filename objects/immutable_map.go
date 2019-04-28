@@ -9,6 +9,7 @@ import (
 
 // ImmutableMap represents an immutable map object.
 type ImmutableMap struct {
+	ObjectImpl
 	Value map[string]Object
 }
 
@@ -61,11 +62,6 @@ func (o *ImmutableMap) IndexGet(index Object) (res Object, err error) {
 	}
 
 	return
-}
-
-// IndexSet sets an element at a given index.
-func (o *ImmutableMap) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }
 
 // Equals returns true if the value of the type

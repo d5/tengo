@@ -8,6 +8,7 @@ import (
 
 // Error represents a string value.
 type Error struct {
+	ObjectImpl
 	Value Object
 }
 
@@ -56,9 +57,4 @@ func (o *Error) IndexGet(index Object) (res Object, err error) {
 
 	res = o.Value
 	return
-}
-
-// IndexSet sets an element at a given index.
-func (o *Error) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }

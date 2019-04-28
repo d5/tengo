@@ -9,6 +9,7 @@ import (
 
 // Map represents a map of objects.
 type Map struct {
+	ObjectImpl
 	Value map[string]Object
 }
 

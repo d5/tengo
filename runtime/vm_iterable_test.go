@@ -29,14 +29,6 @@ func (i *StringArrayIterator) Value() objects.Object {
 	return &objects.String{Value: i.strArr.Value[i.idx-1]}
 }
 
-func (o *StringArrayIterator) IndexGet(index objects.Object) (objects.Object, error) {
-	return nil, objects.ErrNotIndexable
-}
-
-func (o *StringArrayIterator) IndexSet(index, value objects.Object) error {
-	return objects.ErrNotIndexAssignable
-}
-
 func (o *StringArray) Iterate() objects.Iterator {
 	return &StringArrayIterator{
 		strArr: o,

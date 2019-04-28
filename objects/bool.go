@@ -6,6 +6,7 @@ import (
 
 // Bool represents a boolean value.
 type Bool struct {
+	ObjectImpl
 	// this is intentionally non-public to force using objects.TrueValue and FalseValue always
 	value bool
 }
@@ -61,14 +62,4 @@ func (o *Bool) GobEncode() (b []byte, err error) {
 	}
 
 	return
-}
-
-// IndexGet returns an element at a given index.
-func (o *Bool) IndexGet(index Object) (Object, error) {
-	return nil, ErrNotIndexable
-}
-
-// IndexSet sets an element at a given index.
-func (o *Bool) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }

@@ -9,6 +9,7 @@ import (
 
 // String represents a string value.
 type String struct {
+	ObjectImpl
 	Value   string
 	runeStr []rune
 }
@@ -88,11 +89,6 @@ func (o *String) IndexGet(index Object) (res Object, err error) {
 	res = &Char{Value: o.runeStr[idxVal]}
 
 	return
-}
-
-// IndexSet sets an element at a given index.
-func (o *String) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }
 
 // Iterate creates a string iterator.

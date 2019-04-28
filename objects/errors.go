@@ -35,6 +35,9 @@ var ErrNotIndexable = errors.New("not indexable")
 // ErrNotIndexAssignable is an error where an Object is not index assignable.
 var ErrNotIndexAssignable = errors.New("not index-assignable")
 
+// ErrNotIndexAssignable is an error where an Object is not index assignable.
+var ErrNotImplemented = errors.New("not implemented")
+
 // ErrInvalidArgumentType represents an invalid argument value type error.
 type ErrInvalidArgumentType struct {
 	Name     string

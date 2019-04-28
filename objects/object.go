@@ -41,4 +41,57 @@ type Object interface {
 	// If Object is not index assignable, ErrNotIndexAssignable should be returned as error.
 	// If an error is returned, it will be treated as a run-time error.
 	IndexSet(index, value Object) error
+
+	// Iterate should return an Iterator for the type.
+	Iterate() Iterator
+}
+
+// ObjectImpl represents a default Object Implementation.
+type ObjectImpl struct {
+}
+
+// TypeName returns the name of the type.
+func (o *ObjectImpl) TypeName() string {
+	panic(ErrNotImplemented)
+}
+
+func (o *ObjectImpl) String() string {
+	panic(ErrNotImplemented)
+}
+
+// BinaryOp returns another object that is the result of
+// a given binary operator and a right-hand side object.
+func (o *ObjectImpl) BinaryOp(op token.Token, rhs Object) (Object, error) {
+	return nil, ErrInvalidOperator
+}
+
+// Copy returns a copy of the type.
+func (o *ObjectImpl) Copy() Object {
+	return nil
+}
+
+// IsFalsy returns true if the value of the type is falsy.
+func (o *ObjectImpl) IsFalsy() bool {
+	return true
+}
+
+// Equals returns true if the value of the type
+// is equal to the value of another object.
+func (o *ObjectImpl) Equals(x Object) bool {
+	return o == x
+}
+
+// IndexGet returns an element at a given index.
+func (o *ObjectImpl) IndexGet(index Object) (res Object, err error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (o *ObjectImpl) IndexSet(index, value Object) (err error) {
+	return ErrNotIndexAssignable
+}
+
+// Iterate returns an iterator.
+func (o *ObjectImpl) Iterate() Iterator {
+	return nil
 }

@@ -9,6 +9,7 @@ import (
 
 // ImmutableArray represents an immutable array of objects.
 type ImmutableArray struct {
+	ObjectImpl
 	Value []Object
 }
 
@@ -98,11 +99,6 @@ func (o *ImmutableArray) IndexGet(index Object) (res Object, err error) {
 	res = o.Value[idxVal]
 
 	return
-}
-
-// IndexSet sets an element at a given index.
-func (o *ImmutableArray) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }
 
 // Iterate creates an array iterator.

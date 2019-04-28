@@ -6,6 +6,7 @@ import (
 
 // UserFunction represents a user function.
 type UserFunction struct {
+	ObjectImpl
 	Name       string
 	Value      CallableFunc
 	EncodingID string
@@ -45,14 +46,4 @@ func (o *UserFunction) Equals(x Object) bool {
 // Call invokes a user function.
 func (o *UserFunction) Call(args ...Object) (Object, error) {
 	return o.Value(args...)
-}
-
-// IndexGet returns an element at a given index.
-func (o *UserFunction) IndexGet(index Object) (Object, error) {
-	return nil, ErrNotIndexable
-}
-
-// IndexSet sets an element at a given index.
-func (o *UserFunction) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }

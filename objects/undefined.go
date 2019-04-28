@@ -3,7 +3,9 @@ package objects
 import "github.com/d5/tengo/compiler/token"
 
 // Undefined represents an undefined value.
-type Undefined struct{}
+type Undefined struct {
+	ObjectImpl
+}
 
 // TypeName returns the name of the type.
 func (o *Undefined) TypeName() string {
@@ -39,29 +41,4 @@ func (o *Undefined) Equals(x Object) bool {
 // IndexGet returns an element at a given index.
 func (o *Undefined) IndexGet(index Object) (Object, error) {
 	return UndefinedValue, nil
-}
-
-// IndexSet sets an element at a given index.
-func (o *Undefined) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
-}
-
-// Iterate creates a map iterator.
-func (o *Undefined) Iterate() Iterator {
-	return o
-}
-
-// Next returns true if there are more elements to iterate.
-func (o *Undefined) Next() bool {
-	return false
-}
-
-// Key returns the key or index value of the current element.
-func (o *Undefined) Key() Object {
-	return o
-}
-
-// Value returns the value of the current element.
-func (o *Undefined) Value() Object {
-	return o
 }

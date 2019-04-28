@@ -8,6 +8,7 @@ import (
 
 // Int represents an integer value.
 type Int struct {
+	ObjectImpl
 	Value int64
 }
 
@@ -116,13 +117,13 @@ func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	case *Float:
 		switch op {
 		case token.Add:
-			return &Float{float64(o.Value) + rhs.Value}, nil
+			return &Float{Value: float64(o.Value) + rhs.Value}, nil
 		case token.Sub:
-			return &Float{float64(o.Value) - rhs.Value}, nil
+			return &Float{Value: float64(o.Value) - rhs.Value}, nil
 		case token.Mul:
-			return &Float{float64(o.Value) * rhs.Value}, nil
+			return &Float{Value: float64(o.Value) * rhs.Value}, nil
 		case token.Quo:
-			return &Float{float64(o.Value) / rhs.Value}, nil
+			return &Float{Value: float64(o.Value) / rhs.Value}, nil
 		case token.Less:
 			if float64(o.Value) < rhs.Value {
 				return TrueValue, nil
@@ -147,9 +148,9 @@ func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	case *Char:
 		switch op {
 		case token.Add:
-			return &Char{rune(o.Value) + rhs.Value}, nil
+			return &Char{Value: rune(o.Value) + rhs.Value}, nil
 		case token.Sub:
-			return &Char{rune(o.Value) - rhs.Value}, nil
+			return &Char{Value: rune(o.Value) - rhs.Value}, nil
 		case token.Less:
 			if o.Value < int64(rhs.Value) {
 				return TrueValue, nil
@@ -195,14 +196,4 @@ func (o *Int) Equals(x Object) bool {
 	}
 
 	return o.Value == t.Value
-}
-
-// IndexGet returns an element at a given index.
-func (o *Int) IndexGet(index Object) (Object, error) {
-	return nil, ErrNotIndexable
-}
-
-// IndexSet sets an element at a given index.
-func (o *Int) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }

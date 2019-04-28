@@ -6,6 +6,7 @@ import (
 
 // BuiltinFunction represents a builtin function.
 type BuiltinFunction struct {
+	ObjectImpl
 	Name  string
 	Value CallableFunc
 }
@@ -44,14 +45,4 @@ func (o *BuiltinFunction) Equals(x Object) bool {
 // Call executes a builtin function.
 func (o *BuiltinFunction) Call(args ...Object) (Object, error) {
 	return o.Value(args...)
-}
-
-// IndexGet returns an element at a given index.
-func (o *BuiltinFunction) IndexGet(index Object) (Object, error) {
-	return nil, ErrNotIndexable
-}
-
-// IndexSet sets an element at a given index.
-func (o *BuiltinFunction) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }

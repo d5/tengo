@@ -9,6 +9,7 @@ import (
 
 // Bytes represents a byte array.
 type Bytes struct {
+	ObjectImpl
 	Value []byte
 }
 
@@ -78,11 +79,6 @@ func (o *Bytes) IndexGet(index Object) (res Object, err error) {
 	res = &Int{Value: int64(o.Value[idxVal])}
 
 	return
-}
-
-// IndexSet sets an element at a given index.
-func (o *Bytes) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }
 
 // Iterate creates a bytes iterator.

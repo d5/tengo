@@ -8,6 +8,7 @@ import (
 
 // Time represents a time value.
 type Time struct {
+	ObjectImpl
 	Value time.Time
 }
 
@@ -86,14 +87,4 @@ func (o *Time) Equals(x Object) bool {
 	}
 
 	return o.Value.Equal(t.Value)
-}
-
-// IndexGet returns an element at a given index.
-func (o *Time) IndexGet(index Object) (Object, error) {
-	return nil, ErrNotIndexable
-}
-
-// IndexSet sets an element at a given index.
-func (o *Time) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }

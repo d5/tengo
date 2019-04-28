@@ -8,7 +8,9 @@ import (
 	"github.com/d5/tengo/objects"
 )
 
-type objectImpl struct{}
+type objectImpl struct {
+	objects.ObjectImpl
+}
 
 func (objectImpl) TypeName() string                   { return "" }
 func (objectImpl) String() string                     { return "" }

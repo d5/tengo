@@ -7,6 +7,7 @@ import (
 
 // CompiledFunction represents a compiled function.
 type CompiledFunction struct {
+	ObjectImpl
 	Instructions  []byte
 	NumLocals     int // number of local variables (including function parameters)
 	NumParameters int
@@ -57,14 +58,4 @@ func (o *CompiledFunction) SourcePos(ip int) source.Pos {
 		ip--
 	}
 	return source.NoPos
-}
-
-// IndexGet returns an element at a given index.
-func (o *CompiledFunction) IndexGet(index Object) (Object, error) {
-	return nil, ErrNotIndexable
-}
-
-// IndexSet sets an element at a given index.
-func (o *CompiledFunction) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }

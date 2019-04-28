@@ -1,9 +1,8 @@
 package objects
 
-import "github.com/d5/tengo/compiler/token"
-
 // BytesIterator represents an iterator for a string.
 type BytesIterator struct {
+	ObjectImpl
 	v []byte
 	i int
 	l int
@@ -16,17 +15,6 @@ func (i *BytesIterator) TypeName() string {
 
 func (i *BytesIterator) String() string {
 	return "<bytes-iterator>"
-}
-
-// BinaryOp returns another object that is the result of
-// a given binary operator and a right-hand side object.
-func (i *BytesIterator) BinaryOp(op token.Token, rhs Object) (Object, error) {
-	return nil, ErrInvalidOperator
-}
-
-// IsFalsy returns true if the value of the type is falsy.
-func (i *BytesIterator) IsFalsy() bool {
-	return true
 }
 
 // Equals returns true if the value of the type
@@ -54,14 +42,4 @@ func (i *BytesIterator) Key() Object {
 // Value returns the value of the current element.
 func (i *BytesIterator) Value() Object {
 	return &Int{Value: int64(i.v[i.i-1])}
-}
-
-// IndexGet returns an element at a given index.
-func (i *BytesIterator) IndexGet(index Object) (Object, error) {
-	return nil, ErrNotIndexable
-}
-
-// IndexSet sets an element at a given index.
-func (i *BytesIterator) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }

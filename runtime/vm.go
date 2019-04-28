@@ -421,19 +421,19 @@ func (v *VM) run() {
 			left := v.stack[v.sp-2]
 			v.sp -= 2
 
-			val, e := left.IndexGet(index)
-			if e != nil {
-				if e == objects.ErrNotIndexable {
+			val, err := left.IndexGet(index)
+			if err != nil {
+				if err == objects.ErrNotIndexable {
 					v.err = fmt.Errorf("not indexable: %s", index.TypeName())
 					return
 				}
 
-				if e == objects.ErrInvalidIndexType {
+				if err == objects.ErrInvalidIndexType {
 					v.err = fmt.Errorf("invalid index type: %s", index.TypeName())
 					return
 				}
 
-				v.err = e
+				v.err = err
 				return
 			}
 
@@ -935,13 +935,11 @@ func (v *VM) run() {
 			dst := v.stack[v.sp-1]
 			v.sp--
 
-			iterable, ok := dst.(objects.Iterable)
-			if !ok {
+			iterator = dst.Iterate()
+			if iterator == nil {
 				v.err = fmt.Errorf("not iterable: %s", dst.TypeName())
 				return
 			}
-
-			iterator = iterable.Iterate()
 
 			v.allocs--
 			if v.allocs == 0 {

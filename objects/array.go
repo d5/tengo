@@ -9,6 +9,7 @@ import (
 
 // Array represents an array of objects.
 type Array struct {
+	ObjectImpl
 	Value []Object
 }
 

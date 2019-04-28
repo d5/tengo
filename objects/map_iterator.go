@@ -4,6 +4,7 @@ import "github.com/d5/tengo/compiler/token"
 
 // MapIterator represents an iterator for the map.
 type MapIterator struct {
+	ObjectImpl
 	v map[string]Object
 	k []string
 	i int
@@ -59,14 +60,4 @@ func (i *MapIterator) Value() Object {
 	k := i.k[i.i-1]
 
 	return i.v[k]
-}
-
-// IndexGet returns an element at a given index.
-func (i *MapIterator) IndexGet(index Object) (Object, error) {
-	return nil, ErrNotIndexable
-}
-
-// IndexSet sets an element at a given index.
-func (i *MapIterator) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }

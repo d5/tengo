@@ -4,6 +4,7 @@ import "github.com/d5/tengo/compiler/token"
 
 // StringIterator represents an iterator for a string.
 type StringIterator struct {
+	ObjectImpl
 	v []rune
 	i int
 	l int
@@ -54,14 +55,4 @@ func (i *StringIterator) Key() Object {
 // Value returns the value of the current element.
 func (i *StringIterator) Value() Object {
 	return &Char{Value: i.v[i.i-1]}
-}
-
-// IndexGet returns an element at a given index.
-func (i *StringIterator) IndexGet(index Object) (Object, error) {
-	return nil, ErrNotIndexable
-}
-
-// IndexSet sets an element at a given index.
-func (i *StringIterator) IndexSet(index, value Object) error {
-	return ErrNotIndexAssignable
 }
