@@ -35,7 +35,7 @@ var ErrNotIndexable = errors.New("not indexable")
 // ErrNotIndexAssignable is an error where an Object is not index assignable.
 var ErrNotIndexAssignable = errors.New("not index-assignable")
 
-// ErrNotIndexAssignable is an error where an Object is not index assignable.
+// ErrNotImplemented is an error where an Object has not implemented a required method.
 var ErrNotImplemented = errors.New("not implemented")
 
 // ErrInvalidArgumentType represents an invalid argument value type error.
