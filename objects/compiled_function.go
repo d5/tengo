@@ -12,6 +12,7 @@ type CompiledFunction struct {
 	NumLocals     int // number of local variables (including function parameters)
 	NumParameters int
 	SourceMap     map[int]source.Pos
+	Fn            CallableFunc // set by the runtime
 }
 
 // TypeName returns the name of the type.
@@ -58,4 +59,8 @@ func (o *CompiledFunction) SourcePos(ip int) source.Pos {
 		ip--
 	}
 	return source.NoPos
+}
+
+func (o *CompiledFunction) Call(args ...Object) (Object, error) {
+	return o.Fn(args...)
 }
