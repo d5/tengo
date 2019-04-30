@@ -57,7 +57,9 @@ type Object interface {
 	CanCall() bool
 }
 
-// ObjectImpl represents a default Object Implementation.
+// ObjectImpl represents a default Object Implementation. To defined a new value type,
+// one can embed ObjectImpl in their type declarations to avoid implementing all non-significant
+// methods. TypeName() and String() methods still need to be implemented.
 type ObjectImpl struct {
 }
 
