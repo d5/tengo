@@ -704,7 +704,7 @@ func (v *VM) runFrame(numArgs int, fn *objects.CompiledFunction, freeVars []*obj
 					}
 				}
 
-				retVal, e := callee.Call()
+				retVal, e := v.runFrame(numArgs, callee, nil)
 				if e != nil {
 					err = e
 					return
