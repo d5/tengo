@@ -135,7 +135,6 @@ func (v *VM) runFrame(numArgs int, fn *objects.CompiledFunction, freeVars []*obj
 	v.curFrame.fn = fn
 	v.curFrame.freeVars = freeVars
 	v.curFrame.basePointer = v.sp - numArgs
-	v.curInsts = fn.Instructions
 	v.ip = -1
 	v.framesIndex++
 	v.sp = v.sp - numArgs + fn.NumLocals
