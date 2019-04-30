@@ -46,3 +46,8 @@ func (o *BuiltinFunction) Equals(x Object) bool {
 func (o *BuiltinFunction) Call(args ...Object) (Object, error) {
 	return o.Value(args...)
 }
+
+// CanCall returns whether the Object can be Called.
+func (o *BuiltinFunction) CanCall() bool {
+	return true
+}

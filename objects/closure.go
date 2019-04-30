@@ -44,3 +44,8 @@ func (o *Closure) IsFalsy() bool {
 func (o *Closure) Equals(x Object) bool {
 	return false
 }
+
+// CanCall returns whether the Object can be Called.
+func (o *Closure) CanCall() bool {
+	return true
+}

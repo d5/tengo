@@ -47,6 +47,14 @@ type Object interface {
 
 	// CanIterate should return whether the Object can be Iterated.
 	CanIterate() bool
+
+	// Call should take an arbitrary number of arguments
+	// and returns a return value and/or an error,
+	// which the VM will consider as a run-time error.
+	Call(args ...Object) (ret Object, err error)
+
+	// CanCall should return whether the Object can be Called.
+	CanCall() bool
 }
 
 // ObjectImpl represents a default Object Implementation.
@@ -101,5 +109,16 @@ func (o *ObjectImpl) Iterate() Iterator {
 
 // CanIterate returns whether the Object can be Iterated.
 func (o *ObjectImpl) CanIterate() bool {
+	return false
+}
+
+// Call takes an arbitrary number of arguments
+// and returns a return value and/or an error.
+func (o *ObjectImpl) Call(args ...Object) (ret Object, err error) {
+	return nil, nil
+}
+
+// CanCall returns whether the Object can be Called.
+func (o *ObjectImpl) CanCall() bool {
 	return false
 }

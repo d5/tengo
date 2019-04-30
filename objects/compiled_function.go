@@ -61,6 +61,13 @@ func (o *CompiledFunction) SourcePos(ip int) source.Pos {
 	return source.NoPos
 }
 
+// Call takes an arbitrary number of arguments
+// and returns a return value and/or an error.
 func (o *CompiledFunction) Call(args ...Object) (Object, error) {
 	return o.Fn(args...)
+}
+
+// CanCall returns whether the Object can be Called.
+func (o *CompiledFunction) CanCall() bool {
+	return true
 }

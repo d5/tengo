@@ -49,8 +49,7 @@ func (o *Error) Equals(x Object) bool {
 
 // IndexGet returns an element at a given index.
 func (o *Error) IndexGet(index Object) (res Object, err error) {
-	strIdx, ok := ToString(index)
-	if !ok || strIdx != "value" {
+	if strIdx, _ := ToString(index); strIdx != "value" {
 		err = ErrInvalidIndexOnError
 		return
 	}

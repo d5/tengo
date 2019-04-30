@@ -651,6 +651,11 @@ func (v *VM) runFrame(numArgs int, fn *objects.CompiledFunction, freeVars []*obj
 
 			value := v.stack[v.sp-1-numArgs]
 
+			if !value.CanCall() {
+				err = fmt.Errorf("not callable: %s", value.TypeName())
+				return
+			}
+
 			switch callee := value.(type) {
 			case *objects.Closure:
 				if numArgs != callee.Fn.NumParameters {
@@ -714,7 +719,7 @@ func (v *VM) runFrame(numArgs int, fn *objects.CompiledFunction, freeVars []*obj
 				v.stack[v.sp] = retVal
 				v.sp++
 
-			case objects.Callable:
+			default:
 				var args []objects.Object
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 
@@ -752,10 +757,6 @@ func (v *VM) runFrame(numArgs int, fn *objects.CompiledFunction, freeVars []*obj
 
 				v.stack[v.sp] = retVal
 				v.sp++
-
-			default:
-				err = fmt.Errorf("not callable: %s", callee.TypeName())
-				return
 			}
 
 		case compiler.OpReturn:

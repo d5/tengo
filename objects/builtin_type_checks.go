@@ -174,8 +174,7 @@ func builtinIsCallable(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 
-	switch args[0].(type) {
-	case *CompiledFunction, *Closure, Callable: // BuiltinFunction is Callable
+	if args[0].CanCall() {
 		return TrueValue, nil
 	}
 

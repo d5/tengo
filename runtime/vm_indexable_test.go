@@ -226,6 +226,10 @@ func (o *StringArray) Call(args ...objects.Object) (ret objects.Object, err erro
 	return objects.UndefinedValue, nil
 }
 
+func (o *StringArray) CanCall() bool {
+	return true
+}
+
 func TestIndexable(t *testing.T) {
 	dict := func() *StringDict { return &StringDict{Value: map[string]string{"a": "foo", "b": "bar"}} }
 	expect(t, `out = dict["a"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), "foo")
