@@ -187,7 +187,7 @@ func builtinIsIterable(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 
-	if iter := args[0].Iterate(); iter != nil {
+	if args[0].CanIterate() {
 		return TrueValue, nil
 	}
 

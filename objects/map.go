@@ -117,3 +117,8 @@ func (o *Map) Iterate() Iterator {
 		l: len(keys),
 	}
 }
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *Map) CanIterate() bool {
+	return true
+}

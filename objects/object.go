@@ -44,6 +44,9 @@ type Object interface {
 
 	// Iterate should return an Iterator for the type.
 	Iterate() Iterator
+
+	// CanIterate should return whether the Object can be Iterated.
+	CanIterate() bool
 }
 
 // ObjectImpl represents a default Object Implementation.
@@ -94,4 +97,9 @@ func (o *ObjectImpl) IndexSet(index, value Object) (err error) {
 // Iterate returns an iterator.
 func (o *ObjectImpl) Iterate() Iterator {
 	return nil
+}
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *ObjectImpl) CanIterate() bool {
+	return false
 }

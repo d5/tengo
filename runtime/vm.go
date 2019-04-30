@@ -952,12 +952,12 @@ func (v *VM) runFrame(numArgs int, fn *objects.CompiledFunction, freeVars []*obj
 			dst := v.stack[v.sp-1]
 			v.sp--
 
-			iterator = dst.Iterate()
-			if iterator == nil {
+			if !dst.CanIterate() {
 				err = fmt.Errorf("not iterable: %s", dst.TypeName())
 				return
 			}
 
+			iterator = dst.Iterate()
 			v.allocs--
 			if v.allocs == 0 {
 				err = ErrObjectAllocLimit

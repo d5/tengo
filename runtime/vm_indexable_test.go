@@ -106,6 +106,7 @@ func (o *StringCircle) IndexSet(index, value objects.Object) error {
 }
 
 type StringArray struct {
+	objects.ObjectImpl
 	Value []string
 }
 

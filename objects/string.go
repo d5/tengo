@@ -102,3 +102,8 @@ func (o *String) Iterate() Iterator {
 		l: len(o.runeStr),
 	}
 }
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *String) CanIterate() bool {
+	return true
+}

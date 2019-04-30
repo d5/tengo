@@ -108,3 +108,8 @@ func (o *ImmutableArray) Iterate() Iterator {
 		l: len(o.Value),
 	}
 }
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *ImmutableArray) CanIterate() bool {
+	return true
+}

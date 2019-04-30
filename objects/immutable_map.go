@@ -104,3 +104,8 @@ func (o *ImmutableMap) Iterate() Iterator {
 		l: len(keys),
 	}
 }
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *ImmutableMap) CanIterate() bool {
+	return true
+}
