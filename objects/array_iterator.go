@@ -18,7 +18,7 @@ func (i *ArrayIterator) String() string {
 }
 
 // IsFalsy returns true if the value of the type is falsy.
-func (o *ArrayIterator) IsFalsy() bool {
+func (i *ArrayIterator) IsFalsy() bool {
 	return true
 }
 

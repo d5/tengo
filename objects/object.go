@@ -63,6 +63,7 @@ type Object interface {
 type ObjectImpl struct {
 }
 
+// TypeName returns the name of the type.
 func (o *ObjectImpl) TypeName() string {
 	panic(ErrNotImplemented)
 }
