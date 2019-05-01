@@ -106,6 +106,7 @@ func (o *StringCircle) IndexSet(index, value objects.Object) error {
 }
 
 type StringArray struct {
+	objects.ObjectImpl
 	Value []string
 }
 
@@ -223,6 +224,10 @@ func (o *StringArray) Call(args ...objects.Object) (ret objects.Object, err erro
 	}
 
 	return objects.UndefinedValue, nil
+}
+
+func (o *StringArray) CanCall() bool {
+	return true
 }
 
 func TestIndexable(t *testing.T) {

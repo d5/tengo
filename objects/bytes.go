@@ -88,3 +88,8 @@ func (o *Bytes) Iterate() Iterator {
 		l: len(o.Value),
 	}
 }
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *Bytes) CanIterate() bool {
+	return true
+}

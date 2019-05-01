@@ -44,13 +44,25 @@ type Object interface {
 
 	// Iterate should return an Iterator for the type.
 	Iterate() Iterator
+
+	// CanIterate should return whether the Object can be Iterated.
+	CanIterate() bool
+
+	// Call should take an arbitrary number of arguments
+	// and returns a return value and/or an error,
+	// which the VM will consider as a run-time error.
+	Call(args ...Object) (ret Object, err error)
+
+	// CanCall should return whether the Object can be Called.
+	CanCall() bool
 }
 
-// ObjectImpl represents a default Object Implementation.
+// ObjectImpl represents a default Object Implementation. To defined a new value type,
+// one can embed ObjectImpl in their type declarations to avoid implementing all non-significant
+// methods. TypeName() and String() methods still need to be implemented.
 type ObjectImpl struct {
 }
 
-// TypeName returns the name of the type.
 func (o *ObjectImpl) TypeName() string {
 	panic(ErrNotImplemented)
 }
@@ -72,7 +84,7 @@ func (o *ObjectImpl) Copy() Object {
 
 // IsFalsy returns true if the value of the type is falsy.
 func (o *ObjectImpl) IsFalsy() bool {
-	return true
+	return false
 }
 
 // Equals returns true if the value of the type
@@ -94,4 +106,20 @@ func (o *ObjectImpl) IndexSet(index, value Object) (err error) {
 // Iterate returns an iterator.
 func (o *ObjectImpl) Iterate() Iterator {
 	return nil
+}
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *ObjectImpl) CanIterate() bool {
+	return false
+}
+
+// Call takes an arbitrary number of arguments
+// and returns a return value and/or an error.
+func (o *ObjectImpl) Call(args ...Object) (ret Object, err error) {
+	return nil, nil
+}
+
+// CanCall returns whether the Object can be Called.
+func (o *ObjectImpl) CanCall() bool {
+	return false
 }

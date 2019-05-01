@@ -628,6 +628,11 @@ func (v *VM) run() {
 
 			value := v.stack[v.sp-1-numArgs]
 
+			if !value.CanCall() {
+				v.err = fmt.Errorf("not callable: %s", value.TypeName())
+				return
+			}
+
 			switch callee := value.(type) {
 			case *objects.Closure:
 				if numArgs != callee.Fn.NumParameters {
@@ -693,7 +698,7 @@ func (v *VM) run() {
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.NumLocals
 
-			case objects.Callable:
+			default:
 				var args []objects.Object
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 
@@ -731,10 +736,6 @@ func (v *VM) run() {
 
 				v.stack[v.sp] = ret
 				v.sp++
-
-			default:
-				v.err = fmt.Errorf("not callable: %s", callee.TypeName())
-				return
 			}
 
 		case compiler.OpReturn:
@@ -935,12 +936,12 @@ func (v *VM) run() {
 			dst := v.stack[v.sp-1]
 			v.sp--
 
-			iterator = dst.Iterate()
-			if iterator == nil {
+			if !dst.CanIterate() {
 				v.err = fmt.Errorf("not iterable: %s", dst.TypeName())
 				return
 			}
 
+			iterator = dst.Iterate()
 			v.allocs--
 			if v.allocs == 0 {
 				v.err = ErrObjectAllocLimit

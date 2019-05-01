@@ -59,3 +59,8 @@ func (o *CompiledFunction) SourcePos(ip int) source.Pos {
 	}
 	return source.NoPos
 }
+
+// CanCall returns whether the Object can be Called.
+func (o *CompiledFunction) CanCall() bool {
+	return true
+}

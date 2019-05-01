@@ -35,6 +35,10 @@ func (o *StringArray) Iterate() objects.Iterator {
 	}
 }
 
+func (o *StringArray) CanIterate() bool {
+	return true
+}
+
 func TestIterable(t *testing.T) {
 	strArr := func() *StringArray { return &StringArray{Value: []string{"one", "two", "three"}} }
 

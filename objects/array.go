@@ -129,3 +129,8 @@ func (o *Array) Iterate() Iterator {
 		l: len(o.Value),
 	}
 }
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *Array) CanIterate() bool {
+	return true
+}

@@ -47,3 +47,8 @@ func (o *UserFunction) Equals(x Object) bool {
 func (o *UserFunction) Call(args ...Object) (Object, error) {
 	return o.Value(args...)
 }
+
+// CanCall returns whether the Object can be Called.
+func (o *UserFunction) CanCall() bool {
+	return true
+}
