@@ -17,6 +17,11 @@ func (i *ArrayIterator) String() string {
 	return "<array-iterator>"
 }
 
+// IsFalsy returns true if the value of the type is falsy.
+func (o *ArrayIterator) IsFalsy() bool {
+	return true
+}
+
 // Equals returns true if the value of the type
 // is equal to the value of another object.
 func (i *ArrayIterator) Equals(Object) bool {

@@ -63,15 +63,6 @@ type Object interface {
 type ObjectImpl struct {
 }
 
-// TypeName returns the name of the type.
-func (o *ObjectImpl) TypeName() string {
-	panic(ErrNotImplemented)
-}
-
-func (o *ObjectImpl) String() string {
-	panic(ErrNotImplemented)
-}
-
 // BinaryOp returns another object that is the result of
 // a given binary operator and a right-hand side object.
 func (o *ObjectImpl) BinaryOp(op token.Token, rhs Object) (Object, error) {
@@ -85,13 +76,13 @@ func (o *ObjectImpl) Copy() Object {
 
 // IsFalsy returns true if the value of the type is falsy.
 func (o *ObjectImpl) IsFalsy() bool {
-	return true
+	return false
 }
 
 // Equals returns true if the value of the type
 // is equal to the value of another object.
 func (o *ObjectImpl) Equals(x Object) bool {
-	return o == x
+	return false
 }
 
 // IndexGet returns an element at a given index.
