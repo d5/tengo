@@ -47,7 +47,7 @@ e := mod1.double(s)
 `)
 	mod1 := map[string]objects.Object{
 		"double": &objects.UserFunction{
-			Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			Value: func(_ objects.RuntimeHooks, args ...objects.Object) (ret objects.Object, err error) {
 				arg0, _ := objects.ToInt64(args[0])
 				ret = &objects.Int{Value: arg0 * 2}
 				return

@@ -47,6 +47,7 @@ const (
 	OpIteratorValue               // Iterator value
 	OpBinaryOp                    // Binary Operation
 	OpExplode                     // Explode operation
+	OpEscape                      // used internally by the VM to pause execution
 )
 
 // OpcodeNames is opcode names.
@@ -93,6 +94,7 @@ var OpcodeNames = [...]string{
 	OpIteratorValue: "ITVAL",
 	OpBinaryOp:      "BINARYOP",
 	OpExplode:       "EXPLODE",
+	OpEscape:        "ESCAPE",
 }
 
 // OpcodeOperands is the number of operands.
@@ -139,6 +141,7 @@ var OpcodeOperands = [...][]int{
 	OpIteratorValue: {},
 	OpBinaryOp:      {1},
 	OpExplode:       {},
+	OpEscape:        {},
 }
 
 // ReadOperands reads operands from the bytecode.

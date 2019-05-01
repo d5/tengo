@@ -2,7 +2,7 @@ package objects
 
 import "github.com/d5/tengo"
 
-func builtinString(args ...Object) (Object, error) {
+func builtinString(_ RuntimeHooks, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -28,7 +28,7 @@ func builtinString(args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinInt(args ...Object) (Object, error) {
+func builtinInt(_ RuntimeHooks, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -50,7 +50,7 @@ func builtinInt(args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinFloat(args ...Object) (Object, error) {
+func builtinFloat(_ RuntimeHooks, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -72,7 +72,7 @@ func builtinFloat(args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinBool(args ...Object) (Object, error) {
+func builtinBool(_ RuntimeHooks, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -93,7 +93,7 @@ func builtinBool(args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinChar(args ...Object) (Object, error) {
+func builtinChar(_ RuntimeHooks, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -115,7 +115,7 @@ func builtinChar(args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinBytes(args ...Object) (Object, error) {
+func builtinBytes(_ RuntimeHooks, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -146,7 +146,7 @@ func builtinBytes(args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinTime(args ...Object) (Object, error) {
+func builtinTime(_ RuntimeHooks, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments

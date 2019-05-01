@@ -1,6 +1,6 @@
 package objects
 
-func builtinCopy(args ...Object) (Object, error) {
+func builtinCopy(_ RuntimeHooks, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}

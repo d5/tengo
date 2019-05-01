@@ -1,7 +1,6 @@
 package objects
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/d5/tengo/compiler/token"
@@ -9,6 +8,7 @@ import (
 
 // Exploded represents the result of exploding an object.
 type Exploded struct {
+	ObjectImpl
 	Value []Object
 }
 
@@ -28,15 +28,13 @@ func (o *Exploded) Equals(Object) bool { return false }
 // a given binary operator and a right-hand side object.
 func (o *Exploded) BinaryOp(token.Token, Object) (Object, error) { return nil, ErrInvalidOperator }
 
-// Copy returns a copy of the Exploded value
-func (o *Exploded) Copy() Object { return &Exploded{Value: o.Value} }
+// Copy returns a deep copy of the Exploded value
+func (o *Exploded) Copy() Object {
+	copied := make([]Object, len(o.Value))
 
-// IndexGet is not supported on Exploded values
-func (*Exploded) IndexGet(Object) (Object, error) {
-	return nil, errors.New("cannot index exploded value")
-}
+	for i, v := range o.Value {
+		copied[i] = v.Copy()
+	}
 
-// IndexSet is not supported on Exploded values
-func (*Exploded) IndexSet(_, _ Object) error {
-	return errors.New("cannot index exploded value")
+	return &Exploded{Value: copied}
 }

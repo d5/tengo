@@ -196,7 +196,7 @@ func (o *StringArray) IndexSet(index, value objects.Object) error {
 	return objects.ErrInvalidIndexType
 }
 
-func (o *StringArray) Call(args ...objects.Object) (ret objects.Object, err error) {
+func (o *StringArray) Call(_ objects.RuntimeHooks, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}

@@ -492,9 +492,31 @@ func TestFuncAI64RI64(t *testing.T) {
 
 func funcCall(fn objects.CallableFunc, args ...objects.Object) (objects.Object, error) {
 	userFunc := &objects.UserFunction{Value: fn}
-	return userFunc.Call(args...)
+	return userFunc.Call(dummyHooksVal{}, args...)
 }
 
 func array(elements ...objects.Object) *objects.Array {
 	return &objects.Array{Value: elements}
+}
+
+type dummyHooksVal struct {
+	returnVal objects.Object
+}
+
+func (h dummyHooksVal) Call(val objects.Object, args ...objects.Object) (objects.Object, error) {
+	if h.returnVal == nil {
+		return objects.UndefinedValue, nil
+	}
+	return h.returnVal, nil
+}
+
+type dummyHooksError struct {
+	err error
+}
+
+func (h dummyHooksError) Call(val objects.Object, args ...objects.Object) (objects.Object, error) {
+	if h.err == nil {
+		return nil, errors.New("panic: no error set in dummyHooksError")
+	}
+	return nil, h.err
 }

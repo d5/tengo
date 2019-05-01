@@ -121,6 +121,9 @@ func (v *VM) run() {
 		v.ip++
 
 		switch v.curInsts[v.ip] {
+		case compiler.OpEscape:
+			return
+
 		case compiler.OpConstant:
 			v.ip += 2
 			cidx := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
@@ -776,7 +779,7 @@ func (v *VM) run() {
 				var args []objects.Object
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 
-				ret, e := callee.Call(args...)
+				ret, e := callee.Call(hooks{v}, args...)
 				v.sp -= numArgs + 1
 
 				// runtime error

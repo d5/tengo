@@ -14,7 +14,7 @@ var fmtModule = map[string]objects.Object{
 	"sprintf": &objects.UserFunction{Name: "sprintf", Value: fmtSprintf},
 }
 
-func fmtPrint(args ...objects.Object) (ret objects.Object, err error) {
+func fmtPrint(_ objects.RuntimeHooks, args ...objects.Object) (ret objects.Object, err error) {
 	printArgs, err := getPrintArgs(args...)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func fmtPrint(args ...objects.Object) (ret objects.Object, err error) {
 	return nil, nil
 }
 
-func fmtPrintf(args ...objects.Object) (ret objects.Object, err error) {
+func fmtPrintf(_ objects.RuntimeHooks, args ...objects.Object) (ret objects.Object, err error) {
 	numArgs := len(args)
 	if numArgs == 0 {
 		return nil, objects.ErrWrongNumArguments
@@ -54,7 +54,7 @@ func fmtPrintf(args ...objects.Object) (ret objects.Object, err error) {
 	return nil, nil
 }
 
-func fmtPrintln(args ...objects.Object) (ret objects.Object, err error) {
+func fmtPrintln(_ objects.RuntimeHooks, args ...objects.Object) (ret objects.Object, err error) {
 	printArgs, err := getPrintArgs(args...)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func fmtPrintln(args ...objects.Object) (ret objects.Object, err error) {
 	return nil, nil
 }
 
-func fmtSprintf(args ...objects.Object) (ret objects.Object, err error) {
+func fmtSprintf(_ objects.RuntimeHooks, args ...objects.Object) (ret objects.Object, err error) {
 	numArgs := len(args)
 	if numArgs == 0 {
 		return nil, objects.ErrWrongNumArguments

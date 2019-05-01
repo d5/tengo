@@ -1,6 +1,6 @@
 package objects
 
-func builtinFormat(args ...Object) (Object, error) {
+func builtinFormat(_ RuntimeHooks, args ...Object) (Object, error) {
 	numArgs := len(args)
 	if numArgs == 0 {
 		return nil, ErrWrongNumArguments

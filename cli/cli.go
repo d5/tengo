@@ -200,7 +200,7 @@ func RunREPL(modules *objects.ModuleMap, in io.Reader, out io.Writer) {
 	symbol := symbolTable.Define("__repl_println__")
 	globals[symbol.Index] = &objects.UserFunction{
 		Name: "println",
-		Value: func(args ...objects.Object) (ret objects.Object, err error) {
+		Value: func(_ objects.RuntimeHooks, args ...objects.Object) (ret objects.Object, err error) {
 			var printArgs []interface{}
 			for _, arg := range args {
 				if _, isUndefined := arg.(*objects.Undefined); isUndefined {

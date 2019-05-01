@@ -36,7 +36,7 @@ func TestScriptSourceModule(t *testing.T) {
 	mods = objects.NewModuleMap()
 	mods.AddSourceModule("mod", []byte(`text := import("text"); export text.title("foo")`))
 	mods.AddBuiltinModule("text", map[string]objects.Object{
-		"title": &objects.UserFunction{Name: "title", Value: func(args ...objects.Object) (ret objects.Object, err error) {
+		"title": &objects.UserFunction{Name: "title", Value: func(_ objects.RuntimeHooks, args ...objects.Object) (ret objects.Object, err error) {
 			s, _ := objects.ToString(args[0])
 			return &objects.String{Value: strings.Title(s)}, nil
 		}},
