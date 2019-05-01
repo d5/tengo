@@ -8,23 +8,12 @@ import (
 	"github.com/d5/tengo/objects"
 )
 
-type objectImpl struct {
-	objects.ObjectImpl
-}
-
-func (objectImpl) TypeName() string                   { return "" }
-func (objectImpl) String() string                     { return "" }
-func (objectImpl) IsFalsy() bool                      { return false }
-func (objectImpl) Equals(another objects.Object) bool { return false }
-func (objectImpl) Copy() objects.Object               { return nil }
-func (objectImpl) BinaryOp(token.Token, objects.Object) (objects.Object, error) {
-	return nil, objects.ErrInvalidOperator
-}
-
 type StringDict struct {
-	objectImpl
+	objects.ObjectImpl
 	Value map[string]string
 }
+
+func (o *StringDict) String() string { return "" }
 
 func (o *StringDict) TypeName() string {
 	return "string-dict"
@@ -62,12 +51,16 @@ func (o *StringDict) IndexSet(index, value objects.Object) error {
 }
 
 type StringCircle struct {
-	objectImpl
+	objects.ObjectImpl
 	Value []string
 }
 
 func (o *StringCircle) TypeName() string {
 	return "string-circle"
+}
+
+func (o *StringCircle) String() string {
+	return ""
 }
 
 func (o *StringCircle) IndexGet(index objects.Object) (objects.Object, error) {
