@@ -844,7 +844,14 @@ func (v *VM) run() {
 			}
 
 			v.sp -= numFree
-			fn.Free = free
+
+			cl := &objects.CompiledFunction{
+				Instructions:  fn.Instructions,
+				NumLocals:     fn.NumLocals,
+				NumParameters: fn.NumParameters,
+				VarArgs:       fn.VarArgs,
+				Free:          free,
+			}
 
 			v.allocs--
 			if v.allocs == 0 {
@@ -852,7 +859,7 @@ func (v *VM) run() {
 				return
 			}
 
-			v.stack[v.sp] = fn
+			v.stack[v.sp] = cl
 			v.sp++
 
 		case compiler.OpGetFreePtr:
