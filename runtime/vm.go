@@ -633,8 +633,8 @@ func (v *VM) run() {
 		case compiler.OpSpread:
 			sp := v.sp - 1
 			obj := v.stack[sp]
-			if SpreadValues, ok := obj.(objects.Spreadable); ok {
-				v.stack[sp] = &objects.SpreadValues{Value: SpreadValues.Spread()}
+			if obj.CanSpread() {
+				v.stack[sp] = &objects.SpreadValues{Value: obj.Spread()}
 			} else {
 				v.err = fmt.Errorf("cannot spread object of type %s", obj.TypeName())
 				return

@@ -137,3 +137,6 @@ func (o *Array) CanIterate() bool {
 
 // Spread spreads the array into its values
 func (o *Array) Spread() []Object { return o.Value }
+
+// CanSpread returns whether the Object can be Spread.
+func (o *Array) CanSpread() bool { return true }

@@ -40,12 +40,12 @@ func (o *ObjectImpl) Equals(x Object) bool {
 }
 
 // IndexGet returns an element at a given index.
-func (o *ObjectImpl) IndexGet(index Object) (res Object, err error) {
+func (o *ObjectImpl) IndexGet(_ Object) (res Object, err error) {
 	return nil, ErrNotIndexable
 }
 
 // IndexSet sets an element at a given index.
-func (o *ObjectImpl) IndexSet(index, value Object) (err error) {
+func (o *ObjectImpl) IndexSet(_, _ Object) (err error) {
 	return ErrNotIndexAssignable
 }
 
@@ -67,5 +67,15 @@ func (o *ObjectImpl) Call(_ RuntimeHooks, _ ...Object) (ret Object, err error) {
 
 // CanCall returns whether the Object can be Called.
 func (o *ObjectImpl) CanCall() bool {
+	return false
+}
+
+// Spread returns a list of Objects that this object Spreads into.
+func (o *ObjectImpl) Spread() []Object {
+	return nil
+}
+
+// CanSpread returns whether the object can be Spread.
+func (o *ObjectImpl) CanSpread() bool {
 	return false
 }

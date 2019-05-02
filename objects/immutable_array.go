@@ -116,3 +116,6 @@ func (o *ImmutableArray) CanIterate() bool {
 
 // Spread spreads the array into its values
 func (o *ImmutableArray) Spread() []Object { return o.Value }
+
+// CanSpread returns whether the Object can be Spread.
+func (o *ImmutableArray) CanSpread() bool { return true }
