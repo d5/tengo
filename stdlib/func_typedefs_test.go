@@ -510,13 +510,13 @@ func (h dummyHooksVal) Call(val objects.Object, args ...objects.Object) (objects
 	return h.returnVal, nil
 }
 
-type dummyHooksError struct {
-	err error
-}
+// type dummyHooksError struct {
+// 	err error
+// }
 
-func (h dummyHooksError) Call(val objects.Object, args ...objects.Object) (objects.Object, error) {
-	if h.err == nil {
-		return nil, errors.New("panic: no error set in dummyHooksError")
-	}
-	return nil, h.err
-}
+// func (h dummyHooksError) Call(val objects.Object, args ...objects.Object) (objects.Object, error) {
+// 	if h.err == nil {
+// 		return nil, errors.New("panic: no error set in dummyHooksError")
+// 	}
+// 	return nil, h.err
+// }
