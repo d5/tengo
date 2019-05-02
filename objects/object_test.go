@@ -33,8 +33,6 @@ func TestObject_TypeName(t *testing.T) {
 	assert.Equal(t, "builtin-function:fn", o.TypeName())
 	o = &objects.UserFunction{Name: "fn"}
 	assert.Equal(t, "user-function:fn", o.TypeName())
-	o = &objects.Closure{}
-	assert.Equal(t, "closure", o.TypeName())
 	o = &objects.CompiledFunction{}
 	assert.Equal(t, "compiled-function", o.TypeName())
 	o = &objects.Undefined{}
@@ -77,8 +75,6 @@ func TestObject_IsFalsy(t *testing.T) {
 	o = &objects.MapIterator{}
 	assert.True(t, o.IsFalsy())
 	o = &objects.BuiltinFunction{}
-	assert.False(t, o.IsFalsy())
-	o = &objects.Closure{}
 	assert.False(t, o.IsFalsy())
 	o = &objects.CompiledFunction{}
 	assert.False(t, o.IsFalsy())
@@ -151,9 +147,6 @@ func TestObject_BinaryOp(t *testing.T) {
 	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
 	assert.Error(t, err)
 	o = &objects.BuiltinFunction{}
-	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
-	assert.Error(t, err)
-	o = &objects.Closure{}
 	_, err = o.BinaryOp(token.Add, objects.UndefinedValue)
 	assert.Error(t, err)
 	o = &objects.CompiledFunction{}

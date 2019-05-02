@@ -264,15 +264,7 @@ func formatGlobals(globals []objects.Object) (formatted []string) {
 			return
 		}
 
-		switch global := global.(type) {
-		case *objects.Closure:
-			formatted = append(formatted, fmt.Sprintf("[% 3d] (Closure|%p)", idx, global))
-			for _, l := range compiler.FormatInstructions(global.Fn.Instructions, 0) {
-				formatted = append(formatted, fmt.Sprintf("     %s", l))
-			}
-		default:
-			formatted = append(formatted, fmt.Sprintf("[% 3d] %s (%s|%p)", idx, global.String(), reflect.TypeOf(global).Elem().Name(), global))
-		}
+		formatted = append(formatted, fmt.Sprintf("[% 3d] %s (%s|%p)", idx, global.String(), reflect.TypeOf(global).Elem().Name(), global))
 	}
 
 	return

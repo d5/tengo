@@ -165,8 +165,6 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		return equalObjectMap(t, expected.Value, actual.(*objects.ImmutableMap).Value, msg...)
 	case *objects.CompiledFunction:
 		return equalCompiledFunction(t, expected, actual.(*objects.CompiledFunction), msg...)
-	case *objects.Closure:
-		return equalClosure(t, expected, actual.(*objects.Closure), msg...)
 	case *objects.Undefined:
 		if expected != actual {
 			return failExpectedActual(t, expected, actual, msg...)
@@ -315,19 +313,6 @@ func equalCompiledFunction(t *testing.T, expected, actual objects.Object, msg ..
 	expectedT := expected.(*objects.CompiledFunction)
 	actualT := actual.(*objects.CompiledFunction)
 
-	return Equal(t,
-		compiler.FormatInstructions(expectedT.Instructions, 0),
-		compiler.FormatInstructions(actualT.Instructions, 0), msg...)
-}
-
-func equalClosure(t *testing.T, expected, actual objects.Object, msg ...interface{}) bool {
-	expectedT := expected.(*objects.Closure)
-	actualT := actual.(*objects.Closure)
-
-	if !Equal(t, expectedT.Fn, actualT.Fn, msg...) {
-		return false
-	}
-
 	if !Equal(t, len(expectedT.Free), len(actualT.Free), msg...) {
 		return false
 	}
@@ -338,7 +323,9 @@ func equalClosure(t *testing.T, expected, actual objects.Object, msg ...interfac
 		}
 	}
 
-	return true
+	return Equal(t,
+		compiler.FormatInstructions(expectedT.Instructions, 0),
+		compiler.FormatInstructions(actualT.Instructions, 0), msg...)
 }
 
 func isNil(v interface{}) bool {

@@ -13,6 +13,7 @@ type CompiledFunction struct {
 	NumParameters int
 	VarArgs       bool
 	SourceMap     map[int]source.Pos
+	Free          []*ObjectPtr
 }
 
 // TypeName returns the name of the type.
@@ -37,6 +38,7 @@ func (o *CompiledFunction) Copy() Object {
 		NumLocals:     o.NumLocals,
 		NumParameters: o.NumParameters,
 		VarArgs:       o.VarArgs,
+		Free:          append([]*ObjectPtr{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
 	}
 }
 
