@@ -215,7 +215,7 @@ func (p *Parser) parseCall(x ast.Expr) *ast.CallExpr {
 	for p.token != token.RParen && p.token != token.EOF {
 		expr := p.parseExpr()
 		if p.token == token.Ellipsis {
-			expr = &ast.ExplodeExpr{
+			expr = &ast.SpreadExpr{
 				Expr:     expr,
 				Ellipsis: p.pos,
 			}
@@ -499,7 +499,7 @@ func (p *Parser) parseArrayLit() ast.Expr {
 	for p.token != token.RBrack && p.token != token.EOF {
 		expr := p.parseExpr()
 		if p.token == token.Ellipsis {
-			expr = &ast.ExplodeExpr{
+			expr = &ast.SpreadExpr{
 				Expr:     expr,
 				Ellipsis: p.pos,
 			}

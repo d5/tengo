@@ -6,12 +6,12 @@ import (
 	"github.com/d5/tengo/compiler/ast"
 )
 
-func TestExplodeArray(t *testing.T) {
+func TestSpreadArray(t *testing.T) {
 	expect(t, "[a...]", func(p pfn) []ast.Stmt {
 		return stmts(
 			exprStmt(
 				arrayLit(p(1, 1), p(1, 6),
-					explodeExpr(
+					SpreadExpr(
 						ident("a", p(1, 2)),
 					))))
 	})
@@ -20,7 +20,7 @@ func TestExplodeArray(t *testing.T) {
 		return stmts(
 			exprStmt(
 				arrayLit(p(1, 1), p(1, 9),
-					explodeExpr(
+					SpreadExpr(
 						ident("a", p(1, 2)),
 					),
 					ident("b", p(1, 8)),
@@ -32,7 +32,7 @@ func TestExplodeArray(t *testing.T) {
 			exprStmt(
 				arrayLit(p(1, 1), p(1, 9),
 					ident("a", p(1, 2)),
-					explodeExpr(
+					SpreadExpr(
 						ident("b", p(1, 5)),
 					),
 				)))
@@ -42,24 +42,24 @@ func TestExplodeArray(t *testing.T) {
 		return stmts(
 			exprStmt(
 				arrayLit(p(1, 1), p(1, 12),
-					explodeExpr(
+					SpreadExpr(
 						ident("a", p(1, 2)),
 					),
-					explodeExpr(
+					SpreadExpr(
 						ident("b", p(1, 8)),
 					),
 				)))
 	})
 }
 
-func TestExplodeFunc(t *testing.T) {
+func TestSpreadFunc(t *testing.T) {
 	expect(t, "fn(a...)", func(p pfn) []ast.Stmt {
 		return stmts(
 			exprStmt(
 				callExpr(
 					ident("fn", p(1, 1)),
 					p(1, 3), p(1, 8),
-					explodeExpr(
+					SpreadExpr(
 						ident("a", p(1, 4)),
 					),
 				),
@@ -72,7 +72,7 @@ func TestExplodeFunc(t *testing.T) {
 				callExpr(
 					ident("fn", p(1, 1)),
 					p(1, 3), p(1, 11),
-					explodeExpr(
+					SpreadExpr(
 						ident("a", p(1, 4)),
 					),
 					ident("b", p(1, 10)),
@@ -87,7 +87,7 @@ func TestExplodeFunc(t *testing.T) {
 					ident("fn", p(1, 1)),
 					p(1, 3), p(1, 11),
 					ident("a", p(1, 4)),
-					explodeExpr(
+					SpreadExpr(
 						ident("b", p(1, 7)),
 					),
 				),
@@ -100,10 +100,10 @@ func TestExplodeFunc(t *testing.T) {
 				callExpr(
 					ident("fn", p(1, 1)),
 					p(1, 3), p(1, 14),
-					explodeExpr(
+					SpreadExpr(
 						ident("a", p(1, 4)),
 					),
-					explodeExpr(
+					SpreadExpr(
 						ident("b", p(1, 10)),
 					),
 				),

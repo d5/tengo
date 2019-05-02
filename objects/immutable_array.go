@@ -114,5 +114,5 @@ func (o *ImmutableArray) CanIterate() bool {
 	return true
 }
 
-// Explode explodes the array into its vaues
-func (o *ImmutableArray) Explode() []Object { return o.Value }
+// Spread spreads the array into its values
+func (o *ImmutableArray) Spread() []Object { return o.Value }

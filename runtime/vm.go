@@ -337,8 +337,8 @@ func (v *VM) run() {
 			var elements []objects.Object
 			for i := v.sp - numElements; i < v.sp; i++ {
 				elt := v.stack[i]
-				if exploded, ok := elt.(*objects.Exploded); ok {
-					elements = append(elements, exploded.Value...)
+				if SpreadValues, ok := elt.(*objects.SpreadValues); ok {
+					elements = append(elements, SpreadValues.Value...)
 				} else {
 					elements = append(elements, elt)
 				}
@@ -630,13 +630,13 @@ func (v *VM) run() {
 				v.sp++
 			}
 
-		case compiler.OpExplode:
+		case compiler.OpSpread:
 			sp := v.sp - 1
 			obj := v.stack[sp]
-			if exploded, ok := obj.(objects.Explodable); ok {
-				v.stack[sp] = &objects.Exploded{Value: exploded.Explode()}
+			if SpreadValues, ok := obj.(objects.Spreadable); ok {
+				v.stack[sp] = &objects.SpreadValues{Value: SpreadValues.Spread()}
 			} else {
-				v.err = fmt.Errorf("cannot explode object of type %s", obj.TypeName())
+				v.err = fmt.Errorf("cannot spread object of type %s", obj.TypeName())
 				return
 			}
 
@@ -646,18 +646,18 @@ func (v *VM) run() {
 			spBase := v.sp - 1 - numArgs
 			value := v.stack[spBase]
 
-			// explode args that need it
+			// spread args that need it
 			for i := spBase + 1; i < v.sp; i++ {
-				if exploded, ok := v.stack[i].(*objects.Exploded); ok {
-					list := exploded.Value
-					numExploded := len(list)
-					ebStart, ebEnd := i, i+numExploded
+				if SpreadValues, ok := v.stack[i].(*objects.SpreadValues); ok {
+					list := SpreadValues.Value
+					numSpreadValues := len(list)
+					ebStart, ebEnd := i, i+numSpreadValues
 					rxStart, rxEnd := i+1, spBase+numArgs+1
-					rmStart, rmEnd := i+numExploded, spBase+numArgs+numExploded
+					rmStart, rmEnd := i+numSpreadValues, spBase+numArgs+numSpreadValues
 					copy(v.stack[rmStart:rmEnd], v.stack[rxStart:rxEnd])
 					copy(v.stack[ebStart:ebEnd], list)
-					numArgs += numExploded - 1
-					v.sp += numExploded - 1
+					numArgs += numSpreadValues - 1
+					v.sp += numSpreadValues - 1
 				}
 			}
 

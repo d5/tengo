@@ -184,8 +184,8 @@ func identList(opening, closing source.Pos, varArgs bool, list ...*ast.Ident) *a
 	return &ast.IdentList{VarArgs: varArgs, List: list, LParen: opening, RParen: closing}
 }
 
-func explodeExpr(expr ast.Expr) *ast.ExplodeExpr {
-	return &ast.ExplodeExpr{Expr: expr, Ellipsis: expr.End()}
+func SpreadExpr(expr ast.Expr) *ast.SpreadExpr {
+	return &ast.SpreadExpr{Expr: expr, Ellipsis: expr.End()}
 }
 
 func binaryExpr(x, y ast.Expr, op token.Token, pos source.Pos) *ast.BinaryExpr {
@@ -366,8 +366,8 @@ func equalExpr(t *testing.T, expected, actual ast.Expr) bool {
 		return assert.Equal(t, expected.LBrace, actual.(*ast.MapLit).LBrace) &&
 			assert.Equal(t, expected.RBrace, actual.(*ast.MapLit).RBrace) &&
 			equalMapElements(t, expected.Elements, actual.(*ast.MapLit).Elements)
-	case *ast.ExplodeExpr:
-		actualEE := actual.(*ast.ExplodeExpr)
+	case *ast.SpreadExpr:
+		actualEE := actual.(*ast.SpreadExpr)
 		return equalExpr(t, expected.Expr, actualEE.Expr) &&
 			assert.Equal(t, expected.Ellipsis, actualEE.Ellipsis)
 	case *ast.BinaryExpr:

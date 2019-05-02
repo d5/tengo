@@ -135,5 +135,5 @@ func (o *Array) CanIterate() bool {
 	return true
 }
 
-// Explode explodes the array into its vaues
-func (o *Array) Explode() []Object { return o.Value }
+// Spread spreads the array into its values
+func (o *Array) Spread() []Object { return o.Value }

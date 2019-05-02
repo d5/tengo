@@ -503,12 +503,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(node, OpReturn, 1)
 		}
 
-	case *ast.ExplodeExpr:
+	case *ast.SpreadExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
 		}
 
-		c.emit(node, OpExplode)
+		c.emit(node, OpSpread)
 
 	case *ast.CallExpr:
 		if err := c.Compile(node.Func); err != nil {
