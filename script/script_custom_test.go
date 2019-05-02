@@ -12,6 +12,7 @@ import (
 )
 
 type Counter struct {
+	objects.ObjectImpl
 	value int64
 }
 
@@ -62,6 +63,10 @@ func (o *Counter) Copy() objects.Object {
 
 func (o *Counter) Call(args ...objects.Object) (objects.Object, error) {
 	return &objects.Int{Value: o.value}, nil
+}
+
+func (o *Counter) CanCall() bool {
+	return true
 }
 
 func TestScript_CustomObjects(t *testing.T) {

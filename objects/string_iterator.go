@@ -4,6 +4,7 @@ import "github.com/d5/tengo/compiler/token"
 
 // StringIterator represents an iterator for a string.
 type StringIterator struct {
+	ObjectImpl
 	v []rune
 	i int
 	l int

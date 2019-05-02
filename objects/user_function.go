@@ -6,6 +6,7 @@ import (
 
 // UserFunction represents a user function.
 type UserFunction struct {
+	ObjectImpl
 	Name       string
 	Value      CallableFunc
 	EncodingID string
@@ -45,4 +46,9 @@ func (o *UserFunction) Equals(x Object) bool {
 // Call invokes a user function.
 func (o *UserFunction) Call(args ...Object) (Object, error) {
 	return o.Value(args...)
+}
+
+// CanCall returns whether the Object can be Called.
+func (o *UserFunction) CanCall() bool {
+	return true
 }

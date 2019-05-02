@@ -6,6 +6,7 @@ import (
 
 // Bool represents a boolean value.
 type Bool struct {
+	ObjectImpl
 	// this is intentionally non-public to force using objects.TrueValue and FalseValue always
 	value bool
 }

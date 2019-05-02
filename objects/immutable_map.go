@@ -9,6 +9,7 @@ import (
 
 // ImmutableMap represents an immutable map object.
 type ImmutableMap struct {
+	ObjectImpl
 	Value map[string]Object
 }
 
@@ -55,12 +56,12 @@ func (o *ImmutableMap) IndexGet(index Object) (res Object, err error) {
 		return
 	}
 
-	val, ok := o.Value[strIdx]
+	res, ok = o.Value[strIdx]
 	if !ok {
-		val = UndefinedValue
+		res = UndefinedValue
 	}
 
-	return val, nil
+	return
 }
 
 // Equals returns true if the value of the type
@@ -102,4 +103,9 @@ func (o *ImmutableMap) Iterate() Iterator {
 		k: keys,
 		l: len(keys),
 	}
+}
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *ImmutableMap) CanIterate() bool {
+	return true
 }

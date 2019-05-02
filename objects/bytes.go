@@ -9,6 +9,7 @@ import (
 
 // Bytes represents a byte array.
 type Bytes struct {
+	ObjectImpl
 	Value []byte
 }
 
@@ -86,4 +87,9 @@ func (o *Bytes) Iterate() Iterator {
 		v: o.Value,
 		l: len(o.Value),
 	}
+}
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *Bytes) CanIterate() bool {
+	return true
 }

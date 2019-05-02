@@ -9,6 +9,7 @@ import (
 
 // Array represents an array of objects.
 type Array struct {
+	ObjectImpl
 	Value []Object
 }
 
@@ -127,4 +128,9 @@ func (o *Array) Iterate() Iterator {
 		v: o.Value,
 		l: len(o.Value),
 	}
+}
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *Array) CanIterate() bool {
+	return true
 }

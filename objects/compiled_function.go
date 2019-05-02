@@ -7,6 +7,7 @@ import (
 
 // CompiledFunction represents a compiled function.
 type CompiledFunction struct {
+	ObjectImpl
 	Instructions  []byte
 	NumLocals     int // number of local variables (including function parameters)
 	NumParameters int
@@ -59,4 +60,9 @@ func (o *CompiledFunction) SourcePos(ip int) source.Pos {
 		ip--
 	}
 	return source.NoPos
+}
+
+// CanCall returns whether the Object can be Called.
+func (o *CompiledFunction) CanCall() bool {
+	return true
 }

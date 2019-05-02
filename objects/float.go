@@ -9,6 +9,7 @@ import (
 
 // Float represents a floating point number value.
 type Float struct {
+	ObjectImpl
 	Value float64
 }
 

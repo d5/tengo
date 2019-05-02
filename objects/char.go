@@ -6,6 +6,7 @@ import (
 
 // Char represents a character value.
 type Char struct {
+	ObjectImpl
 	Value rune
 }
 

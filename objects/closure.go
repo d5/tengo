@@ -6,6 +6,7 @@ import (
 
 // Closure represents a function closure.
 type Closure struct {
+	ObjectImpl
 	Fn   *CompiledFunction
 	Free []*ObjectPtr
 }
@@ -42,4 +43,9 @@ func (o *Closure) IsFalsy() bool {
 // is equal to the value of another object.
 func (o *Closure) Equals(x Object) bool {
 	return false
+}
+
+// CanCall returns whether the Object can be Called.
+func (o *Closure) CanCall() bool {
+	return true
 }

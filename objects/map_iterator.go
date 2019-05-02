@@ -4,6 +4,7 @@ import "github.com/d5/tengo/compiler/token"
 
 // MapIterator represents an iterator for the map.
 type MapIterator struct {
+	ObjectImpl
 	v map[string]Object
 	k []string
 	i int

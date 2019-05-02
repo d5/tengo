@@ -3,18 +3,12 @@
 ## Table of Contents
 
 - [Tengo Objects](#tengo-objects)
-  - [Object Interface](#object-interface)
-  - [Callable Interface](#callable-interface)
-  - [Indexable Interface](#indexable-interface)
-  - [Index-Assignable Interface](#index-assignable-interface)
-  - [Iterable Interface](#iterable-interface)
-    - [Iterator Interface](#iterator-interface)
 - [Runtime Object Types](#runtime-object-types)
 - [User Object Types](#user-object-types)
 
 ## Tengo Objects
 
-In Tengo, all object types _(both [runtime types](#runtime-object-types) and [user types](#user-object-types))_ must implement [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface. And some types may implement other optional interfaces ([Callable](https://godoc.org/github.com/d5/tengo/objects#Callable), [Indexable](https://godoc.org/github.com/d5/tengo/objects#Indexable), [IndexAssignable](https://godoc.org/github.com/d5/tengo/objects#IndexAssignable), [Iterable](https://godoc.org/github.com/d5/tengo/objects#Iterable)) to support additional language features.  
+In Tengo, all object types _(both [runtime types](#runtime-object-types) and [user types](#user-object-types))_ must implement [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface.
 
 ### Object Interface
 
@@ -59,64 +53,69 @@ Copy() Object
 
 Copy method should return a _new_ copy of the object. Builtin function `copy` uses this method to copy values. Default implementation of all runtime types return a deep-copy values, but, it's not a requirement by the runtime.
 
-
-### Callable Interface
-
-If the type implements [Callable](https://godoc.org/github.com/d5/tengo/objects#Callable) interface, its values can be invoked as if they were functions. 
-
 ```golang
-type Callable interface {
-	Call(args ...Object) (ret Object, err error)
-}
+IndexGet(index Object) (value Object, err error)
 ```
 
-### Indexable Interface
+IndexGet should take an index Object and return a result Object or an error for indexable objects. Indexable is an object that can take an index and return an object. If a type is indexable, its values support dot selector (value = object.index) and indexer (value = object[index]) syntax.
 
-If the type implements [Indexable](https://godoc.org/github.com/d5/tengo/objects#Indexable) interface, its values support dot selector (`value = object.index`) and indexer (`value = object[index]`) syntax.
+If Object is not indexable, ErrNotIndexable should be returned as error. If nil is returned as value, it will be converted to Undefined value by the runtime.
 
-```golang
-type Indexable interface {
-	IndexGet(index Object) (value Object, err error)
-}
-```
+If `IndexGet` returns an error (`err`), the VM will treat it as a run-time error and ignore the returned value.
 
-If `IndexGet` returns an error (`err`), the VM will treat it as a run-time error. 
-
-Array and Map implementation forces the type of index Object to be Int and String respectively, but, it's not a required behavior of the VM. It is completely okay to take various index types as long as it is consistent. 
+Array and Map implementation forces the type of index Object to be Int and String respectively, but, it's not a required behavior of the VM. It is completely okay to take various index types as long as it is consistent.
 
 By convention, Array or Array-like types and Map or Map-like types return `Undefined` value when the key does not exist. But, again, this is not a required behavior.
 
-### Index-Assignable Interface
-
-If the type implements [IndexAssignable](https://godoc.org/github.com/d5/tengo/objects#IndexAssignable) interface, its values support assignment using dot selector (`object.index = value`) and indexer (`object[index] = value`) in the assignment statements.
-
 ```golang
-type IndexAssignable interface {
-	IndexSet(index, value Object) error
-}
+IndexSet(index, value Object) error
 ```
 
-Array and Map implementation forces the type of index Object to be Int and String respectively, but, it's not a required behavior of the VM. It is completely okay to take various index types as long as it is consistent. 
+IndexSet should take an index Object and a value Object for index assignable objects. Index assignable is an object that can take an index and a value on the left-hand side of the assignment statement. If a type is index assignable, its values support assignment using dot selector (`object.index = value`) and indexer (`object[index] = value`) in the assignment statements.
 
-### Iterable Interface
+If Object is not index assignable, ErrNotIndexAssignable should be returned as error. If an error is returned, it will be treated as a run-time error.
 
-If the type implements [Iterable](https://godoc.org/github.com/d5/tengo/objects#Iterable) interface, its values can be used in `for-in` statements (`for key, value in object { ... }`).
+Array and Map implementation forces the type of index Object to be Int and String respectively, but, it's not a required behavior of the VM. It is completely okay to take various index types as long as it is consistent.
+
+#### Callable Objects
+
+If the type is Callable, its values can be invoked as if they were functions. Two functions need to be implemented for Callable objects.
 
 ```golang
-type Iterable interface {
-	Iterate() Iterator
-}
+CanCall() bool
 ```
 
-This Iterate method should return another object that implements [Iterator](https://godoc.org/github.com/d5/tengo/objects#Iterator) interface.
+CanCall should return whether the Object can be called. When this function returns true, the Object is considered Callable.
 
-#### Iterator Interface
+```golang
+Call(args ...Object) (ret Object, err error)
+```
+
+Call should take an arbitrary number of arguments and return a return value and/or an error, which the VM will consider as a run-time error.
+
+#### Iterable Objects
+
+If a type is iterable, its values can be used in `for-in` statements (`for key, value in object { ... }`). Two functions need to be implemented for Iterable Objects
+
+```golang
+CanIterate() bool
+```
+
+CanIterate should return whether the Object can be Iterated.
+
+```golang
+Iterate() Iterator
+```
+
+The Iterate method should return another object that implements [Iterator](https://godoc.org/github.com/d5/tengo/objects#Iterator) interface.
+
+### Iterator Interface
 
 ```golang
 Next() bool
 ```
 
-Next method should return true if there are more elements to iterate. When used with `for-in` statements, the compiler uses Key and Value methods to populate the current element's key (or index) and value from the object that this iterator represents. The runtime will stop iterating in `for-in` statement when this method returns false. 
+Next method should return true if there are more elements to iterate. When used with `for-in` statements, the compiler uses Key and Value methods to populate the current element's key (or index) and value from the object that this iterator represents. The runtime will stop iterating in `for-in` statement when this method returns false.
 
 ```golang
 Key() Object
@@ -144,14 +143,16 @@ These are the basic types Tengo runtime supports out of the box:
 
 See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on these runtime types.
 
+
 ## User Object Types
 
-Users can easily extend and add their own types by implementing the same [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface, and, Tengo runtime will treat them in the same way as its runtime types with no performance overhead. 
+Users can easily extend and add their own types by implementing the same [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface and the default `ObjectImpl` implementation. Tengo runtime will treat them in the same way as its runtime types with no performance overhead.
 
 Here's an example user type implementation, `StringArray`:
 
 ```golang
 type StringArray struct {
+	objects.ObjectImpl
 	Value []string
 }
 
@@ -215,11 +216,11 @@ s := script.New([]byte(`
 `))
 
 myList := &StringArray{Value: []string{"one", "two"}}
-s.Add("my_list", myList)  // add StringArray value 'my_list' 
-s.Run()                   // prints "one, two, three" 
+s.Add("my_list", myList)  // add StringArray value 'my_list'
+s.Run()                   // prints "one, two, three"
 ```
 
-It can also implement `Indexable` and `IndexAssinable` interfaces:
+It can also implement `IndexGet` and `IndexSet`:
 
 ```golang
 func (o *StringArray) IndexGet(index objects.Object) (objects.Object, error) {
@@ -266,9 +267,13 @@ func (o *StringArray) IndexSet(index, value objects.Object) error {
 }
 ```
 
-If we implement `Callabale` interface:
+If we implement `CamCall` and `Call`:
 
 ```golang
+func (o *StringArray) CanCall() bool {
+	return true
+}
+
 func (o *StringArray) Call(args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
@@ -297,13 +302,17 @@ s := script.New([]byte(`
 `))
 
 myList := &StringArray{Value: []string{"one", "two", "three"}}
-s.Add("my_list", myList)  // add StringArray value 'my_list' 
+s.Add("my_list", myList)  // add StringArray value 'my_list'
 s.Run()                   // prints "1" (index of "two")
 ```
 
 We can also make `StringArray` iterable:
 
 ```golang
+func (o *StringArray) CanIterate() bool {
+	return true
+}
+
 func (o *StringArray) Iterate() objects.Iterator {
 	return &StringArrayIterator{
 		strArr: o,
@@ -311,7 +320,7 @@ func (o *StringArray) Iterate() objects.Iterator {
 }
 
 type StringArrayIterator struct {
-	objectImpl
+	objects.ObjectImpl
 	strArr *StringArray
 	idx    int
 }
@@ -333,4 +342,9 @@ func (i *StringArrayIterator) Value() objects.Object {
 	return &objects.String{Value: i.strArr.Value[i.idx-1]}
 }
 ```
+
+### ObjectImpl
+
+ObjectImpl represents a default Object Implementation. To defined a new value type, one can embed ObjectImpl in their type declarations to avoid implementing all non-significant methods. TypeName() and String() methods still need to be implemented.
+
 

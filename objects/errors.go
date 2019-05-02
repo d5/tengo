@@ -14,6 +14,9 @@ var ErrInvalidIndexType = errors.New("invalid index type")
 // ErrInvalidIndexValueType represents an invalid index value type.
 var ErrInvalidIndexValueType = errors.New("invalid index value type")
 
+// ErrInvalidIndexOnError represents an invalid index on error.
+var ErrInvalidIndexOnError = errors.New("invalid index on error")
+
 // ErrInvalidOperator represents an error for invalid operator usage.
 var ErrInvalidOperator = errors.New("invalid operator")
 
@@ -25,6 +28,15 @@ var ErrBytesLimit = errors.New("exceeding bytes size limit")
 
 // ErrStringLimit represents an error where the size of string value exceeds the limit.
 var ErrStringLimit = errors.New("exceeding string size limit")
+
+// ErrNotIndexable is an error where an Object is not indexable.
+var ErrNotIndexable = errors.New("not indexable")
+
+// ErrNotIndexAssignable is an error where an Object is not index assignable.
+var ErrNotIndexAssignable = errors.New("not index-assignable")
+
+// ErrNotImplemented is an error where an Object has not implemented a required method.
+var ErrNotImplemented = errors.New("not implemented")
 
 // ErrInvalidArgumentType represents an invalid argument value type error.
 type ErrInvalidArgumentType struct {

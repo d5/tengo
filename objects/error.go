@@ -8,6 +8,7 @@ import (
 
 // Error represents a string value.
 type Error struct {
+	ObjectImpl
 	Value Object
 }
 
@@ -44,4 +45,15 @@ func (o *Error) Copy() Object {
 // is equal to the value of another object.
 func (o *Error) Equals(x Object) bool {
 	return o == x // pointer equality
+}
+
+// IndexGet returns an element at a given index.
+func (o *Error) IndexGet(index Object) (res Object, err error) {
+	if strIdx, _ := ToString(index); strIdx != "value" {
+		err = ErrInvalidIndexOnError
+		return
+	}
+
+	res = o.Value
+	return
 }

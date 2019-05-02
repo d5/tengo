@@ -1,9 +1,8 @@
 package objects
 
-import "github.com/d5/tengo/compiler/token"
-
 // ArrayIterator is an iterator for an array.
 type ArrayIterator struct {
+	ObjectImpl
 	v []Object
 	i int
 	l int
@@ -16,12 +15,6 @@ func (i *ArrayIterator) TypeName() string {
 
 func (i *ArrayIterator) String() string {
 	return "<array-iterator>"
-}
-
-// BinaryOp returns another object that is the result of
-// a given binary operator and a right-hand side object.
-func (i *ArrayIterator) BinaryOp(op token.Token, rhs Object) (Object, error) {
-	return nil, ErrInvalidOperator
 }
 
 // IsFalsy returns true if the value of the type is falsy.

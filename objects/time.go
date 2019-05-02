@@ -8,6 +8,7 @@ import (
 
 // Time represents a time value.
 type Time struct {
+	ObjectImpl
 	Value time.Time
 }
 

@@ -9,6 +9,7 @@ import (
 
 // String represents a string value.
 type String struct {
+	ObjectImpl
 	Value   string
 	runeStr []rune
 }
@@ -100,4 +101,9 @@ func (o *String) Iterate() Iterator {
 		v: o.runeStr,
 		l: len(o.runeStr),
 	}
+}
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *String) CanIterate() bool {
+	return true
 }

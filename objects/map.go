@@ -9,6 +9,7 @@ import (
 
 // Map represents a map of objects.
 type Map struct {
+	ObjectImpl
 	Value map[string]Object
 }
 
@@ -82,12 +83,12 @@ func (o *Map) IndexGet(index Object) (res Object, err error) {
 		return
 	}
 
-	val, ok := o.Value[strIdx]
+	res, ok = o.Value[strIdx]
 	if !ok {
-		val = UndefinedValue
+		res = UndefinedValue
 	}
 
-	return val, nil
+	return
 }
 
 // IndexSet sets the value for the given key.
@@ -115,4 +116,9 @@ func (o *Map) Iterate() Iterator {
 		k: keys,
 		l: len(keys),
 	}
+}
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *Map) CanIterate() bool {
+	return true
 }

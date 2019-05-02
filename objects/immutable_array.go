@@ -9,6 +9,7 @@ import (
 
 // ImmutableArray represents an immutable array of objects.
 type ImmutableArray struct {
+	ObjectImpl
 	Value []Object
 }
 
@@ -106,4 +107,9 @@ func (o *ImmutableArray) Iterate() Iterator {
 		v: o.Value,
 		l: len(o.Value),
 	}
+}
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *ImmutableArray) CanIterate() bool {
+	return true
 }

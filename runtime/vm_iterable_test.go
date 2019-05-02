@@ -7,13 +7,17 @@ import (
 )
 
 type StringArrayIterator struct {
-	objectImpl
+	objects.ObjectImpl
 	strArr *StringArray
 	idx    int
 }
 
 func (i *StringArrayIterator) TypeName() string {
 	return "string-array-iterator"
+}
+
+func (i *StringArrayIterator) String() string {
+	return ""
 }
 
 func (i *StringArrayIterator) Next() bool {
@@ -33,6 +37,10 @@ func (o *StringArray) Iterate() objects.Iterator {
 	return &StringArrayIterator{
 		strArr: o,
 	}
+}
+
+func (o *StringArray) CanIterate() bool {
+	return true
 }
 
 func TestIterable(t *testing.T) {
