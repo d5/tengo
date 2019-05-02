@@ -846,9 +846,7 @@ func (v *VM) run() {
 			}
 
 			v.sp -= numFree
-
-			cl := fn.Copy().(*objects.CompiledFunction)
-			cl.Free = free
+			fn.Free = free
 
 			v.allocs--
 			if v.allocs == 0 {
@@ -856,7 +854,7 @@ func (v *VM) run() {
 				return
 			}
 
-			v.stack[v.sp] = cl
+			v.stack[v.sp] = fn
 			v.sp++
 
 		case compiler.OpGetFreePtr:
