@@ -138,7 +138,7 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = type_name(undefined)`, nil, "undefined")
 	expect(t, `out = type_name(error("err"))`, nil, "error")
 	expect(t, `out = type_name(func() {})`, nil, "compiled-function")
-	expect(t, `a := func(x) { return func() { return x } }; out = type_name(a(5))`, nil, "closure") // closure
+	expect(t, `a := func(x) { return func() { return x } }; out = type_name(a(5))`, nil, "compiled-function") // closure
 
 	// is_function
 	expect(t, `out = is_function(1)`, nil, false)

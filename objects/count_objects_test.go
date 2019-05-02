@@ -24,7 +24,6 @@ func TestNumObjects(t *testing.T) {
 	testCountObjects(t, &objects.BuiltinFunction{}, 1)
 	testCountObjects(t, &objects.Bytes{Value: []byte("foobar")}, 1)
 	testCountObjects(t, &objects.Char{Value: '가'}, 1)
-	testCountObjects(t, &objects.Closure{}, 1)
 	testCountObjects(t, &objects.CompiledFunction{}, 1)
 	testCountObjects(t, &objects.Error{Value: &objects.Int{Value: 5}}, 2)
 	testCountObjects(t, &objects.Float{Value: 19.84}, 1)

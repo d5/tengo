@@ -633,62 +633,7 @@ func (v *VM) run() {
 				return
 			}
 
-			switch callee := value.(type) {
-			case *objects.Closure:
-				if callee.Fn.VarArgs {
-					// if the closure is variadic,
-					// roll up all variadic parameters into an array
-					realArgs := callee.Fn.NumParameters - 1
-					varArgs := numArgs - realArgs
-					if varArgs >= 0 {
-						numArgs = realArgs + 1
-						args := make([]objects.Object, varArgs)
-						spStart := v.sp - varArgs
-						for i := spStart; i < v.sp; i++ {
-							args[i-spStart] = v.stack[i]
-						}
-						v.stack[spStart] = &objects.Array{Value: args}
-						v.sp = spStart + 1
-					}
-				}
-
-				if numArgs != callee.Fn.NumParameters {
-					if callee.Fn.VarArgs {
-						v.err = fmt.Errorf("wrong number of arguments: want>=%d, got=%d",
-							callee.Fn.NumParameters-1, numArgs)
-					} else {
-						v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
-							callee.Fn.NumParameters, numArgs)
-					}
-					return
-				}
-
-				// test if it's tail-call
-				if callee.Fn == v.curFrame.fn { // recursion
-					nextOp := v.curInsts[v.ip+1]
-					if nextOp == compiler.OpReturn ||
-						(nextOp == compiler.OpPop && compiler.OpReturn == v.curInsts[v.ip+2]) {
-						for p := 0; p < numArgs; p++ {
-							v.stack[v.curFrame.basePointer+p] = v.stack[v.sp-numArgs+p]
-						}
-						v.sp -= numArgs + 1
-						v.ip = -1 // reset IP to beginning of the frame
-						continue
-					}
-				}
-
-				// update call frame
-				v.curFrame.ip = v.ip // store current ip before call
-				v.curFrame = &(v.frames[v.framesIndex])
-				v.curFrame.fn = callee.Fn
-				v.curFrame.freeVars = callee.Free
-				v.curFrame.basePointer = v.sp - numArgs
-				v.curInsts = callee.Fn.Instructions
-				v.ip = -1
-				v.framesIndex++
-				v.sp = v.sp - numArgs + callee.Fn.NumLocals
-
-			case *objects.CompiledFunction:
+			if callee, ok := value.(*objects.CompiledFunction); ok {
 				if callee.VarArgs {
 					// if the closure is variadic,
 					// roll up all variadic parameters into an array
@@ -735,18 +680,17 @@ func (v *VM) run() {
 				v.curFrame.ip = v.ip // store current ip before call
 				v.curFrame = &(v.frames[v.framesIndex])
 				v.curFrame.fn = callee
-				v.curFrame.freeVars = nil
+				v.curFrame.freeVars = callee.Free
 				v.curFrame.basePointer = v.sp - numArgs
 				v.curInsts = callee.Instructions
 				v.ip = -1
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.NumLocals
-
-			default:
+			} else {
 				var args []objects.Object
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 
-				ret, e := callee.Call(args...)
+				ret, e := value.Call(args...)
 				v.sp -= numArgs + 1
 
 				// runtime error
@@ -900,11 +844,7 @@ func (v *VM) run() {
 			}
 
 			v.sp -= numFree
-
-			var cl = &objects.Closure{
-				Fn:   fn,
-				Free: free,
-			}
+			fn.Free = free
 
 			v.allocs--
 			if v.allocs == 0 {
@@ -912,7 +852,7 @@ func (v *VM) run() {
 				return
 			}
 
-			v.stack[v.sp] = cl
+			v.stack[v.sp] = fn
 			v.sp++
 
 		case compiler.OpGetFreePtr:
