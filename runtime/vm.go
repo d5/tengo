@@ -633,8 +633,7 @@ func (v *VM) run() {
 				return
 			}
 
-			switch callee := value.(type) {
-			case *objects.CompiledFunction:
+			if callee, ok := value.(*objects.CompiledFunction); ok {
 				if callee.VarArgs {
 					// if the closure is variadic,
 					// roll up all variadic parameters into an array
@@ -687,12 +686,11 @@ func (v *VM) run() {
 				v.ip = -1
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.NumLocals
-
-			default:
+			} else {
 				var args []objects.Object
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 
-				ret, e := callee.Call(args...)
+				ret, e := value.Call(args...)
 				v.sp -= numArgs + 1
 
 				// runtime error
