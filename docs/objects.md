@@ -4,8 +4,6 @@
 
 - [Tengo Objects](#tengo-objects)
   - [Object Interface](#object-interface)
-  - [Callable Objects](#callable-interface)
-  - [Iterable Objects](#iterable-interface)
     - [Iterator Interface](#iterator-interface)
 - [Runtime Object Types](#runtime-object-types)
 - [User Object Types](#user-object-types)
