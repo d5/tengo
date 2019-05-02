@@ -3,8 +3,6 @@
 ## Table of Contents
 
 - [Tengo Objects](#tengo-objects)
-  - [Object Interface](#object-interface)
-    - [Iterator Interface](#iterator-interface)
 - [Runtime Object Types](#runtime-object-types)
 - [User Object Types](#user-object-types)
 
@@ -79,7 +77,7 @@ If Object is not index assignable, ErrNotIndexAssignable should be returned as e
 
 Array and Map implementation forces the type of index Object to be Int and String respectively, but, it's not a required behavior of the VM. It is completely okay to take various index types as long as it is consistent.
 
-### Callable Objects
+#### Callable Objects
 
 If the type is Callable, its values can be invoked as if they were functions. Two functions need to be implemented for Callable objects.
 
@@ -95,8 +93,7 @@ Call(args ...Object) (ret Object, err error)
 
 Call should take an arbitrary number of arguments and return a return value and/or an error, which the VM will consider as a run-time error.
 
-
-### Iterable Objects
+#### Iterable Objects
 
 If a type is iterable, its values can be used in `for-in` statements (`for key, value in object { ... }`). Two functions need to be implemented for Iterable Objects
 
@@ -112,7 +109,7 @@ Iterate() Iterator
 
 The Iterate method should return another object that implements [Iterator](https://godoc.org/github.com/d5/tengo/objects#Iterator) interface.
 
-#### Iterator Interface
+### Iterator Interface
 
 ```golang
 Next() bool
@@ -146,10 +143,6 @@ These are the basic types Tengo runtime supports out of the box:
 
 See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on these runtime types.
 
-
-## ObjectImpl
-
-ObjectImpl represents a default Object Implementation. To defined a new value type, one can embed ObjectImpl in their type declarations to avoid implementing all non-significant methods. TypeName() and String() methods still need to be implemented.
 
 ## User Object Types
 
@@ -349,4 +342,9 @@ func (i *StringArrayIterator) Value() objects.Object {
 	return &objects.String{Value: i.strArr.Value[i.idx-1]}
 }
 ```
+
+### ObjectImpl
+
+ObjectImpl represents a default Object Implementation. To defined a new value type, one can embed ObjectImpl in their type declarations to avoid implementing all non-significant methods. TypeName() and String() methods still need to be implemented.
+
 
