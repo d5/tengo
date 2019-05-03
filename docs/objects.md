@@ -107,7 +107,21 @@ CanIterate should return whether the Object can be Iterated.
 Iterate() Iterator
 ```
 
-The Iterate method should return another object that implements [Iterator](https://godoc.org/github.com/d5/tengo/objects#Iterator) interface.
+#### Spreadable Objects
+
+If a type is spredable, its values can be used with spread syntax (`a...`). Two functions need to be implemented for Spreadable Objects
+
+```golang
+CanSpread() bool
+```
+
+CanSpread should return whether the Object can be Spread.
+
+```golang
+Spread() []Object
+```
+
+The Spread method should return a list of Object values that the Spreadable Object spreads into
 
 ### Iterator Interface
 

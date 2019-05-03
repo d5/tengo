@@ -337,8 +337,8 @@ func (v *VM) run() {
 			var elements []objects.Object
 			for i := v.sp - numElements; i < v.sp; i++ {
 				elt := v.stack[i]
-				if SpreadValues, ok := elt.(*objects.SpreadValues); ok {
-					elements = append(elements, SpreadValues.Value...)
+				if spread, ok := elt.(*objects.SpreadValues); ok {
+					elements = append(elements, spread.Value...)
 				} else {
 					elements = append(elements, elt)
 				}
@@ -646,10 +646,16 @@ func (v *VM) run() {
 			spBase := v.sp - 1 - numArgs
 			value := v.stack[spBase]
 
+			// don't bother doing any more work if we're going to fail anyway
+			if !value.CanCall() {
+				v.err = fmt.Errorf("not callable: %s", value.TypeName())
+				return
+			}
+
 			// spread args that need it
 			for i := spBase + 1; i < v.sp; i++ {
-				if SpreadValues, ok := v.stack[i].(*objects.SpreadValues); ok {
-					list := SpreadValues.Value
+				if spread, ok := v.stack[i].(*objects.SpreadValues); ok {
+					list := spread.Value
 					numSpreadValues := len(list)
 					ebStart, ebEnd := i, i+numSpreadValues
 					rxStart, rxEnd := i+1, spBase+numArgs+1
@@ -659,11 +665,6 @@ func (v *VM) run() {
 					numArgs += numSpreadValues - 1
 					v.sp += numSpreadValues - 1
 				}
-			}
-
-			if !value.CanCall() {
-				v.err = fmt.Errorf("not callable: %s", value.TypeName())
-				return
 			}
 
 			switch callee := value.(type) {
@@ -677,8 +678,9 @@ func (v *VM) run() {
 						numArgs = realArgs + 1
 						args := make([]objects.Object, varArgs)
 						spStart := v.sp - varArgs
-						for i := spStart; i < v.sp; i++ {
-							args[i-spStart] = v.stack[i]
+						if copy(args, v.stack[spStart:v.sp]) != varArgs {
+							v.err = fmt.Errorf("panic: unable to copy var args")
+							return
 						}
 						v.stack[spStart] = &objects.Array{Value: args}
 						v.sp = spStart + 1
@@ -731,8 +733,9 @@ func (v *VM) run() {
 						numArgs = realArgs + 1
 						args := make([]objects.Object, varArgs)
 						spStart := v.sp - varArgs
-						for i := spStart; i < v.sp; i++ {
-							args[i-spStart] = v.stack[i]
+						if copy(args, v.stack[spStart:v.sp]) != varArgs {
+							v.err = fmt.Errorf("panic: unable to copy var args")
+							return
 						}
 						v.stack[spStart] = &objects.Array{Value: args}
 						v.sp = spStart + 1
