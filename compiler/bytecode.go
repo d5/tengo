@@ -75,7 +75,6 @@ func init() {
 	gob.Register(&objects.Bool{})
 	gob.Register(&objects.Bytes{})
 	gob.Register(&objects.Char{})
-	gob.Register(&objects.Closure{})
 	gob.Register(&objects.CompiledFunction{})
 	gob.Register(&objects.Error{})
 	gob.Register(&objects.Float{})

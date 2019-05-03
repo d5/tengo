@@ -162,7 +162,7 @@ func builtinIsFunction(_ RuntimeHooks, args ...Object) (Object, error) {
 	}
 
 	switch args[0].(type) {
-	case *CompiledFunction, *Closure:
+	case *CompiledFunction:
 		return TrueValue, nil
 	}
 
