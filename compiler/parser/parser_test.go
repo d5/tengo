@@ -248,6 +248,13 @@ func callExpr(f ast.Expr, lparen, rparen source.Pos, args ...ast.Expr) *ast.Call
 	return &ast.CallExpr{Func: f, LParen: lparen, RParen: rparen, Args: args}
 }
 
+func spreadExpr(e ast.Expr, ellipsis source.Pos) *ast.SpreadExpr {
+	return &ast.SpreadExpr{
+		Element:  e,
+		Ellipsis: ellipsis,
+	}
+}
+
 func indexExpr(x, index ast.Expr, lbrack, rbrack source.Pos) *ast.IndexExpr {
 	return &ast.IndexExpr{Expr: x, Index: index, LBrack: lbrack, RBrack: rbrack}
 }
@@ -379,6 +386,10 @@ func equalExpr(t *testing.T, expected, actual ast.Expr) bool {
 			assert.Equal(t, expected.LParen, actual.(*ast.CallExpr).LParen) &&
 			assert.Equal(t, expected.RParen, actual.(*ast.CallExpr).RParen) &&
 			equalExprs(t, expected.Args, actual.(*ast.CallExpr).Args)
+	case *ast.SpreadExpr:
+		actualSpread := actual.(*ast.SpreadExpr)
+		return equalExpr(t, expected.Element, actualSpread.Element) &&
+			assert.Equal(t, expected.Ellipsis, actualSpread.Ellipsis)
 	case *ast.ParenExpr:
 		return equalExpr(t, expected.Expr, actual.(*ast.ParenExpr).Expr) &&
 			assert.Equal(t, expected.LParen, actual.(*ast.ParenExpr).LParen) &&

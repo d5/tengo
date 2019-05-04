@@ -213,7 +213,12 @@ func (p *Parser) parseCall(x ast.Expr) *ast.CallExpr {
 
 	var list []ast.Expr
 	for p.token != token.RParen && p.token != token.EOF {
-		list = append(list, p.parseExpr())
+		expr := p.parseExpr()
+		if p.token == token.Ellipsis {
+			expr = &ast.SpreadExpr{Element: expr, Ellipsis: p.pos}
+			p.next()
+		}
+		list = append(list, expr)
 
 		if !p.expectComma(token.RParen, "call argument") {
 			break
@@ -489,7 +494,12 @@ func (p *Parser) parseArrayLit() ast.Expr {
 
 	var elements []ast.Expr
 	for p.token != token.RBrack && p.token != token.EOF {
-		elements = append(elements, p.parseExpr())
+		expr := p.parseExpr()
+		if p.token == token.Ellipsis {
+			expr = &ast.SpreadExpr{Element: expr, Ellipsis: p.pos}
+			p.next()
+		}
+		elements = append(elements, expr)
 
 		if !p.expectComma(token.RBrack, "array element") {
 			break

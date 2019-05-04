@@ -516,6 +516,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		c.emit(node, OpCall, len(node.Args))
 
+	case *ast.SpreadExpr:
+		if err := c.Compile(node.Element); err != nil {
+			return err
+		}
+
+		c.emit(node, OpSpread)
+
 	case *ast.ImportExpr:
 		if node.ModuleName == "" {
 			return c.errorf(node, "empty module name")
