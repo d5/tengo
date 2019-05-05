@@ -1,7 +1,7 @@
 package objects
 
 // len(obj object) => int
-func builtinLen(args ...Object) (Object, error) {
+func builtinLen(rt Runtime, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}

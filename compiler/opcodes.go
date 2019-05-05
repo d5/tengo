@@ -46,6 +46,7 @@ const (
 	OpIteratorKey                 // Iterator key
 	OpIteratorValue               // Iterator value
 	OpBinaryOp                    // Binary Operation
+	OpSuspend                     // Used internally by the VM to suspend execution
 )
 
 // OpcodeNames is opcode names.
@@ -91,6 +92,7 @@ var OpcodeNames = [...]string{
 	OpIteratorKey:   "ITKEY",
 	OpIteratorValue: "ITVAL",
 	OpBinaryOp:      "BINARYOP",
+	OpSuspend:       "SUSPEND",
 }
 
 // OpcodeOperands is the number of operands.
@@ -136,6 +138,7 @@ var OpcodeOperands = [...][]int{
 	OpIteratorKey:   {},
 	OpIteratorValue: {},
 	OpBinaryOp:      {1},
+	OpSuspend:       {},
 }
 
 // ReadOperands reads operands from the bytecode.

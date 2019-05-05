@@ -1,6 +1,6 @@
 package objects
 
-func builtinTypeName(args ...Object) (Object, error) {
+func builtinTypeName(rt Runtime, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}

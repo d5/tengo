@@ -101,7 +101,7 @@ type callres struct {
 	e error
 }
 
-func (c callres) call(funcName string, args ...interface{}) callres {
+func (c callres) call(funcName string, rt objects.Runtime, args ...interface{}) callres {
 	if c.e != nil {
 		return c
 	}
@@ -123,10 +123,10 @@ func (c callres) call(funcName string, args ...interface{}) callres {
 			return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
 		}
 
-		res, err := f.Value(oargs...)
+		res, err := f.Value(rt, oargs...)
 		return callres{t: c.t, o: res, e: err}
 	case *objects.UserFunction:
-		res, err := o.Value(oargs...)
+		res, err := o.Value(rt, oargs...)
 		return callres{t: c.t, o: res, e: err}
 	case *objects.ImmutableMap:
 		m, ok := o.Value[funcName]
@@ -139,7 +139,7 @@ func (c callres) call(funcName string, args ...interface{}) callres {
 			return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
 		}
 
-		res, err := f.Value(oargs...)
+		res, err := f.Value(rt, oargs...)
 		return callres{t: c.t, o: res, e: err}
 	default:
 		panic(fmt.Errorf("unexpected object: %v (%T)", o, o))
@@ -241,4 +241,21 @@ func expect(t *testing.T, input string, expected interface{}) {
 	}
 
 	assert.Equal(t, expected, v.Value())
+}
+
+type mockRuntime struct {
+	val objects.Object
+	err error
+}
+
+func (rt mockRuntime) Call(fn objects.Object, args ...objects.Object) (objects.Object, error) {
+	if rt.err != nil {
+		return nil, rt.err
+	}
+
+	if rt.val == nil {
+		return objects.UndefinedValue, nil
+	}
+
+	return rt.val, nil
 }

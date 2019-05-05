@@ -48,10 +48,11 @@ type Object interface {
 	// CanIterate should return whether the Object can be Iterated.
 	CanIterate() bool
 
-	// Call should take an arbitrary number of arguments
-	// and returns a return value and/or an error,
+	// Call should take a reference to the currently
+	// executing Runtime, an arbitrary number of arguments,
+	// and should return a return value and/or an error,
 	// which the VM will consider as a run-time error.
-	Call(args ...Object) (ret Object, err error)
+	Call(rt Runtime, args ...Object) (ret Object, err error)
 
 	// CanCall should return whether the Object can be Called.
 	CanCall() bool

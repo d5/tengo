@@ -1,7 +1,7 @@
 package objects
 
 // append(arr, items...)
-func builtinAppend(args ...Object) (Object, error) {
+func builtinAppend(rt Runtime, args ...Object) (Object, error) {
 	if len(args) < 2 {
 		return nil, ErrWrongNumArguments
 	}

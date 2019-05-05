@@ -61,7 +61,7 @@ func (o *ObjectImpl) CanIterate() bool {
 
 // Call takes an arbitrary number of arguments
 // and returns a return value and/or an error.
-func (o *ObjectImpl) Call(args ...Object) (ret Object, err error) {
+func (o *ObjectImpl) Call(rt Runtime, args ...Object) (ret Object, err error) {
 	return nil, nil
 }
 

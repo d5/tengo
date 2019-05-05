@@ -43,8 +43,8 @@ func (o *BuiltinFunction) Equals(x Object) bool {
 }
 
 // Call executes a builtin function.
-func (o *BuiltinFunction) Call(args ...Object) (Object, error) {
-	return o.Value(args...)
+func (o *BuiltinFunction) Call(rt Runtime, args ...Object) (Object, error) {
+	return o.Value(rt, args...)
 }
 
 // CanCall returns whether the Object can be Called.

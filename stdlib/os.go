@@ -84,7 +84,7 @@ var osModule = map[string]objects.Object{
 	"read_file":           &objects.UserFunction{Name: "read_file", Value: osReadFile},                    // readfile(name) => array(byte)/error
 }
 
-func osReadFile(args ...objects.Object) (ret objects.Object, err error) {
+func osReadFile(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -110,7 +110,7 @@ func osReadFile(args ...objects.Object) (ret objects.Object, err error) {
 	return &objects.Bytes{Value: bytes}, nil
 }
 
-func osStat(args ...objects.Object) (ret objects.Object, err error) {
+func osStat(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -147,7 +147,7 @@ func osStat(args ...objects.Object) (ret objects.Object, err error) {
 	return fstat, nil
 }
 
-func osCreate(args ...objects.Object) (objects.Object, error) {
+func osCreate(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -169,7 +169,7 @@ func osCreate(args ...objects.Object) (objects.Object, error) {
 	return makeOSFile(res), nil
 }
 
-func osOpen(args ...objects.Object) (objects.Object, error) {
+func osOpen(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -191,7 +191,7 @@ func osOpen(args ...objects.Object) (objects.Object, error) {
 	return makeOSFile(res), nil
 }
 
-func osOpenFile(args ...objects.Object) (objects.Object, error) {
+func osOpenFile(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
 	if len(args) != 3 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -231,7 +231,7 @@ func osOpenFile(args ...objects.Object) (objects.Object, error) {
 	return makeOSFile(res), nil
 }
 
-func osArgs(args ...objects.Object) (objects.Object, error) {
+func osArgs(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
 	if len(args) != 0 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -251,7 +251,7 @@ func osArgs(args ...objects.Object) (objects.Object, error) {
 func osFuncASFmRE(name string, fn func(string, os.FileMode) error) *objects.UserFunction {
 	return &objects.UserFunction{
 		Name: name,
-		Value: func(args ...objects.Object) (objects.Object, error) {
+		Value: func(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
 			if len(args) != 2 {
 				return nil, objects.ErrWrongNumArguments
 			}
@@ -278,7 +278,7 @@ func osFuncASFmRE(name string, fn func(string, os.FileMode) error) *objects.User
 	}
 }
 
-func osLookupEnv(args ...objects.Object) (objects.Object, error) {
+func osLookupEnv(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -304,7 +304,7 @@ func osLookupEnv(args ...objects.Object) (objects.Object, error) {
 	return &objects.String{Value: res}, nil
 }
 
-func osExpandEnv(args ...objects.Object) (objects.Object, error) {
+func osExpandEnv(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -345,7 +345,7 @@ func osExpandEnv(args ...objects.Object) (objects.Object, error) {
 	return &objects.String{Value: s}, nil
 }
 
-func osExec(args ...objects.Object) (objects.Object, error) {
+func osExec(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
 	if len(args) == 0 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -376,7 +376,7 @@ func osExec(args ...objects.Object) (objects.Object, error) {
 	return makeOSExecCommand(exec.Command(name, execArgs...)), nil
 }
 
-func osFindProcess(args ...objects.Object) (objects.Object, error) {
+func osFindProcess(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -398,7 +398,7 @@ func osFindProcess(args ...objects.Object) (objects.Object, error) {
 	return makeOSProcess(proc), nil
 }
 
-func osStartProcess(args ...objects.Object) (objects.Object, error) {
+func osStartProcess(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
 	if len(args) != 4 {
 		return nil, objects.ErrWrongNumArguments
 	}
