@@ -22,18 +22,11 @@ func TestSpreadCall(t *testing.T) {
 		`fn3 := func(a, b, c) { return [a, b, c]; }; `
 
 	expect(t, defVars+`out = fn1([1,2,3]...)`, nil, ARR{1, 2, 3})
-	expect(t, defVars+`out = fn1(x..., 3)`, nil, ARR{1, 2, 3})
-	expect(t, defVars+`out = fn1(x..., y..., z...)`, nil, ARR{1, 2, 3, 4, 5, 6, 7})
 	expect(t, defVars+`out = fn1(1,2,3,4,z...)`, nil, ARR{1, 2, 3, 4, 5, 6, 7})
-
 	expect(t, defVars+`out = fn2([1,2,3]...)`, nil, ARR{1, ARR{2, 3}})
-	expect(t, defVars+`out = fn2(x..., 3)`, nil, ARR{1, ARR{2, 3}})
-	expect(t, defVars+`out = fn2(x..., y..., z...)`, nil, ARR{1, ARR{2, 3, 4, 5, 6, 7}})
 	expect(t, defVars+`out = fn2(1,2,3,4,z...)`, nil, ARR{1, ARR{2, 3, 4, 5, 6, 7}})
-
 	expect(t, defVars+`out = fn3([1,2,3]...)`, nil, ARR{1, 2, 3})
-	expect(t, defVars+`out = fn3(x..., 3)`, nil, ARR{1, 2, 3})
 	expect(t, defVars+`out = fn3([x..., y...][:3]...)`, nil, ARR{1, 2, 3})
-	expectError(t, defVars+`fn3(x..., y..., z...)`, nil, "Runtime Error: wrong number of arguments: want=3, got=7")
+
 	expectError(t, defVars+`fn3(1,2,3,4,z...)`, nil, "Runtime Error: wrong number of arguments: want=3, got=7")
 }

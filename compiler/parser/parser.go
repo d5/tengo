@@ -211,16 +211,20 @@ func (p *Parser) parseCall(x ast.Expr) *ast.CallExpr {
 	lparen := p.expect(token.LParen)
 	p.exprLevel++
 
-	var list []ast.Expr
+	var (
+		list      []ast.Expr
+		hasSpread bool
+	)
 	for p.token != token.RParen && p.token != token.EOF {
 		expr := p.parseExpr()
 		if p.token == token.Ellipsis {
 			expr = &ast.SpreadExpr{Element: expr, Ellipsis: p.pos}
+			hasSpread = true
 			p.next()
 		}
 		list = append(list, expr)
 
-		if !p.expectComma(token.RParen, "call argument") {
+		if hasSpread || !p.expectComma(token.RParen, "call argument") {
 			break
 		}
 	}

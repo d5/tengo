@@ -651,7 +651,8 @@ func (v *VM) run() {
 				return
 			}
 
-			for i := spBase; i < v.sp; i++ {
+			if numArgs > 0 {
+				i := v.sp - 1
 				arg := v.stack[i]
 				if spread, ok := arg.(*objects.Spread); ok {
 					list := spread.Values

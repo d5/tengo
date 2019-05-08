@@ -66,36 +66,33 @@ func TestSpreadArray(t *testing.T) {
 }
 
 func TestSpreadCall(t *testing.T) {
-	expect(t, "fn(a..., b, c)", func(p pfn) []ast.Stmt {
+	expect(t, "fn(a...)", func(p pfn) []ast.Stmt {
+		return stmts(
+			exprStmt(callExpr(
+				ident("fn", p(1, 1)),
+				p(1, 3), p(1, 8),
+				spreadExpr(ident("a", p(1, 4)), p(1, 5)),
+			)))
+	})
+
+	expect(t, "fn(a, b...)", func(p pfn) []ast.Stmt {
+		return stmts(
+			exprStmt(callExpr(
+				ident("fn", p(1, 1)),
+				p(1, 3), p(1, 11),
+				ident("a", p(1, 4)),
+				spreadExpr(ident("b", p(1, 7)), p(1, 8)),
+			)))
+	})
+
+	expect(t, "fn(a, b, c...)", func(p pfn) []ast.Stmt {
 		return stmts(
 			exprStmt(callExpr(
 				ident("fn", p(1, 1)),
 				p(1, 3), p(1, 14),
-				spreadExpr(ident("a", p(1, 4)), p(1, 5)),
-				ident("b", p(1, 10)),
-				ident("c", p(1, 13)),
-			)))
-	})
-
-	expect(t, "fn(a..., b..., c)", func(p pfn) []ast.Stmt {
-		return stmts(
-			exprStmt(callExpr(
-				ident("fn", p(1, 1)),
-				p(1, 3), p(1, 17),
-				spreadExpr(ident("a", p(1, 4)), p(1, 5)),
-				spreadExpr(ident("b", p(1, 10)), p(1, 11)),
-				ident("c", p(1, 16)),
-			)))
-	})
-
-	expect(t, "fn(a..., b..., c...)", func(p pfn) []ast.Stmt {
-		return stmts(
-			exprStmt(callExpr(
-				ident("fn", p(1, 1)),
-				p(1, 3), p(1, 20),
-				spreadExpr(ident("a", p(1, 4)), p(1, 5)),
-				spreadExpr(ident("b", p(1, 10)), p(1, 11)),
-				spreadExpr(ident("c", p(1, 16)), p(1, 17)),
+				ident("a", p(1, 4)),
+				ident("b", p(1, 7)),
+				spreadExpr(ident("c", p(1, 10)), p(1, 11)),
 			)))
 	})
 
@@ -126,4 +123,7 @@ func TestSpreadCall(t *testing.T) {
 					p(1, 13)),
 			)))
 	})
+
+	expectError(t, "fn(a..., b, c)")
+	expectError(t, "fn(a, b..., c)")
 }
