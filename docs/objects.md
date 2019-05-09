@@ -93,6 +93,22 @@ Call(rt Runtime, args ...Object) (ret Object, err error)
 
 Call should take an arbitrary number of arguments and return a return value and/or an error, which the VM will consider as a run-time error.
 
+#### Spreadable Objects
+
+If a type is spredable, its values can be used with spread syntax (`a...`). Two functions need to be implemented for Spreadable Objects
+
+```golang
+CanSpread() bool
+```
+
+CanSpread should return whether the Object can be Spread.
+
+```golang
+Spread() []Object
+```
+
+The Spread method should return a list of Object values that the Spreadable Object spreads into
+
 #### Iterable Objects
 
 If a type is iterable, its values can be used in `for-in` statements (`for key, value in object { ... }`). Two functions need to be implemented for Iterable Objects

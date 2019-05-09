@@ -393,8 +393,14 @@ func (v *VM) run() {
 
 			var elements []objects.Object
 			for i := v.sp - numElements; i < v.sp; i++ {
-				elements = append(elements, v.stack[i])
+				elt := v.stack[i]
+				if spread, ok := elt.(*objects.Spread); ok {
+					elements = append(elements, spread.Values...)
+				} else {
+					elements = append(elements, elt)
+				}
 			}
+
 			v.sp -= numElements
 
 			var arr objects.Object = &objects.Array{Value: elements}
@@ -682,15 +688,47 @@ func (v *VM) run() {
 				v.sp++
 			}
 
+		case compiler.OpSpread:
+			spreadSP := v.sp - 1
+			target := v.stack[spreadSP]
+			if !target.CanSpread() {
+				v.err = fmt.Errorf("cannot spread value of type %s", target.TypeName())
+				return
+			}
+
+			v.stack[spreadSP] = &objects.Spread{
+				Values: target.Spread(),
+			}
+
 		case compiler.OpCall:
 			numArgs := int(v.curInsts[v.ip+1])
 			v.ip++
-
-			value := v.stack[v.sp-1-numArgs]
+			spBase := v.sp - 1 - numArgs
+			value := v.stack[spBase]
 
 			if !value.CanCall() {
 				v.err = fmt.Errorf("not callable: %s", value.TypeName())
 				return
+			}
+
+			if numArgs > 0 {
+				i := v.sp - 1
+				arg := v.stack[i]
+				if spread, ok := arg.(*objects.Spread); ok {
+					list := spread.Values
+					numSpreadValues := len(list)
+					if v.sp+numSpreadValues >= StackSize {
+						v.err = ErrStackOverflow
+						return
+					}
+					ebStart, ebEnd := i, i+numSpreadValues
+					rxStart, rxEnd := i+1, spBase+numArgs+1
+					rmStart, rmEnd := i+numSpreadValues, spBase+numArgs+numSpreadValues
+					copy(v.stack[rmStart:rmEnd], v.stack[rxStart:rxEnd])
+					copy(v.stack[ebStart:ebEnd], list)
+					numArgs += numSpreadValues - 1
+					v.sp += numSpreadValues - 1
+				}
 			}
 
 			if callee, ok := value.(*objects.CompiledFunction); ok {

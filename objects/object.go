@@ -56,4 +56,10 @@ type Object interface {
 
 	// CanCall should return whether the Object can be Called.
 	CanCall() bool
+
+	// Spread should return a list of Objects.
+	Spread() []Object
+
+	// CanSpread should return whether the Object can be Spread.
+	CanSpread() bool
 }

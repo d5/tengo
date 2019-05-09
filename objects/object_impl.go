@@ -69,3 +69,13 @@ func (o *ObjectImpl) Call(rt Runtime, args ...Object) (ret Object, err error) {
 func (o *ObjectImpl) CanCall() bool {
 	return false
 }
+
+// Spread returns a list of Objects.
+func (o *ObjectImpl) Spread() []Object {
+	return nil
+}
+
+// CanSpread returns whether the Object can be Spread.
+func (o *ObjectImpl) CanSpread() bool {
+	return false
+}

@@ -177,6 +177,47 @@ Only the last parameter can be variadic. The following code is also illegal:
 illegal := func(a..., b) { /*... */ }
 ```
 
+Along with variadic functions, tengo also support spread syntax.
+Tengo's spread syntax is similar to go's spread operator, with 2 exceptions:
+
+In tengo, you can use spread syntax in array literals:
+
+```golang
+a := [1, 2]
+b := [4]
+c := [a..., 3, b..., [5, 6]...] // [1, 2, 3, 4, 5, 6]
+```
+
+...and at the last position in a function call, regardles of whether or not the function is variadic:
+
+```golang
+a := [2, 1]
+
+fn_reg := func(x, y, z) { return [x, y, z] }
+fn_reg(3, a...) // [3, 2, 1]
+fn_reg(4, 3, a...) // Illegal: total number of arguments (4) is greater than function parameters (3)
+fn_reg(a...) // Illegal: total number of arguments (2) is fewer than function parameters (3)
+
+fn_var := func(x, y, ...z) { return [x, y, z] }
+fn_var(3, a...) // [3, 2, [1]]
+fn_var(a...) // [2, 1, []]
+```
+
+You can combine the use of spreads in arrays and spreads in function calls, like this:
+
+```golang
+bind := func(fn, ...boundArgs) {
+ return func(...args) {
+  return fn([boundArgs..., args...]...);
+ }
+}
+
+fmt := import("fmt")
+log := bind(fmt.println, "Log Message: ")
+
+log("hello, world") // "Log Message: hello, world"
+```
+
 ## Variables and Scopes
 
 A value can be assigned to a variable using assignment operator `:=` and `=`.

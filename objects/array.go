@@ -134,3 +134,11 @@ func (o *Array) Iterate() Iterator {
 func (o *Array) CanIterate() bool {
 	return true
 }
+
+// Spread returns the Array's contents.
+func (o *Array) Spread() []Object {
+	return o.Value
+}
+
+// CanSpread returns whether the Object can be Spread.
+func (o *Array) CanSpread() bool { return true }
