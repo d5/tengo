@@ -111,9 +111,9 @@ func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Obj
 	// capture error or return value
 	if v.err != nil {
 		return nil, v.err
-	} else {
-		retVal = v.stack[v.sp-1]
 	}
+	// no error, get return
+	retVal = v.stack[v.sp-1]
 
 	// leave frame
 	v.framesIndex--
