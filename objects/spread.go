@@ -10,4 +10,4 @@ type Spread struct {
 func (s *Spread) TypeName() string { return "spread-values" }
 
 // String returns a string representation of the type's value.
-func (s *Spread) String() string { return "<" + s.TypeName() + ">" }
+func (s *Spread) String() string { return "<spread-values>" }
