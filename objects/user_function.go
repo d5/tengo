@@ -44,8 +44,8 @@ func (o *UserFunction) Equals(x Object) bool {
 }
 
 // Call invokes a user function.
-func (o *UserFunction) Call(args ...Object) (Object, error) {
-	return o.Value(args...)
+func (o *UserFunction) Call(rt Runtime, args ...Object) (Object, error) {
+	return o.Value(rt, args...)
 }
 
 // CanCall returns whether the Object can be Called.

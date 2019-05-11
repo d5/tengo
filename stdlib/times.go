@@ -78,7 +78,7 @@ var timesModule = map[string]objects.Object{
 	"to_utc":               &objects.UserFunction{Name: "to_utc", Value: timesToUTC},                             // to_utc(time) => time
 }
 
-func timesSleep(args ...objects.Object) (ret objects.Object, err error) {
+func timesSleep(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -100,7 +100,7 @@ func timesSleep(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesParseDuration(args ...objects.Object) (ret objects.Object, err error) {
+func timesParseDuration(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -127,7 +127,7 @@ func timesParseDuration(args ...objects.Object) (ret objects.Object, err error) 
 	return
 }
 
-func timesSince(args ...objects.Object) (ret objects.Object, err error) {
+func timesSince(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -148,7 +148,7 @@ func timesSince(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesUntil(args ...objects.Object) (ret objects.Object, err error) {
+func timesUntil(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -169,7 +169,7 @@ func timesUntil(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesDurationHours(args ...objects.Object) (ret objects.Object, err error) {
+func timesDurationHours(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -190,7 +190,7 @@ func timesDurationHours(args ...objects.Object) (ret objects.Object, err error) 
 	return
 }
 
-func timesDurationMinutes(args ...objects.Object) (ret objects.Object, err error) {
+func timesDurationMinutes(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -211,7 +211,7 @@ func timesDurationMinutes(args ...objects.Object) (ret objects.Object, err error
 	return
 }
 
-func timesDurationNanoseconds(args ...objects.Object) (ret objects.Object, err error) {
+func timesDurationNanoseconds(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -232,7 +232,7 @@ func timesDurationNanoseconds(args ...objects.Object) (ret objects.Object, err e
 	return
 }
 
-func timesDurationSeconds(args ...objects.Object) (ret objects.Object, err error) {
+func timesDurationSeconds(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -253,7 +253,7 @@ func timesDurationSeconds(args ...objects.Object) (ret objects.Object, err error
 	return
 }
 
-func timesDurationString(args ...objects.Object) (ret objects.Object, err error) {
+func timesDurationString(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -274,7 +274,7 @@ func timesDurationString(args ...objects.Object) (ret objects.Object, err error)
 	return
 }
 
-func timesMonthString(args ...objects.Object) (ret objects.Object, err error) {
+func timesMonthString(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -295,7 +295,7 @@ func timesMonthString(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesDate(args ...objects.Object) (ret objects.Object, err error) {
+func timesDate(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 7 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -370,7 +370,7 @@ func timesDate(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesNow(args ...objects.Object) (ret objects.Object, err error) {
+func timesNow(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 0 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -381,7 +381,7 @@ func timesNow(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesParse(args ...objects.Object) (ret objects.Object, err error) {
+func timesParse(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -418,7 +418,7 @@ func timesParse(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesUnix(args ...objects.Object) (ret objects.Object, err error) {
+func timesUnix(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -449,7 +449,7 @@ func timesUnix(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesAdd(args ...objects.Object) (ret objects.Object, err error) {
+func timesAdd(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -480,7 +480,7 @@ func timesAdd(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesSub(args ...objects.Object) (ret objects.Object, err error) {
+func timesSub(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -511,7 +511,7 @@ func timesSub(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesAddDate(args ...objects.Object) (ret objects.Object, err error) {
+func timesAddDate(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 4 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -562,7 +562,7 @@ func timesAddDate(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesAfter(args ...objects.Object) (ret objects.Object, err error) {
+func timesAfter(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -597,7 +597,7 @@ func timesAfter(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesBefore(args ...objects.Object) (ret objects.Object, err error) {
+func timesBefore(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -632,7 +632,7 @@ func timesBefore(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeYear(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeYear(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -653,7 +653,7 @@ func timesTimeYear(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeMonth(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeMonth(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -674,7 +674,7 @@ func timesTimeMonth(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeDay(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeDay(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -695,7 +695,7 @@ func timesTimeDay(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeWeekday(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeWeekday(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -716,7 +716,7 @@ func timesTimeWeekday(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeHour(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeHour(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -737,7 +737,7 @@ func timesTimeHour(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeMinute(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeMinute(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -758,7 +758,7 @@ func timesTimeMinute(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeSecond(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeSecond(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -779,7 +779,7 @@ func timesTimeSecond(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeNanosecond(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeNanosecond(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -800,7 +800,7 @@ func timesTimeNanosecond(args ...objects.Object) (ret objects.Object, err error)
 	return
 }
 
-func timesTimeUnix(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeUnix(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -821,7 +821,7 @@ func timesTimeUnix(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeUnixNano(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeUnixNano(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -842,7 +842,7 @@ func timesTimeUnixNano(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeFormat(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeFormat(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -879,7 +879,7 @@ func timesTimeFormat(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesIsZero(args ...objects.Object) (ret objects.Object, err error) {
+func timesIsZero(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -904,7 +904,7 @@ func timesIsZero(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesToLocal(args ...objects.Object) (ret objects.Object, err error) {
+func timesToLocal(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -925,7 +925,7 @@ func timesToLocal(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesToUTC(args ...objects.Object) (ret objects.Object, err error) {
+func timesToUTC(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -946,7 +946,7 @@ func timesToUTC(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeLocation(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeLocation(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -967,7 +967,7 @@ func timesTimeLocation(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func timesTimeString(args ...objects.Object) (ret objects.Object, err error) {
+func timesTimeString(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return

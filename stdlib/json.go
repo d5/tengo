@@ -15,7 +15,7 @@ var jsonModule = map[string]objects.Object{
 	"html_escape": &objects.UserFunction{Name: "html_escape", Value: jsonHTMLEscape},
 }
 
-func jsonDecode(args ...objects.Object) (ret objects.Object, err error) {
+func jsonDecode(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -42,7 +42,7 @@ func jsonDecode(args ...objects.Object) (ret objects.Object, err error) {
 	}
 }
 
-func jsonEncode(args ...objects.Object) (ret objects.Object, err error) {
+func jsonEncode(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -55,7 +55,7 @@ func jsonEncode(args ...objects.Object) (ret objects.Object, err error) {
 	return &objects.Bytes{Value: b}, nil
 }
 
-func jsonIndent(args ...objects.Object) (ret objects.Object, err error) {
+func jsonIndent(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 3 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -102,7 +102,7 @@ func jsonIndent(args ...objects.Object) (ret objects.Object, err error) {
 	}
 }
 
-func jsonHTMLEscape(args ...objects.Object) (ret objects.Object, err error) {
+func jsonHTMLEscape(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}

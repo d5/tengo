@@ -46,6 +46,7 @@ const (
 	OpIteratorKey                 // Iterator key
 	OpIteratorValue               // Iterator value
 	OpBinaryOp                    // Binary Operation
+	OpSuspend                     // Used internally by the VM to suspend execution
 	OpSpread                      // Spread operation
 )
 
@@ -92,6 +93,7 @@ var OpcodeNames = [...]string{
 	OpIteratorKey:   "ITKEY",
 	OpIteratorValue: "ITVAL",
 	OpBinaryOp:      "BINARYOP",
+	OpSuspend:       "SUSPEND",
 	OpSpread:        "SPREAD",
 }
 
@@ -138,6 +140,7 @@ var OpcodeOperands = [...][]int{
 	OpIteratorKey:   {},
 	OpIteratorValue: {},
 	OpBinaryOp:      {1},
+	OpSuspend:       {},
 	OpSpread:        {},
 }
 

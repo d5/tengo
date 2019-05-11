@@ -68,6 +68,63 @@ func (v *VM) Abort() {
 	atomic.StoreInt64(&v.aborting, 1)
 }
 
+// Call provides a hook for go code to initiate a call to a tengo function
+func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Object, retErr error) {
+	numArgs := len(args)
+
+	// check for stack overflow
+	if v.sp+numArgs >= StackSize {
+		return nil, ErrStackOverflow
+	}
+
+	// create a micro-function to handle the call
+	callee := &objects.CompiledFunction{
+		Instructions: []byte{
+			/* CALL		numArgs */ compiler.OpCall, byte(numArgs),
+			/* SUSPEND			*/ compiler.OpSuspend,
+		},
+		SourceMap: map[int]source.Pos{},
+	}
+
+	// create a call frame for our micro-function
+	v.curFrame.ip = v.ip // store current ip before call
+	v.curFrame = &(v.frames[v.framesIndex])
+	v.curFrame.fn = callee
+	v.curFrame.freeVars = nil
+	v.curFrame.basePointer = v.sp
+	v.curInsts = callee.Instructions
+	v.ip = -1
+	v.framesIndex++
+
+	// set up the stack for the call in the micro-function
+	spStart := v.sp
+	spEnd := spStart + numArgs + 1
+	v.stack[v.sp] = fn
+	v.sp++
+	argStart := v.sp
+	copy(v.stack[argStart:spEnd], args)
+	v.sp += numArgs
+
+	// resume execution
+	v.run()
+
+	// capture error or return value
+	if v.err != nil {
+		return nil, v.err
+	}
+	// no error, get return
+	retVal = v.stack[v.sp-1]
+
+	// leave frame
+	v.framesIndex--
+	v.curFrame = &v.frames[v.framesIndex-1]
+	v.curInsts = v.curFrame.fn.Instructions
+	v.ip = v.curFrame.ip
+	v.sp = v.frames[v.framesIndex].basePointer
+
+	return retVal, retErr
+}
+
 // Run starts the execution.
 func (v *VM) Run() (err error) {
 	// reset VM states
@@ -121,6 +178,9 @@ func (v *VM) run() {
 		v.ip++
 
 		switch v.curInsts[v.ip] {
+		case compiler.OpSuspend:
+			return
+
 		case compiler.OpConstant:
 			v.ip += 2
 			cidx := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
@@ -728,7 +788,7 @@ func (v *VM) run() {
 				var args []objects.Object
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 
-				ret, e := value.Call(args...)
+				ret, e := value.Call(v, args...)
 				v.sp -= numArgs + 1
 
 				// runtime error

@@ -61,7 +61,7 @@ var textModule = map[string]objects.Object{
 	"unquote":        &objects.UserFunction{Name: "unquote", Value: FuncASRSE(strconv.Unquote)},             // unquote(str) => string/error
 }
 
-func textREMatch(args ...objects.Object) (ret objects.Object, err error) {
+func textREMatch(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -102,7 +102,7 @@ func textREMatch(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textREFind(args ...objects.Object) (ret objects.Object, err error) {
+func textREFind(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	numArgs := len(args)
 	if numArgs != 2 && numArgs != 3 {
 		err = objects.ErrWrongNumArguments
@@ -190,7 +190,7 @@ func textREFind(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textREReplace(args ...objects.Object) (ret objects.Object, err error) {
+func textREReplace(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 3 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -241,7 +241,7 @@ func textREReplace(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textRESplit(args ...objects.Object) (ret objects.Object, err error) {
+func textRESplit(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	numArgs := len(args)
 	if numArgs != 2 && numArgs != 3 {
 		err = objects.ErrWrongNumArguments
@@ -297,7 +297,7 @@ func textRESplit(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textRECompile(args ...objects.Object) (ret objects.Object, err error) {
+func textRECompile(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -323,7 +323,7 @@ func textRECompile(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textReplace(args ...objects.Object) (ret objects.Object, err error) {
+func textReplace(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 4 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -380,7 +380,7 @@ func textReplace(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textSubstring(args ...objects.Object) (ret objects.Object, err error) {
+func textSubstring(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	argslen := len(args)
 	if argslen != 2 && argslen != 3 {
 		err = objects.ErrWrongNumArguments
@@ -443,7 +443,7 @@ func textSubstring(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textPadLeft(args ...objects.Object) (ret objects.Object, err error) {
+func textPadLeft(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	argslen := len(args)
 	if argslen != 2 && argslen != 3 {
 		err = objects.ErrWrongNumArguments
@@ -506,7 +506,7 @@ func textPadLeft(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textPadRight(args ...objects.Object) (ret objects.Object, err error) {
+func textPadRight(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	argslen := len(args)
 	if argslen != 2 && argslen != 3 {
 		err = objects.ErrWrongNumArguments
@@ -569,7 +569,7 @@ func textPadRight(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textRepeat(args ...objects.Object) (ret objects.Object, err error) {
+func textRepeat(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -599,7 +599,7 @@ func textRepeat(args ...objects.Object) (ret objects.Object, err error) {
 	return &objects.String{Value: strings.Repeat(s1, i2)}, nil
 }
 
-func textJoin(args ...objects.Object) (ret objects.Object, err error) {
+func textJoin(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		return nil, objects.ErrWrongNumArguments
 	}
@@ -658,7 +658,7 @@ func textJoin(args ...objects.Object) (ret objects.Object, err error) {
 	return &objects.String{Value: strings.Join(ss1, s2)}, nil
 }
 
-func textFormatBool(args ...objects.Object) (ret objects.Object, err error) {
+func textFormatBool(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -683,7 +683,7 @@ func textFormatBool(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textFormatFloat(args ...objects.Object) (ret objects.Object, err error) {
+func textFormatFloat(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 4 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -734,7 +734,7 @@ func textFormatFloat(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textFormatInt(args ...objects.Object) (ret objects.Object, err error) {
+func textFormatInt(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -765,7 +765,7 @@ func textFormatInt(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textParseBool(args ...objects.Object) (ret objects.Object, err error) {
+func textParseBool(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -796,7 +796,7 @@ func textParseBool(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textParseFloat(args ...objects.Object) (ret objects.Object, err error) {
+func textParseFloat(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 2 {
 		err = objects.ErrWrongNumArguments
 		return
@@ -833,7 +833,7 @@ func textParseFloat(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textParseInt(args ...objects.Object) (ret objects.Object, err error) {
+func textParseInt(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 3 {
 		err = objects.ErrWrongNumArguments
 		return

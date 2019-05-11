@@ -88,7 +88,7 @@ CanCall() bool
 CanCall should return whether the Object can be called. When this function returns true, the Object is considered Callable.
 
 ```golang
-Call(args ...Object) (ret Object, err error)
+Call(rt Runtime, args ...Object) (ret Object, err error)
 ```
 
 Call should take an arbitrary number of arguments and return a return value and/or an error, which the VM will consider as a run-time error.
@@ -290,7 +290,7 @@ func (o *StringArray) CanCall() bool {
 	return true
 }
 
-func (o *StringArray) Call(args ...objects.Object) (ret objects.Object, err error) {
+func (o *StringArray) Call(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
 	if len(args) != 1 {
 		return nil, objects.ErrWrongNumArguments
 	}
