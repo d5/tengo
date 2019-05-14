@@ -157,23 +157,6 @@ func (v *VM) Run() (err error) {
 }
 
 func (v *VM) run() {
-	defer func() {
-		if r := recover(); r != nil {
-			if v.sp >= StackSize || v.framesIndex >= MaxFrames {
-				v.err = ErrStackOverflow
-				return
-			}
-
-			if v.ip < len(v.curInsts)-1 {
-				if err, ok := r.(error); ok {
-					v.err = err
-				} else {
-					v.err = fmt.Errorf("panic: %v", r)
-				}
-			}
-		}
-	}()
-
 	for atomic.LoadInt64(&v.aborting) == 0 {
 		v.ip++
 
@@ -772,6 +755,11 @@ func (v *VM) run() {
 						v.ip = -1 // reset IP to beginning of the frame
 						continue
 					}
+				}
+
+				if v.framesIndex >= MaxFrames {
+					v.err = ErrStackOverflow
+					return
 				}
 
 				// update call frame

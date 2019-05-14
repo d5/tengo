@@ -8,10 +8,10 @@ import (
 
 func TestCompilerDeadCode(t *testing.T) {
 	expect(t, `
-func() { 
+func() {
 	a := 4
 	return a
-	
+
 	b := 5 // dead code from here
 	c := a
 	return b
@@ -19,7 +19,8 @@ func() {
 		bytecode(
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 2),
-				compiler.MakeInstruction(compiler.OpPop)),
+				compiler.MakeInstruction(compiler.OpPop),
+				compiler.MakeInstruction(compiler.OpSuspend)),
 			objectsArray(
 				intObject(4),
 				intObject(5),
@@ -45,7 +46,8 @@ func() {
 }`, bytecode(
 		concat(
 			compiler.MakeInstruction(compiler.OpConstant, 2),
-			compiler.MakeInstruction(compiler.OpPop)),
+			compiler.MakeInstruction(compiler.OpPop),
+			compiler.MakeInstruction(compiler.OpSuspend)),
 		objectsArray(
 			intObject(5),
 			intObject(4),
@@ -72,7 +74,8 @@ func() {
 }`, bytecode(
 		concat(
 			compiler.MakeInstruction(compiler.OpConstant, 4),
-			compiler.MakeInstruction(compiler.OpPop)),
+			compiler.MakeInstruction(compiler.OpPop),
+			compiler.MakeInstruction(compiler.OpSuspend)),
 		objectsArray(
 			intObject(1),
 			intObject(5),
@@ -110,7 +113,8 @@ func() {
 }`, bytecode(
 		concat(
 			compiler.MakeInstruction(compiler.OpConstant, 2),
-			compiler.MakeInstruction(compiler.OpPop)),
+			compiler.MakeInstruction(compiler.OpPop),
+			compiler.MakeInstruction(compiler.OpSuspend)),
 		objectsArray(
 			intObject(5),
 			intObject(4),

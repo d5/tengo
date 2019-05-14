@@ -28,7 +28,8 @@ if a := 1; a {
 			compiler.MakeInstruction(compiler.OpConstant, 2),
 			compiler.MakeInstruction(compiler.OpSetGlobal, 0),
 			compiler.MakeInstruction(compiler.OpGetGlobal, 0),
-			compiler.MakeInstruction(compiler.OpSetGlobal, 1)),
+			compiler.MakeInstruction(compiler.OpSetGlobal, 1),
+			compiler.MakeInstruction(compiler.OpSuspend)),
 		objectsArray(
 			intObject(1),
 			intObject(2),
@@ -46,7 +47,8 @@ func() {
 }`, bytecode(
 		concat(
 			compiler.MakeInstruction(compiler.OpConstant, 3),
-			compiler.MakeInstruction(compiler.OpPop)),
+			compiler.MakeInstruction(compiler.OpPop),
+			compiler.MakeInstruction(compiler.OpSuspend)),
 		objectsArray(
 			intObject(1),
 			intObject(2),

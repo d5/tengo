@@ -645,7 +645,7 @@ func (c *Compiler) Bytecode() *Bytecode {
 	return &Bytecode{
 		FileSet: c.file.Set(),
 		MainFunction: &objects.CompiledFunction{
-			Instructions: c.currentInstructions(),
+			Instructions: append(c.currentInstructions(), OpSuspend),
 			SourceMap:    c.currentSourceMap(),
 		},
 		Constants: c.constants,

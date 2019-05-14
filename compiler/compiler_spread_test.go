@@ -16,6 +16,7 @@ func TestSpreadArray(t *testing.T) {
 			compiler.MakeInstruction(compiler.OpSpread),
 			compiler.MakeInstruction(compiler.OpArray, 3),
 			compiler.MakeInstruction(compiler.OpPop),
+			compiler.MakeInstruction(compiler.OpSuspend),
 		),
 		objectsArray(
 			intObject(1),
@@ -39,6 +40,7 @@ func TestSpreadArray(t *testing.T) {
 			compiler.MakeInstruction(compiler.OpSpread),
 			compiler.MakeInstruction(compiler.OpArray, 2),
 			compiler.MakeInstruction(compiler.OpPop),
+			compiler.MakeInstruction(compiler.OpSuspend),
 		),
 		objectsArray(
 			intObject(1),
@@ -59,6 +61,7 @@ func TestSpreadArray(t *testing.T) {
 			compiler.MakeInstruction(compiler.OpSpread),
 			compiler.MakeInstruction(compiler.OpCall, 3),
 			compiler.MakeInstruction(compiler.OpPop),
+			compiler.MakeInstruction(compiler.OpSuspend),
 		),
 		objectsArray(
 			intObject(1),
