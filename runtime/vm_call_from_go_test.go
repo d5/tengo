@@ -156,13 +156,13 @@ func TestCallFromGo(t *testing.T) {
 		out = call_from_go(format, "%d %d %d", 1, 2, 3)
 	`, "1 2 3")
 
-	interopExpectError(t, `
+	interopExpect(t, `
 		fn := func() {
 			return 5/[]
 		}
 
 		out = call_from_go_noerr(fn)
-	`, "Runtime Error: invalid operation: int / array")
+	`, objects.UndefinedValue)
 
 	interopExpectError(t, `
 		fn := func(a, b, c) { return [a,b,c]; }

@@ -36,7 +36,7 @@ type VM struct {
 	aborting    int64
 	maxAllocs   int64
 	allocs      int64
-	err         error
+	lastPanic   interface{}
 }
 
 // NewVM creates a VM.
@@ -69,11 +69,10 @@ func (v *VM) Abort() {
 }
 
 // Call provides a hook for go code to initiate a call to a tengo function
-func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Object, retErr error) {
-	if v.err != nil {
-		return nil, v.err
-	}
-
+func (v *VM) Call(
+	fn objects.Object,
+	args ...objects.Object,
+) (ret objects.Object, err error) {
 	numArgs := len(args)
 
 	// check for stack overflow
@@ -110,15 +109,11 @@ func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Obj
 	copy(v.stack[argStart:spEnd], args)
 	v.sp += numArgs
 
-	// resume execution
-	v.run()
-
-	// capture error or return value
-	if v.err != nil {
-		return nil, v.err
+	if verr := v.run(); verr != nil {
+		err = verr
+	} else {
+		ret = v.stack[v.sp-1]
 	}
-	// no error, get return
-	retVal = v.stack[v.sp-1]
 
 	// leave frame
 	v.framesIndex--
@@ -127,7 +122,7 @@ func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Obj
 	v.ip = v.curFrame.ip
 	v.sp = v.frames[v.framesIndex].basePointer
 
-	return retVal, retErr
+	return
 }
 
 // Run starts the execution.
@@ -139,13 +134,12 @@ func (v *VM) Run() (err error) {
 	v.framesIndex = 1
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
-	v.err = nil
+	v.lastPanic = nil
 
-	v.run()
+	err = v.run()
 
 	atomic.StoreInt64(&v.aborting, 0)
 
-	err = v.err
 	if err != nil {
 		filePos := v.fileSet.Position(v.curFrame.fn.SourcePos(v.ip - 1))
 		err = fmt.Errorf("Runtime Error: %s\n\tat %s", err.Error(), filePos)
@@ -162,10 +156,10 @@ func (v *VM) Run() (err error) {
 	return nil
 }
 
-func (v *VM) run() {
+func (v *VM) run() error {
 	defer func() {
 		if r := recover(); r != nil {
-			v.err = fmt.Errorf("panic: %v", r)
+			v.lastPanic = r
 			panic(r)
 		}
 	}()
@@ -175,7 +169,7 @@ func (v *VM) run() {
 
 		switch v.curInsts[v.ip] {
 		case compiler.OpSuspend:
-			return
+			return nil
 
 		case compiler.OpConstant:
 			v.ip += 2
@@ -194,24 +188,21 @@ func (v *VM) run() {
 			left := v.stack[v.sp-2]
 
 			tok := token.Token(v.curInsts[v.ip])
-			res, e := left.BinaryOp(tok, right)
-			if e != nil {
+			res, err := left.BinaryOp(tok, right)
+			if err != nil {
 				v.sp -= 2
 
-				if e == objects.ErrInvalidOperator {
-					v.err = fmt.Errorf("invalid operation: %s %s %s",
+				if err == objects.ErrInvalidOperator {
+					return fmt.Errorf("invalid operation: %s %s %s",
 						left.TypeName(), tok.String(), right.TypeName())
-					return
 				}
 
-				v.err = e
-				return
+				return err
 			}
 
 			v.allocs--
 			if v.allocs == 0 {
-				v.err = ErrObjectAllocLimit
-				return
+				return ErrObjectAllocLimit
 			}
 
 			v.stack[v.sp-2] = res
@@ -273,15 +264,13 @@ func (v *VM) run() {
 
 				v.allocs--
 				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
+					return ErrObjectAllocLimit
 				}
 
 				v.stack[v.sp] = res
 				v.sp++
 			default:
-				v.err = fmt.Errorf("invalid operation: ^%s", operand.TypeName())
-				return
+				return fmt.Errorf("invalid operation: ^%s", operand.TypeName())
 			}
 
 		case compiler.OpMinus:
@@ -294,8 +283,7 @@ func (v *VM) run() {
 
 				v.allocs--
 				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
+					return ErrObjectAllocLimit
 				}
 
 				v.stack[v.sp] = res
@@ -305,15 +293,13 @@ func (v *VM) run() {
 
 				v.allocs--
 				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
+					return ErrObjectAllocLimit
 				}
 
 				v.stack[v.sp] = res
 				v.sp++
 			default:
-				v.err = fmt.Errorf("invalid operation: -%s", operand.TypeName())
-				return
+				return fmt.Errorf("invalid operation: -%s", operand.TypeName())
 			}
 
 		case compiler.OpJumpFalsy:
@@ -369,9 +355,8 @@ func (v *VM) run() {
 			val := v.stack[v.sp-numSelectors-1]
 			v.sp -= numSelectors + 1
 
-			if e := indexAssign(v.globals[globalIndex], val, selectors); e != nil {
-				v.err = e
-				return
+			if err := indexAssign(v.globals[globalIndex], val, selectors); err != nil {
+				return err
 			}
 
 		case compiler.OpGetGlobal:
@@ -403,8 +388,7 @@ func (v *VM) run() {
 
 			v.allocs--
 			if v.allocs == 0 {
-				v.err = ErrObjectAllocLimit
-				return
+				return ErrObjectAllocLimit
 			}
 
 			v.stack[v.sp] = arr
@@ -426,8 +410,7 @@ func (v *VM) run() {
 
 			v.allocs--
 			if v.allocs == 0 {
-				v.err = ErrObjectAllocLimit
-				return
+				return ErrObjectAllocLimit
 			}
 
 			v.stack[v.sp] = m
@@ -442,8 +425,7 @@ func (v *VM) run() {
 
 			v.allocs--
 			if v.allocs == 0 {
-				v.err = ErrObjectAllocLimit
-				return
+				return ErrObjectAllocLimit
 			}
 
 			v.stack[v.sp-1] = e
@@ -459,8 +441,7 @@ func (v *VM) run() {
 
 				v.allocs--
 				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
+					return ErrObjectAllocLimit
 				}
 
 				v.stack[v.sp-1] = immutableArray
@@ -471,8 +452,7 @@ func (v *VM) run() {
 
 				v.allocs--
 				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
+					return ErrObjectAllocLimit
 				}
 
 				v.stack[v.sp-1] = immutableMap
@@ -486,17 +466,14 @@ func (v *VM) run() {
 			val, err := left.IndexGet(index)
 			if err != nil {
 				if err == objects.ErrNotIndexable {
-					v.err = fmt.Errorf("not indexable: %s", index.TypeName())
-					return
+					return fmt.Errorf("not indexable: %s", index.TypeName())
 				}
 
 				if err == objects.ErrInvalidIndexType {
-					v.err = fmt.Errorf("invalid index type: %s", index.TypeName())
-					return
+					return fmt.Errorf("invalid index type: %s", index.TypeName())
 				}
 
-				v.err = err
-				return
+				return err
 			}
 
 			if val == nil {
@@ -517,8 +494,7 @@ func (v *VM) run() {
 				if low, ok := low.(*objects.Int); ok {
 					lowIdx = low.Value
 				} else {
-					v.err = fmt.Errorf("invalid slice index type: %s", low.TypeName())
-					return
+					return fmt.Errorf("invalid slice index type: %s", low.TypeName())
 				}
 			}
 
@@ -531,13 +507,11 @@ func (v *VM) run() {
 				} else if high, ok := high.(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
-					v.err = fmt.Errorf("invalid slice index type: %s", high.TypeName())
-					return
+					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
-					v.err = fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
-					return
+					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
 				}
 
 				if lowIdx < 0 {
@@ -556,8 +530,7 @@ func (v *VM) run() {
 
 				v.allocs--
 				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
+					return ErrObjectAllocLimit
 				}
 
 				v.stack[v.sp] = val
@@ -571,13 +544,11 @@ func (v *VM) run() {
 				} else if high, ok := high.(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
-					v.err = fmt.Errorf("invalid slice index type: %s", high.TypeName())
-					return
+					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
-					v.err = fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
-					return
+					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
 				}
 
 				if lowIdx < 0 {
@@ -596,8 +567,7 @@ func (v *VM) run() {
 
 				v.allocs--
 				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
+					return ErrObjectAllocLimit
 				}
 
 				v.stack[v.sp] = val
@@ -611,13 +581,11 @@ func (v *VM) run() {
 				} else if high, ok := high.(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
-					v.err = fmt.Errorf("invalid slice index type: %s", high.TypeName())
-					return
+					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
-					v.err = fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
-					return
+					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
 				}
 
 				if lowIdx < 0 {
@@ -636,8 +604,7 @@ func (v *VM) run() {
 
 				v.allocs--
 				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
+					return ErrObjectAllocLimit
 				}
 
 				v.stack[v.sp] = val
@@ -651,13 +618,11 @@ func (v *VM) run() {
 				} else if high, ok := high.(*objects.Int); ok {
 					highIdx = high.Value
 				} else {
-					v.err = fmt.Errorf("invalid slice index type: %s", high.TypeName())
-					return
+					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
 				}
 
 				if lowIdx > highIdx {
-					v.err = fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
-					return
+					return fmt.Errorf("invalid slice index: %d > %d", lowIdx, highIdx)
 				}
 
 				if lowIdx < 0 {
@@ -676,8 +641,7 @@ func (v *VM) run() {
 
 				v.allocs--
 				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
+					return ErrObjectAllocLimit
 				}
 
 				v.stack[v.sp] = val
@@ -688,8 +652,7 @@ func (v *VM) run() {
 			spreadSP := v.sp - 1
 			target := v.stack[spreadSP]
 			if !target.CanSpread() {
-				v.err = fmt.Errorf("cannot spread value of type %s", target.TypeName())
-				return
+				return fmt.Errorf("cannot spread value of type %s", target.TypeName())
 			}
 
 			v.stack[spreadSP] = &objects.Spread{
@@ -703,8 +666,7 @@ func (v *VM) run() {
 			value := v.stack[spBase]
 
 			if !value.CanCall() {
-				v.err = fmt.Errorf("not callable: %s", value.TypeName())
-				return
+				return fmt.Errorf("not callable: %s", value.TypeName())
 			}
 
 			if numArgs > 0 {
@@ -714,8 +676,7 @@ func (v *VM) run() {
 					list := spread.Values
 					numSpreadValues := len(list)
 					if v.sp+numSpreadValues >= StackSize {
-						v.err = ErrStackOverflow
-						return
+						return ErrStackOverflow
 					}
 					ebStart, ebEnd := i, i+numSpreadValues
 					rxStart, rxEnd := i+1, spBase+numArgs+1
@@ -747,13 +708,11 @@ func (v *VM) run() {
 
 				if numArgs != callee.NumParameters {
 					if callee.VarArgs {
-						v.err = fmt.Errorf("wrong number of arguments: want>=%d, got=%d",
+						return fmt.Errorf("wrong number of arguments: want>=%d, got=%d",
 							callee.NumParameters-1, numArgs)
-					} else {
-						v.err = fmt.Errorf("wrong number of arguments: want=%d, got=%d",
-							callee.NumParameters, numArgs)
 					}
-					return
+					return fmt.Errorf("wrong number of arguments: want=%d, got=%d",
+						callee.NumParameters, numArgs)
 				}
 
 				// test if it's tail-call
@@ -771,8 +730,7 @@ func (v *VM) run() {
 				}
 
 				if v.framesIndex >= MaxFrames {
-					v.err = ErrStackOverflow
-					return
+					return ErrStackOverflow
 				}
 
 				// update call frame
@@ -789,25 +747,25 @@ func (v *VM) run() {
 				var args []objects.Object
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 
-				ret, e := value.Call(v, args...)
+				ret, err := value.Call(v, args...)
+				if v.lastPanic != nil {
+					panic(v.lastPanic)
+				}
 				v.sp -= numArgs + 1
 
 				// runtime error
-				if e != nil {
-					if e == objects.ErrWrongNumArguments {
-						v.err = fmt.Errorf("wrong number of arguments in call to '%s'",
+				if err != nil {
+					if err == objects.ErrWrongNumArguments {
+						return fmt.Errorf("wrong number of arguments in call to '%s'",
 							value.TypeName())
-						return
 					}
 
-					if e, ok := e.(objects.ErrInvalidArgumentType); ok {
-						v.err = fmt.Errorf("invalid type for argument '%s' in call to '%s': expected %s, found %s",
-							e.Name, value.TypeName(), e.Expected, e.Found)
-						return
+					if err, ok := err.(objects.ErrInvalidArgumentType); ok {
+						return fmt.Errorf("invalid type for argument '%s' in call to '%s': expected %s, found %s",
+							err.Name, value.TypeName(), err.Expected, err.Found)
 					}
 
-					v.err = e
-					return
+					return err
 				}
 
 				// nil return -> undefined
@@ -817,8 +775,7 @@ func (v *VM) run() {
 
 				v.allocs--
 				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
+					return ErrObjectAllocLimit
 				}
 
 				v.stack[v.sp] = ret
@@ -896,9 +853,8 @@ func (v *VM) run() {
 				dst = *obj.Value
 			}
 
-			if e := indexAssign(dst, val, selectors); e != nil {
-				v.err = e
-				return
+			if err := indexAssign(dst, val, selectors); err != nil {
+				return err
 			}
 
 		case compiler.OpGetLocal:
@@ -928,8 +884,7 @@ func (v *VM) run() {
 
 			fn, ok := v.constants[constIndex].(*objects.CompiledFunction)
 			if !ok {
-				v.err = fmt.Errorf("not function: %s", fn.TypeName())
-				return
+				return fmt.Errorf("not function: %s", fn.TypeName())
 			}
 
 			free := make([]*objects.ObjectPtr, numFree)
@@ -954,8 +909,7 @@ func (v *VM) run() {
 
 			v.allocs--
 			if v.allocs == 0 {
-				v.err = ErrObjectAllocLimit
-				return
+				return ErrObjectAllocLimit
 			}
 
 			v.stack[v.sp] = cl
@@ -1018,9 +972,8 @@ func (v *VM) run() {
 			val := v.stack[v.sp-numSelectors-1]
 			v.sp -= numSelectors + 1
 
-			if e := indexAssign(*v.curFrame.freeVars[freeIndex].Value, val, selectors); e != nil {
-				v.err = e
-				return
+			if err := indexAssign(*v.curFrame.freeVars[freeIndex].Value, val, selectors); err != nil {
+				return err
 			}
 
 		case compiler.OpIteratorInit:
@@ -1030,15 +983,13 @@ func (v *VM) run() {
 			v.sp--
 
 			if !dst.CanIterate() {
-				v.err = fmt.Errorf("not iterable: %s", dst.TypeName())
-				return
+				return fmt.Errorf("not iterable: %s", dst.TypeName())
 			}
 
 			iterator = dst.Iterate()
 			v.allocs--
 			if v.allocs == 0 {
-				v.err = ErrObjectAllocLimit
-				return
+				return ErrObjectAllocLimit
 			}
 
 			v.stack[v.sp] = iterator
@@ -1076,12 +1027,11 @@ func (v *VM) run() {
 			v.sp++
 
 		default:
-			v.err = fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])
-			return
+			return fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])
 		}
 	}
 
-	return
+	return nil
 }
 
 // IsStackEmpty tests if the stack is empty or not.
