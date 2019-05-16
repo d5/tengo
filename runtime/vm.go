@@ -36,6 +36,7 @@ type VM struct {
 	aborting    int64
 	maxAllocs   int64
 	allocs      int64
+	valid       bool
 	err         error
 }
 
@@ -53,6 +54,7 @@ func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, maxAllocs int6
 		framesIndex: 1,
 		ip:          -1,
 		maxAllocs:   maxAllocs,
+		valid:       true,
 	}
 
 	v.frames[0].fn = bytecode.MainFunction
@@ -106,8 +108,10 @@ func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Obj
 	v.sp += numArgs
 
 	// resume execution
-	v.run()
-
+	err := v.run()
+	if err != nil {
+		return nil, err
+	}
 	// capture error or return value
 	if v.err != nil {
 		return nil, v.err
@@ -127,6 +131,7 @@ func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Obj
 
 // Run starts the execution.
 func (v *VM) Run() (err error) {
+
 	// reset VM states
 	v.sp = 0
 	v.curFrame = &(v.frames[0])
@@ -135,7 +140,10 @@ func (v *VM) Run() (err error) {
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
 
-	v.run()
+	err = v.run()
+	if err != nil {
+		return err
+	}
 
 	atomic.StoreInt64(&v.aborting, 0)
 
@@ -156,7 +164,18 @@ func (v *VM) Run() (err error) {
 	return nil
 }
 
-func (v *VM) run() {
+func (v *VM) run() (verr error) {
+	defer func() {
+		if r := recover(); r != nil {
+			v.valid = false
+			panic(r)
+		}
+	}()
+
+	if !v.valid {
+		return fmt.Errorf("VM run disallowed when in invalid state")
+	}
+
 	for atomic.LoadInt64(&v.aborting) == 0 {
 		v.ip++
 
@@ -1067,6 +1086,8 @@ func (v *VM) run() {
 			return
 		}
 	}
+
+	return
 }
 
 // IsStackEmpty tests if the stack is empty or not.
