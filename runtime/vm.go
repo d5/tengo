@@ -36,7 +36,6 @@ type VM struct {
 	aborting    int64
 	maxAllocs   int64
 	allocs      int64
-	valid       bool
 	err         error
 }
 
@@ -54,7 +53,6 @@ func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, maxAllocs int6
 		framesIndex: 1,
 		ip:          -1,
 		maxAllocs:   maxAllocs,
-		valid:       true,
 	}
 
 	v.frames[0].fn = bytecode.MainFunction
@@ -72,6 +70,10 @@ func (v *VM) Abort() {
 
 // Call provides a hook for go code to initiate a call to a tengo function
 func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Object, retErr error) {
+	if v.err != nil {
+		return nil, v.err
+	}
+
 	numArgs := len(args)
 
 	// check for stack overflow
@@ -82,8 +84,9 @@ func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Obj
 	// create a micro-function to handle the call
 	callee := &objects.CompiledFunction{
 		Instructions: []byte{
-			/* CALL		numArgs */ compiler.OpCall, byte(numArgs),
-			/* SUSPEND			*/ compiler.OpSuspend,
+			compiler.OpCall,
+			byte(numArgs),
+			compiler.OpSuspend,
 		},
 		SourceMap: map[int]source.Pos{},
 	}
@@ -108,10 +111,8 @@ func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Obj
 	v.sp += numArgs
 
 	// resume execution
-	err := v.run()
-	if err != nil {
-		return nil, err
-	}
+	v.run()
+
 	// capture error or return value
 	if v.err != nil {
 		return nil, v.err
@@ -131,7 +132,6 @@ func (v *VM) Call(fn objects.Object, args ...objects.Object) (retVal objects.Obj
 
 // Run starts the execution.
 func (v *VM) Run() (err error) {
-
 	// reset VM states
 	v.sp = 0
 	v.curFrame = &(v.frames[0])
@@ -139,11 +139,9 @@ func (v *VM) Run() (err error) {
 	v.framesIndex = 1
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
+	v.err = nil
 
-	err = v.run()
-	if err != nil {
-		return err
-	}
+	v.run()
 
 	atomic.StoreInt64(&v.aborting, 0)
 
@@ -164,17 +162,13 @@ func (v *VM) Run() (err error) {
 	return nil
 }
 
-func (v *VM) run() (verr error) {
+func (v *VM) run() {
 	defer func() {
 		if r := recover(); r != nil {
-			v.valid = false
+			v.err = fmt.Errorf("panic: %v", r)
 			panic(r)
 		}
 	}()
-
-	if !v.valid {
-		return fmt.Errorf("VM run disallowed when in invalid state")
-	}
 
 	for atomic.LoadInt64(&v.aborting) == 0 {
 		v.ip++
