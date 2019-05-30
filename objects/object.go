@@ -52,7 +52,7 @@ type Object interface {
 	// executing Runtime, an arbitrary number of arguments,
 	// and should return a return value and/or an error,
 	// which the VM will consider as a run-time error.
-	Call(rt Runtime, args ...Object) (ret Object, err error)
+	Call(runtime Interop, args ...Object) (ret Object, err error)
 
 	// CanCall should return whether the Object can be Called.
 	CanCall() bool

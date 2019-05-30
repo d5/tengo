@@ -61,7 +61,7 @@ func (o *Counter) Copy() objects.Object {
 	return &Counter{value: o.value}
 }
 
-func (o *Counter) Call(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
+func (o *Counter) Call(_ objects.Interop, args ...objects.Object) (objects.Object, error) {
 	return &objects.Int{Value: o.value}, nil
 }
 

@@ -14,7 +14,7 @@ func TestBuiltin(t *testing.T) {
 			Attrs: map[string]objects.Object{
 				"abs": &objects.UserFunction{
 					Name: "abs",
-					Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+					Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 						v, _ := objects.ToFloat64(args[0])
 						return &objects.Float{Value: math.Abs(v)}, nil
 					},
@@ -172,7 +172,7 @@ func TestModuleBlockScopes(t *testing.T) {
 			Attrs: map[string]objects.Object{
 				"intn": &objects.UserFunction{
 					Name: "abs",
-					Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+					Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 						v, _ := objects.ToInt64(args[0])
 						return &objects.Int{Value: rand.Int63n(v)}, nil
 					},

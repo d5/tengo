@@ -101,7 +101,7 @@ type callres struct {
 	e error
 }
 
-func (c callres) call(funcName string, rt objects.Runtime, args ...interface{}) callres {
+func (c callres) call(funcName string, rt objects.Interop, args ...interface{}) callres {
 	if c.e != nil {
 		return c
 	}
@@ -243,19 +243,14 @@ func expect(t *testing.T, input string, expected interface{}) {
 	assert.Equal(t, expected, v.Value())
 }
 
-type mockRuntime struct {
+type mockInterop struct {
 	val objects.Object
 	err error
 }
 
-func (rt mockRuntime) Call(fn objects.Object, args ...objects.Object) (objects.Object, error) {
-	if rt.err != nil {
-		return nil, rt.err
-	}
-
-	if rt.val == nil {
-		return objects.UndefinedValue, nil
-	}
-
-	return rt.val, nil
+func (i mockInterop) InteropCall(
+	callable objects.Object,
+	args ...objects.Object,
+) (objects.Object, error) {
+	return i.val, i.err
 }

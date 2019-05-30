@@ -14,7 +14,7 @@ var fmtModule = map[string]objects.Object{
 	"sprintf": &objects.UserFunction{Name: "sprintf", Value: fmtSprintf},
 }
 
-func fmtPrint(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+func fmtPrint(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 	printArgs, err := getPrintArgs(args...)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func fmtPrint(_ objects.Runtime, args ...objects.Object) (ret objects.Object, er
 	return nil, nil
 }
 
-func fmtPrintf(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+func fmtPrintf(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 	numArgs := len(args)
 	if numArgs == 0 {
 		return nil, objects.ErrWrongNumArguments
@@ -54,7 +54,7 @@ func fmtPrintf(_ objects.Runtime, args ...objects.Object) (ret objects.Object, e
 	return nil, nil
 }
 
-func fmtPrintln(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+func fmtPrintln(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 	printArgs, err := getPrintArgs(args...)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func fmtPrintln(_ objects.Runtime, args ...objects.Object) (ret objects.Object, 
 	return nil, nil
 }
 
-func fmtSprintf(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+func fmtSprintf(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 	numArgs := len(args)
 	if numArgs == 0 {
 		return nil, objects.ErrWrongNumArguments
