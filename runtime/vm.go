@@ -99,7 +99,7 @@ func (v *VM) Run() error {
 	return nil
 }
 
-// Invoke provides a hook for go code to initiate a call to a tengo function
+// InteropCall is an interop call method for Go functions.
 func (v *VM) InteropCall(
 	fn objects.Object,
 	args ...objects.Object,
