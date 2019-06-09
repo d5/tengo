@@ -24,14 +24,14 @@ func TestReadFile(t *testing.T) {
 	}
 	_ = tf.Close()
 
-	module(t, "os").call("read_file", mockRuntime{}, tf.Name()).expect(&objects.Bytes{Value: content})
+	module(t, "os").call("read_file", mockInterop{}, tf.Name()).expect(&objects.Bytes{Value: content})
 }
 
 func TestReadFileArgs(t *testing.T) {
-	module(t, "os").call("read_file", mockRuntime{}).expectError()
+	module(t, "os").call("read_file", mockInterop{}).expectError()
 }
 func TestFileStatArgs(t *testing.T) {
-	module(t, "os").call("stat", mockRuntime{}).expectError()
+	module(t, "os").call("stat", mockInterop{}).expectError()
 }
 
 func TestFileStatFile(t *testing.T) {
@@ -54,7 +54,7 @@ func TestFileStatFile(t *testing.T) {
 		return
 	}
 
-	module(t, "os").call("stat", mockRuntime{}, tf.Name()).expect(&objects.ImmutableMap{
+	module(t, "os").call("stat", mockInterop{}, tf.Name()).expect(&objects.ImmutableMap{
 		Value: map[string]objects.Object{
 			"name":      &objects.String{Value: stat.Name()},
 			"mtime":     &objects.Time{Value: stat.ModTime()},
@@ -77,7 +77,7 @@ func TestFileStatDir(t *testing.T) {
 		return
 	}
 
-	module(t, "os").call("stat", mockRuntime{}, td).expect(&objects.ImmutableMap{
+	module(t, "os").call("stat", mockInterop{}, td).expect(&objects.ImmutableMap{
 		Value: map[string]objects.Object{
 			"name":      &objects.String{Value: stat.Name()},
 			"mtime":     &objects.Time{Value: stat.ModTime()},
@@ -94,26 +94,26 @@ func TestOSExpandEnv(t *testing.T) {
 	tengo.MaxStringLen = 12
 
 	_ = os.Setenv("TENGO", "FOO BAR")
-	module(t, "os").call("expand_env", mockRuntime{}, "$TENGO").expect("FOO BAR")
+	module(t, "os").call("expand_env", mockInterop{}, "$TENGO").expect("FOO BAR")
 
 	_ = os.Setenv("TENGO", "FOO")
-	module(t, "os").call("expand_env", mockRuntime{}, "$TENGO $TENGO").expect("FOO FOO")
+	module(t, "os").call("expand_env", mockInterop{}, "$TENGO $TENGO").expect("FOO FOO")
 
 	_ = os.Setenv("TENGO", "123456789012")
-	module(t, "os").call("expand_env", mockRuntime{}, "$TENGO").expect("123456789012")
+	module(t, "os").call("expand_env", mockInterop{}, "$TENGO").expect("123456789012")
 
 	_ = os.Setenv("TENGO", "1234567890123")
-	module(t, "os").call("expand_env", mockRuntime{}, "$TENGO").expectError()
+	module(t, "os").call("expand_env", mockInterop{}, "$TENGO").expectError()
 
 	_ = os.Setenv("TENGO", "123456")
-	module(t, "os").call("expand_env", mockRuntime{}, "$TENGO$TENGO").expect("123456123456")
+	module(t, "os").call("expand_env", mockInterop{}, "$TENGO$TENGO").expect("123456123456")
 
 	_ = os.Setenv("TENGO", "123456")
-	module(t, "os").call("expand_env", mockRuntime{}, "${TENGO}${TENGO}").expect("123456123456")
+	module(t, "os").call("expand_env", mockInterop{}, "${TENGO}${TENGO}").expect("123456123456")
 
 	_ = os.Setenv("TENGO", "123456")
-	module(t, "os").call("expand_env", mockRuntime{}, "$TENGO $TENGO").expectError()
+	module(t, "os").call("expand_env", mockInterop{}, "$TENGO $TENGO").expectError()
 
 	_ = os.Setenv("TENGO", "123456")
-	module(t, "os").call("expand_env", mockRuntime{}, "${TENGO} ${TENGO}").expectError()
+	module(t, "os").call("expand_env", mockInterop{}, "${TENGO} ${TENGO}").expectError()
 }

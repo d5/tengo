@@ -1,6 +1,6 @@
 package objects
 
-func builtinCopy(rt Runtime, args ...Object) (Object, error) {
+func builtinCopy(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}

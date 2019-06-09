@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	_runtime "runtime"
 	"strings"
 	"testing"
 
@@ -120,7 +119,7 @@ func expect(t *testing.T, input string, opts *testopts, expected interface{}) {
 		res, trace, err := traceCompileRun(file, symbols, modules, maxAllocs)
 		if !assert.NoError(t, err) ||
 			!assert.Equal(t, expectedObj, res[testOut]) {
-			t.Log("\n" + strings.Join(trace, "\n"))
+			t.Log("\n" + strings.Join(trace, "\n") + "\n")
 		}
 	}
 
@@ -144,7 +143,7 @@ func expect(t *testing.T, input string, opts *testopts, expected interface{}) {
 		res, trace, err := traceCompileRun(file, symbols, modules, maxAllocs)
 		if !assert.NoError(t, err) ||
 			!assert.Equal(t, expectedObj, res[testOut]) {
-			t.Log("\n" + strings.Join(trace, "\n"))
+			t.Log("\n" + strings.Join(trace, "\n") + "\n")
 		}
 	}
 }
@@ -173,8 +172,40 @@ func expectError(t *testing.T, input string, opts *testopts, expected string) {
 	_, trace, err := traceCompileRun(program, symbols, modules, maxAllocs)
 	if !assert.Error(t, err) ||
 		!assert.True(t, strings.Contains(err.Error(), expected), "expected error string: %s, got: %s", expected, err.Error()) {
-		t.Log("\n" + strings.Join(trace, "\n"))
+		t.Log("\n" + strings.Join(trace, "\n") + "\n")
 	}
+}
+
+func expectPanic(t *testing.T, input string, opts *testopts, expected string) {
+	if opts == nil {
+		opts = Opts()
+	}
+
+	symbols := opts.symbols
+	modules := opts.modules
+	maxAllocs := opts.maxAllocs
+
+	expected = strings.TrimSpace(expected)
+	if expected == "" {
+		panic("expected must not be empty")
+	}
+
+	// parse
+	program := parse(t, input)
+	if program == nil {
+		return
+	}
+
+	// compiler/VM
+	var trace []string
+	defer func() {
+		e := recover()
+		if !assert.True(t, strings.Contains(fmt.Sprint(e), expected),
+			"expected panic string: %s, got: %s", expected, fmt.Sprint(e)) {
+			t.Log("\n" + strings.Join(trace, "\n") + "\n")
+		}
+	}()
+	_, trace, _ = traceCompileRun(program, symbols, modules, maxAllocs)
 }
 
 type tracer struct {
@@ -189,23 +220,23 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules *objects.ModuleMap, maxAllocs int64) (res map[string]objects.Object, trace []string, err error) {
 	var v *runtime.VM
 
-	defer func() {
-		if e := recover(); e != nil {
-			err = fmt.Errorf("panic: %v", e)
-
-			// stack trace
-			var stackTrace []string
-			for i := 2; ; i += 1 {
-				_, file, line, ok := _runtime.Caller(i)
-				if !ok {
-					break
-				}
-				stackTrace = append(stackTrace, fmt.Sprintf("  %s:%d", file, line))
-			}
-
-			trace = append(trace, fmt.Sprintf("[Error Trace]\n\n  %s\n", strings.Join(stackTrace, "\n  ")))
-		}
-	}()
+	//defer func() {
+	//	if e := recover(); e != nil {
+	//		err = fmt.Errorf("panic: %v", e)
+	//
+	//		// stack trace
+	//		var stackTrace []string
+	//		for i := 2; ; i += 1 {
+	//			_, file, line, ok := _runtime.Caller(i)
+	//			if !ok {
+	//				break
+	//			}
+	//			stackTrace = append(stackTrace, fmt.Sprintf("  %s:%d", file, line))
+	//		}
+	//
+	//		trace = append(trace, fmt.Sprintf("\n[Error Trace]\n\n  %s\n", strings.Join(stackTrace, "\n  ")))
+	//	}
+	//}()
 
 	globals := make([]objects.Object, runtime.GlobalsSize)
 
@@ -222,10 +253,10 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules 
 		symTable.DefineBuiltin(idx, fn.Name)
 	}
 
-	tr := &tracer{}
-	c := compiler.NewCompiler(file.InputFile, symTable, nil, modules, tr)
+	//tr := &tracer{}
+	c := compiler.NewCompiler(file.InputFile, symTable, nil, modules, nil)
 	err = c.Compile(file)
-	trace = append(trace, fmt.Sprintf("\n[Compiler Trace]\n\n%s", strings.Join(tr.Out, "")))
+	//trace = append(trace, fmt.Sprintf("\n[Compiler Trace]\n\n%s", strings.Join(tr.Out, "")))
 	if err != nil {
 		return
 	}
@@ -233,7 +264,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules 
 	bytecode := c.Bytecode()
 	bytecode.RemoveDuplicates()
 	trace = append(trace, fmt.Sprintf("\n[Compiled Constants]\n\n%s", strings.Join(bytecode.FormatConstants(), "\n")))
-	trace = append(trace, fmt.Sprintf("\n[Compiled Instructions]\n\n%s\n", strings.Join(bytecode.FormatInstructions(), "\n")))
+	trace = append(trace, fmt.Sprintf("\n[Compiled Instructions]\n\n%s", strings.Join(bytecode.FormatInstructions(), "\n")))
 
 	v = runtime.NewVM(bytecode, globals, maxAllocs)
 

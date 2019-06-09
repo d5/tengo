@@ -22,7 +22,7 @@ func makeOSExecCommand(cmd *exec.Cmd) *objects.ImmutableMap {
 			// set_path(path string)
 			"set_path": &objects.UserFunction{
 				Name: "set_path",
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 1 {
 						return nil, objects.ErrWrongNumArguments
 					}
@@ -44,7 +44,7 @@ func makeOSExecCommand(cmd *exec.Cmd) *objects.ImmutableMap {
 			// set_dir(dir string)
 			"set_dir": &objects.UserFunction{
 				Name: "set_dir",
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 1 {
 						return nil, objects.ErrWrongNumArguments
 					}
@@ -66,7 +66,7 @@ func makeOSExecCommand(cmd *exec.Cmd) *objects.ImmutableMap {
 			// set_env(env array(string))
 			"set_env": &objects.UserFunction{
 				Name: "set_env",
-				Value: func(_ objects.Runtime, args ...objects.Object) (objects.Object, error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (objects.Object, error) {
 					if len(args) != 1 {
 						return nil, objects.ErrWrongNumArguments
 					}
@@ -100,7 +100,7 @@ func makeOSExecCommand(cmd *exec.Cmd) *objects.ImmutableMap {
 			// process() => imap(process)
 			"process": &objects.UserFunction{
 				Name: "process",
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 0 {
 						return nil, objects.ErrWrongNumArguments
 					}

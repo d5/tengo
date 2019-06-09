@@ -22,8 +22,8 @@ func TestTextRE(t *testing.T) {
 		{"^b", "abc"},
 	} {
 		expected := regexp.MustCompile(d.pattern).MatchString(d.text)
-		module(t, "text").call("re_match", mockRuntime{},  d.pattern, d.text).expect(expected, "pattern: %q, src: %q", d.pattern, d.text)
-		module(t, "text").call("re_compile", mockRuntime{},  d.pattern).call("match", mockRuntime{}, d.text).expect(expected, "patter: %q, src: %q", d.pattern, d.text)
+		module(t, "text").call("re_match", mockInterop{}, d.pattern, d.text).expect(expected, "pattern: %q, src: %q", d.pattern, d.text)
+		module(t, "text").call("re_compile", mockInterop{}, d.pattern).call("match", mockInterop{}, d.text).expect(expected, "patter: %q, src: %q", d.pattern, d.text)
 	}
 
 	// re_find(pattern, text)
@@ -53,8 +53,8 @@ func TestTextRE(t *testing.T) {
 			},
 		}},
 	} {
-		module(t, "text").call("re_find", mockRuntime{},  d.pattern, d.text).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
-		module(t, "text").call("re_compile", mockRuntime{},  d.pattern).call("find", mockRuntime{}, d.text).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_find", mockInterop{}, d.pattern, d.text).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_compile", mockInterop{}, d.pattern).call("find", mockInterop{}, d.text).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
 	}
 
 	// re_find(pattern, text, count))
@@ -102,8 +102,8 @@ func TestTextRE(t *testing.T) {
 			},
 		}},
 	} {
-		module(t, "text").call("re_find", mockRuntime{},  d.pattern, d.text, d.count).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
-		module(t, "text").call("re_compile", mockRuntime{},  d.pattern).call("find", mockRuntime{}, d.text, d.count).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_find", mockInterop{}, d.pattern, d.text, d.count).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_compile", mockInterop{}, d.pattern).call("find", mockInterop{}, d.text, d.count).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
 	}
 
 	// re_replace(pattern, text, repl)
@@ -127,8 +127,8 @@ func TestTextRE(t *testing.T) {
 		{"(a(b)c)", "abc\nabc\nabc", "$1$2"},
 	} {
 		expected := regexp.MustCompile(d.pattern).ReplaceAllString(d.text, d.repl)
-		module(t, "text").call("re_replace", mockRuntime{},  d.pattern, d.text, d.repl).expect(expected, "pattern: %q, text: %q, repl: %q", d.pattern, d.text, d.repl)
-		module(t, "text").call("re_compile", mockRuntime{},  d.pattern).call("replace", mockRuntime{}, d.text, d.repl).expect(expected, "pattern: %q, text: %q, repl: %q", d.pattern, d.text, d.repl)
+		module(t, "text").call("re_replace", mockInterop{}, d.pattern, d.text, d.repl).expect(expected, "pattern: %q, text: %q, repl: %q", d.pattern, d.text, d.repl)
+		module(t, "text").call("re_compile", mockInterop{}, d.pattern).call("replace", mockInterop{}, d.text, d.repl).expect(expected, "pattern: %q, text: %q, repl: %q", d.pattern, d.text, d.repl)
 	}
 
 	// re_split(pattern, text)
@@ -145,8 +145,8 @@ func TestTextRE(t *testing.T) {
 		for _, ex := range regexp.MustCompile(d.pattern).Split(d.text, -1) {
 			expected = append(expected, ex)
 		}
-		module(t, "text").call("re_split", mockRuntime{},  d.pattern, d.text).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
-		module(t, "text").call("re_compile", mockRuntime{},  d.pattern).call("split", mockRuntime{}, d.text).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_split", mockInterop{}, d.pattern, d.text).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_compile", mockInterop{}, d.pattern).call("split", mockInterop{}, d.text).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
 	}
 
 	// re_split(pattern, text, count))
@@ -171,47 +171,47 @@ func TestTextRE(t *testing.T) {
 		for _, ex := range regexp.MustCompile(d.pattern).Split(d.text, d.count) {
 			expected = append(expected, ex)
 		}
-		module(t, "text").call("re_split", mockRuntime{},  d.pattern, d.text, d.count).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
-		module(t, "text").call("re_compile", mockRuntime{},  d.pattern).call("split", mockRuntime{}, d.text, d.count).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_split", mockInterop{}, d.pattern, d.text, d.count).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_compile", mockInterop{}, d.pattern).call("split", mockInterop{}, d.text, d.count).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
 	}
 }
 
 func TestText(t *testing.T) {
-	module(t, "text").call("compare", mockRuntime{},  "", "").expect(0)
-	module(t, "text").call("compare", mockRuntime{},  "", "a").expect(-1)
-	module(t, "text").call("compare", mockRuntime{},  "a", "").expect(1)
-	module(t, "text").call("compare", mockRuntime{},  "a", "a").expect(0)
-	module(t, "text").call("compare", mockRuntime{},  "a", "b").expect(-1)
-	module(t, "text").call("compare", mockRuntime{},  "b", "a").expect(1)
-	module(t, "text").call("compare", mockRuntime{},  "abcde", "abcde").expect(0)
-	module(t, "text").call("compare", mockRuntime{},  "abcde", "abcdf").expect(-1)
-	module(t, "text").call("compare", mockRuntime{},  "abcdf", "abcde").expect(1)
+	module(t, "text").call("compare", mockInterop{}, "", "").expect(0)
+	module(t, "text").call("compare", mockInterop{}, "", "a").expect(-1)
+	module(t, "text").call("compare", mockInterop{}, "a", "").expect(1)
+	module(t, "text").call("compare", mockInterop{}, "a", "a").expect(0)
+	module(t, "text").call("compare", mockInterop{}, "a", "b").expect(-1)
+	module(t, "text").call("compare", mockInterop{}, "b", "a").expect(1)
+	module(t, "text").call("compare", mockInterop{}, "abcde", "abcde").expect(0)
+	module(t, "text").call("compare", mockInterop{}, "abcde", "abcdf").expect(-1)
+	module(t, "text").call("compare", mockInterop{}, "abcdf", "abcde").expect(1)
 
-	module(t, "text").call("contains", mockRuntime{},  "", "").expect(true)
-	module(t, "text").call("contains", mockRuntime{},  "", "a").expect(false)
-	module(t, "text").call("contains", mockRuntime{},  "a", "").expect(true)
-	module(t, "text").call("contains", mockRuntime{},  "a", "a").expect(true)
-	module(t, "text").call("contains", mockRuntime{},  "abcde", "a").expect(true)
-	module(t, "text").call("contains", mockRuntime{},  "abcde", "abcde").expect(true)
-	module(t, "text").call("contains", mockRuntime{},  "abc", "abcde").expect(false)
-	module(t, "text").call("contains", mockRuntime{},  "ab cd", "bc").expect(false)
+	module(t, "text").call("contains", mockInterop{}, "", "").expect(true)
+	module(t, "text").call("contains", mockInterop{}, "", "a").expect(false)
+	module(t, "text").call("contains", mockInterop{}, "a", "").expect(true)
+	module(t, "text").call("contains", mockInterop{}, "a", "a").expect(true)
+	module(t, "text").call("contains", mockInterop{}, "abcde", "a").expect(true)
+	module(t, "text").call("contains", mockInterop{}, "abcde", "abcde").expect(true)
+	module(t, "text").call("contains", mockInterop{}, "abc", "abcde").expect(false)
+	module(t, "text").call("contains", mockInterop{}, "ab cd", "bc").expect(false)
 
-	module(t, "text").call("replace", mockRuntime{},  "", "", "", -1).expect("")
-	module(t, "text").call("replace", mockRuntime{},  "abcd", "a", "x", -1).expect("xbcd")
-	module(t, "text").call("replace", mockRuntime{},  "aaaa", "a", "x", -1).expect("xxxx")
-	module(t, "text").call("replace", mockRuntime{},  "aaaa", "a", "x", 0).expect("aaaa")
-	module(t, "text").call("replace", mockRuntime{},  "aaaa", "a", "x", 2).expect("xxaa")
-	module(t, "text").call("replace", mockRuntime{},  "abcd", "bc", "x", -1).expect("axd")
+	module(t, "text").call("replace", mockInterop{}, "", "", "", -1).expect("")
+	module(t, "text").call("replace", mockInterop{}, "abcd", "a", "x", -1).expect("xbcd")
+	module(t, "text").call("replace", mockInterop{}, "aaaa", "a", "x", -1).expect("xxxx")
+	module(t, "text").call("replace", mockInterop{}, "aaaa", "a", "x", 0).expect("aaaa")
+	module(t, "text").call("replace", mockInterop{}, "aaaa", "a", "x", 2).expect("xxaa")
+	module(t, "text").call("replace", mockInterop{}, "abcd", "bc", "x", -1).expect("axd")
 
-	module(t, "text").call("format_bool", mockRuntime{},  true).expect("true")
-	module(t, "text").call("format_bool", mockRuntime{},  false).expect("false")
-	module(t, "text").call("format_float", mockRuntime{},  -19.84, 'f', -1, 64).expect("-19.84")
-	module(t, "text").call("format_int", mockRuntime{},  -1984, 10).expect("-1984")
-	module(t, "text").call("format_int", mockRuntime{},  1984, 8).expect("3700")
-	module(t, "text").call("parse_bool", mockRuntime{},  "true").expect(true)
-	module(t, "text").call("parse_bool", mockRuntime{},  "0").expect(false)
-	module(t, "text").call("parse_float", mockRuntime{},  "-19.84", 64).expect(-19.84)
-	module(t, "text").call("parse_int", mockRuntime{},  "-1984", 10, 64).expect(-1984)
+	module(t, "text").call("format_bool", mockInterop{}, true).expect("true")
+	module(t, "text").call("format_bool", mockInterop{}, false).expect("false")
+	module(t, "text").call("format_float", mockInterop{}, -19.84, 'f', -1, 64).expect("-19.84")
+	module(t, "text").call("format_int", mockInterop{}, -1984, 10).expect("-1984")
+	module(t, "text").call("format_int", mockInterop{}, 1984, 8).expect("3700")
+	module(t, "text").call("parse_bool", mockInterop{}, "true").expect(true)
+	module(t, "text").call("parse_bool", mockInterop{}, "0").expect(false)
+	module(t, "text").call("parse_float", mockInterop{}, "-19.84", 64).expect(-19.84)
+	module(t, "text").call("parse_int", mockInterop{}, "-1984", 10, 64).expect(-1984)
 }
 
 func TestReplaceLimit(t *testing.T) {
@@ -219,19 +219,19 @@ func TestReplaceLimit(t *testing.T) {
 	defer func() { tengo.MaxStringLen = curMaxStringLen }()
 	tengo.MaxStringLen = 12
 
-	module(t, "text").call("replace", mockRuntime{},  "123456789012", "1", "x", -1).expect("x234567890x2")
-	module(t, "text").call("replace", mockRuntime{},  "123456789012", "12", "x", -1).expect("x34567890x")
-	module(t, "text").call("replace", mockRuntime{},  "123456789012", "1", "xy", -1).expectError()
-	module(t, "text").call("replace", mockRuntime{},  "123456789012", "0", "xy", -1).expectError()
-	module(t, "text").call("replace", mockRuntime{},  "123456789012", "012", "xyz", -1).expect("123456789xyz")
-	module(t, "text").call("replace", mockRuntime{},  "123456789012", "012", "xyzz", -1).expectError()
+	module(t, "text").call("replace", mockInterop{}, "123456789012", "1", "x", -1).expect("x234567890x2")
+	module(t, "text").call("replace", mockInterop{}, "123456789012", "12", "x", -1).expect("x34567890x")
+	module(t, "text").call("replace", mockInterop{}, "123456789012", "1", "xy", -1).expectError()
+	module(t, "text").call("replace", mockInterop{}, "123456789012", "0", "xy", -1).expectError()
+	module(t, "text").call("replace", mockInterop{}, "123456789012", "012", "xyz", -1).expect("123456789xyz")
+	module(t, "text").call("replace", mockInterop{}, "123456789012", "012", "xyzz", -1).expectError()
 
-	module(t, "text").call("re_replace", mockRuntime{},  "1", "123456789012", "x").expect("x234567890x2")
-	module(t, "text").call("re_replace", mockRuntime{},  "12", "123456789012", "x").expect("x34567890x")
-	module(t, "text").call("re_replace", mockRuntime{},  "1", "123456789012", "xy").expectError()
-	module(t, "text").call("re_replace", mockRuntime{},  "1(2)", "123456789012", "x$1").expect("x234567890x2")
-	module(t, "text").call("re_replace", mockRuntime{},  "(1)(2)", "123456789012", "$2$1").expect("213456789021")
-	module(t, "text").call("re_replace", mockRuntime{},  "(1)(2)", "123456789012", "${2}${1}x").expectError()
+	module(t, "text").call("re_replace", mockInterop{}, "1", "123456789012", "x").expect("x234567890x2")
+	module(t, "text").call("re_replace", mockInterop{}, "12", "123456789012", "x").expect("x34567890x")
+	module(t, "text").call("re_replace", mockInterop{}, "1", "123456789012", "xy").expectError()
+	module(t, "text").call("re_replace", mockInterop{}, "1(2)", "123456789012", "x$1").expect("x234567890x2")
+	module(t, "text").call("re_replace", mockInterop{}, "(1)(2)", "123456789012", "$2$1").expect("213456789021")
+	module(t, "text").call("re_replace", mockInterop{}, "(1)(2)", "123456789012", "${2}${1}x").expectError()
 }
 
 func TestTextRepeat(t *testing.T) {
@@ -239,34 +239,34 @@ func TestTextRepeat(t *testing.T) {
 	defer func() { tengo.MaxStringLen = curMaxStringLen }()
 	tengo.MaxStringLen = 12
 
-	module(t, "text").call("repeat", mockRuntime{},  "1234", "3").expect("123412341234")
-	module(t, "text").call("repeat", mockRuntime{},  "1234", "4").expectError()
-	module(t, "text").call("repeat", mockRuntime{},  "1", "12").expect("111111111111")
-	module(t, "text").call("repeat", mockRuntime{},  "1", "13").expectError()
+	module(t, "text").call("repeat", mockInterop{}, "1234", "3").expect("123412341234")
+	module(t, "text").call("repeat", mockInterop{}, "1234", "4").expectError()
+	module(t, "text").call("repeat", mockInterop{}, "1", "12").expect("111111111111")
+	module(t, "text").call("repeat", mockInterop{}, "1", "13").expectError()
 }
 
 func TestSubstr(t *testing.T) {
-	module(t, "text").call("substr", mockRuntime{},  "", 0, 0).expect("")
-	module(t, "text").call("substr", mockRuntime{},  "abcdef", 0, 3).expect("abc")
-	module(t, "text").call("substr", mockRuntime{},  "abcdef", 0, 6).expect("abcdef")
-	module(t, "text").call("substr", mockRuntime{},  "abcdef", 0, 10).expect("abcdef")
-	module(t, "text").call("substr", mockRuntime{},  "abcdef", -10, 10).expect("abcdef")
-	module(t, "text").call("substr", mockRuntime{},  "abcdef", 0).expect("abcdef")
-	module(t, "text").call("substr", mockRuntime{},  "abcdef", 3).expect("def")
+	module(t, "text").call("substr", mockInterop{}, "", 0, 0).expect("")
+	module(t, "text").call("substr", mockInterop{}, "abcdef", 0, 3).expect("abc")
+	module(t, "text").call("substr", mockInterop{}, "abcdef", 0, 6).expect("abcdef")
+	module(t, "text").call("substr", mockInterop{}, "abcdef", 0, 10).expect("abcdef")
+	module(t, "text").call("substr", mockInterop{}, "abcdef", -10, 10).expect("abcdef")
+	module(t, "text").call("substr", mockInterop{}, "abcdef", 0).expect("abcdef")
+	module(t, "text").call("substr", mockInterop{}, "abcdef", 3).expect("def")
 
-	module(t, "text").call("substr", mockRuntime{},  "", 10, 0).expectError()
-	module(t, "text").call("substr", mockRuntime{},  "", "10", 0).expectError()
-	module(t, "text").call("substr", mockRuntime{},  "", 10, "0").expectError()
-	module(t, "text").call("substr", mockRuntime{},  "", "10", "0").expectError()
+	module(t, "text").call("substr", mockInterop{}, "", 10, 0).expectError()
+	module(t, "text").call("substr", mockInterop{}, "", "10", 0).expectError()
+	module(t, "text").call("substr", mockInterop{}, "", 10, "0").expectError()
+	module(t, "text").call("substr", mockInterop{}, "", "10", "0").expectError()
 
-	module(t, "text").call("substr", mockRuntime{},  0, 0, 1).expect("0")
-	module(t, "text").call("substr", mockRuntime{},  123, 0, 1).expect("1")
-	module(t, "text").call("substr", mockRuntime{},  123.456, 4, 7).expect("456")
+	module(t, "text").call("substr", mockInterop{}, 0, 0, 1).expect("0")
+	module(t, "text").call("substr", mockInterop{}, 123, 0, 1).expect("1")
+	module(t, "text").call("substr", mockInterop{}, 123.456, 4, 7).expect("456")
 }
 
 func TestPadLeft(t *testing.T) {
-	module(t, "text").call("pad_left", mockRuntime{},  "ab", 7, 0).expect("00000ab")
-	module(t, "text").call("pad_right", mockRuntime{},  "ab", 7, 0).expect("ab00000")
-	module(t, "text").call("pad_left", mockRuntime{},  "ab", 7, "+-").expect("-+-+-ab")
-	module(t, "text").call("pad_right", mockRuntime{},  "ab", 7, "+-").expect("ab+-+-+")
+	module(t, "text").call("pad_left", mockInterop{}, "ab", 7, 0).expect("00000ab")
+	module(t, "text").call("pad_right", mockInterop{}, "ab", 7, 0).expect("ab00000")
+	module(t, "text").call("pad_left", mockInterop{}, "ab", 7, "+-").expect("-+-+-ab")
+	module(t, "text").call("pad_right", mockInterop{}, "ab", 7, "+-").expect("ab+-+-+")
 }

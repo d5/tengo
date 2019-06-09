@@ -4,7 +4,7 @@ import (
 	"github.com/d5/tengo"
 )
 
-func builtinString(rt Runtime, args ...Object) (Object, error) {
+func builtinString(rt Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -30,7 +30,7 @@ func builtinString(rt Runtime, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinInt(rt Runtime, args ...Object) (Object, error) {
+func builtinInt(rt Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -52,7 +52,7 @@ func builtinInt(rt Runtime, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinFloat(rt Runtime, args ...Object) (Object, error) {
+func builtinFloat(rt Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -74,7 +74,7 @@ func builtinFloat(rt Runtime, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinBool(rt Runtime, args ...Object) (Object, error) {
+func builtinBool(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -95,7 +95,7 @@ func builtinBool(rt Runtime, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinChar(rt Runtime, args ...Object) (Object, error) {
+func builtinChar(rt Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -117,7 +117,7 @@ func builtinChar(rt Runtime, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinBytes(rt Runtime, args ...Object) (Object, error) {
+func builtinBytes(rt Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -148,7 +148,7 @@ func builtinBytes(rt Runtime, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinTime(rt Runtime, args ...Object) (Object, error) {
+func builtinTime(rt Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments

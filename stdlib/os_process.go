@@ -25,7 +25,7 @@ func makeOSProcess(proc *os.Process) *objects.ImmutableMap {
 			"release": &objects.UserFunction{Name: "release", Value: FuncARE(proc.Release)}, //
 			"signal": &objects.UserFunction{
 				Name: "signal",
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 1 {
 						return nil, objects.ErrWrongNumArguments
 					}
@@ -44,7 +44,7 @@ func makeOSProcess(proc *os.Process) *objects.ImmutableMap {
 			},
 			"wait": &objects.UserFunction{
 				Name: "wait",
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 0 {
 						return nil, objects.ErrWrongNumArguments
 					}

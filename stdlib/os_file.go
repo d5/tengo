@@ -30,7 +30,7 @@ func makeOSFile(file *os.File) *objects.ImmutableMap {
 			// chmod(mode int) => error
 			"chmod": &objects.UserFunction{
 				Name: "chmod",
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 1 {
 						return nil, objects.ErrWrongNumArguments
 					}
@@ -50,7 +50,7 @@ func makeOSFile(file *os.File) *objects.ImmutableMap {
 			// seek(offset int, whence int) => int/error
 			"seek": &objects.UserFunction{
 				Name: "seek",
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 2 {
 						return nil, objects.ErrWrongNumArguments
 					}
@@ -83,7 +83,7 @@ func makeOSFile(file *os.File) *objects.ImmutableMap {
 			// stat() => imap(fileinfo)/error
 			"stat": &objects.UserFunction{
 				Name: "start",
-				Value: func(rt objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(rt objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 0 {
 						return nil, objects.ErrWrongNumArguments
 					}

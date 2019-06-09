@@ -12,7 +12,7 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 		Value: map[string]objects.Object{
 			// match(text) => bool
 			"match": &objects.UserFunction{
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 1 {
 						err = objects.ErrWrongNumArguments
 						return
@@ -41,7 +41,7 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 			// find(text) 			=> array(array({text:,begin:,end:}))/undefined
 			// find(text, maxCount) => array(array({text:,begin:,end:}))/undefined
 			"find": &objects.UserFunction{
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					numArgs := len(args)
 					if numArgs != 1 && numArgs != 2 {
 						err = objects.ErrWrongNumArguments
@@ -116,7 +116,7 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 
 			// replace(src, repl) => string
 			"replace": &objects.UserFunction{
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 2 {
 						err = objects.ErrWrongNumArguments
 						return
@@ -156,7 +156,7 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 			// split(text) 			 => array(string)
 			// split(text, maxCount) => array(string)
 			"split": &objects.UserFunction{
-				Value: func(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
 					numArgs := len(args)
 					if numArgs != 1 && numArgs != 2 {
 						err = objects.ErrWrongNumArguments

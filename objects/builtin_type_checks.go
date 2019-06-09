@@ -1,6 +1,6 @@
 package objects
 
-func builtinIsString(rt Runtime, args ...Object) (Object, error) {
+func builtinIsString(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -12,7 +12,7 @@ func builtinIsString(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsInt(rt Runtime, args ...Object) (Object, error) {
+func builtinIsInt(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -24,7 +24,7 @@ func builtinIsInt(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsFloat(rt Runtime, args ...Object) (Object, error) {
+func builtinIsFloat(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -36,7 +36,7 @@ func builtinIsFloat(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsBool(rt Runtime, args ...Object) (Object, error) {
+func builtinIsBool(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -48,7 +48,7 @@ func builtinIsBool(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsChar(rt Runtime, args ...Object) (Object, error) {
+func builtinIsChar(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -60,7 +60,7 @@ func builtinIsChar(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsBytes(rt Runtime, args ...Object) (Object, error) {
+func builtinIsBytes(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -72,7 +72,7 @@ func builtinIsBytes(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsArray(rt Runtime, args ...Object) (Object, error) {
+func builtinIsArray(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -84,7 +84,7 @@ func builtinIsArray(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsImmutableArray(rt Runtime, args ...Object) (Object, error) {
+func builtinIsImmutableArray(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -96,7 +96,7 @@ func builtinIsImmutableArray(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsMap(rt Runtime, args ...Object) (Object, error) {
+func builtinIsMap(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -108,7 +108,7 @@ func builtinIsMap(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsImmutableMap(rt Runtime, args ...Object) (Object, error) {
+func builtinIsImmutableMap(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -120,7 +120,7 @@ func builtinIsImmutableMap(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsTime(rt Runtime, args ...Object) (Object, error) {
+func builtinIsTime(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -132,7 +132,7 @@ func builtinIsTime(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsError(rt Runtime, args ...Object) (Object, error) {
+func builtinIsError(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -144,7 +144,7 @@ func builtinIsError(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsUndefined(rt Runtime, args ...Object) (Object, error) {
+func builtinIsUndefined(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -156,7 +156,7 @@ func builtinIsUndefined(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsFunction(rt Runtime, args ...Object) (Object, error) {
+func builtinIsFunction(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -169,7 +169,7 @@ func builtinIsFunction(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsCallable(rt Runtime, args ...Object) (Object, error) {
+func builtinIsCallable(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -181,7 +181,7 @@ func builtinIsCallable(rt Runtime, args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-func builtinIsIterable(rt Runtime, args ...Object) (Object, error) {
+func builtinIsIterable(rt Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}

@@ -43,7 +43,7 @@ func (o *BuiltinFunction) Equals(x Object) bool {
 }
 
 // Call executes a builtin function.
-func (o *BuiltinFunction) Call(rt Runtime, args ...Object) (Object, error) {
+func (o *BuiltinFunction) Call(rt Interop, args ...Object) (Object, error) {
 	return o.Value(rt, args...)
 }
 
