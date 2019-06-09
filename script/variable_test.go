@@ -3,8 +3,8 @@ package script_test
 import (
 	"testing"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/script"
 )
 
@@ -18,7 +18,7 @@ type VariableTest struct {
 	CharValue   rune
 	BoolValue   bool
 	StringValue string
-	Object      objects.Object
+	Object      tengo.Object
 	IsUndefined bool
 }
 
@@ -34,7 +34,7 @@ func TestVariable(t *testing.T) {
 			CharValue:   rune(1),
 			BoolValue:   true,
 			StringValue: "1",
-			Object:      &objects.Int{Value: 1},
+			Object:      &tengo.Int{Value: 1},
 		},
 		{
 			Name:        "b",
@@ -43,7 +43,7 @@ func TestVariable(t *testing.T) {
 			FloatValue:  52.11,
 			StringValue: "52.11",
 			BoolValue:   true,
-			Object:      &objects.String{Value: "52.11"},
+			Object:      &tengo.String{Value: "52.11"},
 		},
 		{
 			Name:        "c",
@@ -54,13 +54,13 @@ func TestVariable(t *testing.T) {
 			FloatValue:  0,
 			BoolValue:   true,
 			StringValue: "true",
-			Object:      objects.TrueValue,
+			Object:      tengo.TrueValue,
 		},
 		{
 			Name:        "d",
 			Value:       nil,
 			ValueType:   "undefined",
-			Object:      objects.UndefinedValue,
+			Object:      tengo.UndefinedValue,
 			IsUndefined: true,
 		},
 	}

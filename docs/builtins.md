@@ -182,7 +182,7 @@ Returns `true` if the object's type is undefined. Or it returns `false`.
 
 ## is_function
 
-Returns `true` if the object's type is function or closure. Or it returns `false`. Note that `is_function` returns `false` for builtin functions and user-provided callable objects. 
+Returns `true` if the object's type is function or closure. Or it returns `false`. Note that `is_function` returns `false` for builtin functions and user-provided callable tengo. 
 
 ## is_callable
 

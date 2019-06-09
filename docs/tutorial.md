@@ -37,7 +37,7 @@ Here's a list of all available value types in Tengo.
 | immutable map | [immutable](#immutable-values) map | - |
 | undefined | [undefined](#undefined-values) value | - |
 | function | [function](#function-values) value | - |  
-| _user-defined_ | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/objects.md) | - |
+| _user-defined_ | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/tengo.md) | - |
 
 #### Error Values
 

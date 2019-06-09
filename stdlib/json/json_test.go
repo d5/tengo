@@ -4,8 +4,8 @@ import (
 	gojson "encoding/json"
 	"testing"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/stdlib/json"
 )
 
@@ -80,7 +80,7 @@ func testDecodeError(t *testing.T, input string) {
 }
 
 func testJSONEncodeDecode(t *testing.T, v interface{}) bool {
-	o, err := objects.FromInterface(v)
+	o, err := tengo.FromInterface(v)
 	if !assert.NoError(t, err) {
 		return false
 	}
@@ -100,7 +100,7 @@ func testJSONEncodeDecode(t *testing.T, v interface{}) bool {
 		return false
 	}
 
-	aj, err := gojson.Marshal(objects.ToInterface(a))
+	aj, err := gojson.Marshal(tengo.ToInterface(a))
 	if !assert.NoError(t, err) {
 		return false
 	}

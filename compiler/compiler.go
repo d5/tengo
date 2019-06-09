@@ -12,7 +12,6 @@ import (
 	"github.com/d5/tengo/compiler/ast"
 	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/compiler/token"
-	"github.com/d5/tengo/objects"
 )
 
 // Compiler compiles the AST into a bytecode.
@@ -20,12 +19,12 @@ type Compiler struct {
 	file            *source.File
 	parent          *Compiler
 	modulePath      string
-	constants       []objects.Object
+	constants       []tengo.Object
 	symbolTable     *SymbolTable
 	scopes          []CompilationScope
 	scopeIndex      int
-	modules         *objects.ModuleMap
-	compiledModules map[string]*objects.CompiledFunction
+	modules         *tengo.ModuleMap
+	compiledModules map[string]*tengo.CompiledFunction
 	allowFileImport bool
 	loops           []*Loop
 	loopIndex       int
@@ -34,7 +33,7 @@ type Compiler struct {
 }
 
 // NewCompiler creates a Compiler.
-func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []objects.Object, modules *objects.ModuleMap, trace io.Writer) *Compiler {
+func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []tengo.Object, modules *tengo.ModuleMap, trace io.Writer) *Compiler {
 	mainScope := CompilationScope{
 		symbolInit: make(map[string]bool),
 		sourceMap:  make(map[int]source.Pos),
@@ -46,13 +45,13 @@ func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []object
 	}
 
 	// add builtin functions to the symbol table
-	for idx, fn := range objects.Builtins {
+	for idx, fn := range tengo.Builtins {
 		symbolTable.DefineBuiltin(idx, fn.Name)
 	}
 
 	// builtin modules
 	if modules == nil {
-		modules = objects.NewModuleMap()
+		modules = tengo.NewModuleMap()
 	}
 
 	return &Compiler{
@@ -64,7 +63,7 @@ func NewCompiler(file *source.File, symbolTable *SymbolTable, constants []object
 		loopIndex:       -1,
 		trace:           trace,
 		modules:         modules,
-		compiledModules: make(map[string]*objects.CompiledFunction),
+		compiledModules: make(map[string]*tengo.CompiledFunction),
 	}
 }
 
@@ -178,10 +177,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 	case *ast.IntLit:
-		c.emit(node, OpConstant, c.addConstant(&objects.Int{Value: node.Value}))
+		c.emit(node, OpConstant, c.addConstant(&tengo.Int{Value: node.Value}))
 
 	case *ast.FloatLit:
-		c.emit(node, OpConstant, c.addConstant(&objects.Float{Value: node.Value}))
+		c.emit(node, OpConstant, c.addConstant(&tengo.Float{Value: node.Value}))
 
 	case *ast.BoolLit:
 		if node.Value {
@@ -192,13 +191,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 	case *ast.StringLit:
 		if len(node.Value) > tengo.MaxStringLen {
-			return c.error(node, objects.ErrStringLimit)
+			return c.error(node, tengo.ErrStringLimit)
 		}
 
-		c.emit(node, OpConstant, c.addConstant(&objects.String{Value: node.Value}))
+		c.emit(node, OpConstant, c.addConstant(&tengo.String{Value: node.Value}))
 
 	case *ast.CharLit:
-		c.emit(node, OpConstant, c.addConstant(&objects.Char{Value: node.Value}))
+		c.emit(node, OpConstant, c.addConstant(&tengo.Char{Value: node.Value}))
 
 	case *ast.UndefinedLit:
 		c.emit(node, OpNull)
@@ -342,9 +341,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 		for _, elt := range node.Elements {
 			// key
 			if len(elt.Key) > tengo.MaxStringLen {
-				return c.error(node, objects.ErrStringLimit)
+				return c.error(node, tengo.ErrStringLimit)
 			}
-			c.emit(node, OpConstant, c.addConstant(&objects.String{Value: elt.Key}))
+			c.emit(node, OpConstant, c.addConstant(&tengo.String{Value: elt.Key}))
 
 			// value
 			if err := c.Compile(elt.Value); err != nil {
@@ -473,7 +472,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			}
 		}
 
-		compiledFunction := &objects.CompiledFunction{
+		compiledFunction := &tengo.CompiledFunction{
 			Instructions:  instructions,
 			NumLocals:     numLocals,
 			NumParameters: len(node.Type.Params.List),
@@ -542,7 +541,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 				}
 				c.emit(node, OpConstant, c.addConstant(compiled))
 				c.emit(node, OpCall, 0)
-			case objects.Object: // builtin module
+			case tengo.Object: // builtin module
 				c.emit(node, OpConstant, c.addConstant(v))
 			default:
 				panic(fmt.Errorf("invalid import value type: %T", v))
@@ -644,7 +643,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 func (c *Compiler) Bytecode() *Bytecode {
 	return &Bytecode{
 		FileSet: c.file.Set(),
-		MainFunction: &objects.CompiledFunction{
+		MainFunction: &tengo.CompiledFunction{
 			Instructions: append(c.currentInstructions(), OpSuspend),
 			SourceMap:    c.currentSourceMap(),
 		},
@@ -682,7 +681,7 @@ func (c *Compiler) errorf(node ast.Node, format string, args ...interface{}) err
 	}
 }
 
-func (c *Compiler) addConstant(o objects.Object) int {
+func (c *Compiler) addConstant(o tengo.Object) int {
 	if c.parent != nil {
 		// module compilers will use their parent's constants array
 		return c.parent.addConstant(o)

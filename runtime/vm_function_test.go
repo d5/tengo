@@ -3,14 +3,14 @@ package runtime_test
 import (
 	"testing"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 func TestFunction(t *testing.T) {
 	// function with no "return" statement returns "invalid" value.
-	expect(t, `f1 := func() {}; out = f1();`, nil, objects.UndefinedValue)
-	expect(t, `f1 := func() {}; f2 := func() { return f1(); }; f1(); out = f2();`, nil, objects.UndefinedValue)
-	expect(t, `f := func(x) { x; }; out = f(5);`, nil, objects.UndefinedValue)
+	expect(t, `f1 := func() {}; out = f1();`, nil, tengo.UndefinedValue)
+	expect(t, `f1 := func() {}; f2 := func() { return f1(); }; f1(); out = f2();`, nil, tengo.UndefinedValue)
+	expect(t, `f := func(x) { x; }; out = f(5);`, nil, tengo.UndefinedValue)
 
 	expect(t, `f := func(...x) { return x; }; out = f(1,2,3);`, nil, ARR{1, 2, 3})
 
@@ -19,7 +19,7 @@ func TestFunction(t *testing.T) {
 	expect(t, `f := func(v) { x := 2; return func(a, ...b){ return [a, b, v+x]}; }; out = f(5)("a", "b");`, nil,
 		ARR{"a", ARR{"b"}, 7})
 
-	expect(t, `f := func(...x) { return x; }; out = f();`, nil, &objects.Array{Value: []objects.Object{}})
+	expect(t, `f := func(...x) { return x; }; out = f();`, nil, &tengo.Array{Value: []tengo.Object{}})
 
 	expect(t, `f := func(a, b, ...x) { return [a, b, x]; }; out = f(8, 9);`, nil,
 		ARR{8, 9, ARR{}})
@@ -286,13 +286,13 @@ func() {
 }()`, nil, 15)
 
 	// function skipping return
-	expect(t, `out = func() {}()`, nil, objects.UndefinedValue)
+	expect(t, `out = func() {}()`, nil, tengo.UndefinedValue)
 	expect(t, `out = func(v) { if v { return true } }(1)`, nil, true)
-	expect(t, `out = func(v) { if v { return true } }(0)`, nil, objects.UndefinedValue)
-	expect(t, `out = func(v) { if v { } else { return true } }(1)`, nil, objects.UndefinedValue)
-	expect(t, `out = func(v) { if v { return } }(1)`, nil, objects.UndefinedValue)
-	expect(t, `out = func(v) { if v { return } }(0)`, nil, objects.UndefinedValue)
-	expect(t, `out = func(v) { if v { } else { return } }(1)`, nil, objects.UndefinedValue)
+	expect(t, `out = func(v) { if v { return true } }(0)`, nil, tengo.UndefinedValue)
+	expect(t, `out = func(v) { if v { } else { return true } }(1)`, nil, tengo.UndefinedValue)
+	expect(t, `out = func(v) { if v { return } }(1)`, nil, tengo.UndefinedValue)
+	expect(t, `out = func(v) { if v { return } }(0)`, nil, tengo.UndefinedValue)
+	expect(t, `out = func(v) { if v { } else { return } }(1)`, nil, tengo.UndefinedValue)
 	expect(t, `out = func(v) { for ;;v++ { if v == 3 { return true } } }(1)`, nil, true)
-	expect(t, `out = func(v) { for ;;v++ { if v == 3 { break } } }(1)`, nil, objects.UndefinedValue)
+	expect(t, `out = func(v) { for ;;v++ { if v == 3 { break } } }(1)`, nil, tengo.UndefinedValue)
 }

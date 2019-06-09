@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/runtime"
 )
 
@@ -15,7 +15,7 @@ import (
 type Compiled struct {
 	globalIndexes map[string]int // global symbol name to index
 	bytecode      *compiler.Bytecode
-	globals       []objects.Object
+	globals       []tengo.Object
 	maxAllocs     int64
 	lock          sync.RWMutex
 }
@@ -63,7 +63,7 @@ func (c *Compiled) Clone() *Compiled {
 	clone := &Compiled{
 		globalIndexes: c.globalIndexes,
 		bytecode:      c.bytecode,
-		globals:       make([]objects.Object, len(c.globals)),
+		globals:       make([]tengo.Object, len(c.globals)),
 		maxAllocs:     c.maxAllocs,
 	}
 
@@ -92,7 +92,7 @@ func (c *Compiled) IsDefined(name string) bool {
 		return false
 	}
 
-	return v != objects.UndefinedValue
+	return v != tengo.UndefinedValue
 }
 
 // Get returns a variable identified by the name.
@@ -100,12 +100,12 @@ func (c *Compiled) Get(name string) *Variable {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
-	value := objects.UndefinedValue
+	value := tengo.UndefinedValue
 
 	if idx, ok := c.globalIndexes[name]; ok {
 		value = c.globals[idx]
 		if value == nil {
-			value = objects.UndefinedValue
+			value = tengo.UndefinedValue
 		}
 	}
 
@@ -125,7 +125,7 @@ func (c *Compiled) GetAll() []*Variable {
 	for name, idx := range c.globalIndexes {
 		value := c.globals[idx]
 		if value == nil {
-			value = objects.UndefinedValue
+			value = tengo.UndefinedValue
 		}
 
 		vars = append(vars, &Variable{
@@ -143,7 +143,7 @@ func (c *Compiled) Set(name string, value interface{}) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	obj, err := objects.FromInterface(value)
+	obj, err := tengo.FromInterface(value)
 	if err != nil {
 		return err
 	}

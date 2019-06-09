@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/parser"
 	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/objects"
 )
 
 func TestCompiler_Compile(t *testing.T) {
@@ -996,10 +996,10 @@ func concat(instructions ...[]byte) []byte {
 	return concat
 }
 
-func bytecode(instructions []byte, constants []objects.Object) *compiler.Bytecode {
+func bytecode(instructions []byte, constants []tengo.Object) *compiler.Bytecode {
 	return &compiler.Bytecode{
 		FileSet:      source.NewFileSet(),
-		MainFunction: &objects.CompiledFunction{Instructions: instructions},
+		MainFunction: &tengo.CompiledFunction{Instructions: instructions},
 		Constants:    constants,
 	}
 }
@@ -1053,7 +1053,7 @@ func equalBytecode(t *testing.T, expected, actual *compiler.Bytecode) bool {
 		equalConstants(t, expected.Constants, actual.Constants)
 }
 
-func equalConstants(t *testing.T, expected, actual []objects.Object) bool {
+func equalConstants(t *testing.T, expected, actual []tengo.Object) bool {
 	if !assert.Equal(t, len(expected), len(actual)) {
 		return false
 	}
@@ -1076,7 +1076,7 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func traceCompile(input string, symbols map[string]objects.Object) (res *compiler.Bytecode, trace []string, err error) {
+func traceCompile(input string, symbols map[string]tengo.Object) (res *compiler.Bytecode, trace []string, err error) {
 	fileSet := source.NewFileSet()
 	file := fileSet.AddFile("test", -1, len(input))
 
@@ -1086,7 +1086,7 @@ func traceCompile(input string, symbols map[string]objects.Object) (res *compile
 	for name := range symbols {
 		symTable.Define(name)
 	}
-	for idx, fn := range objects.Builtins {
+	for idx, fn := range tengo.Builtins {
 		symTable.DefineBuiltin(idx, fn.Name)
 	}
 
@@ -1112,18 +1112,18 @@ func traceCompile(input string, symbols map[string]objects.Object) (res *compile
 	return
 }
 
-func objectsArray(o ...objects.Object) []objects.Object {
+func objectsArray(o ...tengo.Object) []tengo.Object {
 	return o
 }
 
-func intObject(v int64) *objects.Int {
-	return &objects.Int{Value: v}
+func intObject(v int64) *tengo.Int {
+	return &tengo.Int{Value: v}
 }
 
-func stringObject(v string) *objects.String {
-	return &objects.String{Value: v}
+func stringObject(v string) *tengo.String {
+	return &tengo.String{Value: v}
 }
 
-func compiledFunction(numLocals, numParams int, insts ...[]byte) *objects.CompiledFunction {
-	return &objects.CompiledFunction{Instructions: concat(insts...), NumLocals: numLocals, NumParameters: numParams}
+func compiledFunction(numLocals, numParams int, insts ...[]byte) *tengo.CompiledFunction {
+	return &tengo.CompiledFunction{Instructions: concat(insts...), NumLocals: numLocals, NumParameters: numParams}
 }

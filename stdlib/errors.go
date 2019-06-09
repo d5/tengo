@@ -1,11 +1,11 @@
 package stdlib
 
-import "github.com/d5/tengo/objects"
+import "github.com/d5/tengo"
 
-func wrapError(err error) objects.Object {
+func wrapError(err error) tengo.Object {
 	if err == nil {
-		return objects.TrueValue
+		return tengo.TrueValue
 	}
 
-	return &objects.Error{Value: &objects.String{Value: err.Error()}}
+	return &tengo.Error{Value: &tengo.String{Value: err.Error()}}
 }

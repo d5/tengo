@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/ast"
 	"github.com/d5/tengo/compiler/parser"
 	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/runtime"
 	"github.com/d5/tengo/stdlib"
 )
@@ -25,16 +25,16 @@ type MAP = map[string]interface{}
 type ARR = []interface{}
 
 type testopts struct {
-	modules     *objects.ModuleMap
-	symbols     map[string]objects.Object
+	modules     *tengo.ModuleMap
+	symbols     map[string]tengo.Object
 	maxAllocs   int64
 	skip2ndPass bool
 }
 
 func Opts() *testopts {
 	return &testopts{
-		modules:     objects.NewModuleMap(),
-		symbols:     make(map[string]objects.Object),
+		modules:     tengo.NewModuleMap(),
+		symbols:     make(map[string]tengo.Object),
 		maxAllocs:   -1,
 		skip2ndPass: false,
 	}
@@ -43,7 +43,7 @@ func Opts() *testopts {
 func (o *testopts) copy() *testopts {
 	c := &testopts{
 		modules:     o.modules.Copy(),
-		symbols:     make(map[string]objects.Object),
+		symbols:     make(map[string]tengo.Object),
 		maxAllocs:   o.maxAllocs,
 		skip2ndPass: o.skip2ndPass,
 	}
@@ -61,7 +61,7 @@ func (o *testopts) Stdlib() *testopts {
 func (o *testopts) Module(name string, mod interface{}) *testopts {
 	c := o.copy()
 	switch mod := mod.(type) {
-	case objects.Importable:
+	case tengo.Importable:
 		c.modules.Add(name, mod)
 	case string:
 		c.modules.AddSourceModule(name, []byte(mod))
@@ -73,7 +73,7 @@ func (o *testopts) Module(name string, mod interface{}) *testopts {
 	return c
 }
 
-func (o *testopts) Symbol(name string, value objects.Object) *testopts {
+func (o *testopts) Symbol(name string, value tengo.Object) *testopts {
 	c := o.copy()
 	c.symbols[name] = value
 	return c
@@ -103,7 +103,7 @@ func expect(t *testing.T, input string, opts *testopts, expected interface{}) {
 	expectedObj := toObject(expected)
 
 	if symbols == nil {
-		symbols = make(map[string]objects.Object)
+		symbols = make(map[string]tengo.Object)
 	}
 	symbols[testOut] = objectZeroCopy(expectedObj)
 
@@ -132,10 +132,10 @@ func expect(t *testing.T, input string, opts *testopts, expected interface{}) {
 
 		expectedObj := toObject(expected)
 		switch eo := expectedObj.(type) {
-		case *objects.Array:
-			expectedObj = &objects.ImmutableArray{Value: eo.Value}
-		case *objects.Map:
-			expectedObj = &objects.ImmutableMap{Value: eo.Value}
+		case *tengo.Array:
+			expectedObj = &tengo.ImmutableArray{Value: eo.Value}
+		case *tengo.Map:
+			expectedObj = &tengo.ImmutableMap{Value: eo.Value}
 		}
 
 		modules.AddSourceModule("__code__", []byte(fmt.Sprintf("out := undefined; %s; export out", input)))
@@ -217,7 +217,7 @@ func (o *tracer) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules *objects.ModuleMap, maxAllocs int64) (res map[string]objects.Object, trace []string, err error) {
+func traceCompileRun(file *ast.File, symbols map[string]tengo.Object, modules *tengo.ModuleMap, maxAllocs int64) (res map[string]tengo.Object, trace []string, err error) {
 	var v *runtime.VM
 
 	//defer func() {
@@ -238,7 +238,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules 
 	//	}
 	//}()
 
-	globals := make([]objects.Object, runtime.GlobalsSize)
+	globals := make([]tengo.Object, runtime.GlobalsSize)
 
 	symTable := compiler.NewSymbolTable()
 	for name, value := range symbols {
@@ -249,7 +249,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules 
 		valueCopy := value
 		globals[sym.Index] = valueCopy
 	}
-	for idx, fn := range objects.Builtins {
+	for idx, fn := range tengo.Builtins {
 		symTable.DefineBuiltin(idx, fn.Name)
 	}
 
@@ -270,7 +270,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules 
 
 	err = v.Run()
 	{
-		res = make(map[string]objects.Object)
+		res = make(map[string]tengo.Object)
 		for name := range symbols {
 			sym, depth, ok := symTable.Resolve(name)
 			if !ok || depth != 0 {
@@ -289,7 +289,7 @@ func traceCompileRun(file *ast.File, symbols map[string]objects.Object, modules 
 	return
 }
 
-func formatGlobals(globals []objects.Object) (formatted []string) {
+func formatGlobals(globals []tengo.Object) (formatted []string) {
 	for idx, global := range globals {
 		if global == nil {
 			return
@@ -314,92 +314,92 @@ func parse(t *testing.T, input string) *ast.File {
 	return file
 }
 
-func errorObject(v interface{}) *objects.Error {
-	return &objects.Error{Value: toObject(v)}
+func errorObject(v interface{}) *tengo.Error {
+	return &tengo.Error{Value: toObject(v)}
 }
 
-func toObject(v interface{}) objects.Object {
+func toObject(v interface{}) tengo.Object {
 	switch v := v.(type) {
-	case objects.Object:
+	case tengo.Object:
 		return v
 	case string:
-		return &objects.String{Value: v}
+		return &tengo.String{Value: v}
 	case int64:
-		return &objects.Int{Value: v}
+		return &tengo.Int{Value: v}
 	case int: // for convenience
-		return &objects.Int{Value: int64(v)}
+		return &tengo.Int{Value: int64(v)}
 	case bool:
 		if v {
-			return objects.TrueValue
+			return tengo.TrueValue
 		}
-		return objects.FalseValue
+		return tengo.FalseValue
 	case rune:
-		return &objects.Char{Value: v}
+		return &tengo.Char{Value: v}
 	case byte: // for convenience
-		return &objects.Char{Value: rune(v)}
+		return &tengo.Char{Value: rune(v)}
 	case float64:
-		return &objects.Float{Value: v}
+		return &tengo.Float{Value: v}
 	case []byte:
-		return &objects.Bytes{Value: v}
+		return &tengo.Bytes{Value: v}
 	case MAP:
-		objs := make(map[string]objects.Object)
+		objs := make(map[string]tengo.Object)
 		for k, v := range v {
 			objs[k] = toObject(v)
 		}
 
-		return &objects.Map{Value: objs}
+		return &tengo.Map{Value: objs}
 	case ARR:
-		var objs []objects.Object
+		var objs []tengo.Object
 		for _, e := range v {
 			objs = append(objs, toObject(e))
 		}
 
-		return &objects.Array{Value: objs}
+		return &tengo.Array{Value: objs}
 	case IMAP:
-		objs := make(map[string]objects.Object)
+		objs := make(map[string]tengo.Object)
 		for k, v := range v {
 			objs[k] = toObject(v)
 		}
 
-		return &objects.ImmutableMap{Value: objs}
+		return &tengo.ImmutableMap{Value: objs}
 	case IARR:
-		var objs []objects.Object
+		var objs []tengo.Object
 		for _, e := range v {
 			objs = append(objs, toObject(e))
 		}
 
-		return &objects.ImmutableArray{Value: objs}
+		return &tengo.ImmutableArray{Value: objs}
 	}
 
 	panic(fmt.Errorf("unknown type: %T", v))
 }
 
-func objectZeroCopy(o objects.Object) objects.Object {
+func objectZeroCopy(o tengo.Object) tengo.Object {
 	switch o.(type) {
-	case *objects.Int:
-		return &objects.Int{}
-	case *objects.Float:
-		return &objects.Float{}
-	case *objects.Bool:
-		return &objects.Bool{}
-	case *objects.Char:
-		return &objects.Char{}
-	case *objects.String:
-		return &objects.String{}
-	case *objects.Array:
-		return &objects.Array{}
-	case *objects.Map:
-		return &objects.Map{}
-	case *objects.Undefined:
-		return objects.UndefinedValue
-	case *objects.Error:
-		return &objects.Error{}
-	case *objects.Bytes:
-		return &objects.Bytes{}
-	case *objects.ImmutableArray:
-		return &objects.ImmutableArray{}
-	case *objects.ImmutableMap:
-		return &objects.ImmutableMap{}
+	case *tengo.Int:
+		return &tengo.Int{}
+	case *tengo.Float:
+		return &tengo.Float{}
+	case *tengo.Bool:
+		return &tengo.Bool{}
+	case *tengo.Char:
+		return &tengo.Char{}
+	case *tengo.String:
+		return &tengo.String{}
+	case *tengo.Array:
+		return &tengo.Array{}
+	case *tengo.Map:
+		return &tengo.Map{}
+	case *tengo.Undefined:
+		return tengo.UndefinedValue
+	case *tengo.Error:
+		return &tengo.Error{}
+	case *tengo.Bytes:
+		return &tengo.Bytes{}
+	case *tengo.ImmutableArray:
+		return &tengo.ImmutableArray{}
+	case *tengo.ImmutableMap:
+		return &tengo.ImmutableMap{}
 	case nil:
 		panic("nil")
 	default:

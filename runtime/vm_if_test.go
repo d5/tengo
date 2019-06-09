@@ -3,17 +3,17 @@ package runtime_test
 import (
 	"testing"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 func TestIf(t *testing.T) {
 	expect(t, `if (true) { out = 10 }`, nil, 10)
-	expect(t, `if (false) { out = 10 }`, nil, objects.UndefinedValue)
+	expect(t, `if (false) { out = 10 }`, nil, tengo.UndefinedValue)
 	expect(t, `if (false) { out = 10 } else { out = 20 }`, nil, 20)
 	expect(t, `if (1) { out = 10 }`, nil, 10)
 	expect(t, `if (0) { out = 10 } else { out = 20 }`, nil, 20)
 	expect(t, `if (1 < 2) { out = 10 }`, nil, 10)
-	expect(t, `if (1 > 2) { out = 10 }`, nil, objects.UndefinedValue)
+	expect(t, `if (1 > 2) { out = 10 }`, nil, tengo.UndefinedValue)
 	expect(t, `if (1 < 2) { out = 10 } else { out = 20 }`, nil, 10)
 	expect(t, `if (1 > 2) { out = 10 } else { out = 20 }`, nil, 20)
 

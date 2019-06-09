@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 func TestString(t *testing.T) {
@@ -27,8 +27,8 @@ func TestString(t *testing.T) {
 		expect(t, fmt.Sprintf("idx := %d; out = %s[idx]", idx, strStr), nil, str[idx])
 	}
 
-	expect(t, fmt.Sprintf("%s[%d]", strStr, -1), nil, objects.UndefinedValue)
-	expect(t, fmt.Sprintf("%s[%d]", strStr, strLen), nil, objects.UndefinedValue)
+	expect(t, fmt.Sprintf("%s[%d]", strStr, -1), nil, tengo.UndefinedValue)
+	expect(t, fmt.Sprintf("%s[%d]", strStr, strLen), nil, tengo.UndefinedValue)
 
 	// slice operator
 	for low := 0; low <= strLen; low++ {

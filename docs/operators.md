@@ -153,7 +153,7 @@ Tests whether two times represent the same time instance. Uses [Time.Equal](http
 
 ### Equality
 
-Tests whether two _(immutable)_ arrays contain the same objects.
+Tests whether two _(immutable)_ arrays contain the same tengo.
 
 - `(array) == (array) = (bool)`: equality
 - `(array) != (array) = (bool)`: inequality
@@ -172,7 +172,7 @@ Tests whether two _(immutable)_ arrays contain the same objects.
 
 ### Equality
 
-Tests whether two _(immutable)_ maps contain the same key-objects.
+Tests whether two _(immutable)_ maps contain the same key-tengo.
 
 - `(map) == (map) = (bool)`: equality
 - `(map) != (map) = (bool)`: inequality

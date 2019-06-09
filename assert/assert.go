@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/compiler/token"
-	"github.com/d5/tengo/objects"
 )
 
 // NoError asserts err is not an error.
@@ -137,42 +137,42 @@ func Equal(t *testing.T, expected, actual interface{}, msg ...interface{}) bool 
 		if expected != actual.(token.Token) {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
-	case []objects.Object:
-		return equalObjectSlice(t, expected, actual.([]objects.Object), msg...)
-	case *objects.Int:
-		return Equal(t, expected.Value, actual.(*objects.Int).Value, msg...)
-	case *objects.Float:
-		return Equal(t, expected.Value, actual.(*objects.Float).Value, msg...)
-	case *objects.String:
-		return Equal(t, expected.Value, actual.(*objects.String).Value, msg...)
-	case *objects.Char:
-		return Equal(t, expected.Value, actual.(*objects.Char).Value, msg...)
-	case *objects.Bool:
+	case []tengo.Object:
+		return equalObjectSlice(t, expected, actual.([]tengo.Object), msg...)
+	case *tengo.Int:
+		return Equal(t, expected.Value, actual.(*tengo.Int).Value, msg...)
+	case *tengo.Float:
+		return Equal(t, expected.Value, actual.(*tengo.Float).Value, msg...)
+	case *tengo.String:
+		return Equal(t, expected.Value, actual.(*tengo.String).Value, msg...)
+	case *tengo.Char:
+		return Equal(t, expected.Value, actual.(*tengo.Char).Value, msg...)
+	case *tengo.Bool:
 		if expected != actual {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
-	case *objects.Array:
-		return equalObjectSlice(t, expected.Value, actual.(*objects.Array).Value, msg...)
-	case *objects.ImmutableArray:
-		return equalObjectSlice(t, expected.Value, actual.(*objects.ImmutableArray).Value, msg...)
-	case *objects.Bytes:
-		if !bytes.Equal(expected.Value, actual.(*objects.Bytes).Value) {
-			return failExpectedActual(t, string(expected.Value), string(actual.(*objects.Bytes).Value), msg...)
+	case *tengo.Array:
+		return equalObjectSlice(t, expected.Value, actual.(*tengo.Array).Value, msg...)
+	case *tengo.ImmutableArray:
+		return equalObjectSlice(t, expected.Value, actual.(*tengo.ImmutableArray).Value, msg...)
+	case *tengo.Bytes:
+		if !bytes.Equal(expected.Value, actual.(*tengo.Bytes).Value) {
+			return failExpectedActual(t, string(expected.Value), string(actual.(*tengo.Bytes).Value), msg...)
 		}
-	case *objects.Map:
-		return equalObjectMap(t, expected.Value, actual.(*objects.Map).Value, msg...)
-	case *objects.ImmutableMap:
-		return equalObjectMap(t, expected.Value, actual.(*objects.ImmutableMap).Value, msg...)
-	case *objects.CompiledFunction:
-		return equalCompiledFunction(t, expected, actual.(*objects.CompiledFunction), msg...)
-	case *objects.Undefined:
+	case *tengo.Map:
+		return equalObjectMap(t, expected.Value, actual.(*tengo.Map).Value, msg...)
+	case *tengo.ImmutableMap:
+		return equalObjectMap(t, expected.Value, actual.(*tengo.ImmutableMap).Value, msg...)
+	case *tengo.CompiledFunction:
+		return equalCompiledFunction(t, expected, actual.(*tengo.CompiledFunction), msg...)
+	case *tengo.Undefined:
 		if expected != actual {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
-	case *objects.Error:
-		return Equal(t, expected.Value, actual.(*objects.Error).Value, msg...)
-	case objects.Object:
-		if !expected.Equals(actual.(objects.Object)) {
+	case *tengo.Error:
+		return Equal(t, expected.Value, actual.(*tengo.Error).Value, msg...)
+	case tengo.Object:
+		if !expected.Equals(actual.(tengo.Object)) {
 			return failExpectedActual(t, expected, actual, msg...)
 		}
 	case *source.FileSet:
@@ -265,7 +265,7 @@ func equalSymbol(a, b *compiler.Symbol) bool {
 		a.Scope == b.Scope
 }
 
-func equalObjectSlice(t *testing.T, expected, actual []objects.Object, msg ...interface{}) bool {
+func equalObjectSlice(t *testing.T, expected, actual []tengo.Object, msg ...interface{}) bool {
 	if !Equal(t, len(expected), len(actual), msg...) {
 		return false
 	}
@@ -293,7 +293,7 @@ func equalFileSet(t *testing.T, expected, actual *source.FileSet, msg ...interfa
 		Equal(t, expected.LastFile, actual.LastFile)
 }
 
-func equalObjectMap(t *testing.T, expected, actual map[string]objects.Object, msg ...interface{}) bool {
+func equalObjectMap(t *testing.T, expected, actual map[string]tengo.Object, msg ...interface{}) bool {
 	if !Equal(t, len(expected), len(actual), msg...) {
 		return false
 	}
@@ -309,9 +309,9 @@ func equalObjectMap(t *testing.T, expected, actual map[string]objects.Object, ms
 	return true
 }
 
-func equalCompiledFunction(t *testing.T, expected, actual objects.Object, msg ...interface{}) bool {
-	expectedT := expected.(*objects.CompiledFunction)
-	actualT := actual.(*objects.CompiledFunction)
+func equalCompiledFunction(t *testing.T, expected, actual tengo.Object, msg ...interface{}) bool {
+	expectedT := expected.(*tengo.CompiledFunction)
+	actualT := actual.(*tengo.CompiledFunction)
 
 	if !Equal(t, len(expectedT.Free), len(actualT.Free), msg...) {
 		return false

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler/token"
-	"github.com/d5/tengo/objects"
 )
 
 func TestInterop(t *testing.T) {
@@ -38,35 +38,35 @@ func TestInterop(t *testing.T) {
 	//    - cause a panic
 	//
 	opts := Opts().Skip2ndPass().
-		Symbol("invoke", &objects.UserFunction{
+		Symbol("invoke", &tengo.UserFunction{
 			Name: "invoke",
-			Value: func(rt objects.Interop, args ...objects.Object) (objects.Object, error) {
+			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) < 1 {
-					return nil, objects.ErrWrongNumArguments
+					return nil, tengo.ErrWrongNumArguments
 				}
 
 				return rt.InteropCall(args[0], args[1:]...)
 			},
 		}).
-		Symbol("invoke_ignore_err", &objects.UserFunction{
+		Symbol("invoke_ignore_err", &tengo.UserFunction{
 			Name: "invoke_ignore_err",
-			Value: func(rt objects.Interop, args ...objects.Object) (objects.Object, error) {
+			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) < 1 {
-					return nil, objects.ErrWrongNumArguments
+					return nil, tengo.ErrWrongNumArguments
 				}
 
 				ret, _ := rt.InteropCall(args[0], args[1:]...)
 				if ret == nil {
-					ret = objects.UndefinedValue
+					ret = tengo.UndefinedValue
 				}
 				return ret, nil
 			},
 		}).
-		Symbol("invoke_ignore_panic", &objects.UserFunction{
+		Symbol("invoke_ignore_panic", &tengo.UserFunction{
 			Name: "invoke_ignore_panic",
-			Value: func(rt objects.Interop, args ...objects.Object) (objects.Object, error) {
+			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) < 1 {
-					return nil, objects.ErrWrongNumArguments
+					return nil, tengo.ErrWrongNumArguments
 				}
 
 				defer func() {
@@ -75,48 +75,48 @@ func TestInterop(t *testing.T) {
 				return rt.InteropCall(args[0], args[1:]...)
 			},
 		}).
-		Symbol("bind", &objects.UserFunction{
+		Symbol("bind", &tengo.UserFunction{
 			Name: "bind",
-			Value: func(rt objects.Interop, args ...objects.Object) (objects.Object, error) {
+			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) < 1 {
-					return nil, objects.ErrWrongNumArguments
+					return nil, tengo.ErrWrongNumArguments
 				}
 				fn := args[0]
 				boundArgs := args[1:]
-				return &objects.UserFunction{
-					Value: func(rt objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
+				return &tengo.UserFunction{
+					Value: func(rt tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 						return rt.InteropCall(fn, append(boundArgs, args...)...)
 					},
 				}, nil
 			},
 		}).
-		Symbol("identity", &objects.UserFunction{
+		Symbol("identity", &tengo.UserFunction{
 			Name: "identity",
-			Value: func(rt objects.Interop, args ...objects.Object) (objects.Object, error) {
+			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) < 1 {
-					return nil, objects.ErrWrongNumArguments
+					return nil, tengo.ErrWrongNumArguments
 				}
 				return args[0], nil
 			},
 		}).
-		Symbol("sum", &objects.UserFunction{
+		Symbol("sum", &tengo.UserFunction{
 			Name: "sum",
-			Value: func(rt objects.Interop, args ...objects.Object) (objects.Object, error) {
+			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) != 2 {
-					return nil, objects.ErrWrongNumArguments
+					return nil, tengo.ErrWrongNumArguments
 				}
 				return args[0].BinaryOp(token.Add, args[1])
 			},
 		}).
-		Symbol("rt_err", &objects.UserFunction{
+		Symbol("rt_err", &tengo.UserFunction{
 			Name: "rt_err",
-			Value: func(rt objects.Interop, args ...objects.Object) (objects.Object, error) {
+			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				return nil, fmt.Errorf("rt_err: %s", args[0].String())
 			},
 		}).
-		Symbol("throw", &objects.UserFunction{
+		Symbol("throw", &tengo.UserFunction{
 			Name: "throw",
-			Value: func(rt objects.Interop, args ...objects.Object) (objects.Object, error) {
+			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				panic(fmt.Errorf("throw: %s", args[0].String()))
 			},
 		})
@@ -144,7 +144,7 @@ invoke(rt_err, 4)	// runtime error here
 	// runtime error swallowed
 	expect(t, `
 out = invoke_ignore_err(rt_err, 5)
-`, opts, objects.UndefinedValue)
+`, opts, tengo.UndefinedValue)
 
 	// swallowed runtime error should not halt the runtime
 	expect(t, `

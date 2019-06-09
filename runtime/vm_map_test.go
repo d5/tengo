@@ -3,7 +3,7 @@ package runtime_test
 import (
 	"testing"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 func TestMap(t *testing.T) {
@@ -30,9 +30,9 @@ out = {
 	})
 
 	expect(t, `out = {foo: 5}["foo"]`, nil, 5)
-	expect(t, `out = {foo: 5}["bar"]`, nil, objects.UndefinedValue)
+	expect(t, `out = {foo: 5}["bar"]`, nil, tengo.UndefinedValue)
 	expect(t, `key := "foo"; out = {foo: 5}[key]`, nil, 5)
-	expect(t, `out = {}["foo"]`, nil, objects.UndefinedValue)
+	expect(t, `out = {}["foo"]`, nil, tengo.UndefinedValue)
 
 	expect(t, `
 m := {

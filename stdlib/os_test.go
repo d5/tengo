@@ -7,7 +7,6 @@ import (
 
 	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/objects"
 )
 
 func TestReadFile(t *testing.T) {
@@ -24,7 +23,7 @@ func TestReadFile(t *testing.T) {
 	}
 	_ = tf.Close()
 
-	module(t, "os").call("read_file", mockInterop{}, tf.Name()).expect(&objects.Bytes{Value: content})
+	module(t, "os").call("read_file", mockInterop{}, tf.Name()).expect(&tengo.Bytes{Value: content})
 }
 
 func TestReadFileArgs(t *testing.T) {
@@ -54,13 +53,13 @@ func TestFileStatFile(t *testing.T) {
 		return
 	}
 
-	module(t, "os").call("stat", mockInterop{}, tf.Name()).expect(&objects.ImmutableMap{
-		Value: map[string]objects.Object{
-			"name":      &objects.String{Value: stat.Name()},
-			"mtime":     &objects.Time{Value: stat.ModTime()},
-			"size":      &objects.Int{Value: stat.Size()},
-			"mode":      &objects.Int{Value: int64(stat.Mode())},
-			"directory": objects.FalseValue,
+	module(t, "os").call("stat", mockInterop{}, tf.Name()).expect(&tengo.ImmutableMap{
+		Value: map[string]tengo.Object{
+			"name":      &tengo.String{Value: stat.Name()},
+			"mtime":     &tengo.Time{Value: stat.ModTime()},
+			"size":      &tengo.Int{Value: stat.Size()},
+			"mode":      &tengo.Int{Value: int64(stat.Mode())},
+			"directory": tengo.FalseValue,
 		},
 	})
 }
@@ -77,13 +76,13 @@ func TestFileStatDir(t *testing.T) {
 		return
 	}
 
-	module(t, "os").call("stat", mockInterop{}, td).expect(&objects.ImmutableMap{
-		Value: map[string]objects.Object{
-			"name":      &objects.String{Value: stat.Name()},
-			"mtime":     &objects.Time{Value: stat.ModTime()},
-			"size":      &objects.Int{Value: stat.Size()},
-			"mode":      &objects.Int{Value: int64(stat.Mode())},
-			"directory": objects.TrueValue,
+	module(t, "os").call("stat", mockInterop{}, td).expect(&tengo.ImmutableMap{
+		Value: map[string]tengo.Object{
+			"name":      &tengo.String{Value: stat.Name()},
+			"mtime":     &tengo.Time{Value: stat.ModTime()},
+			"size":      &tengo.Int{Value: stat.Size()},
+			"mode":      &tengo.Int{Value: int64(stat.Mode())},
+			"directory": tengo.TrueValue,
 		},
 	})
 }

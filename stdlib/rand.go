@@ -3,27 +3,27 @@ package stdlib
 import (
 	"math/rand"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
-var randModule = map[string]objects.Object{
-	"int":        &objects.UserFunction{Name: "int", Value: FuncARI64(rand.Int63)},
-	"float":      &objects.UserFunction{Name: "float", Value: FuncARF(rand.Float64)},
-	"intn":       &objects.UserFunction{Name: "intn", Value: FuncAI64RI64(rand.Int63n)},
-	"exp_float":  &objects.UserFunction{Name: "exp_float", Value: FuncARF(rand.ExpFloat64)},
-	"norm_float": &objects.UserFunction{Name: "norm_float", Value: FuncARF(rand.NormFloat64)},
-	"perm":       &objects.UserFunction{Name: "perm", Value: FuncAIRIs(rand.Perm)},
-	"seed":       &objects.UserFunction{Name: "seed", Value: FuncAI64R(rand.Seed)},
-	"read": &objects.UserFunction{
+var randModule = map[string]tengo.Object{
+	"int":        &tengo.UserFunction{Name: "int", Value: FuncARI64(rand.Int63)},
+	"float":      &tengo.UserFunction{Name: "float", Value: FuncARF(rand.Float64)},
+	"intn":       &tengo.UserFunction{Name: "intn", Value: FuncAI64RI64(rand.Int63n)},
+	"exp_float":  &tengo.UserFunction{Name: "exp_float", Value: FuncARF(rand.ExpFloat64)},
+	"norm_float": &tengo.UserFunction{Name: "norm_float", Value: FuncARF(rand.NormFloat64)},
+	"perm":       &tengo.UserFunction{Name: "perm", Value: FuncAIRIs(rand.Perm)},
+	"seed":       &tengo.UserFunction{Name: "seed", Value: FuncAI64R(rand.Seed)},
+	"read": &tengo.UserFunction{
 		Name: "read",
-		Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
+		Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 			if len(args) != 1 {
-				return nil, objects.ErrWrongNumArguments
+				return nil, tengo.ErrWrongNumArguments
 			}
 
-			y1, ok := args[0].(*objects.Bytes)
+			y1, ok := args[0].(*tengo.Bytes)
 			if !ok {
-				return nil, objects.ErrInvalidArgumentType{
+				return nil, tengo.ErrInvalidArgumentType{
 					Name:     "first",
 					Expected: "bytes",
 					Found:    args[0].TypeName(),
@@ -36,19 +36,19 @@ var randModule = map[string]objects.Object{
 				return
 			}
 
-			return &objects.Int{Value: int64(res)}, nil
+			return &tengo.Int{Value: int64(res)}, nil
 		},
 	},
-	"rand": &objects.UserFunction{
+	"rand": &tengo.UserFunction{
 		Name: "rand",
-		Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
+		Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 			if len(args) != 1 {
-				return nil, objects.ErrWrongNumArguments
+				return nil, tengo.ErrWrongNumArguments
 			}
 
-			i1, ok := objects.ToInt64(args[0])
+			i1, ok := tengo.ToInt64(args[0])
 			if !ok {
-				return nil, objects.ErrInvalidArgumentType{
+				return nil, tengo.ErrInvalidArgumentType{
 					Name:     "first",
 					Expected: "int(compatible)",
 					Found:    args[0].TypeName(),
@@ -62,26 +62,26 @@ var randModule = map[string]objects.Object{
 	},
 }
 
-func randRand(r *rand.Rand) *objects.ImmutableMap {
-	return &objects.ImmutableMap{
-		Value: map[string]objects.Object{
-			"int":        &objects.UserFunction{Name: "int", Value: FuncARI64(r.Int63)},
-			"float":      &objects.UserFunction{Name: "float", Value: FuncARF(r.Float64)},
-			"intn":       &objects.UserFunction{Name: "intn", Value: FuncAI64RI64(r.Int63n)},
-			"exp_float":  &objects.UserFunction{Name: "exp_float", Value: FuncARF(r.ExpFloat64)},
-			"norm_float": &objects.UserFunction{Name: "norm_float", Value: FuncARF(r.NormFloat64)},
-			"perm":       &objects.UserFunction{Name: "perm", Value: FuncAIRIs(r.Perm)},
-			"seed":       &objects.UserFunction{Name: "seed", Value: FuncAI64R(r.Seed)},
-			"read": &objects.UserFunction{
+func randRand(r *rand.Rand) *tengo.ImmutableMap {
+	return &tengo.ImmutableMap{
+		Value: map[string]tengo.Object{
+			"int":        &tengo.UserFunction{Name: "int", Value: FuncARI64(r.Int63)},
+			"float":      &tengo.UserFunction{Name: "float", Value: FuncARF(r.Float64)},
+			"intn":       &tengo.UserFunction{Name: "intn", Value: FuncAI64RI64(r.Int63n)},
+			"exp_float":  &tengo.UserFunction{Name: "exp_float", Value: FuncARF(r.ExpFloat64)},
+			"norm_float": &tengo.UserFunction{Name: "norm_float", Value: FuncARF(r.NormFloat64)},
+			"perm":       &tengo.UserFunction{Name: "perm", Value: FuncAIRIs(r.Perm)},
+			"seed":       &tengo.UserFunction{Name: "seed", Value: FuncAI64R(r.Seed)},
+			"read": &tengo.UserFunction{
 				Name: "read",
-				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 1 {
-						return nil, objects.ErrWrongNumArguments
+						return nil, tengo.ErrWrongNumArguments
 					}
 
-					y1, ok := args[0].(*objects.Bytes)
+					y1, ok := args[0].(*tengo.Bytes)
 					if !ok {
-						return nil, objects.ErrInvalidArgumentType{
+						return nil, tengo.ErrInvalidArgumentType{
 							Name:     "first",
 							Expected: "bytes",
 							Found:    args[0].TypeName(),
@@ -94,7 +94,7 @@ func randRand(r *rand.Rand) *objects.ImmutableMap {
 						return
 					}
 
-					return &objects.Int{Value: int64(res)}, nil
+					return &tengo.Int{Value: int64(res)}, nil
 				},
 			},
 		},

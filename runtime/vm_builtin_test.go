@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/objects"
 )
 
 func TestBuiltinFunction(t *testing.T) {
@@ -35,14 +34,14 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = int(true)`, nil, 1)
 	expect(t, `out = int(false)`, nil, 0)
 	expect(t, `out = int('8')`, nil, 56)
-	expect(t, `out = int([1])`, nil, objects.UndefinedValue)
-	expect(t, `out = int({a: 1})`, nil, objects.UndefinedValue)
-	expect(t, `out = int(undefined)`, nil, objects.UndefinedValue)
+	expect(t, `out = int([1])`, nil, tengo.UndefinedValue)
+	expect(t, `out = int({a: 1})`, nil, tengo.UndefinedValue)
+	expect(t, `out = int(undefined)`, nil, tengo.UndefinedValue)
 	expect(t, `out = int("-522", 1)`, nil, -522)
 	expect(t, `out = int(undefined, 1)`, nil, 1)
 	expect(t, `out = int(undefined, 1.8)`, nil, 1.8)
 	expect(t, `out = int(undefined, string(1))`, nil, "1")
-	expect(t, `out = int(undefined, undefined)`, nil, objects.UndefinedValue)
+	expect(t, `out = int(undefined, undefined)`, nil, tengo.UndefinedValue)
 
 	expect(t, `out = string(1)`, nil, "1")
 	expect(t, `out = string(1.8)`, nil, "1.8")
@@ -52,40 +51,40 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = string('8')`, nil, "8")
 	expect(t, `out = string([1,8.1,true,3])`, nil, "[1, 8.1, true, 3]")
 	expect(t, `out = string({b: "foo"})`, nil, `{b: "foo"}`)
-	expect(t, `out = string(undefined)`, nil, objects.UndefinedValue) // not "undefined"
+	expect(t, `out = string(undefined)`, nil, tengo.UndefinedValue) // not "undefined"
 	expect(t, `out = string(1, "-522")`, nil, "1")
 	expect(t, `out = string(undefined, "-522")`, nil, "-522") // not "undefined"
 
 	expect(t, `out = float(1)`, nil, 1.0)
 	expect(t, `out = float(1.8)`, nil, 1.8)
 	expect(t, `out = float("-52.2")`, nil, -52.2)
-	expect(t, `out = float(true)`, nil, objects.UndefinedValue)
-	expect(t, `out = float(false)`, nil, objects.UndefinedValue)
-	expect(t, `out = float('8')`, nil, objects.UndefinedValue)
-	expect(t, `out = float([1,8.1,true,3])`, nil, objects.UndefinedValue)
-	expect(t, `out = float({a: 1, b: "foo"})`, nil, objects.UndefinedValue)
-	expect(t, `out = float(undefined)`, nil, objects.UndefinedValue)
+	expect(t, `out = float(true)`, nil, tengo.UndefinedValue)
+	expect(t, `out = float(false)`, nil, tengo.UndefinedValue)
+	expect(t, `out = float('8')`, nil, tengo.UndefinedValue)
+	expect(t, `out = float([1,8.1,true,3])`, nil, tengo.UndefinedValue)
+	expect(t, `out = float({a: 1, b: "foo"})`, nil, tengo.UndefinedValue)
+	expect(t, `out = float(undefined)`, nil, tengo.UndefinedValue)
 	expect(t, `out = float("-52.2", 1.8)`, nil, -52.2)
 	expect(t, `out = float(undefined, 1)`, nil, 1)
 	expect(t, `out = float(undefined, 1.8)`, nil, 1.8)
 	expect(t, `out = float(undefined, "-52.2")`, nil, "-52.2")
 	expect(t, `out = float(undefined, char(56))`, nil, '8')
-	expect(t, `out = float(undefined, undefined)`, nil, objects.UndefinedValue)
+	expect(t, `out = float(undefined, undefined)`, nil, tengo.UndefinedValue)
 
 	expect(t, `out = char(56)`, nil, '8')
-	expect(t, `out = char(1.8)`, nil, objects.UndefinedValue)
-	expect(t, `out = char("-52.2")`, nil, objects.UndefinedValue)
-	expect(t, `out = char(true)`, nil, objects.UndefinedValue)
-	expect(t, `out = char(false)`, nil, objects.UndefinedValue)
+	expect(t, `out = char(1.8)`, nil, tengo.UndefinedValue)
+	expect(t, `out = char("-52.2")`, nil, tengo.UndefinedValue)
+	expect(t, `out = char(true)`, nil, tengo.UndefinedValue)
+	expect(t, `out = char(false)`, nil, tengo.UndefinedValue)
 	expect(t, `out = char('8')`, nil, '8')
-	expect(t, `out = char([1,8.1,true,3])`, nil, objects.UndefinedValue)
-	expect(t, `out = char({a: 1, b: "foo"})`, nil, objects.UndefinedValue)
-	expect(t, `out = char(undefined)`, nil, objects.UndefinedValue)
+	expect(t, `out = char([1,8.1,true,3])`, nil, tengo.UndefinedValue)
+	expect(t, `out = char({a: 1, b: "foo"})`, nil, tengo.UndefinedValue)
+	expect(t, `out = char(undefined)`, nil, tengo.UndefinedValue)
 	expect(t, `out = char(56, 'a')`, nil, '8')
 	expect(t, `out = char(undefined, '8')`, nil, '8')
 	expect(t, `out = char(undefined, 56)`, nil, 56)
 	expect(t, `out = char(undefined, "-52.2")`, nil, "-52.2")
-	expect(t, `out = char(undefined, undefined)`, nil, objects.UndefinedValue)
+	expect(t, `out = char(undefined, undefined)`, nil, tengo.UndefinedValue)
 
 	expect(t, `out = bool(1)`, nil, true)          // non-zero integer: true
 	expect(t, `out = bool(0)`, nil, false)         // zero: true
@@ -104,20 +103,20 @@ func TestBuiltinFunction(t *testing.T) {
 	expect(t, `out = bool(undefined)`, nil, false) // undefined: false
 
 	expect(t, `out = bytes(1)`, nil, []byte{0})
-	expect(t, `out = bytes(1.8)`, nil, objects.UndefinedValue)
+	expect(t, `out = bytes(1.8)`, nil, tengo.UndefinedValue)
 	expect(t, `out = bytes("-522")`, nil, []byte{'-', '5', '2', '2'})
-	expect(t, `out = bytes(true)`, nil, objects.UndefinedValue)
-	expect(t, `out = bytes(false)`, nil, objects.UndefinedValue)
-	expect(t, `out = bytes('8')`, nil, objects.UndefinedValue)
-	expect(t, `out = bytes([1])`, nil, objects.UndefinedValue)
-	expect(t, `out = bytes({a: 1})`, nil, objects.UndefinedValue)
-	expect(t, `out = bytes(undefined)`, nil, objects.UndefinedValue)
+	expect(t, `out = bytes(true)`, nil, tengo.UndefinedValue)
+	expect(t, `out = bytes(false)`, nil, tengo.UndefinedValue)
+	expect(t, `out = bytes('8')`, nil, tengo.UndefinedValue)
+	expect(t, `out = bytes([1])`, nil, tengo.UndefinedValue)
+	expect(t, `out = bytes({a: 1})`, nil, tengo.UndefinedValue)
+	expect(t, `out = bytes(undefined)`, nil, tengo.UndefinedValue)
 	expect(t, `out = bytes("-522", ['8'])`, nil, []byte{'-', '5', '2', '2'})
 	expect(t, `out = bytes(undefined, "-522")`, nil, "-522")
 	expect(t, `out = bytes(undefined, 1)`, nil, 1)
 	expect(t, `out = bytes(undefined, 1.8)`, nil, 1.8)
 	expect(t, `out = bytes(undefined, int("-522"))`, nil, -522)
-	expect(t, `out = bytes(undefined, undefined)`, nil, objects.UndefinedValue)
+	expect(t, `out = bytes(undefined, undefined)`, nil, tengo.UndefinedValue)
 
 	expect(t, `out = is_error(error(1))`, nil, true)
 	expect(t, `out = is_error(1)`, nil, false)
