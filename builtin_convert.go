@@ -26,7 +26,7 @@ func builtinString(_ Interop, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinInt(rt Interop, args ...Object) (Object, error) {
+func builtinInt(_ Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -48,7 +48,7 @@ func builtinInt(rt Interop, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinFloat(rt Interop, args ...Object) (Object, error) {
+func builtinFloat(_ Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -70,7 +70,7 @@ func builtinFloat(rt Interop, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinBool(rt Interop, args ...Object) (Object, error) {
+func builtinBool(_ Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -91,7 +91,7 @@ func builtinBool(rt Interop, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinChar(rt Interop, args ...Object) (Object, error) {
+func builtinChar(_ Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -113,7 +113,7 @@ func builtinChar(rt Interop, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinBytes(rt Interop, args ...Object) (Object, error) {
+func builtinBytes(_ Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -144,7 +144,7 @@ func builtinBytes(rt Interop, args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinTime(rt Interop, args ...Object) (Object, error) {
+func builtinTime(_ Interop, args ...Object) (Object, error) {
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments

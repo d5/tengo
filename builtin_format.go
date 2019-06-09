@@ -1,6 +1,6 @@
 package tengo
 
-func builtinFormat(rt Interop, args ...Object) (Object, error) {
+func builtinFormat(_ Interop, args ...Object) (Object, error) {
 	numArgs := len(args)
 	if numArgs == 0 {
 		return nil, ErrWrongNumArguments

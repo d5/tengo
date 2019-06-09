@@ -208,36 +208,8 @@ func expectPanic(t *testing.T, input string, opts *testopts, expected string) {
 	_, trace, _ = traceCompileRun(program, symbols, modules, maxAllocs)
 }
 
-type tracer struct {
-	Out []string
-}
-
-func (o *tracer) Write(p []byte) (n int, err error) {
-	o.Out = append(o.Out, string(p))
-	return len(p), nil
-}
-
 func traceCompileRun(file *ast.File, symbols map[string]tengo.Object, modules *tengo.ModuleMap, maxAllocs int64) (res map[string]tengo.Object, trace []string, err error) {
 	var v *runtime.VM
-
-	//defer func() {
-	//	if e := recover(); e != nil {
-	//		err = fmt.Errorf("panic: %v", e)
-	//
-	//		// stack trace
-	//		var stackTrace []string
-	//		for i := 2; ; i += 1 {
-	//			_, file, line, ok := _runtime.Caller(i)
-	//			if !ok {
-	//				break
-	//			}
-	//			stackTrace = append(stackTrace, fmt.Sprintf("  %s:%d", file, line))
-	//		}
-	//
-	//		trace = append(trace, fmt.Sprintf("\n[Error Trace]\n\n  %s\n", strings.Join(stackTrace, "\n  ")))
-	//	}
-	//}()
-
 	globals := make([]tengo.Object, runtime.GlobalsSize)
 
 	symTable := compiler.NewSymbolTable()

@@ -25,11 +25,6 @@ const (
 	udigits = "0123456789ABCDEFX"
 )
 
-const (
-	signed   = true
-	unsigned = false
-)
-
 // flags placed in a separate struct for easy clearing.
 type fmtFlags struct {
 	widPresent  bool
@@ -794,7 +789,7 @@ func (p *pp) fmtBool(v bool, verb rune) {
 func (p *pp) fmt0x64(v uint64, leading0x bool) {
 	sharp := p.fmt.sharp
 	p.fmt.sharp = leading0x
-	p.fmt.fmtInteger(v, 16, unsigned, 'v', ldigits)
+	p.fmt.fmtInteger(v, 16, false, 'v', ldigits)
 	p.fmt.sharp = sharp
 }
 
@@ -893,7 +888,7 @@ func (p *pp) fmtBytes(v []byte, verb rune, typeString string) {
 				if i > 0 {
 					_, _ = p.WriteSingleByte(' ')
 				}
-				p.fmt.fmtInteger(uint64(c), 10, unsigned, verb, ldigits)
+				p.fmt.fmtInteger(uint64(c), 10, false, verb, ldigits)
 			}
 			_, _ = p.WriteSingleByte(']')
 		}
@@ -933,7 +928,7 @@ func (p *pp) printArg(arg Object, verb rune) {
 	case *Float:
 		p.fmtFloat(f.Value, 64, verb)
 	case *Int:
-		p.fmtInteger(uint64(f.Value), signed, verb)
+		p.fmtInteger(uint64(f.Value), true, verb)
 	case *String:
 		p.fmtString(f.Value, verb)
 	case *Bytes:

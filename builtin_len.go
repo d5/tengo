@@ -1,7 +1,7 @@
 package tengo
 
 // len(obj object) => int
-func builtinLen(rt Interop, args ...Object) (Object, error) {
+func builtinLen(_ Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}

@@ -1,6 +1,6 @@
 package tengo
 
-func builtinTypeName(rt Interop, args ...Object) (Object, error) {
+func builtinTypeName(_ Interop, args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
