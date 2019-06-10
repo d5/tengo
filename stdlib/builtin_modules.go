@@ -11,4 +11,5 @@ var BuiltinModules = map[string]map[string]tengo.Object{
 	"rand":  randModule,
 	"fmt":   fmtModule,
 	"json":  jsonModule,
+	"enum":  enumModule,
 }

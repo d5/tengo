@@ -18,7 +18,7 @@ type IMAP map[string]interface{}
 
 func TestAllModuleNames(t *testing.T) {
 	names := stdlib.AllModuleNames()
-	if !assert.Equal(t, len(stdlib.BuiltinModules)+len(stdlib.SourceModules), len(names)) {
+	if !assert.Equal(t, len(stdlib.BuiltinModules), len(names)) {
 		return
 	}
 }
