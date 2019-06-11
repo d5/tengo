@@ -81,7 +81,7 @@ func fixDecoded(o tengo.Object, modules *tengo.ModuleMap) (tengo.Object, error) 
 
 		for k, v := range o.Value {
 			// encoding of user function not supported
-			if _, isUserFunction := v.(*tengo.UserFunction); isUserFunction {
+			if _, isUserFunction := v.(*tengo.GoFunction); isUserFunction {
 				return nil, fmt.Errorf("user function not decodable")
 			}
 

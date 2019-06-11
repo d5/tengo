@@ -118,14 +118,14 @@ func (c callres) call(funcName string, rt tengo.Interop, args ...interface{}) ca
 			return callres{t: c.t, e: fmt.Errorf("function not found: %s", funcName)}
 		}
 
-		f, ok := m.(*tengo.UserFunction)
+		f, ok := m.(*tengo.GoFunction)
 		if !ok {
 			return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
 		}
 
 		res, err := f.Value(rt, oargs...)
 		return callres{t: c.t, o: res, e: err}
-	case *tengo.UserFunction:
+	case *tengo.GoFunction:
 		res, err := o.Value(rt, oargs...)
 		return callres{t: c.t, o: res, e: err}
 	case *tengo.ImmutableMap:
@@ -134,7 +134,7 @@ func (c callres) call(funcName string, rt tengo.Interop, args ...interface{}) ca
 			return callres{t: c.t, e: fmt.Errorf("function not found: %s", funcName)}
 		}
 
-		f, ok := m.(*tengo.UserFunction)
+		f, ok := m.(*tengo.GoFunction)
 		if !ok {
 			return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
 		}

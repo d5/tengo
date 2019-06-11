@@ -12,7 +12,7 @@ func TestBuiltin(t *testing.T) {
 	m := Opts().Module("math",
 		&tengo.BuiltinModule{
 			Attrs: map[string]tengo.Object{
-				"abs": &tengo.UserFunction{
+				"abs": &tengo.GoFunction{
 					Name: "abs",
 					Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 						v, _ := tengo.ToFloat64(args[0])
@@ -170,7 +170,7 @@ func TestModuleBlockScopes(t *testing.T) {
 	m := Opts().Module("rand",
 		&tengo.BuiltinModule{
 			Attrs: map[string]tengo.Object{
-				"intn": &tengo.UserFunction{
+				"intn": &tengo.GoFunction{
 					Name: "abs",
 					Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 						v, _ := tengo.ToInt64(args[0])

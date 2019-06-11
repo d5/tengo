@@ -10,25 +10,25 @@ func makeOSFile(file *os.File) *tengo.ImmutableMap {
 	return &tengo.ImmutableMap{
 		Value: map[string]tengo.Object{
 			// chdir() => true/error
-			"chdir": &tengo.UserFunction{Name: "chdir", Value: FuncARE(file.Chdir)}, //
+			"chdir": &tengo.GoFunction{Name: "chdir", Value: FuncARE(file.Chdir)}, //
 			// chown(uid int, gid int) => true/error
-			"chown": &tengo.UserFunction{Name: "chown", Value: FuncAIIRE(file.Chown)}, //
+			"chown": &tengo.GoFunction{Name: "chown", Value: FuncAIIRE(file.Chown)}, //
 			// close() => error
-			"close": &tengo.UserFunction{Name: "close", Value: FuncARE(file.Close)}, //
+			"close": &tengo.GoFunction{Name: "close", Value: FuncARE(file.Close)}, //
 			// name() => string
-			"name": &tengo.UserFunction{Name: "name", Value: FuncARS(file.Name)}, //
+			"name": &tengo.GoFunction{Name: "name", Value: FuncARS(file.Name)}, //
 			// readdirnames(n int) => array(string)/error
-			"readdirnames": &tengo.UserFunction{Name: "readdirnames", Value: FuncAIRSsE(file.Readdirnames)}, //
+			"readdirnames": &tengo.GoFunction{Name: "readdirnames", Value: FuncAIRSsE(file.Readdirnames)}, //
 			// sync() => error
-			"sync": &tengo.UserFunction{Name: "sync", Value: FuncARE(file.Sync)}, //
+			"sync": &tengo.GoFunction{Name: "sync", Value: FuncARE(file.Sync)}, //
 			// write(bytes) => int/error
-			"write": &tengo.UserFunction{Name: "write", Value: FuncAYRIE(file.Write)}, //
+			"write": &tengo.GoFunction{Name: "write", Value: FuncAYRIE(file.Write)}, //
 			// write(string) => int/error
-			"write_string": &tengo.UserFunction{Name: "write_string", Value: FuncASRIE(file.WriteString)}, //
+			"write_string": &tengo.GoFunction{Name: "write_string", Value: FuncASRIE(file.WriteString)}, //
 			// read(bytes) => int/error
-			"read": &tengo.UserFunction{Name: "read", Value: FuncAYRIE(file.Read)}, //
+			"read": &tengo.GoFunction{Name: "read", Value: FuncAYRIE(file.Read)}, //
 			// chmod(mode int) => error
-			"chmod": &tengo.UserFunction{
+			"chmod": &tengo.GoFunction{
 				Name: "chmod",
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 1 {
@@ -48,7 +48,7 @@ func makeOSFile(file *os.File) *tengo.ImmutableMap {
 				},
 			},
 			// seek(offset int, whence int) => int/error
-			"seek": &tengo.UserFunction{
+			"seek": &tengo.GoFunction{
 				Name: "seek",
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 2 {
@@ -81,7 +81,7 @@ func makeOSFile(file *os.File) *tengo.ImmutableMap {
 				},
 			},
 			// stat() => imap(fileinfo)/error
-			"stat": &tengo.UserFunction{
+			"stat": &tengo.GoFunction{
 				Name: "start",
 				Value: func(rt tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 0 {

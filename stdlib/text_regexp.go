@@ -10,7 +10,7 @@ func makeTextRegexp(re *regexp.Regexp) *tengo.ImmutableMap {
 	return &tengo.ImmutableMap{
 		Value: map[string]tengo.Object{
 			// match(text) => bool
-			"match": &tengo.UserFunction{
+			"match": &tengo.GoFunction{
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 1 {
 						err = tengo.ErrWrongNumArguments
@@ -39,7 +39,7 @@ func makeTextRegexp(re *regexp.Regexp) *tengo.ImmutableMap {
 
 			// find(text) 			=> array(array({text:,begin:,end:}))/undefined
 			// find(text, maxCount) => array(array({text:,begin:,end:}))/undefined
-			"find": &tengo.UserFunction{
+			"find": &tengo.GoFunction{
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					numArgs := len(args)
 					if numArgs != 1 && numArgs != 2 {
@@ -114,7 +114,7 @@ func makeTextRegexp(re *regexp.Regexp) *tengo.ImmutableMap {
 			},
 
 			// replace(src, repl) => string
-			"replace": &tengo.UserFunction{
+			"replace": &tengo.GoFunction{
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 2 {
 						err = tengo.ErrWrongNumArguments
@@ -154,7 +154,7 @@ func makeTextRegexp(re *regexp.Regexp) *tengo.ImmutableMap {
 
 			// split(text) 			 => array(string)
 			// split(text, maxCount) => array(string)
-			"split": &tengo.UserFunction{
+			"split": &tengo.GoFunction{
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					numArgs := len(args)
 					if numArgs != 1 && numArgs != 2 {

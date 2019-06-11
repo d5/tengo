@@ -39,48 +39,48 @@ var osModule = map[string]tengo.Object{
 	"seek_set":            &tengo.Int{Value: int64(io.SeekStart)},
 	"seek_cur":            &tengo.Int{Value: int64(io.SeekCurrent)},
 	"seek_end":            &tengo.Int{Value: int64(io.SeekEnd)},
-	"args":                &tengo.UserFunction{Name: "args", Value: osArgs},                             // args() => array(string)
-	"chdir":               &tengo.UserFunction{Name: "chdir", Value: FuncASRE(os.Chdir)},                // chdir(dir string) => error
-	"chmod":               osFuncASFmRE("chmod", os.Chmod),                                              // chmod(name string, mode int) => error
-	"chown":               &tengo.UserFunction{Name: "chown", Value: FuncASIIRE(os.Chown)},              // chown(name string, uid int, gid int) => error
-	"clearenv":            &tengo.UserFunction{Name: "clearenv", Value: FuncAR(os.Clearenv)},            // clearenv()
-	"environ":             &tengo.UserFunction{Name: "environ", Value: FuncARSs(os.Environ)},            // environ() => array(string)
-	"exit":                &tengo.UserFunction{Name: "exit", Value: FuncAIR(os.Exit)},                   // exit(code int)
-	"expand_env":          &tengo.UserFunction{Name: "expand_env", Value: osExpandEnv},                  // expand_env(s string) => string
-	"getegid":             &tengo.UserFunction{Name: "getegid", Value: FuncARI(os.Getegid)},             // getegid() => int
-	"getenv":              &tengo.UserFunction{Name: "getenv", Value: FuncASRS(os.Getenv)},              // getenv(s string) => string
-	"geteuid":             &tengo.UserFunction{Name: "geteuid", Value: FuncARI(os.Geteuid)},             // geteuid() => int
-	"getgid":              &tengo.UserFunction{Name: "getgid", Value: FuncARI(os.Getgid)},               // getgid() => int
-	"getgroups":           &tengo.UserFunction{Name: "getgroups", Value: FuncARIsE(os.Getgroups)},       // getgroups() => array(string)/error
-	"getpagesize":         &tengo.UserFunction{Name: "getpagesize", Value: FuncARI(os.Getpagesize)},     // getpagesize() => int
-	"getpid":              &tengo.UserFunction{Name: "getpid", Value: FuncARI(os.Getpid)},               // getpid() => int
-	"getppid":             &tengo.UserFunction{Name: "getppid", Value: FuncARI(os.Getppid)},             // getppid() => int
-	"getuid":              &tengo.UserFunction{Name: "getuid", Value: FuncARI(os.Getuid)},               // getuid() => int
-	"getwd":               &tengo.UserFunction{Name: "getwd", Value: FuncARSE(os.Getwd)},                // getwd() => string/error
-	"hostname":            &tengo.UserFunction{Name: "hostname", Value: FuncARSE(os.Hostname)},          // hostname() => string/error
-	"lchown":              &tengo.UserFunction{Name: "lchown", Value: FuncASIIRE(os.Lchown)},            // lchown(name string, uid int, gid int) => error
-	"link":                &tengo.UserFunction{Name: "link", Value: FuncASSRE(os.Link)},                 // link(oldname string, newname string) => error
-	"lookup_env":          &tengo.UserFunction{Name: "lookup_env", Value: osLookupEnv},                  // lookup_env(key string) => string/false
-	"mkdir":               osFuncASFmRE("mkdir", os.Mkdir),                                              // mkdir(name string, perm int) => error
-	"mkdir_all":           osFuncASFmRE("mkdir_all", os.MkdirAll),                                       // mkdir_all(name string, perm int) => error
-	"readlink":            &tengo.UserFunction{Name: "readlink", Value: FuncASRSE(os.Readlink)},         // readlink(name string) => string/error
-	"remove":              &tengo.UserFunction{Name: "remove", Value: FuncASRE(os.Remove)},              // remove(name string) => error
-	"remove_all":          &tengo.UserFunction{Name: "remove_all", Value: FuncASRE(os.RemoveAll)},       // remove_all(name string) => error
-	"rename":              &tengo.UserFunction{Name: "rename", Value: FuncASSRE(os.Rename)},             // rename(oldpath string, newpath string) => error
-	"setenv":              &tengo.UserFunction{Name: "setenv", Value: FuncASSRE(os.Setenv)},             // setenv(key string, value string) => error
-	"symlink":             &tengo.UserFunction{Name: "symlink", Value: FuncASSRE(os.Symlink)},           // symlink(oldname string newname string) => error
-	"temp_dir":            &tengo.UserFunction{Name: "temp_dir", Value: FuncARS(os.TempDir)},            // temp_dir() => string
-	"truncate":            &tengo.UserFunction{Name: "truncate", Value: FuncASI64RE(os.Truncate)},       // truncate(name string, size int) => error
-	"unsetenv":            &tengo.UserFunction{Name: "unsetenv", Value: FuncASRE(os.Unsetenv)},          // unsetenv(key string) => error
-	"create":              &tengo.UserFunction{Name: "create", Value: osCreate},                         // create(name string) => imap(file)/error
-	"open":                &tengo.UserFunction{Name: "open", Value: osOpen},                             // open(name string) => imap(file)/error
-	"open_file":           &tengo.UserFunction{Name: "open_file", Value: osOpenFile},                    // open_file(name string, flag int, perm int) => imap(file)/error
-	"find_process":        &tengo.UserFunction{Name: "find_process", Value: osFindProcess},              // find_process(pid int) => imap(process)/error
-	"start_process":       &tengo.UserFunction{Name: "start_process", Value: osStartProcess},            // start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
-	"exec_look_path":      &tengo.UserFunction{Name: "exec_look_path", Value: FuncASRSE(exec.LookPath)}, // exec_look_path(file) => string/error
-	"exec":                &tengo.UserFunction{Name: "exec", Value: osExec},                             // exec(name, args...) => command
-	"stat":                &tengo.UserFunction{Name: "stat", Value: osStat},                             // stat(name) => imap(fileinfo)/error
-	"read_file":           &tengo.UserFunction{Name: "read_file", Value: osReadFile},                    // readfile(name) => array(byte)/error
+	"args":                &tengo.GoFunction{Name: "args", Value: osArgs},                             // args() => array(string)
+	"chdir":               &tengo.GoFunction{Name: "chdir", Value: FuncASRE(os.Chdir)},                // chdir(dir string) => error
+	"chmod":               osFuncASFmRE("chmod", os.Chmod),                                            // chmod(name string, mode int) => error
+	"chown":               &tengo.GoFunction{Name: "chown", Value: FuncASIIRE(os.Chown)},              // chown(name string, uid int, gid int) => error
+	"clearenv":            &tengo.GoFunction{Name: "clearenv", Value: FuncAR(os.Clearenv)},            // clearenv()
+	"environ":             &tengo.GoFunction{Name: "environ", Value: FuncARSs(os.Environ)},            // environ() => array(string)
+	"exit":                &tengo.GoFunction{Name: "exit", Value: FuncAIR(os.Exit)},                   // exit(code int)
+	"expand_env":          &tengo.GoFunction{Name: "expand_env", Value: osExpandEnv},                  // expand_env(s string) => string
+	"getegid":             &tengo.GoFunction{Name: "getegid", Value: FuncARI(os.Getegid)},             // getegid() => int
+	"getenv":              &tengo.GoFunction{Name: "getenv", Value: FuncASRS(os.Getenv)},              // getenv(s string) => string
+	"geteuid":             &tengo.GoFunction{Name: "geteuid", Value: FuncARI(os.Geteuid)},             // geteuid() => int
+	"getgid":              &tengo.GoFunction{Name: "getgid", Value: FuncARI(os.Getgid)},               // getgid() => int
+	"getgroups":           &tengo.GoFunction{Name: "getgroups", Value: FuncARIsE(os.Getgroups)},       // getgroups() => array(string)/error
+	"getpagesize":         &tengo.GoFunction{Name: "getpagesize", Value: FuncARI(os.Getpagesize)},     // getpagesize() => int
+	"getpid":              &tengo.GoFunction{Name: "getpid", Value: FuncARI(os.Getpid)},               // getpid() => int
+	"getppid":             &tengo.GoFunction{Name: "getppid", Value: FuncARI(os.Getppid)},             // getppid() => int
+	"getuid":              &tengo.GoFunction{Name: "getuid", Value: FuncARI(os.Getuid)},               // getuid() => int
+	"getwd":               &tengo.GoFunction{Name: "getwd", Value: FuncARSE(os.Getwd)},                // getwd() => string/error
+	"hostname":            &tengo.GoFunction{Name: "hostname", Value: FuncARSE(os.Hostname)},          // hostname() => string/error
+	"lchown":              &tengo.GoFunction{Name: "lchown", Value: FuncASIIRE(os.Lchown)},            // lchown(name string, uid int, gid int) => error
+	"link":                &tengo.GoFunction{Name: "link", Value: FuncASSRE(os.Link)},                 // link(oldname string, newname string) => error
+	"lookup_env":          &tengo.GoFunction{Name: "lookup_env", Value: osLookupEnv},                  // lookup_env(key string) => string/false
+	"mkdir":               osFuncASFmRE("mkdir", os.Mkdir),                                            // mkdir(name string, perm int) => error
+	"mkdir_all":           osFuncASFmRE("mkdir_all", os.MkdirAll),                                     // mkdir_all(name string, perm int) => error
+	"readlink":            &tengo.GoFunction{Name: "readlink", Value: FuncASRSE(os.Readlink)},         // readlink(name string) => string/error
+	"remove":              &tengo.GoFunction{Name: "remove", Value: FuncASRE(os.Remove)},              // remove(name string) => error
+	"remove_all":          &tengo.GoFunction{Name: "remove_all", Value: FuncASRE(os.RemoveAll)},       // remove_all(name string) => error
+	"rename":              &tengo.GoFunction{Name: "rename", Value: FuncASSRE(os.Rename)},             // rename(oldpath string, newpath string) => error
+	"setenv":              &tengo.GoFunction{Name: "setenv", Value: FuncASSRE(os.Setenv)},             // setenv(key string, value string) => error
+	"symlink":             &tengo.GoFunction{Name: "symlink", Value: FuncASSRE(os.Symlink)},           // symlink(oldname string newname string) => error
+	"temp_dir":            &tengo.GoFunction{Name: "temp_dir", Value: FuncARS(os.TempDir)},            // temp_dir() => string
+	"truncate":            &tengo.GoFunction{Name: "truncate", Value: FuncASI64RE(os.Truncate)},       // truncate(name string, size int) => error
+	"unsetenv":            &tengo.GoFunction{Name: "unsetenv", Value: FuncASRE(os.Unsetenv)},          // unsetenv(key string) => error
+	"create":              &tengo.GoFunction{Name: "create", Value: osCreate},                         // create(name string) => imap(file)/error
+	"open":                &tengo.GoFunction{Name: "open", Value: osOpen},                             // open(name string) => imap(file)/error
+	"open_file":           &tengo.GoFunction{Name: "open_file", Value: osOpenFile},                    // open_file(name string, flag int, perm int) => imap(file)/error
+	"find_process":        &tengo.GoFunction{Name: "find_process", Value: osFindProcess},              // find_process(pid int) => imap(process)/error
+	"start_process":       &tengo.GoFunction{Name: "start_process", Value: osStartProcess},            // start_process(name string, argv array(string), dir string, env array(string)) => imap(process)/error
+	"exec_look_path":      &tengo.GoFunction{Name: "exec_look_path", Value: FuncASRSE(exec.LookPath)}, // exec_look_path(file) => string/error
+	"exec":                &tengo.GoFunction{Name: "exec", Value: osExec},                             // exec(name, args...) => command
+	"stat":                &tengo.GoFunction{Name: "stat", Value: osStat},                             // stat(name) => imap(fileinfo)/error
+	"read_file":           &tengo.GoFunction{Name: "read_file", Value: osReadFile},                    // readfile(name) => array(byte)/error
 }
 
 func osReadFile(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
@@ -247,8 +247,8 @@ func osArgs(_ tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 	return arr, nil
 }
 
-func osFuncASFmRE(name string, fn func(string, os.FileMode) error) *tengo.UserFunction {
-	return &tengo.UserFunction{
+func osFuncASFmRE(name string, fn func(string, os.FileMode) error) *tengo.GoFunction {
+	return &tengo.GoFunction{
 		Name: name,
 		Value: func(_ tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 			if len(args) != 2 {

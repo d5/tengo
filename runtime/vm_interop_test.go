@@ -38,7 +38,7 @@ func TestInterop(t *testing.T) {
 	//    - cause a panic
 	//
 	opts := Opts().Skip2ndPass().
-		Symbol("invoke", &tengo.UserFunction{
+		Symbol("invoke", &tengo.GoFunction{
 			Name: "invoke",
 			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) < 1 {
@@ -48,7 +48,7 @@ func TestInterop(t *testing.T) {
 				return rt.InteropCall(args[0], args[1:]...)
 			},
 		}).
-		Symbol("invoke_ignore_err", &tengo.UserFunction{
+		Symbol("invoke_ignore_err", &tengo.GoFunction{
 			Name: "invoke_ignore_err",
 			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) < 1 {
@@ -62,7 +62,7 @@ func TestInterop(t *testing.T) {
 				return ret, nil
 			},
 		}).
-		Symbol("invoke_ignore_panic", &tengo.UserFunction{
+		Symbol("invoke_ignore_panic", &tengo.GoFunction{
 			Name: "invoke_ignore_panic",
 			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) < 1 {
@@ -75,7 +75,7 @@ func TestInterop(t *testing.T) {
 				return rt.InteropCall(args[0], args[1:]...)
 			},
 		}).
-		Symbol("bind", &tengo.UserFunction{
+		Symbol("bind", &tengo.GoFunction{
 			Name: "bind",
 			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) < 1 {
@@ -83,14 +83,14 @@ func TestInterop(t *testing.T) {
 				}
 				fn := args[0]
 				boundArgs := args[1:]
-				return &tengo.UserFunction{
+				return &tengo.GoFunction{
 					Value: func(rt tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 						return rt.InteropCall(fn, append(boundArgs, args...)...)
 					},
 				}, nil
 			},
 		}).
-		Symbol("identity", &tengo.UserFunction{
+		Symbol("identity", &tengo.GoFunction{
 			Name: "identity",
 			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) < 1 {
@@ -99,7 +99,7 @@ func TestInterop(t *testing.T) {
 				return args[0], nil
 			},
 		}).
-		Symbol("sum", &tengo.UserFunction{
+		Symbol("sum", &tengo.GoFunction{
 			Name: "sum",
 			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				if len(args) != 2 {
@@ -108,13 +108,13 @@ func TestInterop(t *testing.T) {
 				return args[0].BinaryOp(token.Add, args[1])
 			},
 		}).
-		Symbol("rt_err", &tengo.UserFunction{
+		Symbol("rt_err", &tengo.GoFunction{
 			Name: "rt_err",
 			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				return nil, fmt.Errorf("rt_err: %s", args[0].String())
 			},
 		}).
-		Symbol("throw", &tengo.UserFunction{
+		Symbol("throw", &tengo.GoFunction{
 			Name: "throw",
 			Value: func(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 				panic(fmt.Errorf("throw: %s", args[0].String()))

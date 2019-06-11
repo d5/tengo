@@ -5,17 +5,17 @@ import (
 )
 
 var enumModule = map[string]tengo.Object{
-	"all":      &tengo.UserFunction{Name: "all", Value: enumAll},
-	"any":      &tengo.UserFunction{Name: "any", Value: enumAny},
-	"chunk":    &tengo.UserFunction{Name: "chunk", Value: enumChunk},
-	"at":       &tengo.UserFunction{Name: "at", Value: enumAt},
-	"each":     &tengo.UserFunction{Name: "each", Value: enumEach},
-	"filter":   &tengo.UserFunction{Name: "filter", Value: enumFilter},
-	"find":     &tengo.UserFunction{Name: "find", Value: enumFind},
-	"find_key": &tengo.UserFunction{Name: "find_key", Value: enumFindKey},
-	"map":      &tengo.UserFunction{Name: "map", Value: enumMap},
-	"key":      &tengo.UserFunction{Name: "key", Value: enumKey},
-	"value":    &tengo.UserFunction{Name: "value", Value: enumValue},
+	"all":      &tengo.GoFunction{Name: "all", Value: enumAll},
+	"any":      &tengo.GoFunction{Name: "any", Value: enumAny},
+	"chunk":    &tengo.GoFunction{Name: "chunk", Value: enumChunk},
+	"at":       &tengo.GoFunction{Name: "at", Value: enumAt},
+	"each":     &tengo.GoFunction{Name: "each", Value: enumEach},
+	"filter":   &tengo.GoFunction{Name: "filter", Value: enumFilter},
+	"find":     &tengo.GoFunction{Name: "find", Value: enumFind},
+	"find_key": &tengo.GoFunction{Name: "find_key", Value: enumFindKey},
+	"map":      &tengo.GoFunction{Name: "map", Value: enumMap},
+	"key":      &tengo.GoFunction{Name: "key", Value: enumKey},
+	"value":    &tengo.GoFunction{Name: "value", Value: enumValue},
 }
 
 func enumAll(rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {

@@ -267,7 +267,7 @@ func FromInterface(v interface{}) (Object, error) {
 	case Object:
 		return v, nil
 	case CallableFunc:
-		return &UserFunction{Value: v}, nil
+		return &GoFunction{Value: v}, nil
 	}
 
 	return nil, fmt.Errorf("cannot convert to object: %T", v)

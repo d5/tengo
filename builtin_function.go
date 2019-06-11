@@ -13,7 +13,7 @@ type BuiltinFunction struct {
 
 // TypeName returns the name of the type.
 func (o *BuiltinFunction) TypeName() string {
-	return "builtin-function:" + o.Name
+	return "builtin:" + o.Name
 }
 
 func (o *BuiltinFunction) String() string {

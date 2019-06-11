@@ -18,11 +18,11 @@ type CompiledFunction struct {
 
 // TypeName returns the name of the type.
 func (o *CompiledFunction) TypeName() string {
-	return "compiled-function"
+	return "function"
 }
 
 func (o *CompiledFunction) String() string {
-	return "<compiled-function>"
+	return "<function>"
 }
 
 // BinaryOp returns another object that is the result of

@@ -4,8 +4,8 @@ import (
 	"github.com/d5/tengo/compiler/token"
 )
 
-// UserFunction represents a user function.
-type UserFunction struct {
+// GoFunction represents a Go function.
+type GoFunction struct {
 	ObjectImpl
 	Name       string
 	Value      CallableFunc
@@ -13,42 +13,45 @@ type UserFunction struct {
 }
 
 // TypeName returns the name of the type.
-func (o *UserFunction) TypeName() string {
-	return "user-function:" + o.Name
+func (o *GoFunction) TypeName() string {
+	if o.Name == "" {
+		return "go-function"
+	}
+	return "go-function:" + o.Name
 }
 
-func (o *UserFunction) String() string {
-	return "<user-function>"
+func (o *GoFunction) String() string {
+	return "<go-function>"
 }
 
 // BinaryOp returns another object that is the result of
 // a given binary operator and a right-hand side object.
-func (o *UserFunction) BinaryOp(op token.Token, rhs Object) (Object, error) {
+func (o *GoFunction) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	return nil, ErrInvalidOperator
 }
 
 // Copy returns a copy of the type.
-func (o *UserFunction) Copy() Object {
-	return &UserFunction{Value: o.Value}
+func (o *GoFunction) Copy() Object {
+	return &GoFunction{Value: o.Value}
 }
 
 // IsFalsy returns true if the value of the type is falsy.
-func (o *UserFunction) IsFalsy() bool {
+func (o *GoFunction) IsFalsy() bool {
 	return false
 }
 
 // Equals returns true if the value of the type
 // is equal to the value of another object.
-func (o *UserFunction) Equals(x Object) bool {
+func (o *GoFunction) Equals(x Object) bool {
 	return false
 }
 
 // Call invokes a user function.
-func (o *UserFunction) Call(rt Interop, args ...Object) (Object, error) {
+func (o *GoFunction) Call(rt Interop, args ...Object) (Object, error) {
 	return o.Value(rt, args...)
 }
 
 // CanCall returns whether the Object can be Called.
-func (o *UserFunction) CanCall() bool {
+func (o *GoFunction) CanCall() bool {
 	return true
 }

@@ -10,10 +10,10 @@ import (
 func makeOSProcessState(state *os.ProcessState) *tengo.ImmutableMap {
 	return &tengo.ImmutableMap{
 		Value: map[string]tengo.Object{
-			"exited":  &tengo.UserFunction{Name: "exited", Value: FuncARB(state.Exited)},   //
-			"pid":     &tengo.UserFunction{Name: "pid", Value: FuncARI(state.Pid)},         //
-			"string":  &tengo.UserFunction{Name: "string", Value: FuncARS(state.String)},   //
-			"success": &tengo.UserFunction{Name: "success", Value: FuncARB(state.Success)}, //
+			"exited":  &tengo.GoFunction{Name: "exited", Value: FuncARB(state.Exited)},   //
+			"pid":     &tengo.GoFunction{Name: "pid", Value: FuncARI(state.Pid)},         //
+			"string":  &tengo.GoFunction{Name: "string", Value: FuncARS(state.String)},   //
+			"success": &tengo.GoFunction{Name: "success", Value: FuncARB(state.Success)}, //
 		},
 	}
 }
@@ -21,9 +21,9 @@ func makeOSProcessState(state *os.ProcessState) *tengo.ImmutableMap {
 func makeOSProcess(proc *os.Process) *tengo.ImmutableMap {
 	return &tengo.ImmutableMap{
 		Value: map[string]tengo.Object{
-			"kill":    &tengo.UserFunction{Name: "kill", Value: FuncARE(proc.Kill)},       //
-			"release": &tengo.UserFunction{Name: "release", Value: FuncARE(proc.Release)}, //
-			"signal": &tengo.UserFunction{
+			"kill":    &tengo.GoFunction{Name: "kill", Value: FuncARE(proc.Kill)},       //
+			"release": &tengo.GoFunction{Name: "release", Value: FuncARE(proc.Release)}, //
+			"signal": &tengo.GoFunction{
 				Name: "signal",
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 1 {
@@ -42,7 +42,7 @@ func makeOSProcess(proc *os.Process) *tengo.ImmutableMap {
 					return wrapError(proc.Signal(syscall.Signal(i1))), nil
 				},
 			},
-			"wait": &tengo.UserFunction{
+			"wait": &tengo.GoFunction{
 				Name: "wait",
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 0 {

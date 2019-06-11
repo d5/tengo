@@ -7,10 +7,10 @@ import (
 )
 
 var fmtModule = map[string]tengo.Object{
-	"print":   &tengo.UserFunction{Name: "print", Value: fmtPrint},
-	"printf":  &tengo.UserFunction{Name: "printf", Value: fmtPrintf},
-	"println": &tengo.UserFunction{Name: "println", Value: fmtPrintln},
-	"sprintf": &tengo.UserFunction{Name: "sprintf", Value: fmtSprintf},
+	"print":   &tengo.GoFunction{Name: "print", Value: fmtPrint},
+	"printf":  &tengo.GoFunction{Name: "printf", Value: fmtPrintf},
+	"println": &tengo.GoFunction{Name: "println", Value: fmtPrintln},
+	"sprintf": &tengo.GoFunction{Name: "sprintf", Value: fmtSprintf},
 }
 
 func fmtPrint(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {

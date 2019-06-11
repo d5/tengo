@@ -36,7 +36,7 @@ func TestScriptSourceModule(t *testing.T) {
 	mods = tengo.NewModuleMap()
 	mods.AddSourceModule("mod", []byte(`text := import("text"); export text.title("foo")`))
 	mods.AddBuiltinModule("text", map[string]tengo.Object{
-		"title": &tengo.UserFunction{Name: "title", Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
+		"title": &tengo.GoFunction{Name: "title", Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 			s, _ := tengo.ToString(args[0])
 			return &tengo.String{Value: strings.Title(s)}, nil
 		}},

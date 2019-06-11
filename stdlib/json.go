@@ -9,10 +9,10 @@ import (
 )
 
 var jsonModule = map[string]tengo.Object{
-	"decode":      &tengo.UserFunction{Name: "decode", Value: jsonDecode},
-	"encode":      &tengo.UserFunction{Name: "encode", Value: jsonEncode},
-	"indent":      &tengo.UserFunction{Name: "encode", Value: jsonIndent},
-	"html_escape": &tengo.UserFunction{Name: "html_escape", Value: jsonHTMLEscape},
+	"decode":      &tengo.GoFunction{Name: "decode", Value: jsonDecode},
+	"encode":      &tengo.GoFunction{Name: "encode", Value: jsonEncode},
+	"indent":      &tengo.GoFunction{Name: "encode", Value: jsonIndent},
+	"html_escape": &tengo.GoFunction{Name: "html_escape", Value: jsonHTMLEscape},
 }
 
 func jsonDecode(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {

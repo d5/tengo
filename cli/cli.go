@@ -198,7 +198,7 @@ func RunREPL(modules *tengo.ModuleMap, in io.Reader, out io.Writer) {
 
 	// embed println function
 	symbol := symbolTable.Define("__repl_println__")
-	globals[symbol.Index] = &tengo.UserFunction{
+	globals[symbol.Index] = &tengo.GoFunction{
 		Name: "println",
 		Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 			var printArgs []interface{}

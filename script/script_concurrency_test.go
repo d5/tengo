@@ -46,7 +46,7 @@ for i:=1; i<=d; i++ {
 e := mod1.double(s)
 `)
 	mod1 := map[string]tengo.Object{
-		"double": &tengo.UserFunction{
+		"double": &tengo.GoFunction{
 			Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 				arg0, _ := tengo.ToInt64(args[0])
 				ret = &tengo.Int{Value: arg0 * 2}

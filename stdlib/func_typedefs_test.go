@@ -491,7 +491,7 @@ func TestFuncAI64RI64(t *testing.T) {
 }
 
 func funcCall(fn tengo.CallableFunc, rt tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
-	userFunc := &tengo.UserFunction{Value: fn}
+	userFunc := &tengo.GoFunction{Value: fn}
 	return userFunc.Call(rt, args...)
 }
 

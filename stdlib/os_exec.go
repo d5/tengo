@@ -10,17 +10,17 @@ func makeOSExecCommand(cmd *exec.Cmd) *tengo.ImmutableMap {
 	return &tengo.ImmutableMap{
 		Value: map[string]tengo.Object{
 			// combined_output() => bytes/error
-			"combined_output": &tengo.UserFunction{Name: "combined_output", Value: FuncARYE(cmd.CombinedOutput)}, //
+			"combined_output": &tengo.GoFunction{Name: "combined_output", Value: FuncARYE(cmd.CombinedOutput)}, //
 			// output() => bytes/error
-			"output": &tengo.UserFunction{Name: "output", Value: FuncARYE(cmd.Output)}, //
+			"output": &tengo.GoFunction{Name: "output", Value: FuncARYE(cmd.Output)}, //
 			// run() => error
-			"run": &tengo.UserFunction{Name: "run", Value: FuncARE(cmd.Run)}, //
+			"run": &tengo.GoFunction{Name: "run", Value: FuncARE(cmd.Run)}, //
 			// start() => error
-			"start": &tengo.UserFunction{Name: "start", Value: FuncARE(cmd.Start)}, //
+			"start": &tengo.GoFunction{Name: "start", Value: FuncARE(cmd.Start)}, //
 			// wait() => error
-			"wait": &tengo.UserFunction{Name: "wait", Value: FuncARE(cmd.Wait)}, //
+			"wait": &tengo.GoFunction{Name: "wait", Value: FuncARE(cmd.Wait)}, //
 			// set_path(path string)
-			"set_path": &tengo.UserFunction{
+			"set_path": &tengo.GoFunction{
 				Name: "set_path",
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 1 {
@@ -42,7 +42,7 @@ func makeOSExecCommand(cmd *exec.Cmd) *tengo.ImmutableMap {
 				},
 			},
 			// set_dir(dir string)
-			"set_dir": &tengo.UserFunction{
+			"set_dir": &tengo.GoFunction{
 				Name: "set_dir",
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 1 {
@@ -64,7 +64,7 @@ func makeOSExecCommand(cmd *exec.Cmd) *tengo.ImmutableMap {
 				},
 			},
 			// set_env(env array(string))
-			"set_env": &tengo.UserFunction{
+			"set_env": &tengo.GoFunction{
 				Name: "set_env",
 				Value: func(_ tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
 					if len(args) != 1 {
@@ -98,7 +98,7 @@ func makeOSExecCommand(cmd *exec.Cmd) *tengo.ImmutableMap {
 				},
 			},
 			// process() => imap(process)
-			"process": &tengo.UserFunction{
+			"process": &tengo.GoFunction{
 				Name: "process",
 				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 0 {

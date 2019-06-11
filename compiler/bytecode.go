@@ -85,5 +85,5 @@ func init() {
 	gob.Register(&tengo.String{})
 	gob.Register(&tengo.Time{})
 	gob.Register(&tengo.Undefined{})
-	gob.Register(&tengo.UserFunction{})
+	gob.Register(&tengo.GoFunction{})
 }

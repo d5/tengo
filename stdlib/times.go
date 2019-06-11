@@ -40,41 +40,41 @@ var timesModule = map[string]tengo.Object{
 	"october":              &tengo.Int{Value: int64(time.October)},
 	"november":             &tengo.Int{Value: int64(time.November)},
 	"december":             &tengo.Int{Value: int64(time.December)},
-	"sleep":                &tengo.UserFunction{Name: "sleep", Value: timesSleep},                              // sleep(int)
-	"parse_duration":       &tengo.UserFunction{Name: "parse_duration", Value: timesParseDuration},             // parse_duration(str) => int
-	"since":                &tengo.UserFunction{Name: "since", Value: timesSince},                              // since(time) => int
-	"until":                &tengo.UserFunction{Name: "until", Value: timesUntil},                              // until(time) => int
-	"duration_hours":       &tengo.UserFunction{Name: "duration_hours", Value: timesDurationHours},             // duration_hours(int) => float
-	"duration_minutes":     &tengo.UserFunction{Name: "duration_minutes", Value: timesDurationMinutes},         // duration_minutes(int) => float
-	"duration_nanoseconds": &tengo.UserFunction{Name: "duration_nanoseconds", Value: timesDurationNanoseconds}, // duration_nanoseconds(int) => int
-	"duration_seconds":     &tengo.UserFunction{Name: "duration_seconds", Value: timesDurationSeconds},         // duration_seconds(int) => float
-	"duration_string":      &tengo.UserFunction{Name: "duration_string", Value: timesDurationString},           // duration_string(int) => string
-	"month_string":         &tengo.UserFunction{Name: "month_string", Value: timesMonthString},                 // month_string(int) => string
-	"date":                 &tengo.UserFunction{Name: "date", Value: timesDate},                                // date(year, month, day, hour, min, sec, nsec) => time
-	"now":                  &tengo.UserFunction{Name: "now", Value: timesNow},                                  // now() => time
-	"parse":                &tengo.UserFunction{Name: "parse", Value: timesParse},                              // parse(format, str) => time
-	"unix":                 &tengo.UserFunction{Name: "unix", Value: timesUnix},                                // unix(sec, nsec) => time
-	"add":                  &tengo.UserFunction{Name: "add", Value: timesAdd},                                  // add(time, int) => time
-	"add_date":             &tengo.UserFunction{Name: "add_date", Value: timesAddDate},                         // add_date(time, years, months, days) => time
-	"sub":                  &tengo.UserFunction{Name: "sub", Value: timesSub},                                  // sub(t time, u time) => int
-	"after":                &tengo.UserFunction{Name: "after", Value: timesAfter},                              // after(t time, u time) => bool
-	"before":               &tengo.UserFunction{Name: "before", Value: timesBefore},                            // before(t time, u time) => bool
-	"time_year":            &tengo.UserFunction{Name: "time_year", Value: timesTimeYear},                       // time_year(time) => int
-	"time_month":           &tengo.UserFunction{Name: "time_month", Value: timesTimeMonth},                     // time_month(time) => int
-	"time_day":             &tengo.UserFunction{Name: "time_day", Value: timesTimeDay},                         // time_day(time) => int
-	"time_weekday":         &tengo.UserFunction{Name: "time_weekday", Value: timesTimeWeekday},                 // time_weekday(time) => int
-	"time_hour":            &tengo.UserFunction{Name: "time_hour", Value: timesTimeHour},                       // time_hour(time) => int
-	"time_minute":          &tengo.UserFunction{Name: "time_minute", Value: timesTimeMinute},                   // time_minute(time) => int
-	"time_second":          &tengo.UserFunction{Name: "time_second", Value: timesTimeSecond},                   // time_second(time) => int
-	"time_nanosecond":      &tengo.UserFunction{Name: "time_nanosecond", Value: timesTimeNanosecond},           // time_nanosecond(time) => int
-	"time_unix":            &tengo.UserFunction{Name: "time_unix", Value: timesTimeUnix},                       // time_unix(time) => int
-	"time_unix_nano":       &tengo.UserFunction{Name: "time_unix_nano", Value: timesTimeUnixNano},              // time_unix_nano(time) => int
-	"time_format":          &tengo.UserFunction{Name: "time_format", Value: timesTimeFormat},                   // time_format(time, format) => string
-	"time_location":        &tengo.UserFunction{Name: "time_location", Value: timesTimeLocation},               // time_location(time) => string
-	"time_string":          &tengo.UserFunction{Name: "time_string", Value: timesTimeString},                   // time_string(time) => string
-	"is_zero":              &tengo.UserFunction{Name: "is_zero", Value: timesIsZero},                           // is_zero(time) => bool
-	"to_local":             &tengo.UserFunction{Name: "to_local", Value: timesToLocal},                         // to_local(time) => time
-	"to_utc":               &tengo.UserFunction{Name: "to_utc", Value: timesToUTC},                             // to_utc(time) => time
+	"sleep":                &tengo.GoFunction{Name: "sleep", Value: timesSleep},                              // sleep(int)
+	"parse_duration":       &tengo.GoFunction{Name: "parse_duration", Value: timesParseDuration},             // parse_duration(str) => int
+	"since":                &tengo.GoFunction{Name: "since", Value: timesSince},                              // since(time) => int
+	"until":                &tengo.GoFunction{Name: "until", Value: timesUntil},                              // until(time) => int
+	"duration_hours":       &tengo.GoFunction{Name: "duration_hours", Value: timesDurationHours},             // duration_hours(int) => float
+	"duration_minutes":     &tengo.GoFunction{Name: "duration_minutes", Value: timesDurationMinutes},         // duration_minutes(int) => float
+	"duration_nanoseconds": &tengo.GoFunction{Name: "duration_nanoseconds", Value: timesDurationNanoseconds}, // duration_nanoseconds(int) => int
+	"duration_seconds":     &tengo.GoFunction{Name: "duration_seconds", Value: timesDurationSeconds},         // duration_seconds(int) => float
+	"duration_string":      &tengo.GoFunction{Name: "duration_string", Value: timesDurationString},           // duration_string(int) => string
+	"month_string":         &tengo.GoFunction{Name: "month_string", Value: timesMonthString},                 // month_string(int) => string
+	"date":                 &tengo.GoFunction{Name: "date", Value: timesDate},                                // date(year, month, day, hour, min, sec, nsec) => time
+	"now":                  &tengo.GoFunction{Name: "now", Value: timesNow},                                  // now() => time
+	"parse":                &tengo.GoFunction{Name: "parse", Value: timesParse},                              // parse(format, str) => time
+	"unix":                 &tengo.GoFunction{Name: "unix", Value: timesUnix},                                // unix(sec, nsec) => time
+	"add":                  &tengo.GoFunction{Name: "add", Value: timesAdd},                                  // add(time, int) => time
+	"add_date":             &tengo.GoFunction{Name: "add_date", Value: timesAddDate},                         // add_date(time, years, months, days) => time
+	"sub":                  &tengo.GoFunction{Name: "sub", Value: timesSub},                                  // sub(t time, u time) => int
+	"after":                &tengo.GoFunction{Name: "after", Value: timesAfter},                              // after(t time, u time) => bool
+	"before":               &tengo.GoFunction{Name: "before", Value: timesBefore},                            // before(t time, u time) => bool
+	"time_year":            &tengo.GoFunction{Name: "time_year", Value: timesTimeYear},                       // time_year(time) => int
+	"time_month":           &tengo.GoFunction{Name: "time_month", Value: timesTimeMonth},                     // time_month(time) => int
+	"time_day":             &tengo.GoFunction{Name: "time_day", Value: timesTimeDay},                         // time_day(time) => int
+	"time_weekday":         &tengo.GoFunction{Name: "time_weekday", Value: timesTimeWeekday},                 // time_weekday(time) => int
+	"time_hour":            &tengo.GoFunction{Name: "time_hour", Value: timesTimeHour},                       // time_hour(time) => int
+	"time_minute":          &tengo.GoFunction{Name: "time_minute", Value: timesTimeMinute},                   // time_minute(time) => int
+	"time_second":          &tengo.GoFunction{Name: "time_second", Value: timesTimeSecond},                   // time_second(time) => int
+	"time_nanosecond":      &tengo.GoFunction{Name: "time_nanosecond", Value: timesTimeNanosecond},           // time_nanosecond(time) => int
+	"time_unix":            &tengo.GoFunction{Name: "time_unix", Value: timesTimeUnix},                       // time_unix(time) => int
+	"time_unix_nano":       &tengo.GoFunction{Name: "time_unix_nano", Value: timesTimeUnixNano},              // time_unix_nano(time) => int
+	"time_format":          &tengo.GoFunction{Name: "time_format", Value: timesTimeFormat},                   // time_format(time, format) => string
+	"time_location":        &tengo.GoFunction{Name: "time_location", Value: timesTimeLocation},               // time_location(time) => string
+	"time_string":          &tengo.GoFunction{Name: "time_string", Value: timesTimeString},                   // time_string(time) => string
+	"is_zero":              &tengo.GoFunction{Name: "is_zero", Value: timesIsZero},                           // is_zero(time) => bool
+	"to_local":             &tengo.GoFunction{Name: "to_local", Value: timesToLocal},                         // to_local(time) => time
+	"to_utc":               &tengo.GoFunction{Name: "to_utc", Value: timesToUTC},                             // to_utc(time) => time
 }
 
 func timesSleep(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {

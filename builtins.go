@@ -31,6 +31,7 @@ var Builtins = []*BuiltinFunction{
 	{Name: "is_callable", Value: builtinIsCallable},
 	{Name: "type_name", Value: builtinTypeName},
 	{Name: "format", Value: builtinFormat},
+	{Name: "bind", Value: builtinBind},
 }
 
 // len(obj object) => int
@@ -481,4 +482,16 @@ func builtinIsIterable(_ Interop, args ...Object) (Object, error) {
 	}
 
 	return FalseValue, nil
+}
+
+func builtinBind(_ Interop, args ...Object) (Object, error) {
+	if len(args) == 0 {
+		return nil, ErrWrongNumArguments
+	}
+
+	return &GoFunction{
+		Value: func(rt Interop, newArgs ...Object) (ret Object, err error) {
+			return rt.InteropCall(args[0], append(args[1:], newArgs...)...)
+		},
+	}, nil
 }

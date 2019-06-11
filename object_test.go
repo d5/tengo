@@ -30,11 +30,11 @@ func TestObject_TypeName(t *testing.T) {
 	o = &tengo.MapIterator{}
 	assert.Equal(t, "map-iterator", o.TypeName())
 	o = &tengo.BuiltinFunction{Name: "fn"}
-	assert.Equal(t, "builtin-function:fn", o.TypeName())
-	o = &tengo.UserFunction{Name: "fn"}
-	assert.Equal(t, "user-function:fn", o.TypeName())
+	assert.Equal(t, "builtin:fn", o.TypeName())
+	o = &tengo.GoFunction{Name: "fn"}
+	assert.Equal(t, "go-function:fn", o.TypeName())
 	o = &tengo.CompiledFunction{}
-	assert.Equal(t, "compiled-function", o.TypeName())
+	assert.Equal(t, "function", o.TypeName())
 	o = &tengo.Undefined{}
 	assert.Equal(t, "undefined", o.TypeName())
 	o = &tengo.Error{}
