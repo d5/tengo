@@ -1,9 +1,9 @@
 package compiler
 
 import (
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler/ast"
 	"github.com/d5/tengo/compiler/parser"
-	"github.com/d5/tengo/objects"
 )
 
 func (c *Compiler) checkCyclicImports(node ast.Node, modulePath string) error {
@@ -16,7 +16,7 @@ func (c *Compiler) checkCyclicImports(node ast.Node, modulePath string) error {
 	return nil
 }
 
-func (c *Compiler) compileModule(node ast.Node, moduleName, modulePath string, src []byte) (*objects.CompiledFunction, error) {
+func (c *Compiler) compileModule(node ast.Node, moduleName, modulePath string, src []byte) (*tengo.CompiledFunction, error) {
 	if err := c.checkCyclicImports(node, modulePath); err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c *Compiler) compileModule(node ast.Node, moduleName, modulePath string, s
 	return compiledFunc, nil
 }
 
-func (c *Compiler) loadCompiledModule(modulePath string) (mod *objects.CompiledFunction, ok bool) {
+func (c *Compiler) loadCompiledModule(modulePath string) (mod *tengo.CompiledFunction, ok bool) {
 	if c.parent != nil {
 		return c.parent.loadCompiledModule(modulePath)
 	}
@@ -70,7 +70,7 @@ func (c *Compiler) loadCompiledModule(modulePath string) (mod *objects.CompiledF
 	return
 }
 
-func (c *Compiler) storeCompiledModule(modulePath string, module *objects.CompiledFunction) {
+func (c *Compiler) storeCompiledModule(modulePath string, module *tengo.CompiledFunction) {
 	if c.parent != nil {
 		c.parent.storeCompiledModule(modulePath, module)
 	}

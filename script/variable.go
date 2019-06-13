@@ -3,18 +3,18 @@ package script
 import (
 	"errors"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 // Variable is a user-defined variable for the script.
 type Variable struct {
 	name  string
-	value objects.Object
+	value tengo.Object
 }
 
 // NewVariable creates a Variable.
 func NewVariable(name string, value interface{}) (*Variable, error) {
-	obj, err := objects.FromInterface(value)
+	obj, err := tengo.FromInterface(value)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (v *Variable) Name() string {
 
 // Value returns an empty interface of the variable value.
 func (v *Variable) Value() interface{} {
-	return objects.ToInterface(v.value)
+	return tengo.ToInterface(v.value)
 }
 
 // ValueType returns the name of the value type.
@@ -43,7 +43,7 @@ func (v *Variable) ValueType() string {
 // Int returns int value of the variable value.
 // It returns 0 if the value is not convertible to int.
 func (v *Variable) Int() int {
-	c, _ := objects.ToInt(v.value)
+	c, _ := tengo.ToInt(v.value)
 
 	return c
 }
@@ -51,7 +51,7 @@ func (v *Variable) Int() int {
 // Int64 returns int64 value of the variable value.
 // It returns 0 if the value is not convertible to int64.
 func (v *Variable) Int64() int64 {
-	c, _ := objects.ToInt64(v.value)
+	c, _ := tengo.ToInt64(v.value)
 
 	return c
 }
@@ -59,7 +59,7 @@ func (v *Variable) Int64() int64 {
 // Float returns float64 value of the variable value.
 // It returns 0.0 if the value is not convertible to float64.
 func (v *Variable) Float() float64 {
-	c, _ := objects.ToFloat64(v.value)
+	c, _ := tengo.ToFloat64(v.value)
 
 	return c
 }
@@ -67,7 +67,7 @@ func (v *Variable) Float() float64 {
 // Char returns rune value of the variable value.
 // It returns 0 if the value is not convertible to rune.
 func (v *Variable) Char() rune {
-	c, _ := objects.ToRune(v.value)
+	c, _ := tengo.ToRune(v.value)
 
 	return c
 }
@@ -75,7 +75,7 @@ func (v *Variable) Char() rune {
 // Bool returns bool value of the variable value.
 // It returns 0 if the value is not convertible to bool.
 func (v *Variable) Bool() bool {
-	c, _ := objects.ToBool(v.value)
+	c, _ := tengo.ToBool(v.value)
 
 	return c
 }
@@ -84,10 +84,10 @@ func (v *Variable) Bool() bool {
 // It returns 0 if the value is not convertible to []interface.
 func (v *Variable) Array() []interface{} {
 	switch val := v.value.(type) {
-	case *objects.Array:
+	case *tengo.Array:
 		var arr []interface{}
 		for _, e := range val.Value {
-			arr = append(arr, objects.ToInterface(e))
+			arr = append(arr, tengo.ToInterface(e))
 		}
 		return arr
 	}
@@ -99,10 +99,10 @@ func (v *Variable) Array() []interface{} {
 // It returns 0 if the value is not convertible to map[string]interface{}.
 func (v *Variable) Map() map[string]interface{} {
 	switch val := v.value.(type) {
-	case *objects.Map:
+	case *tengo.Map:
 		kv := make(map[string]interface{})
 		for mk, mv := range val.Value {
-			kv[mk] = objects.ToInterface(mv)
+			kv[mk] = tengo.ToInterface(mv)
 		}
 		return kv
 	}
@@ -113,7 +113,7 @@ func (v *Variable) Map() map[string]interface{} {
 // String returns string value of the variable value.
 // It returns 0 if the value is not convertible to string.
 func (v *Variable) String() string {
-	c, _ := objects.ToString(v.value)
+	c, _ := tengo.ToString(v.value)
 
 	return c
 }
@@ -121,7 +121,7 @@ func (v *Variable) String() string {
 // Bytes returns a byte slice of the variable value.
 // It returns nil if the value is not convertible to byte slice.
 func (v *Variable) Bytes() []byte {
-	c, _ := objects.ToByteSlice(v.value)
+	c, _ := tengo.ToByteSlice(v.value)
 
 	return c
 }
@@ -129,7 +129,7 @@ func (v *Variable) Bytes() []byte {
 // Error returns an error if the underlying value is error object.
 // If not, this returns nil.
 func (v *Variable) Error() error {
-	err, ok := v.value.(*objects.Error)
+	err, ok := v.value.(*tengo.Error)
 	if ok {
 		return errors.New(err.String())
 	}
@@ -139,11 +139,11 @@ func (v *Variable) Error() error {
 
 // Object returns an underlying Object of the variable value.
 // Note that returned Object is a copy of an actual Object used in the script.
-func (v *Variable) Object() objects.Object {
+func (v *Variable) Object() tengo.Object {
 	return v.value
 }
 
 // IsUndefined returns true if the underlying value is undefined.
 func (v *Variable) IsUndefined() bool {
-	return v.value == objects.UndefinedValue
+	return v.value == tengo.UndefinedValue
 }

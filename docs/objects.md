@@ -8,7 +8,7 @@
 
 ## Tengo Objects
 
-In Tengo, all object types _(both [runtime types](#runtime-object-types) and [user types](#user-object-types))_ must implement [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface.
+In Tengo, all object types _(both [runtime types](#runtime-object-types) and [user types](#user-object-types))_ must implement [Object](https://godoc.org/github.com/d5/tengo#Object) interface.
 
 ### Object Interface
 
@@ -57,7 +57,7 @@ Copy method should return a _new_ copy of the object. Builtin function `copy` us
 IndexGet(index Object) (value Object, err error)
 ```
 
-IndexGet should take an index Object and return a result Object or an error for indexable objects. Indexable is an object that can take an index and return an object. If a type is indexable, its values support dot selector (value = object.index) and indexer (value = object[index]) syntax.
+IndexGet should take an index Object and return a result Object or an error for indexable tengo. Indexable is an object that can take an index and return an object. If a type is indexable, its values support dot selector (value = object.index) and indexer (value = object[index]) syntax.
 
 If Object is not indexable, ErrNotIndexable should be returned as error. If nil is returned as value, it will be converted to Undefined value by the runtime.
 
@@ -71,7 +71,7 @@ By convention, Array or Array-like types and Map or Map-like types return `Undef
 IndexSet(index, value Object) error
 ```
 
-IndexSet should take an index Object and a value Object for index assignable objects. Index assignable is an object that can take an index and a value on the left-hand side of the assignment statement. If a type is index assignable, its values support assignment using dot selector (`object.index = value`) and indexer (`object[index] = value`) in the assignment statements.
+IndexSet should take an index Object and a value Object for index assignable tengo. Index assignable is an object that can take an index and a value on the left-hand side of the assignment statement. If a type is index assignable, its values support assignment using dot selector (`object.index = value`) and indexer (`object[index] = value`) in the assignment statements.
 
 If Object is not index assignable, ErrNotIndexAssignable should be returned as error. If an error is returned, it will be treated as a run-time error.
 
@@ -79,7 +79,7 @@ Array and Map implementation forces the type of index Object to be Int and Strin
 
 #### Callable Objects
 
-If the type is Callable, its values can be invoked as if they were functions. Two functions need to be implemented for Callable objects.
+If the type is Callable, its values can be invoked as if they were functions. Two functions need to be implemented for Callable tengo.
 
 ```golang
 CanCall() bool
@@ -123,7 +123,7 @@ CanIterate should return whether the Object can be Iterated.
 Iterate() Iterator
 ```
 
-The Iterate method should return another object that implements [Iterator](https://godoc.org/github.com/d5/tengo/objects#Iterator) interface.
+The Iterate method should return another object that implements [Iterator](https://godoc.org/github.com/d5/tengo#Iterator) interface.
 
 ### Iterator Interface
 
@@ -149,26 +149,26 @@ Value method should return a value Object for the current element of the underly
 
 These are the basic types Tengo runtime supports out of the box:
 
-- Primitive value types: [Int](https://godoc.org/github.com/d5/tengo/objects#Int), [String](https://godoc.org/github.com/d5/tengo/objects#String), [Float](https://godoc.org/github.com/d5/tengo/objects#Float), [Bool](https://godoc.org/github.com/d5/tengo/objects#ArrayIterator), [Char](https://godoc.org/github.com/d5/tengo/objects#Char), [Bytes](https://godoc.org/github.com/d5/tengo/objects#Bytes), [Time](https://godoc.org/github.com/d5/tengo/objects#Time)
-- Composite value types: [Array](https://godoc.org/github.com/d5/tengo/objects#Array), [ImmutableArray](https://godoc.org/github.com/d5/tengo/objects#ImmutableArray), [Map](https://godoc.org/github.com/d5/tengo/objects#Map), [ImmutableMap](https://godoc.org/github.com/d5/tengo/objects#ImmutableMap)
-- Functions: [CompiledFunction](https://godoc.org/github.com/d5/tengo/objects#CompiledFunction), [BuiltinFunction](https://godoc.org/github.com/d5/tengo/objects#BuiltinFunction), [UserFunction](https://godoc.org/github.com/d5/tengo/objects#UserFunction)
-- [Iterators](https://godoc.org/github.com/d5/tengo/objects#Iterator): [StringIterator](https://godoc.org/github.com/d5/tengo/objects#StringIterator), [ArrayIterator](https://godoc.org/github.com/d5/tengo/objects#ArrayIterator), [MapIterator](https://godoc.org/github.com/d5/tengo/objects#MapIterator), [ImmutableMapIterator](https://godoc.org/github.com/d5/tengo/objects#ImmutableMapIterator)
-- [Error](https://godoc.org/github.com/d5/tengo/objects#Error)
-- [Undefined](https://godoc.org/github.com/d5/tengo/objects#Undefined)
-- Other internal objects: [Closure](https://godoc.org/github.com/d5/tengo/objects#Closure), [Break](https://godoc.org/github.com/d5/tengo/objects#Break), [Continue](https://godoc.org/github.com/d5/tengo/objects#Continue), [ReturnValue](https://godoc.org/github.com/d5/tengo/objects#ReturnValue)
+- Primitive value types: [Int](https://godoc.org/github.com/d5/tengo#Int), [String](https://godoc.org/github.com/d5/tengo#String), [Float](https://godoc.org/github.com/d5/tengo#Float), [Bool](https://godoc.org/github.com/d5/tengo#ArrayIterator), [Char](https://godoc.org/github.com/d5/tengo#Char), [Bytes](https://godoc.org/github.com/d5/tengo#Bytes), [Time](https://godoc.org/github.com/d5/tengo#Time)
+- Composite value types: [Array](https://godoc.org/github.com/d5/tengo#Array), [ImmutableArray](https://godoc.org/github.com/d5/tengo#ImmutableArray), [Map](https://godoc.org/github.com/d5/tengo#Map), [ImmutableMap](https://godoc.org/github.com/d5/tengo#ImmutableMap)
+- Functions: [CompiledFunction](https://godoc.org/github.com/d5/tengo#CompiledFunction), [BuiltinFunction](https://godoc.org/github.com/d5/tengo#BuiltinFunction), [UserFunction](https://godoc.org/github.com/d5/tengo#UserFunction)
+- [Iterators](https://godoc.org/github.com/d5/tengo#Iterator): [StringIterator](https://godoc.org/github.com/d5/tengo#StringIterator), [ArrayIterator](https://godoc.org/github.com/d5/tengo#ArrayIterator), [MapIterator](https://godoc.org/github.com/d5/tengo#MapIterator), [ImmutableMapIterator](https://godoc.org/github.com/d5/tengo#ImmutableMapIterator)
+- [Error](https://godoc.org/github.com/d5/tengo#Error)
+- [Undefined](https://godoc.org/github.com/d5/tengo#Undefined)
+- Other internal objects: [Closure](https://godoc.org/github.com/d5/tengo#Closure), [Break](https://godoc.org/github.com/d5/tengo#Break), [Continue](https://godoc.org/github.com/d5/tengo#Continue), [ReturnValue](https://godoc.org/github.com/d5/tengo#ReturnValue)
 
 See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on these runtime types.
 
 
 ## User Object Types
 
-Users can easily extend and add their own types by implementing the same [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface and the default `ObjectImpl` implementation. Tengo runtime will treat them in the same way as its runtime types with no performance overhead.
+Users can easily extend and add their own types by implementing the same [Object](https://godoc.org/github.com/d5/tengo#Object) interface and the default `ObjectImpl` implementation. Tengo runtime will treat them in the same way as its runtime types with no performance overhead.
 
 Here's an example user type implementation, `StringArray`:
 
 ```golang
 type StringArray struct {
-	objects.ObjectImpl
+	tengo.ObjectImpl
 	Value []string
 }
 
@@ -176,7 +176,7 @@ func (o *StringArray) String() string {
 	return strings.Join(o.Value, ", ")
 }
 
-func (o *StringArray) BinaryOp(op token.Token, rhs objects.Object) (objects.Object, error) {
+func (o *StringArray) BinaryOp(op token.Token, rhs tengo.Object) (tengo.Object, error) {
 	if rhs, ok := rhs.(*StringArray); ok {
 		switch op {
 		case token.Add:
@@ -187,14 +187,14 @@ func (o *StringArray) BinaryOp(op token.Token, rhs objects.Object) (objects.Obje
 		}
 	}
 
-	return nil, objects.ErrInvalidOperator
+	return nil, tengo.ErrInvalidOperator
 }
 
 func (o *StringArray) IsFalsy() bool {
 	return len(o.Value) == 0
 }
 
-func (o *StringArray) Equals(x objects.Object) bool {
+func (o *StringArray) Equals(x tengo.Object) bool {
 	if x, ok := x.(*StringArray); ok {
 		if len(o.Value) != len(x.Value) {
 			return false
@@ -212,7 +212,7 @@ func (o *StringArray) Equals(x objects.Object) bool {
 	return false
 }
 
-func (o *StringArray) Copy() objects.Object {
+func (o *StringArray) Copy() tengo.Object {
 	return &StringArray{
 		Value: append([]string{}, o.Value...),
 	}
@@ -239,74 +239,74 @@ s.Run()                   // prints "one, two, three"
 It can also implement `IndexGet` and `IndexSet`:
 
 ```golang
-func (o *StringArray) IndexGet(index objects.Object) (objects.Object, error) {
-	intIdx, ok := index.(*objects.Int)
+func (o *StringArray) IndexGet(index tengo.Object) (tengo.Object, error) {
+	intIdx, ok := index.(*tengo.Int)
 	if ok {
 		if intIdx.Value >= 0 && intIdx.Value < int64(len(o.Value)) {
-			return &objects.String{Value: o.Value[intIdx.Value]}, nil
+			return &tengo.String{Value: o.Value[intIdx.Value]}, nil
 		}
 
-		return nil, objects.ErrIndexOutOfBounds
+		return nil, tengo.ErrIndexOutOfBounds
 	}
 
-	strIdx, ok := index.(*objects.String)
+	strIdx, ok := index.(*tengo.String)
 	if ok {
 		for vidx, str := range o.Value {
 			if strIdx.Value == str {
-				return &objects.Int{Value: int64(vidx)}, nil
+				return &tengo.Int{Value: int64(vidx)}, nil
 			}
 		}
 
-		return objects.UndefinedValue, nil
+		return tengo.UndefinedValue, nil
 	}
 
-	return nil, objects.ErrInvalidIndexType
+	return nil, tengo.ErrInvalidIndexType
 }
 
-func (o *StringArray) IndexSet(index, value objects.Object) error {
-	strVal, ok := objects.ToString(value)
+func (o *StringArray) IndexSet(index, value tengo.Object) error {
+	strVal, ok := tengo.ToString(value)
 	if !ok {
-		return objects.ErrInvalidTypeConversion
+		return tengo.ErrInvalidTypeConversion
 	}
 
-	intIdx, ok := index.(*objects.Int)
+	intIdx, ok := index.(*tengo.Int)
 	if ok {
 		if intIdx.Value >= 0 && intIdx.Value < int64(len(o.Value)) {
 			o.Value[intIdx.Value] = strVal
 			return nil
 		}
 
-		return objects.ErrIndexOutOfBounds
+		return tengo.ErrIndexOutOfBounds
 	}
 
-	return objects.ErrInvalidIndexType
+	return tengo.ErrInvalidIndexType
 }
 ```
 
-If we implement `CamCall` and `Call`:
+If we implement `CanCall` and `Call`:
 
 ```golang
 func (o *StringArray) CanCall() bool {
 	return true
 }
 
-func (o *StringArray) Call(_ objects.Runtime, args ...objects.Object) (ret objects.Object, err error) {
+func (o *StringArray) Call(_ tengo.Runtime, args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 1 {
-		return nil, objects.ErrWrongNumArguments
+		return nil, tengo.ErrWrongNumArguments
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, tengo.ErrInvalidTypeConversion
 	}
 
 	for i, v := range o.Value {
 		if v == s1 {
-			return &objects.Int{Value: int64(i)}, nil
+			return &tengo.Int{Value: int64(i)}, nil
 		}
 	}
 
-	return objects.UndefinedValue, nil
+	return tengo.UndefinedValue, nil
 }
 ```
 
@@ -329,14 +329,14 @@ func (o *StringArray) CanIterate() bool {
 	return true
 }
 
-func (o *StringArray) Iterate() objects.Iterator {
+func (o *StringArray) Iterate() tengo.Iterator {
 	return &StringArrayIterator{
 		strArr: o,
 	}
 }
 
 type StringArrayIterator struct {
-	objects.ObjectImpl
+	tengo.ObjectImpl
 	strArr *StringArray
 	idx    int
 }
@@ -350,12 +350,12 @@ func (i *StringArrayIterator) Next() bool {
 	return i.idx <= len(i.strArr.Value)
 }
 
-func (i *StringArrayIterator) Key() objects.Object {
-	return &objects.Int{Value: int64(i.idx - 1)}
+func (i *StringArrayIterator) Key() tengo.Object {
+	return &tengo.Int{Value: int64(i.idx - 1)}
 }
 
-func (i *StringArrayIterator) Value() objects.Object {
-	return &objects.String{Value: i.strArr.Value[i.idx-1]}
+func (i *StringArrayIterator) Value() tengo.Object {
+	return &tengo.String{Value: i.strArr.Value[i.idx-1]}
 }
 ```
 

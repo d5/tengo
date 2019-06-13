@@ -5,18 +5,18 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 func TestBuiltin(t *testing.T) {
 	m := Opts().Module("math",
-		&objects.BuiltinModule{
-			Attrs: map[string]objects.Object{
-				"abs": &objects.UserFunction{
+		&tengo.BuiltinModule{
+			Attrs: map[string]tengo.Object{
+				"abs": &tengo.GoFunction{
 					Name: "abs",
-					Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
-						v, _ := objects.ToFloat64(args[0])
-						return &objects.Float{Value: math.Abs(v)}, nil
+					Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
+						v, _ := tengo.ToFloat64(args[0])
+						return &tengo.Float{Value: math.Abs(v)}, nil
 					},
 				},
 			},
@@ -31,7 +31,7 @@ func TestBuiltin(t *testing.T) {
 
 func TestUserModules(t *testing.T) {
 	// export none
-	expect(t, `out = import("mod1")`, Opts().Module("mod1", `fn := func() { return 5.0 }; a := 2`), objects.UndefinedValue)
+	expect(t, `out = import("mod1")`, Opts().Module("mod1", `fn := func() { return 5.0 }; a := 2`), tengo.UndefinedValue)
 
 	// export values
 	expect(t, `out = import("mod1")`, Opts().Module("mod1", `export 5`), 5)
@@ -158,23 +158,23 @@ export func(a) {
 `), "Runtime Error: not callable: int\n\tat mod1:3:4\n\tat test:4:1")
 
 	// module skipping export
-	expect(t, `out = import("mod0")`, Opts().Module("mod0", ``), objects.UndefinedValue)
+	expect(t, `out = import("mod0")`, Opts().Module("mod0", ``), tengo.UndefinedValue)
 	expect(t, `out = import("mod0")`, Opts().Module("mod0", `if 1 { export true }`), true)
-	expect(t, `out = import("mod0")`, Opts().Module("mod0", `if 0 { export true }`), objects.UndefinedValue)
-	expect(t, `out = import("mod0")`, Opts().Module("mod0", `if 1 { } else { export true }`), objects.UndefinedValue)
+	expect(t, `out = import("mod0")`, Opts().Module("mod0", `if 0 { export true }`), tengo.UndefinedValue)
+	expect(t, `out = import("mod0")`, Opts().Module("mod0", `if 1 { } else { export true }`), tengo.UndefinedValue)
 	expect(t, `out = import("mod0")`, Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { export true } } }`), true)
-	expect(t, `out = import("mod0")`, Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { break } } }`), objects.UndefinedValue)
+	expect(t, `out = import("mod0")`, Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { break } } }`), tengo.UndefinedValue)
 }
 
 func TestModuleBlockScopes(t *testing.T) {
 	m := Opts().Module("rand",
-		&objects.BuiltinModule{
-			Attrs: map[string]objects.Object{
-				"intn": &objects.UserFunction{
+		&tengo.BuiltinModule{
+			Attrs: map[string]tengo.Object{
+				"intn": &tengo.GoFunction{
 					Name: "abs",
-					Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
-						v, _ := objects.ToInt64(args[0])
-						return &objects.Int{Value: rand.Int63n(v)}, nil
+					Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
+						v, _ := tengo.ToInt64(args[0])
+						return &tengo.Int{Value: rand.Int63n(v)}, nil
 					},
 				},
 			},

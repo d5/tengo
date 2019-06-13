@@ -40,7 +40,7 @@ fmt.println(sum("", [1, 2, 3]))  // "123"
   - Higher-order functions and closures
   - Immutable values
   - Garbage collection
-- [Securely Embeddable](https://github.com/d5/tengo/blob/master/docs/interoperability.md) and [Extensible](https://github.com/d5/tengo/blob/master/docs/objects.md)
+- [Securely Embeddable](https://github.com/d5/tengo/blob/master/docs/interoperability.md) and [Extensible](https://github.com/d5/tengo/blob/master/docs/tengo.md)
 - Compiler/runtime written in native Go _(no external deps or cgo)_
 - Executable as a [standalone](https://github.com/d5/tengo/blob/master/docs/tengo-cli.md) language / REPL
 - Use cases: rules engine, [state machine](https://github.com/d5/go-fsm), [gaming](https://github.com/d5/pbr), data pipeline, [transpiler](https://github.com/d5/tengo2lua)
@@ -69,7 +69,7 @@ _* See [here](https://github.com/d5/tengobench) for commands/codes used_
 ## References
 
 - [Language Syntax](https://github.com/d5/tengo/blob/master/docs/tutorial.md)
-- [Object Types](https://github.com/d5/tengo/blob/master/docs/objects.md)
+- [Object Types](https://github.com/d5/tengo/blob/master/docs/tengo.md)
 - [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) and [Operators](https://github.com/d5/tengo/blob/master/docs/operators.md)
 - [Builtin Functions](https://github.com/d5/tengo/blob/master/docs/builtins.md)
 - [Interoperability](https://github.com/d5/tengo/blob/master/docs/interoperability.md)

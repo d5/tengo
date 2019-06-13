@@ -4,17 +4,17 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/parser"
 	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/runtime"
 )
 
 // Script can simplify compilation and execution of embedded scripts.
 type Script struct {
 	variables        map[string]*Variable
-	modules          *objects.ModuleMap
+	modules          *tengo.ModuleMap
 	input            []byte
 	maxAllocs        int64
 	maxConstObjects  int
@@ -33,7 +33,7 @@ func New(input []byte) *Script {
 
 // Add adds a new variable or updates an existing variable to the script.
 func (s *Script) Add(name string, value interface{}) error {
-	obj, err := objects.FromInterface(value)
+	obj, err := tengo.FromInterface(value)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (s *Script) Remove(name string) bool {
 }
 
 // SetImports sets import modules.
-func (s *Script) SetImports(modules *objects.ModuleMap) {
+func (s *Script) SetImports(modules *tengo.ModuleMap) {
 	s.modules = modules
 }
 
@@ -159,18 +159,18 @@ func (s *Script) RunContext(ctx context.Context) (compiled *Compiled, err error)
 	return
 }
 
-func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, globals []objects.Object, err error) {
+func (s *Script) prepCompile() (symbolTable *compiler.SymbolTable, globals []tengo.Object, err error) {
 	var names []string
 	for name := range s.variables {
 		names = append(names, name)
 	}
 
 	symbolTable = compiler.NewSymbolTable()
-	for idx, fn := range objects.Builtins {
+	for idx, fn := range tengo.Builtins {
 		symbolTable.DefineBuiltin(idx, fn.Name)
 	}
 
-	globals = make([]objects.Object, runtime.GlobalsSize)
+	globals = make([]tengo.Object, runtime.GlobalsSize)
 
 	for idx, name := range names {
 		symbol := symbolTable.Define(name)

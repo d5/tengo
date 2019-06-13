@@ -113,13 +113,13 @@ When adding a Variable _([Script.Add](https://godoc.org/github.com/d5/tengo/scri
 
 ### User Types
 
-Users can add and use a custom user type in Tengo code by implementing [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface. Tengo runtime will treat the user types in the same way it does to the runtime types with no performance overhead. See [Object Types](https://github.com/d5/tengo/blob/master/docs/objects.md) for more details.
+Users can add and use a custom user type in Tengo code by implementing [Object](https://godoc.org/github.com/d5/tengo#Object) interface. Tengo runtime will treat the user types in the same way it does to the runtime types with no performance overhead. See [Object Types](https://github.com/d5/tengo/blob/master/docs/tengo.md) for more details.
 
 ## Sandbox Environments
 
 To securely compile and execute _potentially_ unsafe script code, you can use the following Script functions.
 
-#### Script.SetImports(modules *objects.ModuleMap)
+#### Script.SetImports(modules *tengo.ModuleMap)
 
 SetImports sets the import modules with corresponding names. Script **does not** include any modules by default. You can use this function to include the [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md).
 
@@ -131,12 +131,12 @@ s.SetImports(stdlib.GetModuleMap("math"))
 s.SetImports(stdlib.GetModuleMap(stdlib.AllModuleNames()...))
 ```
 
-You can also include Tengo's written module using `objects.SourceModule` (which implements `objects.Importable`).
+You can also include Tengo's written module using `tengo.SourceModule` (which implements `tengo.Importable`).
 
 ```golang
 s := script.New([]byte(`double := import("double"); a := double(20)`))
 
-mods := objects.NewModuleMap()
+mods := tengo.NewModuleMap()
 mods.AddSourceModule("double", []byte(`export func(x) { return x * 2 }`))
 s.SetImports(mods)
 ```

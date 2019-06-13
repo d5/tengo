@@ -4,12 +4,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler/token"
-	"github.com/d5/tengo/objects"
 )
 
 type StringDict struct {
-	objects.ObjectImpl
+	tengo.ObjectImpl
 	Value map[string]string
 }
 
@@ -19,30 +19,30 @@ func (o *StringDict) TypeName() string {
 	return "string-dict"
 }
 
-func (o *StringDict) IndexGet(index objects.Object) (objects.Object, error) {
-	strIdx, ok := index.(*objects.String)
+func (o *StringDict) IndexGet(index tengo.Object) (tengo.Object, error) {
+	strIdx, ok := index.(*tengo.String)
 	if !ok {
-		return nil, objects.ErrInvalidIndexType
+		return nil, tengo.ErrInvalidIndexType
 	}
 
 	for k, v := range o.Value {
 		if strings.ToLower(strIdx.Value) == strings.ToLower(k) {
-			return &objects.String{Value: v}, nil
+			return &tengo.String{Value: v}, nil
 		}
 	}
 
-	return objects.UndefinedValue, nil
+	return tengo.UndefinedValue, nil
 }
 
-func (o *StringDict) IndexSet(index, value objects.Object) error {
-	strIdx, ok := index.(*objects.String)
+func (o *StringDict) IndexSet(index, value tengo.Object) error {
+	strIdx, ok := index.(*tengo.String)
 	if !ok {
-		return objects.ErrInvalidIndexType
+		return tengo.ErrInvalidIndexType
 	}
 
-	strVal, ok := objects.ToString(value)
+	strVal, ok := tengo.ToString(value)
 	if !ok {
-		return objects.ErrInvalidIndexValueType
+		return tengo.ErrInvalidIndexValueType
 	}
 
 	o.Value[strings.ToLower(strIdx.Value)] = strVal
@@ -51,7 +51,7 @@ func (o *StringDict) IndexSet(index, value objects.Object) error {
 }
 
 type StringCircle struct {
-	objects.ObjectImpl
+	tengo.ObjectImpl
 	Value []string
 }
 
@@ -63,10 +63,10 @@ func (o *StringCircle) String() string {
 	return ""
 }
 
-func (o *StringCircle) IndexGet(index objects.Object) (objects.Object, error) {
-	intIdx, ok := index.(*objects.Int)
+func (o *StringCircle) IndexGet(index tengo.Object) (tengo.Object, error) {
+	intIdx, ok := index.(*tengo.Int)
 	if !ok {
-		return nil, objects.ErrInvalidIndexType
+		return nil, tengo.ErrInvalidIndexType
 	}
 
 	r := int(intIdx.Value) % len(o.Value)
@@ -74,13 +74,13 @@ func (o *StringCircle) IndexGet(index objects.Object) (objects.Object, error) {
 		r = len(o.Value) + r
 	}
 
-	return &objects.String{Value: o.Value[r]}, nil
+	return &tengo.String{Value: o.Value[r]}, nil
 }
 
-func (o *StringCircle) IndexSet(index, value objects.Object) error {
-	intIdx, ok := index.(*objects.Int)
+func (o *StringCircle) IndexSet(index, value tengo.Object) error {
+	intIdx, ok := index.(*tengo.Int)
 	if !ok {
-		return objects.ErrInvalidIndexType
+		return tengo.ErrInvalidIndexType
 	}
 
 	r := int(intIdx.Value) % len(o.Value)
@@ -88,9 +88,9 @@ func (o *StringCircle) IndexSet(index, value objects.Object) error {
 		r = len(o.Value) + r
 	}
 
-	strVal, ok := objects.ToString(value)
+	strVal, ok := tengo.ToString(value)
 	if !ok {
-		return objects.ErrInvalidIndexValueType
+		return tengo.ErrInvalidIndexValueType
 	}
 
 	o.Value[r] = strVal
@@ -99,7 +99,7 @@ func (o *StringCircle) IndexSet(index, value objects.Object) error {
 }
 
 type StringArray struct {
-	objects.ObjectImpl
+	tengo.ObjectImpl
 	Value []string
 }
 
@@ -107,7 +107,7 @@ func (o *StringArray) String() string {
 	return strings.Join(o.Value, ", ")
 }
 
-func (o *StringArray) BinaryOp(op token.Token, rhs objects.Object) (objects.Object, error) {
+func (o *StringArray) BinaryOp(op token.Token, rhs tengo.Object) (tengo.Object, error) {
 	if rhs, ok := rhs.(*StringArray); ok {
 		switch op {
 		case token.Add:
@@ -118,14 +118,14 @@ func (o *StringArray) BinaryOp(op token.Token, rhs objects.Object) (objects.Obje
 		}
 	}
 
-	return nil, objects.ErrInvalidOperator
+	return nil, tengo.ErrInvalidOperator
 }
 
 func (o *StringArray) IsFalsy() bool {
 	return len(o.Value) == 0
 }
 
-func (o *StringArray) Equals(x objects.Object) bool {
+func (o *StringArray) Equals(x tengo.Object) bool {
 	if x, ok := x.(*StringArray); ok {
 		if len(o.Value) != len(x.Value) {
 			return false
@@ -143,7 +143,7 @@ func (o *StringArray) Equals(x objects.Object) bool {
 	return false
 }
 
-func (o *StringArray) Copy() objects.Object {
+func (o *StringArray) Copy() tengo.Object {
 	return &StringArray{
 		Value: append([]string{}, o.Value...),
 	}
@@ -153,57 +153,57 @@ func (o *StringArray) TypeName() string {
 	return "string-array"
 }
 
-func (o *StringArray) IndexGet(index objects.Object) (objects.Object, error) {
-	intIdx, ok := index.(*objects.Int)
+func (o *StringArray) IndexGet(index tengo.Object) (tengo.Object, error) {
+	intIdx, ok := index.(*tengo.Int)
 	if ok {
 		if intIdx.Value >= 0 && intIdx.Value < int64(len(o.Value)) {
-			return &objects.String{Value: o.Value[intIdx.Value]}, nil
+			return &tengo.String{Value: o.Value[intIdx.Value]}, nil
 		}
 
-		return nil, objects.ErrIndexOutOfBounds
+		return nil, tengo.ErrIndexOutOfBounds
 	}
 
-	strIdx, ok := index.(*objects.String)
+	strIdx, ok := index.(*tengo.String)
 	if ok {
 		for vidx, str := range o.Value {
 			if strIdx.Value == str {
-				return &objects.Int{Value: int64(vidx)}, nil
+				return &tengo.Int{Value: int64(vidx)}, nil
 			}
 		}
 
-		return objects.UndefinedValue, nil
+		return tengo.UndefinedValue, nil
 	}
 
-	return nil, objects.ErrInvalidIndexType
+	return nil, tengo.ErrInvalidIndexType
 }
 
-func (o *StringArray) IndexSet(index, value objects.Object) error {
-	strVal, ok := objects.ToString(value)
+func (o *StringArray) IndexSet(index, value tengo.Object) error {
+	strVal, ok := tengo.ToString(value)
 	if !ok {
-		return objects.ErrInvalidIndexValueType
+		return tengo.ErrInvalidIndexValueType
 	}
 
-	intIdx, ok := index.(*objects.Int)
+	intIdx, ok := index.(*tengo.Int)
 	if ok {
 		if intIdx.Value >= 0 && intIdx.Value < int64(len(o.Value)) {
 			o.Value[intIdx.Value] = strVal
 			return nil
 		}
 
-		return objects.ErrIndexOutOfBounds
+		return tengo.ErrIndexOutOfBounds
 	}
 
-	return objects.ErrInvalidIndexType
+	return tengo.ErrInvalidIndexType
 }
 
-func (o *StringArray) Call(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
+func (o *StringArray) Call(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 1 {
-		return nil, objects.ErrWrongNumArguments
+		return nil, tengo.ErrWrongNumArguments
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
@@ -212,11 +212,11 @@ func (o *StringArray) Call(_ objects.Interop, args ...objects.Object) (ret objec
 
 	for i, v := range o.Value {
 		if v == s1 {
-			return &objects.Int{Value: int64(i)}, nil
+			return &tengo.Int{Value: int64(i)}, nil
 		}
 	}
 
-	return objects.UndefinedValue, nil
+	return tengo.UndefinedValue, nil
 }
 
 func (o *StringArray) CanCall() bool {
@@ -227,7 +227,7 @@ func TestIndexable(t *testing.T) {
 	dict := func() *StringDict { return &StringDict{Value: map[string]string{"a": "foo", "b": "bar"}} }
 	expect(t, `out = dict["a"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), "foo")
 	expect(t, `out = dict["B"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), "bar")
-	expect(t, `out = dict["x"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), objects.UndefinedValue)
+	expect(t, `out = dict["x"]`, Opts().Symbol("dict", dict()).Skip2ndPass(), tengo.UndefinedValue)
 	expectError(t, `dict[0]`, Opts().Symbol("dict", dict()).Skip2ndPass(), "invalid index type")
 
 	strCir := func() *StringCircle { return &StringCircle{Value: []string{"one", "two", "three"}} }
@@ -241,7 +241,7 @@ func TestIndexable(t *testing.T) {
 	strArr := func() *StringArray { return &StringArray{Value: []string{"one", "two", "three"}} }
 	expect(t, `out = arr["one"]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), 0)
 	expect(t, `out = arr["three"]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), 2)
-	expect(t, `out = arr["four"]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), objects.UndefinedValue)
+	expect(t, `out = arr["four"]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), tengo.UndefinedValue)
 	expect(t, `out = arr[0]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "one")
 	expect(t, `out = arr[1]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "two")
 	expectError(t, `arr[-1]`, Opts().Symbol("arr", strArr()).Skip2ndPass(), "index out of bounds")

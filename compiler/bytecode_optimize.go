@@ -3,13 +3,13 @@ package compiler
 import (
 	"fmt"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 // RemoveDuplicates finds and remove the duplicate values in Constants.
 // Note this function mutates Bytecode.
 func (b *Bytecode) RemoveDuplicates() {
-	var deduped []objects.Object
+	var deduped []tengo.Object
 
 	indexMap := make(map[int]int) // mapping from old constant index to new index
 	ints := make(map[int64]int)
@@ -20,11 +20,11 @@ func (b *Bytecode) RemoveDuplicates() {
 
 	for curIdx, c := range b.Constants {
 		switch c := c.(type) {
-		case *objects.CompiledFunction:
+		case *tengo.CompiledFunction:
 			// add to deduped list
 			indexMap[curIdx] = len(deduped)
 			deduped = append(deduped, c)
-		case *objects.ImmutableMap:
+		case *tengo.ImmutableMap:
 			modName := moduleName(c)
 			newIdx, ok := immutableMaps[modName]
 			if modName != "" && ok {
@@ -35,7 +35,7 @@ func (b *Bytecode) RemoveDuplicates() {
 				indexMap[curIdx] = newIdx
 				deduped = append(deduped, c)
 			}
-		case *objects.Int:
+		case *tengo.Int:
 			if newIdx, ok := ints[c.Value]; ok {
 				indexMap[curIdx] = newIdx
 			} else {
@@ -44,7 +44,7 @@ func (b *Bytecode) RemoveDuplicates() {
 				indexMap[curIdx] = newIdx
 				deduped = append(deduped, c)
 			}
-		case *objects.String:
+		case *tengo.String:
 			if newIdx, ok := strings[c.Value]; ok {
 				indexMap[curIdx] = newIdx
 			} else {
@@ -53,7 +53,7 @@ func (b *Bytecode) RemoveDuplicates() {
 				indexMap[curIdx] = newIdx
 				deduped = append(deduped, c)
 			}
-		case *objects.Float:
+		case *tengo.Float:
 			if newIdx, ok := floats[c.Value]; ok {
 				indexMap[curIdx] = newIdx
 			} else {
@@ -62,7 +62,7 @@ func (b *Bytecode) RemoveDuplicates() {
 				indexMap[curIdx] = newIdx
 				deduped = append(deduped, c)
 			}
-		case *objects.Char:
+		case *tengo.Char:
 			if newIdx, ok := chars[c.Value]; ok {
 				indexMap[curIdx] = newIdx
 			} else {
@@ -85,7 +85,7 @@ func (b *Bytecode) RemoveDuplicates() {
 	// other compiled functions in constants
 	for _, c := range b.Constants {
 		switch c := c.(type) {
-		case *objects.CompiledFunction:
+		case *tengo.CompiledFunction:
 			updateConstIndexes(c.Instructions, indexMap)
 		}
 	}
@@ -120,8 +120,8 @@ func updateConstIndexes(insts []byte, indexMap map[int]int) {
 	}
 }
 
-func moduleName(mod *objects.ImmutableMap) string {
-	if modName, ok := mod.Value["__module_name__"].(*objects.String); ok {
+func moduleName(mod *tengo.ImmutableMap) string {
+	if modName, ok := mod.Value["__module_name__"].(*tengo.String); ok {
 		return modName.Value
 	}
 

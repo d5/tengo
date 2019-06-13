@@ -4,18 +4,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/objects"
 )
 
 func TestTimes(t *testing.T) {
 	time1 := time.Date(1982, 9, 28, 19, 21, 44, 999, time.Now().Location())
 	time2 := time.Now()
 
-	module(t, "times").call("sleep", mockInterop{}, 1).expect(objects.UndefinedValue)
+	module(t, "times").call("sleep", mockInterop{}, 1).expect(tengo.UndefinedValue)
 
-	assert.True(t, module(t, "times").call("since", mockInterop{}, time.Now().Add(-time.Hour)).o.(*objects.Int).Value > 3600000000000)
-	assert.True(t, module(t, "times").call("until", mockInterop{}, time.Now().Add(time.Hour)).o.(*objects.Int).Value < 3600000000000)
+	assert.True(t, module(t, "times").call("since", mockInterop{}, time.Now().Add(-time.Hour)).o.(*tengo.Int).Value > 3600000000000)
+	assert.True(t, module(t, "times").call("until", mockInterop{}, time.Now().Add(time.Hour)).o.(*tengo.Int).Value < 3600000000000)
 
 	module(t, "times").call("parse_duration", mockInterop{}, "1ns").expect(1)
 	module(t, "times").call("parse_duration", mockInterop{}, "1ms").expect(1000000)
@@ -30,7 +30,7 @@ func TestTimes(t *testing.T) {
 	module(t, "times").call("month_string", mockInterop{}, 12).expect("December")
 
 	module(t, "times").call("date", mockInterop{}, 1982, 9, 28, 19, 21, 44, 999).expect(time1)
-	nowD := time.Until(module(t, "times").call("now", mockInterop{}).o.(*objects.Time).Value).Nanoseconds()
+	nowD := time.Until(module(t, "times").call("now", mockInterop{}).o.(*tengo.Time).Value).Nanoseconds()
 	assert.True(t, 0 > nowD && nowD > -100000000) // within 100ms
 	parsed, _ := time.Parse(time.RFC3339, "1982-09-28T19:21:44+07:00")
 	module(t, "times").call("parse", mockInterop{}, time.RFC3339, "1982-09-28T19:21:44+07:00").expect(parsed)

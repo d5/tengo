@@ -3,7 +3,7 @@ package runtime_test
 import (
 	"testing"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 func TestImmutable(t *testing.T) {
@@ -30,7 +30,7 @@ func TestImmutable(t *testing.T) {
 	expect(t, `out = immutable([1, 2, 3, 4])[1]`, nil, 2)
 	expect(t, `out = immutable([1, 2, 3, 4])[1:3]`, nil, ARR{2, 3})
 	expect(t, `a := immutable([1,2,3]); a = 5; out = a`, nil, 5)
-	expect(t, `a := immutable([1, 2, 3]); out = a[5]`, nil, objects.UndefinedValue)
+	expect(t, `a := immutable([1, 2, 3]); out = a[5]`, nil, tengo.UndefinedValue)
 
 	// map
 	expectError(t, `a := immutable({b: 1, c: 2}); a.b = 5`, nil, "not index-assignable")
@@ -47,7 +47,7 @@ func TestImmutable(t *testing.T) {
 	expect(t, `out = immutable({a:1,b:2}).b`, nil, 2)
 	expect(t, `out = immutable({a:1,b:2})["b"]`, nil, 2)
 	expect(t, `a := immutable({a:1,b:2}); a = 5; out = 5`, nil, 5)
-	expect(t, `a := immutable({a:1,b:2}); out = a.c`, nil, objects.UndefinedValue)
+	expect(t, `a := immutable({a:1,b:2}); out = a.c`, nil, tengo.UndefinedValue)
 
 	expect(t, `a := immutable({b: 5, c: "foo"}); out = a.b`, nil, 5)
 	expectError(t, `a := immutable({b: 5, c: "foo"}); a.b = 10`, nil, "not index-assignable")

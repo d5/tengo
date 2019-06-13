@@ -6,15 +6,15 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/objects"
 )
 
 // Bytecode is a compiled instructions and constants.
 type Bytecode struct {
 	FileSet      *source.FileSet
-	MainFunction *objects.CompiledFunction
-	Constants    []objects.Object
+	MainFunction *tengo.CompiledFunction
+	Constants    []tengo.Object
 }
 
 // Encode writes Bytecode data to the writer.
@@ -38,7 +38,7 @@ func (b *Bytecode) CountObjects() int {
 	n := 0
 
 	for _, c := range b.Constants {
-		n += objects.CountObjects(c)
+		n += tengo.CountObjects(c)
 	}
 
 	return n
@@ -55,7 +55,7 @@ func (b *Bytecode) FormatInstructions() []string {
 func (b *Bytecode) FormatConstants() (output []string) {
 	for cidx, cn := range b.Constants {
 		switch cn := cn.(type) {
-		case *objects.CompiledFunction:
+		case *tengo.CompiledFunction:
 			output = append(output, fmt.Sprintf("[% 3d] (Compiled Function|%p)", cidx, &cn))
 			for _, l := range FormatInstructions(cn.Instructions, 0) {
 				output = append(output, fmt.Sprintf("     %s", l))
@@ -71,19 +71,19 @@ func (b *Bytecode) FormatConstants() (output []string) {
 func init() {
 	gob.Register(&source.FileSet{})
 	gob.Register(&source.File{})
-	gob.Register(&objects.Array{})
-	gob.Register(&objects.Bool{})
-	gob.Register(&objects.Bytes{})
-	gob.Register(&objects.Char{})
-	gob.Register(&objects.CompiledFunction{})
-	gob.Register(&objects.Error{})
-	gob.Register(&objects.Float{})
-	gob.Register(&objects.ImmutableArray{})
-	gob.Register(&objects.ImmutableMap{})
-	gob.Register(&objects.Int{})
-	gob.Register(&objects.Map{})
-	gob.Register(&objects.String{})
-	gob.Register(&objects.Time{})
-	gob.Register(&objects.Undefined{})
-	gob.Register(&objects.UserFunction{})
+	gob.Register(&tengo.Array{})
+	gob.Register(&tengo.Bool{})
+	gob.Register(&tengo.Bytes{})
+	gob.Register(&tengo.Char{})
+	gob.Register(&tengo.CompiledFunction{})
+	gob.Register(&tengo.Error{})
+	gob.Register(&tengo.Float{})
+	gob.Register(&tengo.ImmutableArray{})
+	gob.Register(&tengo.ImmutableMap{})
+	gob.Register(&tengo.Int{})
+	gob.Register(&tengo.Map{})
+	gob.Register(&tengo.String{})
+	gob.Register(&tengo.Time{})
+	gob.Register(&tengo.Undefined{})
+	gob.Register(&tengo.GoFunction{})
 }

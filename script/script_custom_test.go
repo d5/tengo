@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler/token"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/script"
 )
 
 type Counter struct {
-	objects.ObjectImpl
+	tengo.ObjectImpl
 	value int64
 }
 
@@ -24,7 +24,7 @@ func (o *Counter) String() string {
 	return fmt.Sprintf("Counter(%d)", o.value)
 }
 
-func (o *Counter) BinaryOp(op token.Token, rhs objects.Object) (objects.Object, error) {
+func (o *Counter) BinaryOp(op token.Token, rhs tengo.Object) (tengo.Object, error) {
 	switch rhs := rhs.(type) {
 	case *Counter:
 		switch op {
@@ -33,7 +33,7 @@ func (o *Counter) BinaryOp(op token.Token, rhs objects.Object) (objects.Object, 
 		case token.Sub:
 			return &Counter{value: o.value - rhs.value}, nil
 		}
-	case *objects.Int:
+	case *tengo.Int:
 		switch op {
 		case token.Add:
 			return &Counter{value: o.value + rhs.Value}, nil
@@ -49,7 +49,7 @@ func (o *Counter) IsFalsy() bool {
 	return o.value == 0
 }
 
-func (o *Counter) Equals(t objects.Object) bool {
+func (o *Counter) Equals(t tengo.Object) bool {
 	if tc, ok := t.(*Counter); ok {
 		return o.value == tc.value
 	}
@@ -57,12 +57,12 @@ func (o *Counter) Equals(t objects.Object) bool {
 	return false
 }
 
-func (o *Counter) Copy() objects.Object {
+func (o *Counter) Copy() tengo.Object {
 	return &Counter{value: o.value}
 }
 
-func (o *Counter) Call(_ objects.Interop, args ...objects.Object) (objects.Object, error) {
-	return &objects.Int{Value: o.value}, nil
+func (o *Counter) Call(_ tengo.Interop, args ...tengo.Object) (tengo.Object, error) {
+	return &tengo.Int{Value: o.value}, nil
 }
 
 func (o *Counter) CanCall() bool {

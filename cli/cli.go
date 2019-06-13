@@ -10,11 +10,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/ast"
 	"github.com/d5/tengo/compiler/parser"
 	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/runtime"
 )
 
@@ -41,7 +41,7 @@ type Options struct {
 	Version string
 
 	// Import modules
-	Modules *objects.ModuleMap
+	Modules *tengo.ModuleMap
 }
 
 // Run CLI
@@ -117,7 +117,7 @@ func doHelp() {
 }
 
 // CompileOnly compiles the source code and writes the compiled binary into outputFile.
-func CompileOnly(modules *objects.ModuleMap, data []byte, inputFile, outputFile string) (err error) {
+func CompileOnly(modules *tengo.ModuleMap, data []byte, inputFile, outputFile string) (err error) {
 	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
 	if err != nil {
 		return
@@ -150,7 +150,7 @@ func CompileOnly(modules *objects.ModuleMap, data []byte, inputFile, outputFile 
 }
 
 // CompileAndRun compiles the source code and executes it.
-func CompileAndRun(modules *objects.ModuleMap, data []byte, inputFile string) (err error) {
+func CompileAndRun(modules *tengo.ModuleMap, data []byte, inputFile string) (err error) {
 	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
 	if err != nil {
 		return
@@ -167,7 +167,7 @@ func CompileAndRun(modules *objects.ModuleMap, data []byte, inputFile string) (e
 }
 
 // RunCompiled reads the compiled binary from file and executes it.
-func RunCompiled(modules *objects.ModuleMap, data []byte) (err error) {
+func RunCompiled(modules *tengo.ModuleMap, data []byte) (err error) {
 	bytecode := &compiler.Bytecode{}
 	err = bytecode.Decode(bytes.NewReader(data), modules)
 	if err != nil {
@@ -185,28 +185,28 @@ func RunCompiled(modules *objects.ModuleMap, data []byte) (err error) {
 }
 
 // RunREPL starts REPL.
-func RunREPL(modules *objects.ModuleMap, in io.Reader, out io.Writer) {
+func RunREPL(modules *tengo.ModuleMap, in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
 
 	fileSet := source.NewFileSet()
-	globals := make([]objects.Object, runtime.GlobalsSize)
+	globals := make([]tengo.Object, runtime.GlobalsSize)
 
 	symbolTable := compiler.NewSymbolTable()
-	for idx, fn := range objects.Builtins {
+	for idx, fn := range tengo.Builtins {
 		symbolTable.DefineBuiltin(idx, fn.Name)
 	}
 
 	// embed println function
 	symbol := symbolTable.Define("__repl_println__")
-	globals[symbol.Index] = &objects.UserFunction{
+	globals[symbol.Index] = &tengo.GoFunction{
 		Name: "println",
-		Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
+		Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 			var printArgs []interface{}
 			for _, arg := range args {
-				if _, isUndefined := arg.(*objects.Undefined); isUndefined {
+				if _, isUndefined := arg.(*tengo.Undefined); isUndefined {
 					printArgs = append(printArgs, "<undefined>")
 				} else {
-					s, _ := objects.ToString(arg)
+					s, _ := tengo.ToString(arg)
 					printArgs = append(printArgs, s)
 				}
 			}
@@ -218,7 +218,7 @@ func RunREPL(modules *objects.ModuleMap, in io.Reader, out io.Writer) {
 		},
 	}
 
-	var constants []objects.Object
+	var constants []tengo.Object
 
 	for {
 		_, _ = fmt.Fprint(out, replPrompt)
@@ -258,7 +258,7 @@ func RunREPL(modules *objects.ModuleMap, in io.Reader, out io.Writer) {
 	}
 }
 
-func compileSrc(modules *objects.ModuleMap, src []byte, filename string) (*compiler.Bytecode, error) {
+func compileSrc(modules *tengo.ModuleMap, src []byte, filename string) (*compiler.Bytecode, error) {
 	fileSet := source.NewFileSet()
 	srcFile := fileSet.AddFile(filename, -1, len(src))
 

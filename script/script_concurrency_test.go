@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/script"
 )
 
@@ -45,11 +45,11 @@ for i:=1; i<=d; i++ {
 
 e := mod1.double(s)
 `)
-	mod1 := map[string]objects.Object{
-		"double": &objects.UserFunction{
-			Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
-				arg0, _ := objects.ToInt64(args[0])
-				ret = &objects.Int{Value: arg0 * 2}
+	mod1 := map[string]tengo.Object{
+		"double": &tengo.GoFunction{
+			Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
+				arg0, _ := tengo.ToInt64(args[0])
+				ret = &tengo.Int{Value: arg0 * 2}
 				return
 			},
 		},
@@ -59,7 +59,7 @@ e := mod1.double(s)
 	_ = scr.Add("a", 0)
 	_ = scr.Add("b", 0)
 	_ = scr.Add("c", 0)
-	mods := objects.NewModuleMap()
+	mods := tengo.NewModuleMap()
 	mods.AddBuiltinModule("mod1", mod1)
 	scr.SetImports(mods)
 	compiled, err := scr.Compile()

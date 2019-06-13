@@ -3,11 +3,11 @@ package runtime_test
 import (
 	"testing"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 type StringArrayIterator struct {
-	objects.ObjectImpl
+	tengo.ObjectImpl
 	strArr *StringArray
 	idx    int
 }
@@ -25,15 +25,15 @@ func (i *StringArrayIterator) Next() bool {
 	return i.idx <= len(i.strArr.Value)
 }
 
-func (i *StringArrayIterator) Key() objects.Object {
-	return &objects.Int{Value: int64(i.idx - 1)}
+func (i *StringArrayIterator) Key() tengo.Object {
+	return &tengo.Int{Value: int64(i.idx - 1)}
 }
 
-func (i *StringArrayIterator) Value() objects.Object {
-	return &objects.String{Value: i.strArr.Value[i.idx-1]}
+func (i *StringArrayIterator) Value() tengo.Object {
+	return &tengo.String{Value: i.strArr.Value[i.idx-1]}
 }
 
-func (o *StringArray) Iterate() objects.Iterator {
+func (o *StringArray) Iterate() tengo.Iterator {
 	return &StringArrayIterator{
 		strArr: o,
 	}

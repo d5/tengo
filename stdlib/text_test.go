@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/objects"
 )
 
 func TestTextRE(t *testing.T) {
@@ -32,7 +31,7 @@ func TestTextRE(t *testing.T) {
 		text     string
 		expected interface{}
 	}{
-		{"a(b)", "", objects.UndefinedValue},
+		{"a(b)", "", tengo.UndefinedValue},
 		{"a(b)", "ab", ARR{
 			ARR{
 				IMAP{"text": "ab", "begin": 0, "end": 2},
@@ -64,7 +63,7 @@ func TestTextRE(t *testing.T) {
 		count    int
 		expected interface{}
 	}{
-		{"a(b)", "", -1, objects.UndefinedValue},
+		{"a(b)", "", -1, tengo.UndefinedValue},
 		{"a(b)", "ab", -1, ARR{
 			ARR{
 				IMAP{"text": "ab", "begin": 0, "end": 2},
@@ -93,7 +92,7 @@ func TestTextRE(t *testing.T) {
 				IMAP{"text": "c", "begin": 9, "end": 10},
 			},
 		}},
-		{"(a)b(c)d", "abcdefgabcd", 0, objects.UndefinedValue},
+		{"(a)b(c)d", "abcdefgabcd", 0, tengo.UndefinedValue},
 		{"(a)b(c)d", "abcdefgabcd", 1, ARR{
 			ARR{
 				IMAP{"text": "abcd", "begin": 0, "end": 4},

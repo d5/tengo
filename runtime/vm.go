@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/source"
 	"github.com/d5/tengo/compiler/token"
-	"github.com/d5/tengo/objects"
 )
 
 const (
@@ -23,10 +23,10 @@ const (
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
-	constants   []objects.Object
-	stack       [StackSize]objects.Object
+	constants   []tengo.Object
+	stack       [StackSize]tengo.Object
 	sp          int
-	globals     []objects.Object
+	globals     []tengo.Object
 	fileSet     *source.FileSet
 	frames      [MaxFrames]Frame
 	framesIndex int
@@ -40,9 +40,9 @@ type VM struct {
 }
 
 // NewVM creates a VM.
-func NewVM(bytecode *compiler.Bytecode, globals []objects.Object, maxAllocs int64) *VM {
+func NewVM(bytecode *compiler.Bytecode, globals []tengo.Object, maxAllocs int64) *VM {
 	if globals == nil {
-		globals = make([]objects.Object, GlobalsSize)
+		globals = make([]tengo.Object, GlobalsSize)
 	}
 
 	v := &VM{
@@ -101,12 +101,12 @@ func (v *VM) Run() error {
 
 // InteropCall is an interop call method for Go functions.
 func (v *VM) InteropCall(
-	fn objects.Object,
-	args ...objects.Object,
-) (ret objects.Object, err error) {
+	fn tengo.Object,
+	args ...tengo.Object,
+) (ret tengo.Object, err error) {
 	numArgs := len(args)
 	numLocals := numArgs
-	if cf, ok := fn.(*objects.CompiledFunction); ok {
+	if cf, ok := fn.(*tengo.CompiledFunction); ok {
 		numLocals = cf.NumLocals
 	}
 
@@ -116,7 +116,7 @@ func (v *VM) InteropCall(
 	}
 
 	// create a micro-function to handle the call
-	callee := &objects.CompiledFunction{
+	callee := &tengo.CompiledFunction{
 		Instructions: []byte{
 			compiler.OpCall,
 			byte(numArgs),
@@ -176,7 +176,7 @@ func (v *VM) run() error {
 			v.sp++
 
 		case compiler.OpNull:
-			v.stack[v.sp] = objects.UndefinedValue
+			v.stack[v.sp] = tengo.UndefinedValue
 			v.sp++
 
 		case compiler.OpBinaryOp:
@@ -189,7 +189,7 @@ func (v *VM) run() error {
 			if err != nil {
 				v.sp -= 2
 
-				if err == objects.ErrInvalidOperator {
+				if err == tengo.ErrInvalidOperator {
 					return fmt.Errorf("invalid operation: %s %s %s",
 						left.TypeName(), tok.String(), right.TypeName())
 				}
@@ -210,9 +210,9 @@ func (v *VM) run() error {
 			v.sp -= 2
 
 			if left.Equals(right) {
-				v.stack[v.sp] = objects.TrueValue
+				v.stack[v.sp] = tengo.TrueValue
 			} else {
-				v.stack[v.sp] = objects.FalseValue
+				v.stack[v.sp] = tengo.FalseValue
 			}
 			v.sp++
 
@@ -222,9 +222,9 @@ func (v *VM) run() error {
 			v.sp -= 2
 
 			if left.Equals(right) {
-				v.stack[v.sp] = objects.FalseValue
+				v.stack[v.sp] = tengo.FalseValue
 			} else {
-				v.stack[v.sp] = objects.TrueValue
+				v.stack[v.sp] = tengo.TrueValue
 			}
 			v.sp++
 
@@ -232,11 +232,11 @@ func (v *VM) run() error {
 			v.sp--
 
 		case compiler.OpTrue:
-			v.stack[v.sp] = objects.TrueValue
+			v.stack[v.sp] = tengo.TrueValue
 			v.sp++
 
 		case compiler.OpFalse:
-			v.stack[v.sp] = objects.FalseValue
+			v.stack[v.sp] = tengo.FalseValue
 			v.sp++
 
 		case compiler.OpLNot:
@@ -244,9 +244,9 @@ func (v *VM) run() error {
 			v.sp--
 
 			if operand.IsFalsy() {
-				v.stack[v.sp] = objects.TrueValue
+				v.stack[v.sp] = tengo.TrueValue
 			} else {
-				v.stack[v.sp] = objects.FalseValue
+				v.stack[v.sp] = tengo.FalseValue
 			}
 			v.sp++
 
@@ -255,8 +255,8 @@ func (v *VM) run() error {
 			v.sp--
 
 			switch x := operand.(type) {
-			case *objects.Int:
-				var res objects.Object = &objects.Int{Value: ^x.Value}
+			case *tengo.Int:
+				var res tengo.Object = &tengo.Int{Value: ^x.Value}
 
 				v.allocs--
 				if v.allocs == 0 {
@@ -274,8 +274,8 @@ func (v *VM) run() error {
 			v.sp--
 
 			switch x := operand.(type) {
-			case *objects.Int:
-				var res objects.Object = &objects.Int{Value: -x.Value}
+			case *tengo.Int:
+				var res tengo.Object = &tengo.Int{Value: -x.Value}
 
 				v.allocs--
 				if v.allocs == 0 {
@@ -284,8 +284,8 @@ func (v *VM) run() error {
 
 				v.stack[v.sp] = res
 				v.sp++
-			case *objects.Float:
-				var res objects.Object = &objects.Float{Value: -x.Value}
+			case *tengo.Float:
+				var res tengo.Object = &tengo.Float{Value: -x.Value}
 
 				v.allocs--
 				if v.allocs == 0 {
@@ -343,7 +343,7 @@ func (v *VM) run() error {
 			numSelectors := int(v.curInsts[v.ip])
 
 			// selectors and RHS value
-			selectors := make([]objects.Object, numSelectors)
+			selectors := make([]tengo.Object, numSelectors)
 			for i := 0; i < numSelectors; i++ {
 				selectors[i] = v.stack[v.sp-numSelectors+i]
 			}
@@ -368,10 +368,10 @@ func (v *VM) run() error {
 			v.ip += 2
 			numElements := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
-			var elements []objects.Object
+			var elements []tengo.Object
 			for i := v.sp - numElements; i < v.sp; i++ {
 				elt := v.stack[i]
-				if spread, ok := elt.(*objects.Spread); ok {
+				if spread, ok := elt.(*tengo.Spread); ok {
 					elements = append(elements, spread.Values...)
 				} else {
 					elements = append(elements, elt)
@@ -380,7 +380,7 @@ func (v *VM) run() error {
 
 			v.sp -= numElements
 
-			var arr objects.Object = &objects.Array{Value: elements}
+			var arr tengo.Object = &tengo.Array{Value: elements}
 
 			v.allocs--
 			if v.allocs == 0 {
@@ -394,15 +394,15 @@ func (v *VM) run() error {
 			v.ip += 2
 			numElements := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
-			kv := make(map[string]objects.Object)
+			kv := make(map[string]tengo.Object)
 			for i := v.sp - numElements; i < v.sp; i += 2 {
 				key := v.stack[i]
 				value := v.stack[i+1]
-				kv[key.(*objects.String).Value] = value
+				kv[key.(*tengo.String).Value] = value
 			}
 			v.sp -= numElements
 
-			var m objects.Object = &objects.Map{Value: kv}
+			var m tengo.Object = &tengo.Map{Value: kv}
 
 			v.allocs--
 			if v.allocs == 0 {
@@ -415,7 +415,7 @@ func (v *VM) run() error {
 		case compiler.OpError:
 			value := v.stack[v.sp-1]
 
-			var e objects.Object = &objects.Error{
+			var e tengo.Object = &tengo.Error{
 				Value: value,
 			}
 
@@ -430,8 +430,8 @@ func (v *VM) run() error {
 			value := v.stack[v.sp-1]
 
 			switch value := value.(type) {
-			case *objects.Array:
-				var immutableArray objects.Object = &objects.ImmutableArray{
+			case *tengo.Array:
+				var immutableArray tengo.Object = &tengo.ImmutableArray{
 					Value: value.Value,
 				}
 
@@ -441,8 +441,8 @@ func (v *VM) run() error {
 				}
 
 				v.stack[v.sp-1] = immutableArray
-			case *objects.Map:
-				var immutableMap objects.Object = &objects.ImmutableMap{
+			case *tengo.Map:
+				var immutableMap tengo.Object = &tengo.ImmutableMap{
 					Value: value.Value,
 				}
 
@@ -461,17 +461,17 @@ func (v *VM) run() error {
 
 			val, err := left.IndexGet(index)
 			if err != nil {
-				if err == objects.ErrNotIndexable {
+				if err == tengo.ErrNotIndexable {
 					return fmt.Errorf("not indexable: %s", index.TypeName())
 				}
-				if err == objects.ErrInvalidIndexType {
+				if err == tengo.ErrInvalidIndexType {
 					return fmt.Errorf("invalid index type: %s", index.TypeName())
 				}
 				return err
 			}
 
 			if val == nil {
-				val = objects.UndefinedValue
+				val = tengo.UndefinedValue
 			}
 
 			v.stack[v.sp] = val
@@ -484,8 +484,8 @@ func (v *VM) run() error {
 			v.sp -= 3
 
 			var lowIdx int64
-			if low != objects.UndefinedValue {
-				if low, ok := low.(*objects.Int); ok {
+			if low != tengo.UndefinedValue {
+				if low, ok := low.(*tengo.Int); ok {
 					lowIdx = low.Value
 				} else {
 					return fmt.Errorf("invalid slice index type: %s", low.TypeName())
@@ -493,12 +493,12 @@ func (v *VM) run() error {
 			}
 
 			switch left := left.(type) {
-			case *objects.Array:
+			case *tengo.Array:
 				numElements := int64(len(left.Value))
 				var highIdx int64
-				if high == objects.UndefinedValue {
+				if high == tengo.UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := high.(*objects.Int); ok {
+				} else if high, ok := high.(*tengo.Int); ok {
 					highIdx = high.Value
 				} else {
 					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
@@ -520,7 +520,7 @@ func (v *VM) run() error {
 					highIdx = numElements
 				}
 
-				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
+				var val tengo.Object = &tengo.Array{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
 				if v.allocs == 0 {
@@ -530,12 +530,12 @@ func (v *VM) run() error {
 				v.stack[v.sp] = val
 				v.sp++
 
-			case *objects.ImmutableArray:
+			case *tengo.ImmutableArray:
 				numElements := int64(len(left.Value))
 				var highIdx int64
-				if high == objects.UndefinedValue {
+				if high == tengo.UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := high.(*objects.Int); ok {
+				} else if high, ok := high.(*tengo.Int); ok {
 					highIdx = high.Value
 				} else {
 					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
@@ -557,7 +557,7 @@ func (v *VM) run() error {
 					highIdx = numElements
 				}
 
-				var val objects.Object = &objects.Array{Value: left.Value[lowIdx:highIdx]}
+				var val tengo.Object = &tengo.Array{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
 				if v.allocs == 0 {
@@ -567,12 +567,12 @@ func (v *VM) run() error {
 				v.stack[v.sp] = val
 				v.sp++
 
-			case *objects.String:
+			case *tengo.String:
 				numElements := int64(len(left.Value))
 				var highIdx int64
-				if high == objects.UndefinedValue {
+				if high == tengo.UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := high.(*objects.Int); ok {
+				} else if high, ok := high.(*tengo.Int); ok {
 					highIdx = high.Value
 				} else {
 					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
@@ -594,7 +594,7 @@ func (v *VM) run() error {
 					highIdx = numElements
 				}
 
-				var val objects.Object = &objects.String{Value: left.Value[lowIdx:highIdx]}
+				var val tengo.Object = &tengo.String{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
 				if v.allocs == 0 {
@@ -604,12 +604,12 @@ func (v *VM) run() error {
 				v.stack[v.sp] = val
 				v.sp++
 
-			case *objects.Bytes:
+			case *tengo.Bytes:
 				numElements := int64(len(left.Value))
 				var highIdx int64
-				if high == objects.UndefinedValue {
+				if high == tengo.UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := high.(*objects.Int); ok {
+				} else if high, ok := high.(*tengo.Int); ok {
 					highIdx = high.Value
 				} else {
 					return fmt.Errorf("invalid slice index type: %s", high.TypeName())
@@ -631,7 +631,7 @@ func (v *VM) run() error {
 					highIdx = numElements
 				}
 
-				var val objects.Object = &objects.Bytes{Value: left.Value[lowIdx:highIdx]}
+				var val tengo.Object = &tengo.Bytes{Value: left.Value[lowIdx:highIdx]}
 
 				v.allocs--
 				if v.allocs == 0 {
@@ -649,7 +649,7 @@ func (v *VM) run() error {
 				return fmt.Errorf("cannot spread value of type %s", target.TypeName())
 			}
 
-			v.stack[spreadSP] = &objects.Spread{
+			v.stack[spreadSP] = &tengo.Spread{
 				Values: target.Spread(),
 			}
 
@@ -666,7 +666,7 @@ func (v *VM) run() error {
 			if numArgs > 0 {
 				i := v.sp - 1
 				arg := v.stack[i]
-				if spread, ok := arg.(*objects.Spread); ok {
+				if spread, ok := arg.(*tengo.Spread); ok {
 					list := spread.Values
 					numSpreadValues := len(list)
 					if v.sp+numSpreadValues >= StackSize {
@@ -682,7 +682,7 @@ func (v *VM) run() error {
 				}
 			}
 
-			if callee, ok := value.(*objects.CompiledFunction); ok {
+			if callee, ok := value.(*tengo.CompiledFunction); ok {
 				if callee.VarArgs {
 					// if the closure is variadic,
 					// roll up all variadic parameters into an array
@@ -690,12 +690,12 @@ func (v *VM) run() error {
 					varArgs := numArgs - realArgs
 					if varArgs >= 0 {
 						numArgs = realArgs + 1
-						args := make([]objects.Object, varArgs)
+						args := make([]tengo.Object, varArgs)
 						spStart := v.sp - varArgs
 						for i := spStart; i < v.sp; i++ {
 							args[i-spStart] = v.stack[i]
 						}
-						v.stack[spStart] = &objects.Array{Value: args}
+						v.stack[spStart] = &tengo.Array{Value: args}
 						v.sp = spStart + 1
 					}
 				}
@@ -738,7 +738,7 @@ func (v *VM) run() error {
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.NumLocals
 			} else {
-				var args []objects.Object
+				var args []tengo.Object
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 
 				ret, err := value.Call(v, args...)
@@ -753,11 +753,11 @@ func (v *VM) run() error {
 
 				// runtime error
 				if err != nil {
-					if err == objects.ErrWrongNumArguments {
+					if err == tengo.ErrWrongNumArguments {
 						return fmt.Errorf("wrong number of arguments in call to '%s'",
 							value.TypeName())
 					}
-					if err, ok := err.(objects.ErrInvalidArgumentType); ok {
+					if err, ok := err.(tengo.ErrInvalidArgumentType); ok {
 						return fmt.Errorf("invalid type for argument '%s' in call to '%s': expected %s, found %s",
 							err.Name, value.TypeName(), err.Expected, err.Found)
 					}
@@ -766,7 +766,7 @@ func (v *VM) run() error {
 
 				if ret == nil {
 					// nil return -> undefined
-					ret = objects.UndefinedValue
+					ret = tengo.UndefinedValue
 				}
 
 				v.allocs--
@@ -780,11 +780,11 @@ func (v *VM) run() error {
 
 		case compiler.OpReturn:
 			v.ip++
-			var retVal objects.Object
+			var retVal tengo.Object
 			if int(v.curInsts[v.ip]) == 1 {
 				retVal = v.stack[v.sp-1]
 			} else {
-				retVal = objects.UndefinedValue
+				retVal = tengo.UndefinedValue
 			}
 			//v.sp--
 
@@ -824,7 +824,7 @@ func (v *VM) run() error {
 			val := v.stack[v.sp-1]
 			v.sp--
 
-			if obj, ok := v.stack[sp].(*objects.ObjectPtr); ok {
+			if obj, ok := v.stack[sp].(*tengo.ObjectPtr); ok {
 				*obj.Value = val
 				val = obj
 			}
@@ -836,7 +836,7 @@ func (v *VM) run() error {
 			v.ip += 2
 
 			// selectors and RHS value
-			selectors := make([]objects.Object, numSelectors)
+			selectors := make([]tengo.Object, numSelectors)
 			for i := 0; i < numSelectors; i++ {
 				selectors[i] = v.stack[v.sp-numSelectors+i]
 			}
@@ -845,7 +845,7 @@ func (v *VM) run() error {
 			v.sp -= numSelectors + 1
 
 			dst := v.stack[v.curFrame.basePointer+localIndex]
-			if obj, ok := dst.(*objects.ObjectPtr); ok {
+			if obj, ok := dst.(*tengo.ObjectPtr); ok {
 				dst = *obj.Value
 			}
 
@@ -859,7 +859,7 @@ func (v *VM) run() error {
 
 			val := v.stack[v.curFrame.basePointer+localIndex]
 
-			if obj, ok := val.(*objects.ObjectPtr); ok {
+			if obj, ok := val.(*tengo.ObjectPtr); ok {
 				val = *obj.Value
 			}
 
@@ -870,7 +870,7 @@ func (v *VM) run() error {
 			v.ip++
 			builtinIndex := int(v.curInsts[v.ip])
 
-			v.stack[v.sp] = objects.Builtins[builtinIndex]
+			v.stack[v.sp] = tengo.Builtins[builtinIndex]
 			v.sp++
 
 		case compiler.OpClosure:
@@ -878,24 +878,24 @@ func (v *VM) run() error {
 			constIndex := int(v.curInsts[v.ip-1]) | int(v.curInsts[v.ip-2])<<8
 			numFree := int(v.curInsts[v.ip])
 
-			fn, ok := v.constants[constIndex].(*objects.CompiledFunction)
+			fn, ok := v.constants[constIndex].(*tengo.CompiledFunction)
 			if !ok {
 				return fmt.Errorf("not function: %s", fn.TypeName())
 			}
 
-			free := make([]*objects.ObjectPtr, numFree)
+			free := make([]*tengo.ObjectPtr, numFree)
 			for i := 0; i < numFree; i++ {
 				switch freeVar := (v.stack[v.sp-numFree+i]).(type) {
-				case *objects.ObjectPtr:
+				case *tengo.ObjectPtr:
 					free[i] = freeVar
 				default:
-					free[i] = &objects.ObjectPtr{Value: &v.stack[v.sp-numFree+i]}
+					free[i] = &tengo.ObjectPtr{Value: &v.stack[v.sp-numFree+i]}
 				}
 			}
 
 			v.sp -= numFree
 
-			cl := &objects.CompiledFunction{
+			cl := &tengo.CompiledFunction{
 				Instructions:  fn.Instructions,
 				NumLocals:     fn.NumLocals,
 				NumParameters: fn.NumParameters,
@@ -944,11 +944,11 @@ func (v *VM) run() error {
 			sp := v.curFrame.basePointer + localIndex
 			val := v.stack[sp]
 
-			var freeVar *objects.ObjectPtr
-			if obj, ok := val.(*objects.ObjectPtr); ok {
+			var freeVar *tengo.ObjectPtr
+			if obj, ok := val.(*tengo.ObjectPtr); ok {
 				freeVar = obj
 			} else {
-				freeVar = &objects.ObjectPtr{Value: &val}
+				freeVar = &tengo.ObjectPtr{Value: &val}
 				v.stack[sp] = freeVar
 			}
 
@@ -961,7 +961,7 @@ func (v *VM) run() error {
 			numSelectors := int(v.curInsts[v.ip])
 
 			// selectors and RHS value
-			selectors := make([]objects.Object, numSelectors)
+			selectors := make([]tengo.Object, numSelectors)
 			for i := 0; i < numSelectors; i++ {
 				selectors[i] = v.stack[v.sp-numSelectors+i]
 			}
@@ -973,7 +973,7 @@ func (v *VM) run() error {
 			}
 
 		case compiler.OpIteratorInit:
-			var iterator objects.Object
+			var iterator tengo.Object
 
 			dst := v.stack[v.sp-1]
 			v.sp--
@@ -995,12 +995,12 @@ func (v *VM) run() error {
 			iterator := v.stack[v.sp-1]
 			v.sp--
 
-			hasMore := iterator.(objects.Iterator).Next()
+			hasMore := iterator.(tengo.Iterator).Next()
 
 			if hasMore {
-				v.stack[v.sp] = objects.TrueValue
+				v.stack[v.sp] = tengo.TrueValue
 			} else {
-				v.stack[v.sp] = objects.FalseValue
+				v.stack[v.sp] = tengo.FalseValue
 			}
 			v.sp++
 
@@ -1008,7 +1008,7 @@ func (v *VM) run() error {
 			iterator := v.stack[v.sp-1]
 			v.sp--
 
-			val := iterator.(objects.Iterator).Key()
+			val := iterator.(tengo.Iterator).Key()
 
 			v.stack[v.sp] = val
 			v.sp++
@@ -1017,7 +1017,7 @@ func (v *VM) run() error {
 			iterator := v.stack[v.sp-1]
 			v.sp--
 
-			val := iterator.(objects.Iterator).Value()
+			val := iterator.(tengo.Iterator).Value()
 
 			v.stack[v.sp] = val
 			v.sp++
@@ -1035,17 +1035,17 @@ func (v *VM) IsStackEmpty() bool {
 	return v.sp == 0
 }
 
-func indexAssign(dst, src objects.Object, selectors []objects.Object) error {
+func indexAssign(dst, src tengo.Object, selectors []tengo.Object) error {
 	numSel := len(selectors)
 
 	for sidx := numSel - 1; sidx > 0; sidx-- {
 		next, err := dst.IndexGet(selectors[sidx])
 		if err != nil {
-			if err == objects.ErrNotIndexable {
+			if err == tengo.ErrNotIndexable {
 				return fmt.Errorf("not indexable: %s", dst.TypeName())
 			}
 
-			if err == objects.ErrInvalidIndexType {
+			if err == tengo.ErrInvalidIndexType {
 				return fmt.Errorf("invalid index type: %s", selectors[sidx].TypeName())
 			}
 
@@ -1056,11 +1056,11 @@ func indexAssign(dst, src objects.Object, selectors []objects.Object) error {
 	}
 
 	if err := dst.IndexSet(selectors[0], src); err != nil {
-		if err == objects.ErrNotIndexAssignable {
+		if err == tengo.ErrNotIndexAssignable {
 			return fmt.Errorf("not index-assignable: %s", dst.TypeName())
 		}
 
-		if err == objects.ErrInvalidIndexValueType {
+		if err == tengo.ErrInvalidIndexValueType {
 			return fmt.Errorf("invaid index value type: %s", src.TypeName())
 		}
 

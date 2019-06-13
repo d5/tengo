@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/objects"
 )
 
 type srcfile struct {
@@ -21,16 +21,16 @@ func TestBytecode(t *testing.T) {
 
 	testBytecodeSerialization(t, bytecode(
 		concat(), objectsArray(
-			&objects.Char{Value: 'y'},
-			&objects.Float{Value: 93.11},
+			&tengo.Char{Value: 'y'},
+			&tengo.Float{Value: 93.11},
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 3),
 				compiler.MakeInstruction(compiler.OpSetLocal, 0),
 				compiler.MakeInstruction(compiler.OpGetGlobal, 0),
 				compiler.MakeInstruction(compiler.OpGetFree, 0)),
-			&objects.Float{Value: 39.2},
-			&objects.Int{Value: 192},
-			&objects.String{Value: "bar"})))
+			&tengo.Float{Value: 39.2},
+			&tengo.Int{Value: 192},
+			&tengo.String{Value: "bar"})))
 
 	testBytecodeSerialization(t, bytecodeFileSet(
 		concat(
@@ -39,62 +39,62 @@ func TestBytecode(t *testing.T) {
 			compiler.MakeInstruction(compiler.OpConstant, 6),
 			compiler.MakeInstruction(compiler.OpPop)),
 		objectsArray(
-			&objects.Int{Value: 55},
-			&objects.Int{Value: 66},
-			&objects.Int{Value: 77},
-			&objects.Int{Value: 88},
-			&objects.ImmutableMap{
-				Value: map[string]objects.Object{
-					"array": &objects.ImmutableArray{
-						Value: []objects.Object{
-							&objects.Int{Value: 1},
-							&objects.Int{Value: 2},
-							&objects.Int{Value: 3},
-							objects.TrueValue,
-							objects.FalseValue,
-							objects.UndefinedValue,
+			&tengo.Int{Value: 55},
+			&tengo.Int{Value: 66},
+			&tengo.Int{Value: 77},
+			&tengo.Int{Value: 88},
+			&tengo.ImmutableMap{
+				Value: map[string]tengo.Object{
+					"array": &tengo.ImmutableArray{
+						Value: []tengo.Object{
+							&tengo.Int{Value: 1},
+							&tengo.Int{Value: 2},
+							&tengo.Int{Value: 3},
+							tengo.TrueValue,
+							tengo.FalseValue,
+							tengo.UndefinedValue,
 						},
 					},
-					"true":  objects.TrueValue,
-					"false": objects.FalseValue,
-					"bytes": &objects.Bytes{Value: make([]byte, 16)},
-					"char":  &objects.Char{Value: 'Y'},
-					"error": &objects.Error{Value: &objects.String{Value: "some error"}},
-					"float": &objects.Float{Value: -19.84},
-					"immutable_array": &objects.ImmutableArray{
-						Value: []objects.Object{
-							&objects.Int{Value: 1},
-							&objects.Int{Value: 2},
-							&objects.Int{Value: 3},
-							objects.TrueValue,
-							objects.FalseValue,
-							objects.UndefinedValue,
+					"true":  tengo.TrueValue,
+					"false": tengo.FalseValue,
+					"bytes": &tengo.Bytes{Value: make([]byte, 16)},
+					"char":  &tengo.Char{Value: 'Y'},
+					"error": &tengo.Error{Value: &tengo.String{Value: "some error"}},
+					"float": &tengo.Float{Value: -19.84},
+					"immutable_array": &tengo.ImmutableArray{
+						Value: []tengo.Object{
+							&tengo.Int{Value: 1},
+							&tengo.Int{Value: 2},
+							&tengo.Int{Value: 3},
+							tengo.TrueValue,
+							tengo.FalseValue,
+							tengo.UndefinedValue,
 						},
 					},
-					"immutable_map": &objects.ImmutableMap{
-						Value: map[string]objects.Object{
-							"a": &objects.Int{Value: 1},
-							"b": &objects.Int{Value: 2},
-							"c": &objects.Int{Value: 3},
-							"d": objects.TrueValue,
-							"e": objects.FalseValue,
-							"f": objects.UndefinedValue,
+					"immutable_map": &tengo.ImmutableMap{
+						Value: map[string]tengo.Object{
+							"a": &tengo.Int{Value: 1},
+							"b": &tengo.Int{Value: 2},
+							"c": &tengo.Int{Value: 3},
+							"d": tengo.TrueValue,
+							"e": tengo.FalseValue,
+							"f": tengo.UndefinedValue,
 						},
 					},
-					"int": &objects.Int{Value: 91},
-					"map": &objects.Map{
-						Value: map[string]objects.Object{
-							"a": &objects.Int{Value: 1},
-							"b": &objects.Int{Value: 2},
-							"c": &objects.Int{Value: 3},
-							"d": objects.TrueValue,
-							"e": objects.FalseValue,
-							"f": objects.UndefinedValue,
+					"int": &tengo.Int{Value: 91},
+					"map": &tengo.Map{
+						Value: map[string]tengo.Object{
+							"a": &tengo.Int{Value: 1},
+							"b": &tengo.Int{Value: 2},
+							"c": &tengo.Int{Value: 3},
+							"d": tengo.TrueValue,
+							"e": tengo.FalseValue,
+							"f": tengo.UndefinedValue,
 						},
 					},
-					"string":    &objects.String{Value: "foo bar"},
-					"time":      &objects.Time{Value: time.Now()},
-					"undefined": objects.UndefinedValue,
+					"string":    &tengo.String{Value: "foo bar"},
+					"time":      &tengo.Time{Value: time.Now()},
+					"undefined": tengo.UndefinedValue,
 				},
 			},
 			compiledFunction(1, 0,
@@ -128,28 +128,28 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 	testBytecodeRemoveDuplicates(t,
 		bytecode(
 			concat(), objectsArray(
-				&objects.Char{Value: 'y'},
-				&objects.Float{Value: 93.11},
+				&tengo.Char{Value: 'y'},
+				&tengo.Float{Value: 93.11},
 				compiledFunction(1, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 3),
 					compiler.MakeInstruction(compiler.OpSetLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetGlobal, 0),
 					compiler.MakeInstruction(compiler.OpGetFree, 0)),
-				&objects.Float{Value: 39.2},
-				&objects.Int{Value: 192},
-				&objects.String{Value: "bar"})),
+				&tengo.Float{Value: 39.2},
+				&tengo.Int{Value: 192},
+				&tengo.String{Value: "bar"})),
 		bytecode(
 			concat(), objectsArray(
-				&objects.Char{Value: 'y'},
-				&objects.Float{Value: 93.11},
+				&tengo.Char{Value: 'y'},
+				&tengo.Float{Value: 93.11},
 				compiledFunction(1, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 3),
 					compiler.MakeInstruction(compiler.OpSetLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetGlobal, 0),
 					compiler.MakeInstruction(compiler.OpGetFree, 0)),
-				&objects.Float{Value: 39.2},
-				&objects.Int{Value: 192},
-				&objects.String{Value: "bar"})))
+				&tengo.Float{Value: 39.2},
+				&tengo.Int{Value: 192},
+				&tengo.String{Value: "bar"})))
 
 	testBytecodeRemoveDuplicates(t,
 		bytecode(
@@ -165,20 +165,20 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpConstant, 8),
 				compiler.MakeInstruction(compiler.OpClosure, 4, 1)),
 			objectsArray(
-				&objects.Int{Value: 1},
-				&objects.Float{Value: 2.0},
-				&objects.Char{Value: '3'},
-				&objects.String{Value: "four"},
+				&tengo.Int{Value: 1},
+				&tengo.Float{Value: 2.0},
+				&tengo.Char{Value: '3'},
+				&tengo.String{Value: "four"},
 				compiledFunction(1, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 3),
 					compiler.MakeInstruction(compiler.OpConstant, 7),
 					compiler.MakeInstruction(compiler.OpSetLocal, 0),
 					compiler.MakeInstruction(compiler.OpGetGlobal, 0),
 					compiler.MakeInstruction(compiler.OpGetFree, 0)),
-				&objects.Int{Value: 1},
-				&objects.Float{Value: 2.0},
-				&objects.Char{Value: '3'},
-				&objects.String{Value: "four"})),
+				&tengo.Int{Value: 1},
+				&tengo.Float{Value: 2.0},
+				&tengo.Char{Value: '3'},
+				&tengo.String{Value: "four"})),
 		bytecode(
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 0),
@@ -192,10 +192,10 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpConstant, 3),
 				compiler.MakeInstruction(compiler.OpClosure, 4, 1)),
 			objectsArray(
-				&objects.Int{Value: 1},
-				&objects.Float{Value: 2.0},
-				&objects.Char{Value: '3'},
-				&objects.String{Value: "four"},
+				&tengo.Int{Value: 1},
+				&tengo.Float{Value: 2.0},
+				&tengo.Char{Value: '3'},
+				&tengo.String{Value: "four"},
 				compiledFunction(1, 0,
 					compiler.MakeInstruction(compiler.OpConstant, 3),
 					compiler.MakeInstruction(compiler.OpConstant, 2),
@@ -212,11 +212,11 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpConstant, 3),
 				compiler.MakeInstruction(compiler.OpConstant, 4)),
 			objectsArray(
-				&objects.Int{Value: 1},
-				&objects.Int{Value: 2},
-				&objects.Int{Value: 3},
-				&objects.Int{Value: 1},
-				&objects.Int{Value: 3})),
+				&tengo.Int{Value: 1},
+				&tengo.Int{Value: 2},
+				&tengo.Int{Value: 3},
+				&tengo.Int{Value: 1},
+				&tengo.Int{Value: 3})),
 		bytecode(
 			concat(
 				compiler.MakeInstruction(compiler.OpConstant, 0),
@@ -225,19 +225,19 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				compiler.MakeInstruction(compiler.OpConstant, 0),
 				compiler.MakeInstruction(compiler.OpConstant, 2)),
 			objectsArray(
-				&objects.Int{Value: 1},
-				&objects.Int{Value: 2},
-				&objects.Int{Value: 3})))
+				&tengo.Int{Value: 1},
+				&tengo.Int{Value: 2},
+				&tengo.Int{Value: 3})))
 }
 
 func TestBytecode_CountObjects(t *testing.T) {
 	b := bytecode(
 		concat(),
 		objectsArray(
-			&objects.Int{Value: 55},
-			&objects.Int{Value: 66},
-			&objects.Int{Value: 77},
-			&objects.Int{Value: 88},
+			&tengo.Int{Value: 55},
+			&tengo.Int{Value: 66},
+			&tengo.Int{Value: 77},
+			&tengo.Int{Value: 88},
 			compiledFunction(1, 0,
 				compiler.MakeInstruction(compiler.OpConstant, 3),
 				compiler.MakeInstruction(compiler.OpReturn, 1)),
@@ -258,10 +258,10 @@ func fileSet(files ...srcfile) *source.FileSet {
 	return fileSet
 }
 
-func bytecodeFileSet(instructions []byte, constants []objects.Object, fileSet *source.FileSet) *compiler.Bytecode {
+func bytecodeFileSet(instructions []byte, constants []tengo.Object, fileSet *source.FileSet) *compiler.Bytecode {
 	return &compiler.Bytecode{
 		FileSet:      fileSet,
-		MainFunction: &objects.CompiledFunction{Instructions: instructions},
+		MainFunction: &tengo.CompiledFunction{Instructions: instructions},
 		Constants:    constants,
 	}
 }

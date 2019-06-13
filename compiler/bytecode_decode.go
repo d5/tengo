@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 // Decode reads Bytecode data from the reader.
-func (b *Bytecode) Decode(r io.Reader, modules *objects.ModuleMap) error {
+func (b *Bytecode) Decode(r io.Reader, modules *tengo.ModuleMap) error {
 	if modules == nil {
-		modules = objects.NewModuleMap()
+		modules = tengo.NewModuleMap()
 	}
 
 	dec := gob.NewDecoder(r)
@@ -40,16 +40,16 @@ func (b *Bytecode) Decode(r io.Reader, modules *objects.ModuleMap) error {
 	return nil
 }
 
-func fixDecoded(o objects.Object, modules *objects.ModuleMap) (objects.Object, error) {
+func fixDecoded(o tengo.Object, modules *tengo.ModuleMap) (tengo.Object, error) {
 	switch o := o.(type) {
-	case *objects.Bool:
+	case *tengo.Bool:
 		if o.IsFalsy() {
-			return objects.FalseValue, nil
+			return tengo.FalseValue, nil
 		}
-		return objects.TrueValue, nil
-	case *objects.Undefined:
-		return objects.UndefinedValue, nil
-	case *objects.Array:
+		return tengo.TrueValue, nil
+	case *tengo.Undefined:
+		return tengo.UndefinedValue, nil
+	case *tengo.Array:
 		for i, v := range o.Value {
 			fv, err := fixDecoded(v, modules)
 			if err != nil {
@@ -57,7 +57,7 @@ func fixDecoded(o objects.Object, modules *objects.ModuleMap) (objects.Object, e
 			}
 			o.Value[i] = fv
 		}
-	case *objects.ImmutableArray:
+	case *tengo.ImmutableArray:
 		for i, v := range o.Value {
 			fv, err := fixDecoded(v, modules)
 			if err != nil {
@@ -65,7 +65,7 @@ func fixDecoded(o objects.Object, modules *objects.ModuleMap) (objects.Object, e
 			}
 			o.Value[i] = fv
 		}
-	case *objects.Map:
+	case *tengo.Map:
 		for k, v := range o.Value {
 			fv, err := fixDecoded(v, modules)
 			if err != nil {
@@ -73,7 +73,7 @@ func fixDecoded(o objects.Object, modules *objects.ModuleMap) (objects.Object, e
 			}
 			o.Value[k] = fv
 		}
-	case *objects.ImmutableMap:
+	case *tengo.ImmutableMap:
 		modName := moduleName(o)
 		if mod := modules.GetBuiltinModule(modName); mod != nil {
 			return mod.AsImmutableMap(modName), nil
@@ -81,7 +81,7 @@ func fixDecoded(o objects.Object, modules *objects.ModuleMap) (objects.Object, e
 
 		for k, v := range o.Value {
 			// encoding of user function not supported
-			if _, isUserFunction := v.(*objects.UserFunction); isUserFunction {
+			if _, isUserFunction := v.(*tengo.GoFunction); isUserFunction {
 				return nil, fmt.Errorf("user function not decodable")
 			}
 

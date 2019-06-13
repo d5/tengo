@@ -3,13 +3,13 @@ package runtime_test
 import (
 	"testing"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 func TestSelector(t *testing.T) {
 	expect(t, `a := {k1: 5, k2: "foo"}; out = a.k1`, nil, 5)
 	expect(t, `a := {k1: 5, k2: "foo"}; out = a.k2`, nil, "foo")
-	expect(t, `a := {k1: 5, k2: "foo"}; out = a.k3`, nil, objects.UndefinedValue)
+	expect(t, `a := {k1: 5, k2: "foo"}; out = a.k3`, nil, tengo.UndefinedValue)
 
 	expect(t, `
 a := {
@@ -29,7 +29,7 @@ a := {
 	},
 	c: "foo bar"
 }
-b := a.x.c`, nil, objects.UndefinedValue)
+b := a.x.c`, nil, tengo.UndefinedValue)
 
 	expect(t, `
 a := {
@@ -39,7 +39,7 @@ a := {
 	},
 	c: "foo bar"
 }
-b := a.x.y`, nil, objects.UndefinedValue)
+b := a.x.y`, nil, tengo.UndefinedValue)
 
 	expect(t, `a := {b: 1, c: "foo"}; a.b = 2; out = a.b`, nil, 2)
 	expect(t, `a := {b: 1, c: "foo"}; a.c = 2; out = a.c`, nil, 2) // type not checked on sub-field

@@ -3,7 +3,7 @@ package runtime_test
 import (
 	"testing"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 func TestObjectsLimit(t *testing.T) {
@@ -37,9 +37,9 @@ f()
 }
 
 func testAllocsLimit(t *testing.T, src string, limit int64) {
-	expect(t, src, Opts().Skip2ndPass(), objects.UndefinedValue) // no limit
-	expect(t, src, Opts().MaxAllocs(limit).Skip2ndPass(), objects.UndefinedValue)
-	expect(t, src, Opts().MaxAllocs(limit+1).Skip2ndPass(), objects.UndefinedValue)
+	expect(t, src, Opts().Skip2ndPass(), tengo.UndefinedValue) // no limit
+	expect(t, src, Opts().MaxAllocs(limit).Skip2ndPass(), tengo.UndefinedValue)
+	expect(t, src, Opts().MaxAllocs(limit+1).Skip2ndPass(), tengo.UndefinedValue)
 	if limit > 1 {
 		expectError(t, src, Opts().MaxAllocs(limit-1).Skip2ndPass(), "allocation limit exceeded")
 	}

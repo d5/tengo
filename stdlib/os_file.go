@@ -3,41 +3,41 @@ package stdlib
 import (
 	"os"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
-func makeOSFile(file *os.File) *objects.ImmutableMap {
-	return &objects.ImmutableMap{
-		Value: map[string]objects.Object{
+func makeOSFile(file *os.File) *tengo.ImmutableMap {
+	return &tengo.ImmutableMap{
+		Value: map[string]tengo.Object{
 			// chdir() => true/error
-			"chdir": &objects.UserFunction{Name: "chdir", Value: FuncARE(file.Chdir)}, //
+			"chdir": &tengo.GoFunction{Name: "chdir", Value: FuncARE(file.Chdir)}, //
 			// chown(uid int, gid int) => true/error
-			"chown": &objects.UserFunction{Name: "chown", Value: FuncAIIRE(file.Chown)}, //
+			"chown": &tengo.GoFunction{Name: "chown", Value: FuncAIIRE(file.Chown)}, //
 			// close() => error
-			"close": &objects.UserFunction{Name: "close", Value: FuncARE(file.Close)}, //
+			"close": &tengo.GoFunction{Name: "close", Value: FuncARE(file.Close)}, //
 			// name() => string
-			"name": &objects.UserFunction{Name: "name", Value: FuncARS(file.Name)}, //
+			"name": &tengo.GoFunction{Name: "name", Value: FuncARS(file.Name)}, //
 			// readdirnames(n int) => array(string)/error
-			"readdirnames": &objects.UserFunction{Name: "readdirnames", Value: FuncAIRSsE(file.Readdirnames)}, //
+			"readdirnames": &tengo.GoFunction{Name: "readdirnames", Value: FuncAIRSsE(file.Readdirnames)}, //
 			// sync() => error
-			"sync": &objects.UserFunction{Name: "sync", Value: FuncARE(file.Sync)}, //
+			"sync": &tengo.GoFunction{Name: "sync", Value: FuncARE(file.Sync)}, //
 			// write(bytes) => int/error
-			"write": &objects.UserFunction{Name: "write", Value: FuncAYRIE(file.Write)}, //
+			"write": &tengo.GoFunction{Name: "write", Value: FuncAYRIE(file.Write)}, //
 			// write(string) => int/error
-			"write_string": &objects.UserFunction{Name: "write_string", Value: FuncASRIE(file.WriteString)}, //
+			"write_string": &tengo.GoFunction{Name: "write_string", Value: FuncASRIE(file.WriteString)}, //
 			// read(bytes) => int/error
-			"read": &objects.UserFunction{Name: "read", Value: FuncAYRIE(file.Read)}, //
+			"read": &tengo.GoFunction{Name: "read", Value: FuncAYRIE(file.Read)}, //
 			// chmod(mode int) => error
-			"chmod": &objects.UserFunction{
+			"chmod": &tengo.GoFunction{
 				Name: "chmod",
-				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 1 {
-						return nil, objects.ErrWrongNumArguments
+						return nil, tengo.ErrWrongNumArguments
 					}
 
-					i1, ok := objects.ToInt64(args[0])
+					i1, ok := tengo.ToInt64(args[0])
 					if !ok {
-						return nil, objects.ErrInvalidArgumentType{
+						return nil, tengo.ErrInvalidArgumentType{
 							Name:     "first",
 							Expected: "int(compatible)",
 							Found:    args[0].TypeName(),
@@ -48,24 +48,24 @@ func makeOSFile(file *os.File) *objects.ImmutableMap {
 				},
 			},
 			// seek(offset int, whence int) => int/error
-			"seek": &objects.UserFunction{
+			"seek": &tengo.GoFunction{
 				Name: "seek",
-				Value: func(_ objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(_ tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 2 {
-						return nil, objects.ErrWrongNumArguments
+						return nil, tengo.ErrWrongNumArguments
 					}
 
-					i1, ok := objects.ToInt64(args[0])
+					i1, ok := tengo.ToInt64(args[0])
 					if !ok {
-						return nil, objects.ErrInvalidArgumentType{
+						return nil, tengo.ErrInvalidArgumentType{
 							Name:     "first",
 							Expected: "int(compatible)",
 							Found:    args[0].TypeName(),
 						}
 					}
-					i2, ok := objects.ToInt(args[1])
+					i2, ok := tengo.ToInt(args[1])
 					if !ok {
-						return nil, objects.ErrInvalidArgumentType{
+						return nil, tengo.ErrInvalidArgumentType{
 							Name:     "second",
 							Expected: "int(compatible)",
 							Found:    args[1].TypeName(),
@@ -77,18 +77,18 @@ func makeOSFile(file *os.File) *objects.ImmutableMap {
 						return wrapError(err), nil
 					}
 
-					return &objects.Int{Value: res}, nil
+					return &tengo.Int{Value: res}, nil
 				},
 			},
 			// stat() => imap(fileinfo)/error
-			"stat": &objects.UserFunction{
+			"stat": &tengo.GoFunction{
 				Name: "start",
-				Value: func(rt objects.Interop, args ...objects.Object) (ret objects.Object, err error) {
+				Value: func(rt tengo.Interop, args ...tengo.Object) (ret tengo.Object, err error) {
 					if len(args) != 0 {
-						return nil, objects.ErrWrongNumArguments
+						return nil, tengo.ErrWrongNumArguments
 					}
 
-					return osStat(rt, &objects.String{Value: file.Name()})
+					return osStat(rt, &tengo.String{Value: file.Name()})
 				},
 			},
 		},

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 func TestArray(t *testing.T) {
@@ -28,8 +28,8 @@ func TestArray(t *testing.T) {
 		expect(t, fmt.Sprintf("idx := %d; out = %s[idx]", idx, arrStr), nil, arr[idx])
 	}
 
-	expect(t, fmt.Sprintf("%s[%d]", arrStr, -1), nil, objects.UndefinedValue)
-	expect(t, fmt.Sprintf("%s[%d]", arrStr, arrLen), nil, objects.UndefinedValue)
+	expect(t, fmt.Sprintf("%s[%d]", arrStr, -1), nil, tengo.UndefinedValue)
+	expect(t, fmt.Sprintf("%s[%d]", arrStr, arrLen), nil, tengo.UndefinedValue)
 
 	// slice operator
 	for low := 0; low < arrLen; low++ {

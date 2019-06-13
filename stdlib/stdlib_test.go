@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/script"
 	"github.com/d5/tengo/stdlib"
 )
@@ -18,7 +18,7 @@ type IMAP map[string]interface{}
 
 func TestAllModuleNames(t *testing.T) {
 	names := stdlib.AllModuleNames()
-	if !assert.Equal(t, len(stdlib.BuiltinModules)+len(stdlib.SourceModules), len(names)) {
+	if !assert.Equal(t, len(stdlib.BuiltinModules), len(names)) {
 		return
 	}
 }
@@ -101,40 +101,40 @@ type callres struct {
 	e error
 }
 
-func (c callres) call(funcName string, rt objects.Interop, args ...interface{}) callres {
+func (c callres) call(funcName string, rt tengo.Interop, args ...interface{}) callres {
 	if c.e != nil {
 		return c
 	}
 
-	var oargs []objects.Object
+	var oargs []tengo.Object
 	for _, v := range args {
 		oargs = append(oargs, object(v))
 	}
 
 	switch o := c.o.(type) {
-	case *objects.BuiltinModule:
+	case *tengo.BuiltinModule:
 		m, ok := o.Attrs[funcName]
 		if !ok {
 			return callres{t: c.t, e: fmt.Errorf("function not found: %s", funcName)}
 		}
 
-		f, ok := m.(*objects.UserFunction)
+		f, ok := m.(*tengo.GoFunction)
 		if !ok {
 			return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
 		}
 
 		res, err := f.Value(rt, oargs...)
 		return callres{t: c.t, o: res, e: err}
-	case *objects.UserFunction:
+	case *tengo.GoFunction:
 		res, err := o.Value(rt, oargs...)
 		return callres{t: c.t, o: res, e: err}
-	case *objects.ImmutableMap:
+	case *tengo.ImmutableMap:
 		m, ok := o.Value[funcName]
 		if !ok {
 			return callres{t: c.t, e: fmt.Errorf("function not found: %s", funcName)}
 		}
 
-		f, ok := m.(*objects.UserFunction)
+		f, ok := m.(*tengo.GoFunction)
 		if !ok {
 			return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
 		}
@@ -164,66 +164,66 @@ func module(t *testing.T, moduleName string) callres {
 	return callres{t: t, o: mod}
 }
 
-func object(v interface{}) objects.Object {
+func object(v interface{}) tengo.Object {
 	switch v := v.(type) {
-	case objects.Object:
+	case tengo.Object:
 		return v
 	case string:
-		return &objects.String{Value: v}
+		return &tengo.String{Value: v}
 	case int64:
-		return &objects.Int{Value: v}
+		return &tengo.Int{Value: v}
 	case int: // for convenience
-		return &objects.Int{Value: int64(v)}
+		return &tengo.Int{Value: int64(v)}
 	case bool:
 		if v {
-			return objects.TrueValue
+			return tengo.TrueValue
 		}
-		return objects.FalseValue
+		return tengo.FalseValue
 	case rune:
-		return &objects.Char{Value: v}
+		return &tengo.Char{Value: v}
 	case byte: // for convenience
-		return &objects.Char{Value: rune(v)}
+		return &tengo.Char{Value: rune(v)}
 	case float64:
-		return &objects.Float{Value: v}
+		return &tengo.Float{Value: v}
 	case []byte:
-		return &objects.Bytes{Value: v}
+		return &tengo.Bytes{Value: v}
 	case MAP:
-		objs := make(map[string]objects.Object)
+		objs := make(map[string]tengo.Object)
 		for k, v := range v {
 			objs[k] = object(v)
 		}
 
-		return &objects.Map{Value: objs}
+		return &tengo.Map{Value: objs}
 	case ARR:
-		var objs []objects.Object
+		var objs []tengo.Object
 		for _, e := range v {
 			objs = append(objs, object(e))
 		}
 
-		return &objects.Array{Value: objs}
+		return &tengo.Array{Value: objs}
 	case IMAP:
-		objs := make(map[string]objects.Object)
+		objs := make(map[string]tengo.Object)
 		for k, v := range v {
 			objs[k] = object(v)
 		}
 
-		return &objects.ImmutableMap{Value: objs}
+		return &tengo.ImmutableMap{Value: objs}
 	case IARR:
-		var objs []objects.Object
+		var objs []tengo.Object
 		for _, e := range v {
 			objs = append(objs, object(e))
 		}
 
-		return &objects.ImmutableArray{Value: objs}
+		return &tengo.ImmutableArray{Value: objs}
 	case time.Time:
-		return &objects.Time{Value: v}
+		return &tengo.Time{Value: v}
 	case []int:
-		var objs []objects.Object
+		var objs []tengo.Object
 		for _, e := range v {
-			objs = append(objs, &objects.Int{Value: int64(e)})
+			objs = append(objs, &tengo.Int{Value: int64(e)})
 		}
 
-		return &objects.Array{Value: objs}
+		return &tengo.Array{Value: objs}
 	}
 
 	panic(fmt.Errorf("unknown type: %T", v))
@@ -244,13 +244,13 @@ func expect(t *testing.T, input string, expected interface{}) {
 }
 
 type mockInterop struct {
-	val objects.Object
+	val tengo.Object
 	err error
 }
 
 func (i mockInterop) InteropCall(
-	callable objects.Object,
-	args ...objects.Object,
-) (objects.Object, error) {
+	callable tengo.Object,
+	args ...tengo.Object,
+) (tengo.Object, error) {
 	return i.val, i.err
 }

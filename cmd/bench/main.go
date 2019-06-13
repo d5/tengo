@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/d5/tengo"
 	"github.com/d5/tengo/compiler"
 	"github.com/d5/tengo/compiler/ast"
 	"github.com/d5/tengo/compiler/parser"
 	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/objects"
 	"github.com/d5/tengo/runtime"
 )
 
@@ -40,8 +40,8 @@ fib := func(x) {
 		panic(err)
 	}
 
-	if nativeResult != int(result.(*objects.Int).Value) {
-		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
+	if nativeResult != int(result.(*tengo.Int).Value) {
+		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*tengo.Int).Value)))
 	}
 
 	fmt.Println("-------------------------------------")
@@ -76,8 +76,8 @@ fib := func(x, s) {
 		panic(err)
 	}
 
-	if nativeResult != int(result.(*objects.Int).Value) {
-		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
+	if nativeResult != int(result.(*tengo.Int).Value) {
+		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*tengo.Int).Value)))
 	}
 
 	fmt.Println("-------------------------------------")
@@ -112,8 +112,8 @@ fib := func(x, a, b) {
 		panic(err)
 	}
 
-	if nativeResult != int(result.(*objects.Int).Value) {
-		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
+	if nativeResult != int(result.(*tengo.Int).Value) {
+		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*tengo.Int).Value)))
 	}
 
 	fmt.Println("-------------------------------------")
@@ -155,7 +155,7 @@ func fibTC2(n, a, b int) int {
 	}
 }
 
-func runBench(input []byte) (parseTime time.Duration, compileTime time.Duration, runTime time.Duration, result objects.Object, err error) {
+func runBench(input []byte) (parseTime time.Duration, compileTime time.Duration, runTime time.Duration, result tengo.Object, err error) {
 	var astFile *ast.File
 	parseTime, astFile, err = parse(input)
 	if err != nil {
@@ -205,8 +205,8 @@ func compileFile(file *ast.File) (time.Duration, *compiler.Bytecode, error) {
 	return time.Since(start), bytecode, nil
 }
 
-func runVM(bytecode *compiler.Bytecode) (time.Duration, objects.Object, error) {
-	globals := make([]objects.Object, runtime.GlobalsSize)
+func runVM(bytecode *compiler.Bytecode) (time.Duration, tengo.Object, error) {
+	globals := make([]tengo.Object, runtime.GlobalsSize)
 
 	start := time.Now()
 

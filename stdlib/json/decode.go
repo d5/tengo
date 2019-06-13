@@ -12,11 +12,11 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 // Decode parses the JSON-encoded data and returns the result object.
-func Decode(data []byte) (objects.Object, error) {
+func Decode(data []byte) (tengo.Object, error) {
 	var d decodeState
 	err := checkValid(data, &d.scan)
 	if err != nil {
@@ -80,7 +80,7 @@ func (d *decodeState) scanWhile(op int) {
 	d.opcode = d.scan.eof()
 }
 
-func (d *decodeState) value() (objects.Object, error) {
+func (d *decodeState) value() (tengo.Object, error) {
 	switch d.opcode {
 	default:
 		panic(phasePanicMsg)
@@ -110,8 +110,8 @@ func (d *decodeState) value() (objects.Object, error) {
 	}
 }
 
-func (d *decodeState) array() (objects.Object, error) {
-	var arr []objects.Object
+func (d *decodeState) array() (tengo.Object, error) {
+	var arr []tengo.Object
 	for {
 		// Look ahead for ] - can only happen on first iteration.
 		d.scanWhile(scanSkipSpace)
@@ -137,11 +137,11 @@ func (d *decodeState) array() (objects.Object, error) {
 		}
 	}
 
-	return &objects.Array{Value: arr}, nil
+	return &tengo.Array{Value: arr}, nil
 }
 
-func (d *decodeState) object() (objects.Object, error) {
-	m := make(map[string]objects.Object)
+func (d *decodeState) object() (tengo.Object, error) {
+	m := make(map[string]tengo.Object)
 	for {
 		// Read opening " of string key or closing }.
 		d.scanWhile(scanSkipSpace)
@@ -191,10 +191,10 @@ func (d *decodeState) object() (objects.Object, error) {
 		}
 	}
 
-	return &objects.Map{Value: m}, nil
+	return &tengo.Map{Value: m}, nil
 }
 
-func (d *decodeState) literal() (objects.Object, error) {
+func (d *decodeState) literal() (tengo.Object, error) {
 	// All bytes inside literal return scanContinue op code.
 	start := d.readIndex()
 	d.scanWhile(scanContinue)
@@ -203,20 +203,20 @@ func (d *decodeState) literal() (objects.Object, error) {
 
 	switch c := item[0]; c {
 	case 'n': // null
-		return objects.UndefinedValue, nil
+		return tengo.UndefinedValue, nil
 
 	case 't', 'f': // true, false
 		if c == 't' {
-			return objects.TrueValue, nil
+			return tengo.TrueValue, nil
 		}
-		return objects.FalseValue, nil
+		return tengo.FalseValue, nil
 
 	case '"': // string
 		s, ok := unquote(item)
 		if !ok {
 			panic(phasePanicMsg)
 		}
-		return &objects.String{Value: s}, nil
+		return &tengo.String{Value: s}, nil
 
 	default: // number
 		if c != '-' && (c < '0' || c > '9') {
@@ -224,7 +224,7 @@ func (d *decodeState) literal() (objects.Object, error) {
 		}
 
 		n, _ := strconv.ParseFloat(string(item), 10)
-		return &objects.Float{Value: n}, nil
+		return &tengo.Float{Value: n}, nil
 	}
 }
 

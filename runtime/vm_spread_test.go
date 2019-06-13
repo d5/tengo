@@ -13,13 +13,14 @@ func TestSpreadArray(t *testing.T) {
 }
 
 func TestSpreadCall(t *testing.T) {
-
-	const defVars = `x := [1,2]; ` +
-		`y := [3,4]; ` +
-		`z := [5,6,7]; ` +
-		`fn1 := func(...a) { return a; }; ` +
-		`fn2 := func(a, ...b) { return [a, b]; }; ` +
-		`fn3 := func(a, b, c) { return [a, b, c]; }; `
+	const defVars = `
+x := [1,2]
+y := [3,4]
+z := [5,6,7]
+fn1 := func(...a) { return a } 
+fn2 := func(a, ...b) { return [a, b] } 
+fn3 := func(a, b, c) { return [a, b, c] }
+`
 
 	expect(t, defVars+`out = fn1([1,2,3]...)`, nil, ARR{1, 2, 3})
 	expect(t, defVars+`out = fn1(1,2,3,4,z...)`, nil, ARR{1, 2, 3, 4, 5, 6, 7})
