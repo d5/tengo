@@ -68,4 +68,13 @@ if is_error(x) {
 } else {
 	out = 0;	
 }`, nil, 12)
+
+	// TODO hmm... maybe we should prevent this
+	expect(t, `
+try := func(a) {
+	return a+1;
+};
+
+out = try(1)`, nil, 1)
+
 }
