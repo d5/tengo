@@ -248,6 +248,10 @@ func callExpr(f ast.Expr, lparen, rparen source.Pos, args ...ast.Expr) *ast.Call
 	return &ast.CallExpr{Func: f, LParen: lparen, RParen: rparen, Args: args}
 }
 
+func tryExpr(tryPos, lparen, rparen source.Pos, x ast.Expr) *ast.TryExpr {
+	return &ast.TryExpr{TryPos: tryPos, LParen: lparen, RParen: rparen, Expr: x}
+}
+
 func spreadExpr(e ast.Expr, ellipsis source.Pos) *ast.SpreadExpr {
 	return &ast.SpreadExpr{
 		Element:  e,
@@ -386,6 +390,11 @@ func equalExpr(t *testing.T, expected, actual ast.Expr) bool {
 			assert.Equal(t, expected.LParen, actual.(*ast.CallExpr).LParen) &&
 			assert.Equal(t, expected.RParen, actual.(*ast.CallExpr).RParen) &&
 			equalExprs(t, expected.Args, actual.(*ast.CallExpr).Args)
+	case *ast.TryExpr:
+		return assert.Equal(t, expected.TryPos, actual.(*ast.TryExpr).TryPos) &&
+			assert.Equal(t, expected.LParen, actual.(*ast.TryExpr).LParen) &&
+			assert.Equal(t, expected.RParen, actual.(*ast.TryExpr).RParen) &&
+			equalExpr(t, expected.Expr, actual.(*ast.TryExpr).Expr)
 	case *ast.SpreadExpr:
 		actualSpread := actual.(*ast.SpreadExpr)
 		return equalExpr(t, expected.Element, actualSpread.Element) &&

@@ -194,7 +194,27 @@ L:
 		case token.LBrack:
 			x = p.parseIndexOrSlice(x)
 		case token.LParen:
-			x = p.parseCall(x)
+			temp := p.parseCall(x)
+			if id, isIdent := temp.Func.(*ast.Ident); isIdent && id.Name == "try" {
+				if len(temp.Args) != 1 {
+					p.error(id.Pos(), "try expression must have exactly one argument")
+					return &ast.BadExpr{From: temp.Pos(), To: temp.End()}
+				}
+
+				if _, isSpread := temp.Args[0].(*ast.SpreadExpr); isSpread {
+					p.error(temp.Args[0].Pos(), "try expression cannot contain a spread")
+					return &ast.BadExpr{From: temp.Pos(), To: temp.End()}
+				}
+
+				x = &ast.TryExpr{
+					TryPos: id.Pos(),
+					LParen: temp.LParen,
+					Expr:   temp.Args[0],
+					RParen: temp.RParen,
+				}
+			} else {
+				x = temp
+			}
 		default:
 			break L
 		}

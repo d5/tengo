@@ -141,4 +141,20 @@ func TestCall(t *testing.T) {
 						stringLit("c", p(1, 8))),
 					p(1, 9), p(1, 10))))
 	})
+
+	expectString(t, "try(someExpr)", "try(someExpr)")
+
+	expect(t, `try(someExpr)`, func(p pfn) []ast.Stmt {
+		return stmts(
+			exprStmt(
+				tryExpr(
+					p(1, 1),
+					p(1, 4),
+					p(1, 13),
+					ident("someExpr", p(1, 5)),
+				)))
+	})
+
+	expectError(t, "try(a, b)")
+	expectError(t, "try(a...)")
 }

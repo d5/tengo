@@ -515,6 +515,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		c.emit(node, OpCall, len(node.Args))
 
+	case *ast.TryExpr:
+		if err := c.Compile(node.Expr); err != nil {
+			return err
+		}
+
+		c.emit(node, OpReturnIfError, 1)
+
 	case *ast.SpreadExpr:
 		if err := c.Compile(node.Element); err != nil {
 			return err
