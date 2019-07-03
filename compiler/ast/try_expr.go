@@ -16,6 +16,10 @@ type TryExpr struct {
 
 func (e *TryExpr) exprNode() {}
 
+// Pos returns the position of first character belonging to the node.
 func (e *TryExpr) Pos() source.Pos { return e.TryPos }
-func (e *TryExpr) End() source.Pos { return e.RParen }
-func (e *TryExpr) String() string  { return fmt.Sprintf("try(%s)", e.Expr.String()) }
+
+// End returns the position of first character immediately after the node.
+func (e *TryExpr) End() source.Pos { return e.RParen + 1 }
+
+func (e *TryExpr) String() string { return fmt.Sprintf("try(%s)", e.Expr.String()) }
