@@ -17,6 +17,13 @@ func (c *Compiler) compileAssign(node ast.Node, lhs, rhs []ast.Expr, op token.To
 	ident, selectors := resolveAssignLHS(lhs[0])
 	numSel := len(selectors)
 
+	if ident == "try" {
+		if numSel > 0 {
+			return c.errorf(node, "'try' cannot be indexed or assigned to")
+		}
+		return c.errorf(node, "'try' cannot be assigned to")
+	}
+
 	if op == token.Define && numSel > 0 {
 		// using selector on new variable does not make sense
 		return c.errorf(node, "operator ':=' not allowed with selector")

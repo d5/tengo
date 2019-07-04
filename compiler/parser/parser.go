@@ -963,7 +963,6 @@ func (p *Parser) parseSimpleStmt(forIn bool) ast.Stmt {
 	case token.Assign, token.Define: // assignment statement
 		pos, tok := p.pos, p.token
 		p.next()
-
 		y := p.parseExprList()
 
 		return &ast.AssignStmt{
