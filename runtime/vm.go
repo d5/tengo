@@ -779,7 +779,7 @@ func (v *VM) run() error {
 				v.sp++
 			}
 
-		case compiler.OpReturnIfError:
+		case compiler.OpReturnOnError:
 			errv, isErr := v.stack[v.sp-1].(*tengo.Error)
 			if !isErr {
 				v.ip++

@@ -7,8 +7,6 @@ import (
 )
 
 func TestTryExpr(t *testing.T) {
-	// not assignable, because it's not a function, it's syntax
-	expectError(t, `x := try`, nil, "Compile Error: unresolved reference 'try'")
 	// top-level try failure considered a runtime error
 	expectError(t, `try(error("oops"))`, nil, "oops")
 	// if try succeeds, value is passed through
@@ -68,8 +66,4 @@ if is_error(x) {
 } else {
 	out = 0;	
 }`, nil, 12)
-
-	expectError(t, `try := func(){}`, nil, "'try' cannot be assigned to")
-	expectError(t, `try = func(){}`, nil, "'try' cannot be assigned to")
-	expectError(t, `try.a = func(){}`, nil, "'try' cannot be indexed or assigned to")
 }

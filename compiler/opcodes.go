@@ -48,7 +48,7 @@ const (
 	OpBinaryOp                    // Binary Operation
 	OpSuspend                     // Used internally by the VM to suspend execution
 	OpSpread                      // Spread operation
-	OpReturnIfError               // Returns if last value on stack is an error
+	OpReturnOnError               // Returns if last value on stack is an error
 )
 
 // OpcodeNames is opcode names.
@@ -96,7 +96,7 @@ var OpcodeNames = [...]string{
 	OpBinaryOp:      "BINARYOP",
 	OpSuspend:       "SUSPEND",
 	OpSpread:        "SPREAD",
-	OpReturnIfError: "ERRRET",
+	OpReturnOnError: "ERRRET",
 }
 
 // OpcodeOperands is the number of operands.
@@ -144,7 +144,7 @@ var OpcodeOperands = [...][]int{
 	OpBinaryOp:      {1},
 	OpSuspend:       {},
 	OpSpread:        {},
-	OpReturnIfError: {1},
+	OpReturnOnError: {1},
 }
 
 // ReadOperands reads operands from the bytecode.

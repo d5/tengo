@@ -194,27 +194,7 @@ L:
 		case token.LBrack:
 			x = p.parseIndexOrSlice(x)
 		case token.LParen:
-			temp := p.parseCall(x)
-			if id, isIdent := temp.Func.(*ast.Ident); isIdent && id.Name == "try" {
-				if len(temp.Args) != 1 {
-					p.error(id.Pos(), "try expression must have exactly one argument")
-					return &ast.BadExpr{From: temp.Pos(), To: temp.End()}
-				}
-
-				if _, isSpread := temp.Args[0].(*ast.SpreadExpr); isSpread {
-					p.error(temp.Args[0].Pos(), "try expression cannot contain a spread")
-					return &ast.BadExpr{From: temp.Pos(), To: temp.End()}
-				}
-
-				x = &ast.TryExpr{
-					TryPos: id.Pos(),
-					LParen: temp.LParen,
-					Expr:   temp.Args[0],
-					RParen: temp.RParen,
-				}
-			} else {
-				x = temp
-			}
+			x = p.parseCall(x)
 		default:
 			break L
 		}
@@ -430,6 +410,9 @@ func (p *Parser) parseOperand() ast.Expr {
 	case token.Error: // error expression
 		return p.parseErrorExpr()
 
+	case token.Try: // try expression
+		return p.parseTryExpr()
+
 	case token.Immutable: // immutable expression
 		return p.parseImmutableExpr()
 	}
@@ -559,6 +542,25 @@ func (p *Parser) parseErrorExpr() ast.Expr {
 	return expr
 }
 
+func (p *Parser) parseTryExpr() ast.Expr {
+	pos := p.pos
+
+	p.next()
+
+	lparen := p.expect(token.LParen)
+	value := p.parseExpr()
+	rparen := p.expect(token.RParen)
+
+	expr := &ast.TryExpr{
+		TryPos: pos,
+		Expr:   value,
+		LParen: lparen,
+		RParen: rparen,
+	}
+
+	return expr
+}
+
 func (p *Parser) parseImmutableExpr() ast.Expr {
 	pos := p.pos
 
@@ -679,7 +681,7 @@ func (p *Parser) parseStmt() (stmt ast.Stmt) {
 
 	switch p.token {
 	case // simple statements
-		token.Func, token.Error, token.Immutable, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False,
+		token.Func, token.Error, token.Try, token.Immutable, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False,
 		token.Undefined, token.Import, token.LParen, token.LBrace, token.LBrack,
 		token.Add, token.Sub, token.Mul, token.And, token.Xor, token.Not:
 		s := p.parseSimpleStmt(false)

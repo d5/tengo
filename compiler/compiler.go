@@ -520,7 +520,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
-		c.emit(node, OpReturnIfError, 1)
+		c.emit(node, OpReturnOnError, 1)
 
 	case *ast.SpreadExpr:
 		if err := c.Compile(node.Element); err != nil {
