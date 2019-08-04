@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 	"sync/atomic"
 
@@ -777,6 +778,23 @@ func (v *VM) run() error {
 				v.stack[v.sp] = ret
 				v.sp++
 			}
+
+		case compiler.OpReturnOnError:
+			errv, isErr := v.stack[v.sp-1].(*tengo.Error)
+			if !isErr {
+				v.ip++
+				// no error, just move on
+				continue
+			}
+
+			// special case: try expressions in the top level
+			// will be treated as runtime errors and returned
+			if v.framesIndex == 1 {
+				errStr, _ := tengo.ToString(errv.Value)
+				return errors.New(errStr)
+			}
+
+			fallthrough
 
 		case compiler.OpReturn:
 			v.ip++

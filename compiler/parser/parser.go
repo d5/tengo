@@ -410,6 +410,9 @@ func (p *Parser) parseOperand() ast.Expr {
 	case token.Error: // error expression
 		return p.parseErrorExpr()
 
+	case token.Try: // try expression
+		return p.parseTryExpr()
+
 	case token.Immutable: // immutable expression
 		return p.parseImmutableExpr()
 	}
@@ -539,6 +542,25 @@ func (p *Parser) parseErrorExpr() ast.Expr {
 	return expr
 }
 
+func (p *Parser) parseTryExpr() ast.Expr {
+	pos := p.pos
+
+	p.next()
+
+	lparen := p.expect(token.LParen)
+	value := p.parseExpr()
+	rparen := p.expect(token.RParen)
+
+	expr := &ast.TryExpr{
+		TryPos: pos,
+		Expr:   value,
+		LParen: lparen,
+		RParen: rparen,
+	}
+
+	return expr
+}
+
 func (p *Parser) parseImmutableExpr() ast.Expr {
 	pos := p.pos
 
@@ -659,7 +681,7 @@ func (p *Parser) parseStmt() (stmt ast.Stmt) {
 
 	switch p.token {
 	case // simple statements
-		token.Func, token.Error, token.Immutable, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False,
+		token.Func, token.Error, token.Try, token.Immutable, token.Ident, token.Int, token.Float, token.Char, token.String, token.True, token.False,
 		token.Undefined, token.Import, token.LParen, token.LBrace, token.LBrack,
 		token.Add, token.Sub, token.Mul, token.And, token.Xor, token.Not:
 		s := p.parseSimpleStmt(false)
@@ -943,7 +965,6 @@ func (p *Parser) parseSimpleStmt(forIn bool) ast.Stmt {
 	case token.Assign, token.Define: // assignment statement
 		pos, tok := p.pos, p.token
 		p.next()
-
 		y := p.parseExprList()
 
 		return &ast.AssignStmt{
