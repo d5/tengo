@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.12.x
+  - "1.12"
 
 # Force-enable Go modules. Also force go to use the code in vendor/
 # These will both be unnecessary when Go 1.13 lands.
