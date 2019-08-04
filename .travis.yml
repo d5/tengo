@@ -10,10 +10,10 @@ go:
 #   - GOFLAGS='-mod vendor'
 
 install:
-  - go get -u golang.org/x/lint/golint
+  - env GO111MODULE=on GOFLAGS='-mod vendor' go get -u golang.org/x/lint/golint
 
 script:
-  - GO111MODULE=on GOFLAGS='-mod vendor' make test
+  - env GO111MODULE=on GOFLAGS='-mod vendor' make test
 
 deploy:
   - provider: script
