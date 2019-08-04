@@ -5,15 +5,15 @@ go:
 
 # Force-enable Go modules. Also force go to use the code in vendor/
 # These will both be unnecessary when Go 1.13 lands.
-env:
-  - GO111MODULE=on
-  - GOFLAGS='-mod vendor'
+# env:
+#   - GO111MODULE=on
+#   - GOFLAGS='-mod vendor'
 
 install:
   - go get -u golang.org/x/lint/golint
 
 script:
-  - make test
+  - GO111MODULE=on GOFLAGS='-mod vendor' make test
 
 deploy:
   - provider: script
