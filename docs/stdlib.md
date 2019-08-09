@@ -8,3 +8,5 @@
 - [fmt](https://github.com/d5/tengo/blob/master/docs/stdlib-fmt.md): formatting functions
 - [json](https://github.com/d5/tengo/blob/master/docs/stdlib-json.md): JSON functions
 - [enum](https://github.com/d5/tengo/blob/master/docs/stdlib-enum.md): Enumeration functions
+- [hex](https://github.com/d5/tengo/blob/master/docs/stdlib-hex.md): hex encoding and decoding functions
+- [base64](https://github.com/d5/tengo/blob/master/docs/stdlib-base64.md): base64 encoding and decoding functions
