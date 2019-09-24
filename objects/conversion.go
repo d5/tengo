@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -219,6 +220,11 @@ func FromInterface(v interface{}) (Object, error) {
 		return &String{Value: v}, nil
 	case int64:
 		return &Int{Value: v}, nil
+	case json.Number:
+		if len(v) > tengo.MaxStringLen {
+			return nil, ErrStringLimit
+		}
+		return &String{Value: string(v)}, nil
 	case int:
 		return &Int{Value: int64(v)}, nil
 	case bool:
