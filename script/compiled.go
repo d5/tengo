@@ -77,7 +77,7 @@ func (c *Compiled) Clone() *Compiled {
 	return clone
 }
 
-// Lock is unnecessary when copy exist struct concurrently
+// CloneWithoutLock clone compiled without lock
 func (c *Compiled) CloneWithoutLock() *Compiled {
 	clone := &Compiled{
 		globalIndexes: c.globalIndexes,
