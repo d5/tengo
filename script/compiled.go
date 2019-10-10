@@ -77,6 +77,25 @@ func (c *Compiled) Clone() *Compiled {
 	return clone
 }
 
+// Lock is unnecessary when copy exist struct concurrently
+func (c *Compiled) CloneWithoutLock() *Compiled {
+	clone := &Compiled{
+		globalIndexes: c.globalIndexes,
+		bytecode:      c.bytecode,
+		globals:       make([]objects.Object, len(c.globals)),
+		maxAllocs:     c.maxAllocs,
+	}
+
+	// copy global objects
+	for idx, g := range c.globals {
+		if g != nil {
+			clone.globals[idx] = g
+		}
+	}
+
+	return clone
+}
+
 // IsDefined returns true if the variable name is defined (has value) before or after the execution.
 func (c *Compiled) IsDefined(name string) bool {
 	c.lock.RLock()
