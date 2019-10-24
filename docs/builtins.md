@@ -50,20 +50,20 @@ type_name("str") // string
 type_name([1, 2, 3]) // array
 ```
 
+## string
+
+Tries to convert an object to string object. See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on type conversion.
+
+```golang
+x := string(123) //  x == "123"
+```
+
 
 Optionally it can take the second argument, which will be returned if the first argument cannot be converted to string. Note that the second argument does not have to be string.
 
 ```golang
 v = string(undefined, "foo")  // v == "foo"
 v = string(undefined, false)  // v == false 
-```
-
-## string
-
-Tries to convert an object to string object. See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on type conversion.
-
-```golang
-x := string(123) //  v == "123"
 ```
 
 ## int
