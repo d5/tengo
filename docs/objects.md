@@ -249,7 +249,7 @@ func (o *StringArray) IndexGet(index objects.Object) (objects.Object, error) {
 func (o *StringArray) IndexSet(index, value objects.Object) error {
 	strVal, ok := objects.ToString(value)
 	if !ok {
-		return objects.ErrInvalidTypeConversion
+		return objects.ErrInvalidIndexValueType
 	}
 
 	intIdx, ok := index.(*objects.Int)
@@ -276,7 +276,11 @@ func (o *StringArray) Call(args ...objects.Object) (ret objects.Object, err erro
 
 	s1, ok := objects.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidTypeConversion
+		return nil, objects.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
 	}
 
 	for i, v := range o.Value {
