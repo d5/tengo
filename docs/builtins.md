@@ -55,7 +55,7 @@ type_name([1, 2, 3]) // array
 Tries to convert an object to string object. See [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) for more details on type conversion.
 
 ```golang
-x := string(123) //  v == "123"
+x := string(123) //  x == "123"
 ```
 
 
