@@ -82,7 +82,7 @@ func makeOSFile(file *os.File) *objects.ImmutableMap {
 			},
 			// stat() => imap(fileinfo)/error
 			"stat": &objects.UserFunction{
-				Name: "start",
+				Name: "stat",
 				Value: func(args ...objects.Object) (ret objects.Object, err error) {
 					if len(args) != 0 {
 						return nil, objects.ErrWrongNumArguments
