@@ -259,6 +259,17 @@ func FromInterface(v interface{}) (Object, error) {
 		return &Map{Value: kv}, nil
 	case []Object:
 		return &Array{Value: v}, nil
+	case []map[string]interface{}:
+		arr := make([]Object, len(v))
+		for i, e := range v {
+			vo, err := FromInterface(e)
+			if err != nil {
+				return nil, err
+			}
+
+			arr[i] = vo
+		}
+		return &Array{Value: arr}, nil
 	case []interface{}:
 		arr := make([]Object, len(v))
 		for i, e := range v {
