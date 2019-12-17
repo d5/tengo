@@ -27,7 +27,8 @@ func main() {
 
 			src, err := ioutil.ReadFile(file.Name())
 			if err != nil {
-				log.Fatalf("file '%s' read error: %s", file.Name(), err.Error())
+				log.Fatalf("file '%s' read error: %s",
+					file.Name(), err.Error())
 			}
 
 			modules[modName] = string(src)
@@ -42,7 +43,8 @@ package stdlib
 // SourceModules are source type standard library modules.
 var SourceModules = map[string]string{` + "\n")
 	for modName, modSrc := range modules {
-		out.WriteString("\t\"" + modName + "\": " + strconv.Quote(modSrc) + ",\n")
+		out.WriteString("\t\"" + modName + "\": " +
+			strconv.Quote(modSrc) + ",\n")
 	}
 	out.WriteString("}\n")
 

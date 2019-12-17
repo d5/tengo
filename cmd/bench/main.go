@@ -4,12 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/d5/tengo/compiler"
-	"github.com/d5/tengo/compiler/ast"
-	"github.com/d5/tengo/compiler/parser"
-	"github.com/d5/tengo/compiler/source"
-	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/runtime"
+	"github.com/d5/tengo"
+	"github.com/d5/tengo/internal"
 )
 
 func main() {
@@ -40,8 +36,9 @@ fib := func(x) {
 		panic(err)
 	}
 
-	if nativeResult != int(result.(*objects.Int).Value) {
-		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
+	if nativeResult != int(result.(*tengo.Int).Value) {
+		panic(fmt.Errorf("wrong result: %d != %d", nativeResult,
+			int(result.(*tengo.Int).Value)))
 	}
 
 	fmt.Println("-------------------------------------")
@@ -76,8 +73,9 @@ fib := func(x, s) {
 		panic(err)
 	}
 
-	if nativeResult != int(result.(*objects.Int).Value) {
-		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
+	if nativeResult != int(result.(*tengo.Int).Value) {
+		panic(fmt.Errorf("wrong result: %d != %d", nativeResult,
+			int(result.(*tengo.Int).Value)))
 	}
 
 	fmt.Println("-------------------------------------")
@@ -112,8 +110,9 @@ fib := func(x, a, b) {
 		panic(err)
 	}
 
-	if nativeResult != int(result.(*objects.Int).Value) {
-		panic(fmt.Errorf("wrong result: %d != %d", nativeResult, int(result.(*objects.Int).Value)))
+	if nativeResult != int(result.(*tengo.Int).Value) {
+		panic(fmt.Errorf("wrong result: %d != %d", nativeResult,
+			int(result.(*tengo.Int).Value)))
 	}
 
 	fmt.Println("-------------------------------------")
@@ -155,14 +154,22 @@ func fibTC2(n, a, b int) int {
 	}
 }
 
-func runBench(input []byte) (parseTime time.Duration, compileTime time.Duration, runTime time.Duration, result objects.Object, err error) {
-	var astFile *ast.File
+func runBench(
+	input []byte,
+) (
+	parseTime time.Duration,
+	compileTime time.Duration,
+	runTime time.Duration,
+	result tengo.Object,
+	err error,
+) {
+	var astFile *internal.File
 	parseTime, astFile, err = parse(input)
 	if err != nil {
 		return
 	}
 
-	var bytecode *compiler.Bytecode
+	var bytecode *tengo.Bytecode
 	compileTime, bytecode, err = compileFile(astFile)
 	if err != nil {
 		return
@@ -173,13 +180,13 @@ func runBench(input []byte) (parseTime time.Duration, compileTime time.Duration,
 	return
 }
 
-func parse(input []byte) (time.Duration, *ast.File, error) {
-	fileSet := source.NewFileSet()
+func parse(input []byte) (time.Duration, *internal.File, error) {
+	fileSet := internal.NewFileSet()
 	inputFile := fileSet.AddFile("bench", -1, len(input))
 
 	start := time.Now()
 
-	p := parser.NewParser(inputFile, input, nil)
+	p := internal.NewParser(inputFile, input, nil)
 	file, err := p.ParseFile()
 	if err != nil {
 		return time.Since(start), nil, err
@@ -188,13 +195,13 @@ func parse(input []byte) (time.Duration, *ast.File, error) {
 	return time.Since(start), file, nil
 }
 
-func compileFile(file *ast.File) (time.Duration, *compiler.Bytecode, error) {
-	symTable := compiler.NewSymbolTable()
+func compileFile(file *internal.File) (time.Duration, *tengo.Bytecode, error) {
+	symTable := internal.NewSymbolTable()
 	symTable.Define("out")
 
 	start := time.Now()
 
-	c := compiler.NewCompiler(file.InputFile, symTable, nil, nil, nil)
+	c := tengo.NewCompiler(file.InputFile, symTable, nil, nil, nil)
 	if err := c.Compile(file); err != nil {
 		return time.Since(start), nil, err
 	}
@@ -205,12 +212,14 @@ func compileFile(file *ast.File) (time.Duration, *compiler.Bytecode, error) {
 	return time.Since(start), bytecode, nil
 }
 
-func runVM(bytecode *compiler.Bytecode) (time.Duration, objects.Object, error) {
-	globals := make([]objects.Object, runtime.GlobalsSize)
+func runVM(
+	bytecode *tengo.Bytecode,
+) (time.Duration, tengo.Object, error) {
+	globals := make([]tengo.Object, tengo.GlobalsSize)
 
 	start := time.Now()
 
-	v := runtime.NewVM(bytecode, globals, -1)
+	v := tengo.NewVM(bytecode, globals, -1)
 	if err := v.Run(); err != nil {
 		return time.Since(start), nil, err
 	}

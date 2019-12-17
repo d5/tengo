@@ -12,15 +12,15 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
 )
 
 // Encode returns the JSON encoding of the object.
-func Encode(o objects.Object) ([]byte, error) {
+func Encode(o tengo.Object) ([]byte, error) {
 	var b []byte
 
 	switch o := o.(type) {
-	case *objects.Array:
+	case *tengo.Array:
 		b = append(b, '[')
 		len1 := len(o.Value) - 1
 		for idx, elem := range o.Value {
@@ -34,7 +34,7 @@ func Encode(o objects.Object) ([]byte, error) {
 			}
 		}
 		b = append(b, ']')
-	case *objects.ImmutableArray:
+	case *tengo.ImmutableArray:
 		b = append(b, '[')
 		len1 := len(o.Value) - 1
 		for idx, elem := range o.Value {
@@ -48,7 +48,7 @@ func Encode(o objects.Object) ([]byte, error) {
 			}
 		}
 		b = append(b, ']')
-	case *objects.Map:
+	case *tengo.Map:
 		b = append(b, '{')
 		len1 := len(o.Value) - 1
 		idx := 0
@@ -66,7 +66,7 @@ func Encode(o objects.Object) ([]byte, error) {
 			idx++
 		}
 		b = append(b, '}')
-	case *objects.ImmutableMap:
+	case *tengo.ImmutableMap:
 		b = append(b, '{')
 		len1 := len(o.Value) - 1
 		idx := 0
@@ -84,22 +84,22 @@ func Encode(o objects.Object) ([]byte, error) {
 			idx++
 		}
 		b = append(b, '}')
-	case *objects.Bool:
+	case *tengo.Bool:
 		if o.IsFalsy() {
 			b = strconv.AppendBool(b, false)
 		} else {
 			b = strconv.AppendBool(b, true)
 		}
-	case *objects.Bytes:
+	case *tengo.Bytes:
 		b = append(b, '"')
 		encodedLen := base64.StdEncoding.EncodedLen(len(o.Value))
 		dst := make([]byte, encodedLen)
 		base64.StdEncoding.Encode(dst, o.Value)
 		b = append(b, dst...)
 		b = append(b, '"')
-	case *objects.Char:
+	case *tengo.Char:
 		b = strconv.AppendInt(b, int64(o.Value), 10)
-	case *objects.Float:
+	case *tengo.Float:
 		var y []byte
 
 		f := o.Value
@@ -127,21 +127,20 @@ func Encode(o objects.Object) ([]byte, error) {
 		}
 
 		b = append(b, y...)
-	case *objects.Int:
+	case *tengo.Int:
 		b = strconv.AppendInt(b, o.Value, 10)
-	case *objects.String:
+	case *tengo.String:
 		b = strconv.AppendQuote(b, o.Value)
-	case *objects.Time:
+	case *tengo.Time:
 		y, err := o.Value.MarshalJSON()
 		if err != nil {
 			return nil, err
 		}
 		b = append(b, y...)
-	case *objects.Undefined:
+	case *tengo.Undefined:
 		b = append(b, "null"...)
 	default:
 		// unknown type: ignore
 	}
-
 	return b, nil
 }

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/objects"
 )
 
 func TestTextRE(t *testing.T) {
@@ -22,8 +21,10 @@ func TestTextRE(t *testing.T) {
 		{"^b", "abc"},
 	} {
 		expected := regexp.MustCompile(d.pattern).MatchString(d.text)
-		module(t, "text").call("re_match", d.pattern, d.text).expect(expected, "pattern: %q, src: %q", d.pattern, d.text)
-		module(t, "text").call("re_compile", d.pattern).call("match", d.text).expect(expected, "patter: %q, src: %q", d.pattern, d.text)
+		module(t, "text").call("re_match", d.pattern, d.text).
+			expect(expected, "pattern: %q, src: %q", d.pattern, d.text)
+		module(t, "text").call("re_compile", d.pattern).call("match", d.text).
+			expect(expected, "patter: %q, src: %q", d.pattern, d.text)
 	}
 
 	// re_find(pattern, text)
@@ -32,7 +33,7 @@ func TestTextRE(t *testing.T) {
 		text     string
 		expected interface{}
 	}{
-		{"a(b)", "", objects.UndefinedValue},
+		{"a(b)", "", tengo.UndefinedValue},
 		{"a(b)", "ab", ARR{
 			ARR{
 				IMAP{"text": "ab", "begin": 0, "end": 2},
@@ -53,8 +54,10 @@ func TestTextRE(t *testing.T) {
 			},
 		}},
 	} {
-		module(t, "text").call("re_find", d.pattern, d.text).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
-		module(t, "text").call("re_compile", d.pattern).call("find", d.text).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_find", d.pattern, d.text).
+			expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_compile", d.pattern).call("find", d.text).
+			expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
 	}
 
 	// re_find(pattern, text, count))
@@ -64,7 +67,7 @@ func TestTextRE(t *testing.T) {
 		count    int
 		expected interface{}
 	}{
-		{"a(b)", "", -1, objects.UndefinedValue},
+		{"a(b)", "", -1, tengo.UndefinedValue},
 		{"a(b)", "ab", -1, ARR{
 			ARR{
 				IMAP{"text": "ab", "begin": 0, "end": 2},
@@ -93,7 +96,7 @@ func TestTextRE(t *testing.T) {
 				IMAP{"text": "c", "begin": 9, "end": 10},
 			},
 		}},
-		{"(a)b(c)d", "abcdefgabcd", 0, objects.UndefinedValue},
+		{"(a)b(c)d", "abcdefgabcd", 0, tengo.UndefinedValue},
 		{"(a)b(c)d", "abcdefgabcd", 1, ARR{
 			ARR{
 				IMAP{"text": "abcd", "begin": 0, "end": 4},
@@ -102,8 +105,11 @@ func TestTextRE(t *testing.T) {
 			},
 		}},
 	} {
-		module(t, "text").call("re_find", d.pattern, d.text, d.count).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
-		module(t, "text").call("re_compile", d.pattern).call("find", d.text, d.count).expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_find", d.pattern, d.text, d.count).
+			expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_compile", d.pattern).
+			call("find", d.text, d.count).
+			expect(d.expected, "pattern: %q, text: %q", d.pattern, d.text)
 	}
 
 	// re_replace(pattern, text, repl)
@@ -126,9 +132,15 @@ func TestTextRE(t *testing.T) {
 		{"((일)(2)3)", "일23\n일이3\n일23", "$1$2$3"},
 		{"(a(b)c)", "abc\nabc\nabc", "$1$2"},
 	} {
-		expected := regexp.MustCompile(d.pattern).ReplaceAllString(d.text, d.repl)
-		module(t, "text").call("re_replace", d.pattern, d.text, d.repl).expect(expected, "pattern: %q, text: %q, repl: %q", d.pattern, d.text, d.repl)
-		module(t, "text").call("re_compile", d.pattern).call("replace", d.text, d.repl).expect(expected, "pattern: %q, text: %q, repl: %q", d.pattern, d.text, d.repl)
+		expected := regexp.MustCompile(d.pattern).
+			ReplaceAllString(d.text, d.repl)
+		module(t, "text").call("re_replace", d.pattern, d.text, d.repl).
+			expect(expected, "pattern: %q, text: %q, repl: %q",
+				d.pattern, d.text, d.repl)
+		module(t, "text").call("re_compile", d.pattern).
+			call("replace", d.text, d.repl).
+			expect(expected, "pattern: %q, text: %q, repl: %q",
+				d.pattern, d.text, d.repl)
 	}
 
 	// re_split(pattern, text)
@@ -145,8 +157,10 @@ func TestTextRE(t *testing.T) {
 		for _, ex := range regexp.MustCompile(d.pattern).Split(d.text, -1) {
 			expected = append(expected, ex)
 		}
-		module(t, "text").call("re_split", d.pattern, d.text).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
-		module(t, "text").call("re_compile", d.pattern).call("split", d.text).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_split", d.pattern, d.text).
+			expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_compile", d.pattern).call("split", d.text).
+			expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
 	}
 
 	// re_split(pattern, text, count))
@@ -171,8 +185,11 @@ func TestTextRE(t *testing.T) {
 		for _, ex := range regexp.MustCompile(d.pattern).Split(d.text, d.count) {
 			expected = append(expected, ex)
 		}
-		module(t, "text").call("re_split", d.pattern, d.text, d.count).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
-		module(t, "text").call("re_compile", d.pattern).call("split", d.text, d.count).expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_split", d.pattern, d.text, d.count).
+			expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
+		module(t, "text").call("re_compile", d.pattern).
+			call("split", d.text, d.count).
+			expect(expected, "pattern: %q, text: %q", d.pattern, d.text)
 	}
 }
 
@@ -219,19 +236,31 @@ func TestReplaceLimit(t *testing.T) {
 	defer func() { tengo.MaxStringLen = curMaxStringLen }()
 	tengo.MaxStringLen = 12
 
-	module(t, "text").call("replace", "123456789012", "1", "x", -1).expect("x234567890x2")
-	module(t, "text").call("replace", "123456789012", "12", "x", -1).expect("x34567890x")
-	module(t, "text").call("replace", "123456789012", "1", "xy", -1).expectError()
-	module(t, "text").call("replace", "123456789012", "0", "xy", -1).expectError()
-	module(t, "text").call("replace", "123456789012", "012", "xyz", -1).expect("123456789xyz")
-	module(t, "text").call("replace", "123456789012", "012", "xyzz", -1).expectError()
+	module(t, "text").call("replace", "123456789012", "1", "x", -1).
+		expect("x234567890x2")
+	module(t, "text").call("replace", "123456789012", "12", "x", -1).
+		expect("x34567890x")
+	module(t, "text").call("replace", "123456789012", "1", "xy", -1).
+		expectError()
+	module(t, "text").call("replace", "123456789012", "0", "xy", -1).
+		expectError()
+	module(t, "text").call("replace", "123456789012", "012", "xyz", -1).
+		expect("123456789xyz")
+	module(t, "text").call("replace", "123456789012", "012", "xyzz", -1).
+		expectError()
 
-	module(t, "text").call("re_replace", "1", "123456789012", "x").expect("x234567890x2")
-	module(t, "text").call("re_replace", "12", "123456789012", "x").expect("x34567890x")
-	module(t, "text").call("re_replace", "1", "123456789012", "xy").expectError()
-	module(t, "text").call("re_replace", "1(2)", "123456789012", "x$1").expect("x234567890x2")
-	module(t, "text").call("re_replace", "(1)(2)", "123456789012", "$2$1").expect("213456789021")
-	module(t, "text").call("re_replace", "(1)(2)", "123456789012", "${2}${1}x").expectError()
+	module(t, "text").call("re_replace", "1", "123456789012", "x").
+		expect("x234567890x2")
+	module(t, "text").call("re_replace", "12", "123456789012", "x").
+		expect("x34567890x")
+	module(t, "text").call("re_replace", "1", "123456789012", "xy").
+		expectError()
+	module(t, "text").call("re_replace", "1(2)", "123456789012", "x$1").
+		expect("x234567890x2")
+	module(t, "text").call("re_replace", "(1)(2)", "123456789012", "$2$1").
+		expect("213456789021")
+	module(t, "text").call("re_replace", "(1)(2)", "123456789012", "${2}${1}x").
+		expectError()
 }
 
 func TestTextRepeat(t *testing.T) {
@@ -239,10 +268,14 @@ func TestTextRepeat(t *testing.T) {
 	defer func() { tengo.MaxStringLen = curMaxStringLen }()
 	tengo.MaxStringLen = 12
 
-	module(t, "text").call("repeat", "1234", "3").expect("123412341234")
-	module(t, "text").call("repeat", "1234", "4").expectError()
-	module(t, "text").call("repeat", "1", "12").expect("111111111111")
-	module(t, "text").call("repeat", "1", "13").expectError()
+	module(t, "text").call("repeat", "1234", "3").
+		expect("123412341234")
+	module(t, "text").call("repeat", "1234", "4").
+		expectError()
+	module(t, "text").call("repeat", "1", "12").
+		expect("111111111111")
+	module(t, "text").call("repeat", "1", "13").
+		expectError()
 }
 
 func TestSubstr(t *testing.T) {

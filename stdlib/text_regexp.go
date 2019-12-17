@@ -4,23 +4,25 @@ import (
 	"regexp"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/objects"
 )
 
-func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
-	return &objects.ImmutableMap{
-		Value: map[string]objects.Object{
+func makeTextRegexp(re *regexp.Regexp) *tengo.ImmutableMap {
+	return &tengo.ImmutableMap{
+		Value: map[string]tengo.Object{
 			// match(text) => bool
-			"match": &objects.UserFunction{
-				Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			"match": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (
+					ret tengo.Object,
+					err error,
+				) {
 					if len(args) != 1 {
-						err = objects.ErrWrongNumArguments
+						err = tengo.ErrWrongNumArguments
 						return
 					}
 
-					s1, ok := objects.ToString(args[0])
+					s1, ok := tengo.ToString(args[0])
 					if !ok {
-						err = objects.ErrInvalidArgumentType{
+						err = tengo.ErrInvalidArgumentType{
 							Name:     "first",
 							Expected: "string(compatible)",
 							Found:    args[0].TypeName(),
@@ -29,9 +31,9 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 					}
 
 					if re.MatchString(s1) {
-						ret = objects.TrueValue
+						ret = tengo.TrueValue
 					} else {
-						ret = objects.FalseValue
+						ret = tengo.FalseValue
 					}
 
 					return
@@ -40,17 +42,20 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 
 			// find(text) 			=> array(array({text:,begin:,end:}))/undefined
 			// find(text, maxCount) => array(array({text:,begin:,end:}))/undefined
-			"find": &objects.UserFunction{
-				Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			"find": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (
+					ret tengo.Object,
+					err error,
+				) {
 					numArgs := len(args)
 					if numArgs != 1 && numArgs != 2 {
-						err = objects.ErrWrongNumArguments
+						err = tengo.ErrWrongNumArguments
 						return
 					}
 
-					s1, ok := objects.ToString(args[0])
+					s1, ok := tengo.ToString(args[0])
 					if !ok {
-						err = objects.ErrInvalidArgumentType{
+						err = tengo.ErrInvalidArgumentType{
 							Name:     "first",
 							Expected: "string(compatible)",
 							Found:    args[0].TypeName(),
@@ -61,27 +66,35 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 					if numArgs == 1 {
 						m := re.FindStringSubmatchIndex(s1)
 						if m == nil {
-							ret = objects.UndefinedValue
+							ret = tengo.UndefinedValue
 							return
 						}
 
-						arr := &objects.Array{}
+						arr := &tengo.Array{}
 						for i := 0; i < len(m); i += 2 {
-							arr.Value = append(arr.Value, &objects.ImmutableMap{Value: map[string]objects.Object{
-								"text":  &objects.String{Value: s1[m[i]:m[i+1]]},
-								"begin": &objects.Int{Value: int64(m[i])},
-								"end":   &objects.Int{Value: int64(m[i+1])},
-							}})
+							arr.Value = append(arr.Value,
+								&tengo.ImmutableMap{
+									Value: map[string]tengo.Object{
+										"text": &tengo.String{
+											Value: s1[m[i]:m[i+1]],
+										},
+										"begin": &tengo.Int{
+											Value: int64(m[i]),
+										},
+										"end": &tengo.Int{
+											Value: int64(m[i+1]),
+										},
+									}})
 						}
 
-						ret = &objects.Array{Value: []objects.Object{arr}}
+						ret = &tengo.Array{Value: []tengo.Object{arr}}
 
 						return
 					}
 
-					i2, ok := objects.ToInt(args[1])
+					i2, ok := tengo.ToInt(args[1])
 					if !ok {
-						err = objects.ErrInvalidArgumentType{
+						err = tengo.ErrInvalidArgumentType{
 							Name:     "second",
 							Expected: "int(compatible)",
 							Found:    args[1].TypeName(),
@@ -90,19 +103,27 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 					}
 					m := re.FindAllStringSubmatchIndex(s1, i2)
 					if m == nil {
-						ret = objects.UndefinedValue
+						ret = tengo.UndefinedValue
 						return
 					}
 
-					arr := &objects.Array{}
+					arr := &tengo.Array{}
 					for _, m := range m {
-						subMatch := &objects.Array{}
+						subMatch := &tengo.Array{}
 						for i := 0; i < len(m); i += 2 {
-							subMatch.Value = append(subMatch.Value, &objects.ImmutableMap{Value: map[string]objects.Object{
-								"text":  &objects.String{Value: s1[m[i]:m[i+1]]},
-								"begin": &objects.Int{Value: int64(m[i])},
-								"end":   &objects.Int{Value: int64(m[i+1])},
-							}})
+							subMatch.Value = append(subMatch.Value,
+								&tengo.ImmutableMap{
+									Value: map[string]tengo.Object{
+										"text": &tengo.String{
+											Value: s1[m[i]:m[i+1]],
+										},
+										"begin": &tengo.Int{
+											Value: int64(m[i]),
+										},
+										"end": &tengo.Int{
+											Value: int64(m[i+1]),
+										},
+									}})
 						}
 
 						arr.Value = append(arr.Value, subMatch)
@@ -115,16 +136,19 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 			},
 
 			// replace(src, repl) => string
-			"replace": &objects.UserFunction{
-				Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			"replace": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (
+					ret tengo.Object,
+					err error,
+				) {
 					if len(args) != 2 {
-						err = objects.ErrWrongNumArguments
+						err = tengo.ErrWrongNumArguments
 						return
 					}
 
-					s1, ok := objects.ToString(args[0])
+					s1, ok := tengo.ToString(args[0])
 					if !ok {
-						err = objects.ErrInvalidArgumentType{
+						err = tengo.ErrInvalidArgumentType{
 							Name:     "first",
 							Expected: "string(compatible)",
 							Found:    args[0].TypeName(),
@@ -132,9 +156,9 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 						return
 					}
 
-					s2, ok := objects.ToString(args[1])
+					s2, ok := tengo.ToString(args[1])
 					if !ok {
-						err = objects.ErrInvalidArgumentType{
+						err = tengo.ErrInvalidArgumentType{
 							Name:     "second",
 							Expected: "string(compatible)",
 							Found:    args[1].TypeName(),
@@ -144,10 +168,10 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 
 					s, ok := doTextRegexpReplace(re, s1, s2)
 					if !ok {
-						return nil, objects.ErrStringLimit
+						return nil, tengo.ErrStringLimit
 					}
 
-					ret = &objects.String{Value: s}
+					ret = &tengo.String{Value: s}
 
 					return
 				},
@@ -155,17 +179,20 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 
 			// split(text) 			 => array(string)
 			// split(text, maxCount) => array(string)
-			"split": &objects.UserFunction{
-				Value: func(args ...objects.Object) (ret objects.Object, err error) {
+			"split": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (
+					ret tengo.Object,
+					err error,
+				) {
 					numArgs := len(args)
 					if numArgs != 1 && numArgs != 2 {
-						err = objects.ErrWrongNumArguments
+						err = tengo.ErrWrongNumArguments
 						return
 					}
 
-					s1, ok := objects.ToString(args[0])
+					s1, ok := tengo.ToString(args[0])
 					if !ok {
-						err = objects.ErrInvalidArgumentType{
+						err = tengo.ErrInvalidArgumentType{
 							Name:     "first",
 							Expected: "string(compatible)",
 							Found:    args[0].TypeName(),
@@ -175,9 +202,9 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 
 					var i2 = -1
 					if numArgs > 1 {
-						i2, ok = objects.ToInt(args[1])
+						i2, ok = tengo.ToInt(args[1])
 						if !ok {
-							err = objects.ErrInvalidArgumentType{
+							err = tengo.ErrInvalidArgumentType{
 								Name:     "second",
 								Expected: "int(compatible)",
 								Found:    args[1].TypeName(),
@@ -186,9 +213,10 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 						}
 					}
 
-					arr := &objects.Array{}
+					arr := &tengo.Array{}
 					for _, s := range re.Split(s1, i2) {
-						arr.Value = append(arr.Value, &objects.String{Value: s})
+						arr.Value = append(arr.Value,
+							&tengo.String{Value: s})
 					}
 
 					ret = arr
@@ -204,15 +232,12 @@ func makeTextRegexp(re *regexp.Regexp) *objects.ImmutableMap {
 func doTextRegexpReplace(re *regexp.Regexp, src, repl string) (string, bool) {
 	idx := 0
 	out := ""
-
 	for _, m := range re.FindAllStringSubmatchIndex(src, -1) {
 		var exp []byte
 		exp = re.ExpandString(exp, repl, src, m)
-
 		if len(out)+m[0]-idx+len(exp) > tengo.MaxStringLen {
 			return "", false
 		}
-
 		out += src[idx:m[0]] + string(exp)
 		idx = m[1]
 	}
@@ -220,9 +245,7 @@ func doTextRegexpReplace(re *regexp.Regexp, src, repl string) (string, bool) {
 		if len(out)+len(src)-idx > tengo.MaxStringLen {
 			return "", false
 		}
-
 		out += src[idx:]
 	}
-
-	return string(out), true
+	return out, true
 }

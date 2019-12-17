@@ -8,68 +8,208 @@ import (
 	"unicode/utf8"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/objects"
 )
 
-var textModule = map[string]objects.Object{
-	"re_match":       &objects.UserFunction{Name: "re_match", Value: textREMatch},                           // re_match(pattern, text) => bool/error
-	"re_find":        &objects.UserFunction{Name: "re_find", Value: textREFind},                             // re_find(pattern, text, count) => [[{text:,begin:,end:}]]/undefined
-	"re_replace":     &objects.UserFunction{Name: "re_replace", Value: textREReplace},                       // re_replace(pattern, text, repl) => string/error
-	"re_split":       &objects.UserFunction{Name: "re_split", Value: textRESplit},                           // re_split(pattern, text, count) => [string]/error
-	"re_compile":     &objects.UserFunction{Name: "re_compile", Value: textRECompile},                       // re_compile(pattern) => Regexp/error
-	"compare":        &objects.UserFunction{Name: "compare", Value: FuncASSRI(strings.Compare)},             // compare(a, b) => int
-	"contains":       &objects.UserFunction{Name: "contains", Value: FuncASSRB(strings.Contains)},           // contains(s, substr) => bool
-	"contains_any":   &objects.UserFunction{Name: "contains_any", Value: FuncASSRB(strings.ContainsAny)},    // contains_any(s, chars) => bool
-	"count":          &objects.UserFunction{Name: "count", Value: FuncASSRI(strings.Count)},                 // count(s, substr) => int
-	"equal_fold":     &objects.UserFunction{Name: "equal_fold", Value: FuncASSRB(strings.EqualFold)},        // "equal_fold(s, t) => bool
-	"fields":         &objects.UserFunction{Name: "fields", Value: FuncASRSs(strings.Fields)},               // fields(s) => [string]
-	"has_prefix":     &objects.UserFunction{Name: "has_prefix", Value: FuncASSRB(strings.HasPrefix)},        // has_prefix(s, prefix) => bool
-	"has_suffix":     &objects.UserFunction{Name: "has_suffix", Value: FuncASSRB(strings.HasSuffix)},        // has_suffix(s, suffix) => bool
-	"index":          &objects.UserFunction{Name: "index", Value: FuncASSRI(strings.Index)},                 // index(s, substr) => int
-	"index_any":      &objects.UserFunction{Name: "index_any", Value: FuncASSRI(strings.IndexAny)},          // index_any(s, chars) => int
-	"join":           &objects.UserFunction{Name: "join", Value: textJoin},                                  // join(arr, sep) => string
-	"last_index":     &objects.UserFunction{Name: "last_index", Value: FuncASSRI(strings.LastIndex)},        // last_index(s, substr) => int
-	"last_index_any": &objects.UserFunction{Name: "last_index_any", Value: FuncASSRI(strings.LastIndexAny)}, // last_index_any(s, chars) => int
-	"repeat":         &objects.UserFunction{Name: "repeat", Value: textRepeat},                              // repeat(s, count) => string
-	"replace":        &objects.UserFunction{Name: "replace", Value: textReplace},                            // replace(s, old, new, n) => string
-	"substr":         &objects.UserFunction{Name: "substr", Value: textSubstring},                           // substr(s, lower, upper) => string
-	"split":          &objects.UserFunction{Name: "split", Value: FuncASSRSs(strings.Split)},                // split(s, sep) => [string]
-	"split_after":    &objects.UserFunction{Name: "split_after", Value: FuncASSRSs(strings.SplitAfter)},     // split_after(s, sep) => [string]
-	"split_after_n":  &objects.UserFunction{Name: "split_after_n", Value: FuncASSIRSs(strings.SplitAfterN)}, // split_after_n(s, sep, n) => [string]
-	"split_n":        &objects.UserFunction{Name: "split_n", Value: FuncASSIRSs(strings.SplitN)},            // split_n(s, sep, n) => [string]
-	"title":          &objects.UserFunction{Name: "title", Value: FuncASRS(strings.Title)},                  // title(s) => string
-	"to_lower":       &objects.UserFunction{Name: "to_lower", Value: FuncASRS(strings.ToLower)},             // to_lower(s) => string
-	"to_title":       &objects.UserFunction{Name: "to_title", Value: FuncASRS(strings.ToTitle)},             // to_title(s) => string
-	"to_upper":       &objects.UserFunction{Name: "to_upper", Value: FuncASRS(strings.ToUpper)},             // to_upper(s) => string
-	"pad_left":       &objects.UserFunction{Name: "pad_left", Value: textPadLeft},                           // pad_left(s, pad_len, pad_with) => string
-	"pad_right":      &objects.UserFunction{Name: "pad_right", Value: textPadRight},                         // pad_right(s, pad_len, pad_with) => string
-	"trim":           &objects.UserFunction{Name: "trim", Value: FuncASSRS(strings.Trim)},                   // trim(s, cutset) => string
-	"trim_left":      &objects.UserFunction{Name: "trim_left", Value: FuncASSRS(strings.TrimLeft)},          // trim_left(s, cutset) => string
-	"trim_prefix":    &objects.UserFunction{Name: "trim_prefix", Value: FuncASSRS(strings.TrimPrefix)},      // trim_prefix(s, prefix) => string
-	"trim_right":     &objects.UserFunction{Name: "trim_right", Value: FuncASSRS(strings.TrimRight)},        // trim_right(s, cutset) => string
-	"trim_space":     &objects.UserFunction{Name: "trim_space", Value: FuncASRS(strings.TrimSpace)},         // trim_space(s) => string
-	"trim_suffix":    &objects.UserFunction{Name: "trim_suffix", Value: FuncASSRS(strings.TrimSuffix)},      // trim_suffix(s, suffix) => string
-	"atoi":           &objects.UserFunction{Name: "atoi", Value: FuncASRIE(strconv.Atoi)},                   // atoi(str) => int/error
-	"format_bool":    &objects.UserFunction{Name: "format_bool", Value: textFormatBool},                     // format_bool(b) => string
-	"format_float":   &objects.UserFunction{Name: "format_float", Value: textFormatFloat},                   // format_float(f, fmt, prec, bits) => string
-	"format_int":     &objects.UserFunction{Name: "format_int", Value: textFormatInt},                       // format_int(i, base) => string
-	"itoa":           &objects.UserFunction{Name: "itoa", Value: FuncAIRS(strconv.Itoa)},                    // itoa(i) => string
-	"parse_bool":     &objects.UserFunction{Name: "parse_bool", Value: textParseBool},                       // parse_bool(str) => bool/error
-	"parse_float":    &objects.UserFunction{Name: "parse_float", Value: textParseFloat},                     // parse_float(str, bits) => float/error
-	"parse_int":      &objects.UserFunction{Name: "parse_int", Value: textParseInt},                         // parse_int(str, base, bits) => int/error
-	"quote":          &objects.UserFunction{Name: "quote", Value: FuncASRS(strconv.Quote)},                  // quote(str) => string
-	"unquote":        &objects.UserFunction{Name: "unquote", Value: FuncASRSE(strconv.Unquote)},             // unquote(str) => string/error
+var textModule = map[string]tengo.Object{
+	"re_match": &tengo.UserFunction{
+		Name:  "re_match",
+		Value: textREMatch,
+	}, // re_match(pattern, text) => bool/error
+	"re_find": &tengo.UserFunction{
+		Name:  "re_find",
+		Value: textREFind,
+	}, // re_find(pattern, text, count) => [[{text:,begin:,end:}]]/undefined
+	"re_replace": &tengo.UserFunction{
+		Name:  "re_replace",
+		Value: textREReplace,
+	}, // re_replace(pattern, text, repl) => string/error
+	"re_split": &tengo.UserFunction{
+		Name:  "re_split",
+		Value: textRESplit,
+	}, // re_split(pattern, text, count) => [string]/error
+	"re_compile": &tengo.UserFunction{
+		Name:  "re_compile",
+		Value: textRECompile,
+	}, // re_compile(pattern) => Regexp/error
+	"compare": &tengo.UserFunction{
+		Name:  "compare",
+		Value: FuncASSRI(strings.Compare),
+	}, // compare(a, b) => int
+	"contains": &tengo.UserFunction{
+		Name:  "contains",
+		Value: FuncASSRB(strings.Contains),
+	}, // contains(s, substr) => bool
+	"contains_any": &tengo.UserFunction{
+		Name:  "contains_any",
+		Value: FuncASSRB(strings.ContainsAny),
+	}, // contains_any(s, chars) => bool
+	"count": &tengo.UserFunction{
+		Name:  "count",
+		Value: FuncASSRI(strings.Count),
+	}, // count(s, substr) => int
+	"equal_fold": &tengo.UserFunction{
+		Name:  "equal_fold",
+		Value: FuncASSRB(strings.EqualFold),
+	}, // "equal_fold(s, t) => bool
+	"fields": &tengo.UserFunction{
+		Name:  "fields",
+		Value: FuncASRSs(strings.Fields),
+	}, // fields(s) => [string]
+	"has_prefix": &tengo.UserFunction{
+		Name:  "has_prefix",
+		Value: FuncASSRB(strings.HasPrefix),
+	}, // has_prefix(s, prefix) => bool
+	"has_suffix": &tengo.UserFunction{
+		Name:  "has_suffix",
+		Value: FuncASSRB(strings.HasSuffix),
+	}, // has_suffix(s, suffix) => bool
+	"index": &tengo.UserFunction{
+		Name:  "index",
+		Value: FuncASSRI(strings.Index),
+	}, // index(s, substr) => int
+	"index_any": &tengo.UserFunction{
+		Name:  "index_any",
+		Value: FuncASSRI(strings.IndexAny),
+	}, // index_any(s, chars) => int
+	"join": &tengo.UserFunction{
+		Name:  "join",
+		Value: textJoin,
+	}, // join(arr, sep) => string
+	"last_index": &tengo.UserFunction{
+		Name:  "last_index",
+		Value: FuncASSRI(strings.LastIndex),
+	}, // last_index(s, substr) => int
+	"last_index_any": &tengo.UserFunction{
+		Name:  "last_index_any",
+		Value: FuncASSRI(strings.LastIndexAny),
+	}, // last_index_any(s, chars) => int
+	"repeat": &tengo.UserFunction{
+		Name:  "repeat",
+		Value: textRepeat,
+	}, // repeat(s, count) => string
+	"replace": &tengo.UserFunction{
+		Name:  "replace",
+		Value: textReplace,
+	}, // replace(s, old, new, n) => string
+	"substr": &tengo.UserFunction{
+		Name:  "substr",
+		Value: textSubstring,
+	}, // substr(s, lower, upper) => string
+	"split": &tengo.UserFunction{
+		Name:  "split",
+		Value: FuncASSRSs(strings.Split),
+	}, // split(s, sep) => [string]
+	"split_after": &tengo.UserFunction{
+		Name:  "split_after",
+		Value: FuncASSRSs(strings.SplitAfter),
+	}, // split_after(s, sep) => [string]
+	"split_after_n": &tengo.UserFunction{
+		Name:  "split_after_n",
+		Value: FuncASSIRSs(strings.SplitAfterN),
+	}, // split_after_n(s, sep, n) => [string]
+	"split_n": &tengo.UserFunction{
+		Name:  "split_n",
+		Value: FuncASSIRSs(strings.SplitN),
+	}, // split_n(s, sep, n) => [string]
+	"title": &tengo.UserFunction{
+		Name:  "title",
+		Value: FuncASRS(strings.Title),
+	}, // title(s) => string
+	"to_lower": &tengo.UserFunction{
+		Name:  "to_lower",
+		Value: FuncASRS(strings.ToLower),
+	}, // to_lower(s) => string
+	"to_title": &tengo.UserFunction{
+		Name:  "to_title",
+		Value: FuncASRS(strings.ToTitle),
+	}, // to_title(s) => string
+	"to_upper": &tengo.UserFunction{
+		Name:  "to_upper",
+		Value: FuncASRS(strings.ToUpper),
+	}, // to_upper(s) => string
+	"pad_left": &tengo.UserFunction{
+		Name:  "pad_left",
+		Value: textPadLeft,
+	}, // pad_left(s, pad_len, pad_with) => string
+	"pad_right": &tengo.UserFunction{
+		Name:  "pad_right",
+		Value: textPadRight,
+	}, // pad_right(s, pad_len, pad_with) => string
+	"trim": &tengo.UserFunction{
+		Name:  "trim",
+		Value: FuncASSRS(strings.Trim),
+	}, // trim(s, cutset) => string
+	"trim_left": &tengo.UserFunction{
+		Name:  "trim_left",
+		Value: FuncASSRS(strings.TrimLeft),
+	}, // trim_left(s, cutset) => string
+	"trim_prefix": &tengo.UserFunction{
+		Name:  "trim_prefix",
+		Value: FuncASSRS(strings.TrimPrefix),
+	}, // trim_prefix(s, prefix) => string
+	"trim_right": &tengo.UserFunction{
+		Name:  "trim_right",
+		Value: FuncASSRS(strings.TrimRight),
+	}, // trim_right(s, cutset) => string
+	"trim_space": &tengo.UserFunction{
+		Name:  "trim_space",
+		Value: FuncASRS(strings.TrimSpace),
+	}, // trim_space(s) => string
+	"trim_suffix": &tengo.UserFunction{
+		Name:  "trim_suffix",
+		Value: FuncASSRS(strings.TrimSuffix),
+	}, // trim_suffix(s, suffix) => string
+	"atoi": &tengo.UserFunction{
+		Name:  "atoi",
+		Value: FuncASRIE(strconv.Atoi),
+	}, // atoi(str) => int/error
+	"format_bool": &tengo.UserFunction{
+		Name:  "format_bool",
+		Value: textFormatBool,
+	}, // format_bool(b) => string
+	"format_float": &tengo.UserFunction{
+		Name:  "format_float",
+		Value: textFormatFloat,
+	}, // format_float(f, fmt, prec, bits) => string
+	"format_int": &tengo.UserFunction{
+		Name:  "format_int",
+		Value: textFormatInt,
+	}, // format_int(i, base) => string
+	"itoa": &tengo.UserFunction{
+		Name:  "itoa",
+		Value: FuncAIRS(strconv.Itoa),
+	}, // itoa(i) => string
+	"parse_bool": &tengo.UserFunction{
+		Name:  "parse_bool",
+		Value: textParseBool,
+	}, // parse_bool(str) => bool/error
+	"parse_float": &tengo.UserFunction{
+		Name:  "parse_float",
+		Value: textParseFloat,
+	}, // parse_float(str, bits) => float/error
+	"parse_int": &tengo.UserFunction{
+		Name:  "parse_int",
+		Value: textParseInt,
+	}, // parse_int(str, base, bits) => int/error
+	"quote": &tengo.UserFunction{
+		Name:  "quote",
+		Value: FuncASRS(strconv.Quote),
+	}, // quote(str) => string
+	"unquote": &tengo.UserFunction{
+		Name:  "unquote",
+		Value: FuncASRSE(strconv.Unquote),
+	}, // unquote(str) => string/error
 }
 
-func textREMatch(args ...objects.Object) (ret objects.Object, err error) {
+func textREMatch(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 2 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
@@ -77,9 +217,9 @@ func textREMatch(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	s2, ok := objects.ToString(args[1])
+	s2, ok := tengo.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "string(compatible)",
 			Found:    args[1].TypeName(),
@@ -94,24 +234,24 @@ func textREMatch(args ...objects.Object) (ret objects.Object, err error) {
 	}
 
 	if matched {
-		ret = objects.TrueValue
+		ret = tengo.TrueValue
 	} else {
-		ret = objects.FalseValue
+		ret = tengo.FalseValue
 	}
 
 	return
 }
 
-func textREFind(args ...objects.Object) (ret objects.Object, err error) {
+func textREFind(args ...tengo.Object) (ret tengo.Object, err error) {
 	numArgs := len(args)
 	if numArgs != 2 && numArgs != 3 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
@@ -125,9 +265,9 @@ func textREFind(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	s2, ok := objects.ToString(args[1])
+	s2, ok := tengo.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "string(compatible)",
 			Found:    args[1].TypeName(),
@@ -138,27 +278,28 @@ func textREFind(args ...objects.Object) (ret objects.Object, err error) {
 	if numArgs < 3 {
 		m := re.FindStringSubmatchIndex(s2)
 		if m == nil {
-			ret = objects.UndefinedValue
+			ret = tengo.UndefinedValue
 			return
 		}
 
-		arr := &objects.Array{}
+		arr := &tengo.Array{}
 		for i := 0; i < len(m); i += 2 {
-			arr.Value = append(arr.Value, &objects.ImmutableMap{Value: map[string]objects.Object{
-				"text":  &objects.String{Value: s2[m[i]:m[i+1]]},
-				"begin": &objects.Int{Value: int64(m[i])},
-				"end":   &objects.Int{Value: int64(m[i+1])},
-			}})
+			arr.Value = append(arr.Value,
+				&tengo.ImmutableMap{Value: map[string]tengo.Object{
+					"text":  &tengo.String{Value: s2[m[i]:m[i+1]]},
+					"begin": &tengo.Int{Value: int64(m[i])},
+					"end":   &tengo.Int{Value: int64(m[i+1])},
+				}})
 		}
 
-		ret = &objects.Array{Value: []objects.Object{arr}}
+		ret = &tengo.Array{Value: []tengo.Object{arr}}
 
 		return
 	}
 
-	i3, ok := objects.ToInt(args[2])
+	i3, ok := tengo.ToInt(args[2])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "third",
 			Expected: "int(compatible)",
 			Found:    args[2].TypeName(),
@@ -167,19 +308,20 @@ func textREFind(args ...objects.Object) (ret objects.Object, err error) {
 	}
 	m := re.FindAllStringSubmatchIndex(s2, i3)
 	if m == nil {
-		ret = objects.UndefinedValue
+		ret = tengo.UndefinedValue
 		return
 	}
 
-	arr := &objects.Array{}
+	arr := &tengo.Array{}
 	for _, m := range m {
-		subMatch := &objects.Array{}
+		subMatch := &tengo.Array{}
 		for i := 0; i < len(m); i += 2 {
-			subMatch.Value = append(subMatch.Value, &objects.ImmutableMap{Value: map[string]objects.Object{
-				"text":  &objects.String{Value: s2[m[i]:m[i+1]]},
-				"begin": &objects.Int{Value: int64(m[i])},
-				"end":   &objects.Int{Value: int64(m[i+1])},
-			}})
+			subMatch.Value = append(subMatch.Value,
+				&tengo.ImmutableMap{Value: map[string]tengo.Object{
+					"text":  &tengo.String{Value: s2[m[i]:m[i+1]]},
+					"begin": &tengo.Int{Value: int64(m[i])},
+					"end":   &tengo.Int{Value: int64(m[i+1])},
+				}})
 		}
 
 		arr.Value = append(arr.Value, subMatch)
@@ -190,15 +332,15 @@ func textREFind(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textREReplace(args ...objects.Object) (ret objects.Object, err error) {
+func textREReplace(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 3 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
@@ -206,9 +348,9 @@ func textREReplace(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	s2, ok := objects.ToString(args[1])
+	s2, ok := tengo.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "string(compatible)",
 			Found:    args[1].TypeName(),
@@ -216,9 +358,9 @@ func textREReplace(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	s3, ok := objects.ToString(args[2])
+	s3, ok := tengo.ToString(args[2])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "third",
 			Expected: "string(compatible)",
 			Found:    args[2].TypeName(),
@@ -232,25 +374,25 @@ func textREReplace(args ...objects.Object) (ret objects.Object, err error) {
 	} else {
 		s, ok := doTextRegexpReplace(re, s2, s3)
 		if !ok {
-			return nil, objects.ErrStringLimit
+			return nil, tengo.ErrStringLimit
 		}
 
-		ret = &objects.String{Value: s}
+		ret = &tengo.String{Value: s}
 	}
 
 	return
 }
 
-func textRESplit(args ...objects.Object) (ret objects.Object, err error) {
+func textRESplit(args ...tengo.Object) (ret tengo.Object, err error) {
 	numArgs := len(args)
 	if numArgs != 2 && numArgs != 3 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
@@ -258,9 +400,9 @@ func textRESplit(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	s2, ok := objects.ToString(args[1])
+	s2, ok := tengo.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "string(compatible)",
 			Found:    args[1].TypeName(),
@@ -270,9 +412,9 @@ func textRESplit(args ...objects.Object) (ret objects.Object, err error) {
 
 	var i3 = -1
 	if numArgs > 2 {
-		i3, ok = objects.ToInt(args[2])
+		i3, ok = tengo.ToInt(args[2])
 		if !ok {
-			err = objects.ErrInvalidArgumentType{
+			err = tengo.ErrInvalidArgumentType{
 				Name:     "third",
 				Expected: "int(compatible)",
 				Found:    args[2].TypeName(),
@@ -287,9 +429,9 @@ func textRESplit(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	arr := &objects.Array{}
+	arr := &tengo.Array{}
 	for _, s := range re.Split(s2, i3) {
-		arr.Value = append(arr.Value, &objects.String{Value: s})
+		arr.Value = append(arr.Value, &tengo.String{Value: s})
 	}
 
 	ret = arr
@@ -297,15 +439,15 @@ func textRESplit(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textRECompile(args ...objects.Object) (ret objects.Object, err error) {
+func textRECompile(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 1 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
@@ -323,15 +465,15 @@ func textRECompile(args ...objects.Object) (ret objects.Object, err error) {
 	return
 }
 
-func textReplace(args ...objects.Object) (ret objects.Object, err error) {
+func textReplace(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 4 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
@@ -339,9 +481,9 @@ func textReplace(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	s2, ok := objects.ToString(args[1])
+	s2, ok := tengo.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "string(compatible)",
 			Found:    args[1].TypeName(),
@@ -349,9 +491,9 @@ func textReplace(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	s3, ok := objects.ToString(args[2])
+	s3, ok := tengo.ToString(args[2])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "third",
 			Expected: "string(compatible)",
 			Found:    args[2].TypeName(),
@@ -359,9 +501,9 @@ func textReplace(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	i4, ok := objects.ToInt(args[3])
+	i4, ok := tengo.ToInt(args[3])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "fourth",
 			Expected: "int(compatible)",
 			Found:    args[3].TypeName(),
@@ -371,25 +513,25 @@ func textReplace(args ...objects.Object) (ret objects.Object, err error) {
 
 	s, ok := doTextReplace(s1, s2, s3, i4)
 	if !ok {
-		err = objects.ErrStringLimit
+		err = tengo.ErrStringLimit
 		return
 	}
 
-	ret = &objects.String{Value: s}
+	ret = &tengo.String{Value: s}
 
 	return
 }
 
-func textSubstring(args ...objects.Object) (ret objects.Object, err error) {
+func textSubstring(args ...tengo.Object) (ret tengo.Object, err error) {
 	argslen := len(args)
 	if argslen != 2 && argslen != 3 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
@@ -397,9 +539,9 @@ func textSubstring(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	i2, ok := objects.ToInt(args[1])
+	i2, ok := tengo.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "int(compatible)",
 			Found:    args[1].TypeName(),
@@ -410,9 +552,9 @@ func textSubstring(args ...objects.Object) (ret objects.Object, err error) {
 	strlen := len(s1)
 	i3 := strlen
 	if argslen == 3 {
-		i3, ok = objects.ToInt(args[2])
+		i3, ok = tengo.ToInt(args[2])
 		if !ok {
-			err = objects.ErrInvalidArgumentType{
+			err = tengo.ErrInvalidArgumentType{
 				Name:     "third",
 				Expected: "int(compatible)",
 				Found:    args[2].TypeName(),
@@ -422,7 +564,7 @@ func textSubstring(args ...objects.Object) (ret objects.Object, err error) {
 	}
 
 	if i2 > i3 {
-		err = objects.ErrInvalidIndexType
+		err = tengo.ErrInvalidIndexType
 		return
 	}
 
@@ -438,21 +580,21 @@ func textSubstring(args ...objects.Object) (ret objects.Object, err error) {
 		i3 = strlen
 	}
 
-	ret = &objects.String{Value: s1[i2:i3]}
+	ret = &tengo.String{Value: s1[i2:i3]}
 
 	return
 }
 
-func textPadLeft(args ...objects.Object) (ret objects.Object, err error) {
+func textPadLeft(args ...tengo.Object) (ret tengo.Object, err error) {
 	argslen := len(args)
 	if argslen != 2 && argslen != 3 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
@@ -460,9 +602,9 @@ func textPadLeft(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	i2, ok := objects.ToInt(args[1])
+	i2, ok := tengo.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "int(compatible)",
 			Found:    args[1].TypeName(),
@@ -471,20 +613,20 @@ func textPadLeft(args ...objects.Object) (ret objects.Object, err error) {
 	}
 
 	if i2 > tengo.MaxStringLen {
-		return nil, objects.ErrStringLimit
+		return nil, tengo.ErrStringLimit
 	}
 
 	sLen := len(s1)
 	if sLen >= i2 {
-		ret = &objects.String{Value: s1}
+		ret = &tengo.String{Value: s1}
 		return
 	}
 
 	s3 := " "
 	if argslen == 3 {
-		s3, ok = objects.ToString(args[2])
+		s3, ok = tengo.ToString(args[2])
 		if !ok {
-			err = objects.ErrInvalidArgumentType{
+			err = tengo.ErrInvalidArgumentType{
 				Name:     "third",
 				Expected: "string(compatible)",
 				Found:    args[2].TypeName(),
@@ -495,27 +637,27 @@ func textPadLeft(args ...objects.Object) (ret objects.Object, err error) {
 
 	padStrLen := len(s3)
 	if padStrLen == 0 {
-		ret = &objects.String{Value: s1}
+		ret = &tengo.String{Value: s1}
 		return
 	}
 
 	padCount := ((i2 - padStrLen) / padStrLen) + 1
-	retStr := strings.Repeat(s3, int(padCount)) + s1
-	ret = &objects.String{Value: retStr[len(retStr)-i2:]}
+	retStr := strings.Repeat(s3, padCount) + s1
+	ret = &tengo.String{Value: retStr[len(retStr)-i2:]}
 
 	return
 }
 
-func textPadRight(args ...objects.Object) (ret objects.Object, err error) {
+func textPadRight(args ...tengo.Object) (ret tengo.Object, err error) {
 	argslen := len(args)
 	if argslen != 2 && argslen != 3 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
@@ -523,9 +665,9 @@ func textPadRight(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	i2, ok := objects.ToInt(args[1])
+	i2, ok := tengo.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "int(compatible)",
 			Found:    args[1].TypeName(),
@@ -534,20 +676,20 @@ func textPadRight(args ...objects.Object) (ret objects.Object, err error) {
 	}
 
 	if i2 > tengo.MaxStringLen {
-		return nil, objects.ErrStringLimit
+		return nil, tengo.ErrStringLimit
 	}
 
 	sLen := len(s1)
 	if sLen >= i2 {
-		ret = &objects.String{Value: s1}
+		ret = &tengo.String{Value: s1}
 		return
 	}
 
 	s3 := " "
 	if argslen == 3 {
-		s3, ok = objects.ToString(args[2])
+		s3, ok = tengo.ToString(args[2])
 		if !ok {
-			err = objects.ErrInvalidArgumentType{
+			err = tengo.ErrInvalidArgumentType{
 				Name:     "third",
 				Expected: "string(compatible)",
 				Found:    args[2].TypeName(),
@@ -558,34 +700,34 @@ func textPadRight(args ...objects.Object) (ret objects.Object, err error) {
 
 	padStrLen := len(s3)
 	if padStrLen == 0 {
-		ret = &objects.String{Value: s1}
+		ret = &tengo.String{Value: s1}
 		return
 	}
 
 	padCount := ((i2 - padStrLen) / padStrLen) + 1
-	retStr := s1 + strings.Repeat(s3, int(padCount))
-	ret = &objects.String{Value: retStr[:i2]}
+	retStr := s1 + strings.Repeat(s3, padCount)
+	ret = &tengo.String{Value: retStr[:i2]}
 
 	return
 }
 
-func textRepeat(args ...objects.Object) (ret objects.Object, err error) {
+func textRepeat(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 2 {
-		return nil, objects.ErrWrongNumArguments
+		return nil, tengo.ErrWrongNumArguments
 	}
 
-	s1, ok := objects.ToString(args[0])
+	s1, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, objects.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
 			Found:    args[0].TypeName(),
 		}
 	}
 
-	i2, ok := objects.ToInt(args[1])
+	i2, ok := tengo.ToInt(args[1])
 	if !ok {
-		return nil, objects.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "int(compatible)",
 			Found:    args[1].TypeName(),
@@ -593,25 +735,25 @@ func textRepeat(args ...objects.Object) (ret objects.Object, err error) {
 	}
 
 	if len(s1)*i2 > tengo.MaxStringLen {
-		return nil, objects.ErrStringLimit
+		return nil, tengo.ErrStringLimit
 	}
 
-	return &objects.String{Value: strings.Repeat(s1, i2)}, nil
+	return &tengo.String{Value: strings.Repeat(s1, i2)}, nil
 }
 
-func textJoin(args ...objects.Object) (ret objects.Object, err error) {
+func textJoin(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 2 {
-		return nil, objects.ErrWrongNumArguments
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	var slen int
 	var ss1 []string
 	switch arg0 := args[0].(type) {
-	case *objects.Array:
+	case *tengo.Array:
 		for idx, a := range arg0.Value {
-			as, ok := objects.ToString(a)
+			as, ok := tengo.ToString(a)
 			if !ok {
-				return nil, objects.ErrInvalidArgumentType{
+				return nil, tengo.ErrInvalidArgumentType{
 					Name:     fmt.Sprintf("first[%d]", idx),
 					Expected: "string(compatible)",
 					Found:    a.TypeName(),
@@ -620,11 +762,11 @@ func textJoin(args ...objects.Object) (ret objects.Object, err error) {
 			slen += len(as)
 			ss1 = append(ss1, as)
 		}
-	case *objects.ImmutableArray:
+	case *tengo.ImmutableArray:
 		for idx, a := range arg0.Value {
-			as, ok := objects.ToString(a)
+			as, ok := tengo.ToString(a)
 			if !ok {
-				return nil, objects.ErrInvalidArgumentType{
+				return nil, tengo.ErrInvalidArgumentType{
 					Name:     fmt.Sprintf("first[%d]", idx),
 					Expected: "string(compatible)",
 					Found:    a.TypeName(),
@@ -634,16 +776,16 @@ func textJoin(args ...objects.Object) (ret objects.Object, err error) {
 			ss1 = append(ss1, as)
 		}
 	default:
-		return nil, objects.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "array",
 			Found:    args[0].TypeName(),
 		}
 	}
 
-	s2, ok := objects.ToString(args[1])
+	s2, ok := tengo.ToString(args[1])
 	if !ok {
-		return nil, objects.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "string(compatible)",
 			Found:    args[1].TypeName(),
@@ -652,21 +794,21 @@ func textJoin(args ...objects.Object) (ret objects.Object, err error) {
 
 	// make sure output length does not exceed the limit
 	if slen+len(s2)*(len(ss1)-1) > tengo.MaxStringLen {
-		return nil, objects.ErrStringLimit
+		return nil, tengo.ErrStringLimit
 	}
 
-	return &objects.String{Value: strings.Join(ss1, s2)}, nil
+	return &tengo.String{Value: strings.Join(ss1, s2)}, nil
 }
 
-func textFormatBool(args ...objects.Object) (ret objects.Object, err error) {
+func textFormatBool(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 1 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	b1, ok := args[0].(*objects.Bool)
+	b1, ok := args[0].(*tengo.Bool)
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "bool",
 			Found:    args[0].TypeName(),
@@ -674,24 +816,24 @@ func textFormatBool(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	if b1 == objects.TrueValue {
-		ret = &objects.String{Value: "true"}
+	if b1 == tengo.TrueValue {
+		ret = &tengo.String{Value: "true"}
 	} else {
-		ret = &objects.String{Value: "false"}
+		ret = &tengo.String{Value: "false"}
 	}
 
 	return
 }
 
-func textFormatFloat(args ...objects.Object) (ret objects.Object, err error) {
+func textFormatFloat(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 4 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	f1, ok := args[0].(*objects.Float)
+	f1, ok := args[0].(*tengo.Float)
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "float",
 			Found:    args[0].TypeName(),
@@ -699,9 +841,9 @@ func textFormatFloat(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	s2, ok := objects.ToString(args[1])
+	s2, ok := tengo.ToString(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "string(compatible)",
 			Found:    args[1].TypeName(),
@@ -709,9 +851,9 @@ func textFormatFloat(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	i3, ok := objects.ToInt(args[2])
+	i3, ok := tengo.ToInt(args[2])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "third",
 			Expected: "int(compatible)",
 			Found:    args[2].TypeName(),
@@ -719,9 +861,9 @@ func textFormatFloat(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	i4, ok := objects.ToInt(args[3])
+	i4, ok := tengo.ToInt(args[3])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "fourth",
 			Expected: "int(compatible)",
 			Found:    args[3].TypeName(),
@@ -729,20 +871,20 @@ func textFormatFloat(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	ret = &objects.String{Value: strconv.FormatFloat(f1.Value, s2[0], i3, i4)}
+	ret = &tengo.String{Value: strconv.FormatFloat(f1.Value, s2[0], i3, i4)}
 
 	return
 }
 
-func textFormatInt(args ...objects.Object) (ret objects.Object, err error) {
+func textFormatInt(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 2 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	i1, ok := args[0].(*objects.Int)
+	i1, ok := args[0].(*tengo.Int)
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "int",
 			Found:    args[0].TypeName(),
@@ -750,9 +892,9 @@ func textFormatInt(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	i2, ok := objects.ToInt(args[1])
+	i2, ok := tengo.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "int(compatible)",
 			Found:    args[1].TypeName(),
@@ -760,20 +902,20 @@ func textFormatInt(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	ret = &objects.String{Value: strconv.FormatInt(i1.Value, i2)}
+	ret = &tengo.String{Value: strconv.FormatInt(i1.Value, i2)}
 
 	return
 }
 
-func textParseBool(args ...objects.Object) (ret objects.Object, err error) {
+func textParseBool(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 1 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := args[0].(*objects.String)
+	s1, ok := args[0].(*tengo.String)
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string",
 			Found:    args[0].TypeName(),
@@ -788,23 +930,23 @@ func textParseBool(args ...objects.Object) (ret objects.Object, err error) {
 	}
 
 	if parsed {
-		ret = objects.TrueValue
+		ret = tengo.TrueValue
 	} else {
-		ret = objects.FalseValue
+		ret = tengo.FalseValue
 	}
 
 	return
 }
 
-func textParseFloat(args ...objects.Object) (ret objects.Object, err error) {
+func textParseFloat(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 2 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := args[0].(*objects.String)
+	s1, ok := args[0].(*tengo.String)
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string",
 			Found:    args[0].TypeName(),
@@ -812,9 +954,9 @@ func textParseFloat(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	i2, ok := objects.ToInt(args[1])
+	i2, ok := tengo.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "int(compatible)",
 			Found:    args[1].TypeName(),
@@ -828,20 +970,20 @@ func textParseFloat(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	ret = &objects.Float{Value: parsed}
+	ret = &tengo.Float{Value: parsed}
 
 	return
 }
 
-func textParseInt(args ...objects.Object) (ret objects.Object, err error) {
+func textParseInt(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 3 {
-		err = objects.ErrWrongNumArguments
+		err = tengo.ErrWrongNumArguments
 		return
 	}
 
-	s1, ok := args[0].(*objects.String)
+	s1, ok := args[0].(*tengo.String)
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string",
 			Found:    args[0].TypeName(),
@@ -849,9 +991,9 @@ func textParseInt(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	i2, ok := objects.ToInt(args[1])
+	i2, ok := tengo.ToInt(args[1])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "int(compatible)",
 			Found:    args[1].TypeName(),
@@ -859,9 +1001,9 @@ func textParseInt(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	i3, ok := objects.ToInt(args[2])
+	i3, ok := tengo.ToInt(args[2])
 	if !ok {
-		err = objects.ErrInvalidArgumentType{
+		err = tengo.ErrInvalidArgumentType{
 			Name:     "third",
 			Expected: "int(compatible)",
 			Found:    args[2].TypeName(),
@@ -875,7 +1017,7 @@ func textParseInt(args ...objects.Object) (ret objects.Object, err error) {
 		return
 	}
 
-	ret = &objects.Int{Value: parsed}
+	ret = &tengo.Int{Value: parsed}
 
 	return
 }

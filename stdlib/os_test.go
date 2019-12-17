@@ -6,25 +6,21 @@ import (
 	"testing"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo/internal/require"
 )
 
 func TestReadFile(t *testing.T) {
 	content := []byte("the quick brown fox jumps over the lazy dog")
 	tf, err := ioutil.TempFile("", "test")
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	defer func() { _ = os.Remove(tf.Name()) }()
 
 	_, err = tf.Write(content)
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	_ = tf.Close()
 
-	module(t, "os").call("read_file", tf.Name()).expect(&objects.Bytes{Value: content})
+	module(t, "os").call("read_file", tf.Name()).
+		expect(&tengo.Bytes{Value: content})
 }
 
 func TestReadFileArgs(t *testing.T) {
@@ -37,15 +33,11 @@ func TestFileStatArgs(t *testing.T) {
 func TestFileStatFile(t *testing.T) {
 	content := []byte("the quick brown fox jumps over the lazy dog")
 	tf, err := ioutil.TempFile("", "test")
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	defer func() { _ = os.Remove(tf.Name()) }()
 
 	_, err = tf.Write(content)
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	_ = tf.Close()
 
 	stat, err := os.Stat(tf.Name())
@@ -54,36 +46,32 @@ func TestFileStatFile(t *testing.T) {
 		return
 	}
 
-	module(t, "os").call("stat", tf.Name()).expect(&objects.ImmutableMap{
-		Value: map[string]objects.Object{
-			"name":      &objects.String{Value: stat.Name()},
-			"mtime":     &objects.Time{Value: stat.ModTime()},
-			"size":      &objects.Int{Value: stat.Size()},
-			"mode":      &objects.Int{Value: int64(stat.Mode())},
-			"directory": objects.FalseValue,
+	module(t, "os").call("stat", tf.Name()).expect(&tengo.ImmutableMap{
+		Value: map[string]tengo.Object{
+			"name":      &tengo.String{Value: stat.Name()},
+			"mtime":     &tengo.Time{Value: stat.ModTime()},
+			"size":      &tengo.Int{Value: stat.Size()},
+			"mode":      &tengo.Int{Value: int64(stat.Mode())},
+			"directory": tengo.FalseValue,
 		},
 	})
 }
 
 func TestFileStatDir(t *testing.T) {
 	td, err := ioutil.TempDir("", "test")
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 	defer func() { _ = os.RemoveAll(td) }()
 
 	stat, err := os.Stat(td)
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 
-	module(t, "os").call("stat", td).expect(&objects.ImmutableMap{
-		Value: map[string]objects.Object{
-			"name":      &objects.String{Value: stat.Name()},
-			"mtime":     &objects.Time{Value: stat.ModTime()},
-			"size":      &objects.Int{Value: stat.Size()},
-			"mode":      &objects.Int{Value: int64(stat.Mode())},
-			"directory": objects.TrueValue,
+	module(t, "os").call("stat", td).expect(&tengo.ImmutableMap{
+		Value: map[string]tengo.Object{
+			"name":      &tengo.String{Value: stat.Name()},
+			"mtime":     &tengo.Time{Value: stat.ModTime()},
+			"size":      &tengo.Int{Value: stat.Size()},
+			"mode":      &tengo.Int{Value: int64(stat.Mode())},
+			"directory": tengo.TrueValue,
 		},
 	})
 }
@@ -109,7 +97,8 @@ func TestOSExpandEnv(t *testing.T) {
 	module(t, "os").call("expand_env", "$TENGO$TENGO").expect("123456123456")
 
 	_ = os.Setenv("TENGO", "123456")
-	module(t, "os").call("expand_env", "${TENGO}${TENGO}").expect("123456123456")
+	module(t, "os").call("expand_env", "${TENGO}${TENGO}").
+		expect("123456123456")
 
 	_ = os.Setenv("TENGO", "123456")
 	module(t, "os").call("expand_env", "$TENGO $TENGO").expectError()
