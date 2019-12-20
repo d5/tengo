@@ -11,11 +11,11 @@
 
 **Tengo is a small, dynamic, fast, secure script language for Go.** 
 
-Tengo is **[fast](#benchmark)** and secure because it's compiled/executed as bytecode on stack-based VM that's written in native Go.
+Tengo is **[fast](#benchmark)** and secure because it's compiled/executed as
+bytecode on stack-based VM that's written in native Go.
 
 ```golang
 /* The Tengo Language */
-
 fmt := import("fmt")
 
 each := func(seq, fn) {
@@ -31,19 +31,24 @@ fmt.println(sum(0, [1, 2, 3]))   // "6"
 fmt.println(sum("", [1, 2, 3]))  // "123"
 ```
 
-> Run this code in the [Playground](https://tengolang.com/?s=0c8d5d0d88f2795a7093d7f35ae12c3afa17bea3)
+> Test this Tengo code in the
+> [Tengo Playground](https://tengolang.com/?s=0c8d5d0d88f2795a7093d7f35ae12c3afa17bea3)
 
 ## Features
 
-- Simple and highly readable [Syntax](https://github.com/d5/tengo/blob/master/docs/tutorial.md)
+- Simple and highly readable
+  [Syntax](https://github.com/d5/tengo/blob/master/docs/tutorial.md)
   - Dynamic typing with type coercion
   - Higher-order functions and closures
   - Immutable values
-  - Garbage collection
-- [Securely Embeddable](https://github.com/d5/tengo/blob/master/docs/interoperability.md) and [Extensible](https://github.com/d5/tengo/blob/master/docs/objects.md)
+- [Securely Embeddable](https://github.com/d5/tengo/blob/master/docs/interoperability.md)
+  and [Extensible](https://github.com/d5/tengo/blob/master/docs/objects.md)
 - Compiler/runtime written in native Go _(no external deps or cgo)_
-- Executable as a [standalone](https://github.com/d5/tengo/blob/master/docs/tengo-cli.md) language / REPL
-- Use cases: rules engine, [state machine](https://github.com/d5/go-fsm), [gaming](https://github.com/d5/pbr), data pipeline, [transpiler](https://github.com/d5/tengo2lua)
+- Executable as a
+  [standalone](https://github.com/d5/tengo/blob/master/docs/tengo-cli.md)
+  language / REPL
+- Use cases: rules engine, [state machine](https://github.com/d5/go-fsm),
+  data pipeline, [transpiler](https://github.com/d5/tengo2lua)
 
 ## Benchmark
 
@@ -61,16 +66,70 @@ fmt.println(sum("", [1, 2, 3]))  // "123"
 | [otto](https://github.com/robertkrimen/otto) | `68,377ms` | `11ms` | JS Interpreter on Go |
 | [Anko](https://github.com/mattn/anko) | `92,579ms` | `18ms` | Interpreter on Go |
 
-_* [fib(35)](https://github.com/d5/tengobench/blob/master/code/fib.tengo): Fibonacci(35)_  
-_* [fibt(35)](https://github.com/d5/tengobench/blob/master/code/fibtc.tengo): [tail-call](https://en.wikipedia.org/wiki/Tail_call) version of Fibonacci(35)_  
+_* [fib(35)](https://github.com/d5/tengobench/blob/master/code/fib.tengo):
+Fibonacci(35)_  
+_* [fibt(35)](https://github.com/d5/tengobench/blob/master/code/fibtc.tengo):
+[tail-call](https://en.wikipedia.org/wiki/Tail_call) version of Fibonacci(35)_  
 _* **Go** does not read the source code from file, while all other cases do_  
 _* See [here](https://github.com/d5/tengobench) for commands/codes used_
+
+## Quick Start
+
+A simple Go example code that compiles/runs Tengo script code with some input/output values:
+
+```golang
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/d5/tengo"
+)
+
+func main() {
+	// Tengo script code
+	src := `
+each := func(seq, fn) {
+    for x in seq { fn(x) }
+}
+
+sum := 0
+mul := 1
+each([a, b, c, d], func(x) {
+	sum += x
+	mul *= x
+})`
+
+	// create a new Script instance
+	script := tengo.NewScript([]byte(src))
+
+	// set values
+	_ = script.Add("a", 1)
+	_ = script.Add("b", 9)
+	_ = script.Add("c", 8)
+	_ = script.Add("d", 4)
+
+	// run the script
+	compiled, err := script.RunContext(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
+	// retrieve values
+	sum := compiled.Get("sum")
+	mul := compiled.Get("mul")
+	fmt.Println(sum, mul) // "22 288"
+}
+
+```
 
 ## References
 
 - [Language Syntax](https://github.com/d5/tengo/blob/master/docs/tutorial.md)
 - [Object Types](https://github.com/d5/tengo/blob/master/docs/objects.md)
-- [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md) and [Operators](https://github.com/d5/tengo/blob/master/docs/operators.md)
+- [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md)
+  and [Operators](https://github.com/d5/tengo/blob/master/docs/operators.md)
 - [Builtin Functions](https://github.com/d5/tengo/blob/master/docs/builtins.md)
 - [Interoperability](https://github.com/d5/tengo/blob/master/docs/interoperability.md)
 - [Tengo CLI](https://github.com/d5/tengo/blob/master/docs/tengo-cli.md)
