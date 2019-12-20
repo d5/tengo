@@ -6,7 +6,7 @@
 
 [![GoDoc](https://godoc.org/github.com/d5/tengo?status.svg)](https://godoc.org/github.com/d5/tengo)
 [![Go Report Card](https://goreportcard.com/badge/github.com/d5/tengo)](https://goreportcard.com/report/github.com/d5/tengo)
-[![Build Status](https://travis-ci.org/d5/tengo.svg?branch=master)](https://travis-ci.org/d5/tengo)
+[![CircleCI](https://circleci.com/gh/d5/tengo.svg?style=svg)](https://circleci.com/gh/d5/tengo)
 [![Sourcegraph](https://sourcegraph.com/github.com/d5/tengo/-/badge.svg)](https://sourcegraph.com/github.com/d5/tengo?badge)
 
 **Tengo is a small, dynamic, fast, secure script language for Go.** 
