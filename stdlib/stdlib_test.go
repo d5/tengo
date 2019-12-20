@@ -5,9 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/objects"
-	"github.com/d5/tengo/script"
+	"github.com/d5/tengo"
+	"github.com/d5/tengo/internal/require"
 	"github.com/d5/tengo/stdlib"
 )
 
@@ -18,9 +17,9 @@ type IMAP map[string]interface{}
 
 func TestAllModuleNames(t *testing.T) {
 	names := stdlib.AllModuleNames()
-	if !assert.Equal(t, len(stdlib.BuiltinModules)+len(stdlib.SourceModules), len(names)) {
-		return
-	}
+	require.Equal(t,
+		len(stdlib.BuiltinModules)+len(stdlib.SourceModules),
+		len(names))
 }
 
 func TestModulesRun(t *testing.T) {
@@ -75,24 +74,24 @@ if !is_error(cmd) {
 
 func TestGetModules(t *testing.T) {
 	mods := stdlib.GetModuleMap()
-	assert.Equal(t, 0, mods.Len())
+	require.Equal(t, 0, mods.Len())
 
 	mods = stdlib.GetModuleMap("os")
-	assert.Equal(t, 1, mods.Len())
-	assert.NotNil(t, mods.Get("os"))
+	require.Equal(t, 1, mods.Len())
+	require.NotNil(t, mods.Get("os"))
 
 	mods = stdlib.GetModuleMap("os", "rand")
-	assert.Equal(t, 2, mods.Len())
-	assert.NotNil(t, mods.Get("os"))
-	assert.NotNil(t, mods.Get("rand"))
+	require.Equal(t, 2, mods.Len())
+	require.NotNil(t, mods.Get("os"))
+	require.NotNil(t, mods.Get("rand"))
 
 	mods = stdlib.GetModuleMap("text", "text")
-	assert.Equal(t, 1, mods.Len())
-	assert.NotNil(t, mods.Get("text"))
+	require.Equal(t, 1, mods.Len())
+	require.NotNil(t, mods.Get("text"))
 
 	mods = stdlib.GetModuleMap("nonexisting", "text")
-	assert.Equal(t, 1, mods.Len())
-	assert.NotNil(t, mods.Get("text"))
+	require.Equal(t, 1, mods.Len())
+	require.NotNil(t, mods.Get("text"))
 }
 
 type callres struct {
@@ -106,35 +105,37 @@ func (c callres) call(funcName string, args ...interface{}) callres {
 		return c
 	}
 
-	var oargs []objects.Object
+	var oargs []tengo.Object
 	for _, v := range args {
 		oargs = append(oargs, object(v))
 	}
 
 	switch o := c.o.(type) {
-	case *objects.BuiltinModule:
+	case *tengo.BuiltinModule:
 		m, ok := o.Attrs[funcName]
 		if !ok {
-			return callres{t: c.t, e: fmt.Errorf("function not found: %s", funcName)}
+			return callres{t: c.t, e: fmt.Errorf(
+				"function not found: %s", funcName)}
 		}
 
-		f, ok := m.(*objects.UserFunction)
+		f, ok := m.(*tengo.UserFunction)
 		if !ok {
-			return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
+			return callres{t: c.t, e: fmt.Errorf(
+				"non-callable: %s", funcName)}
 		}
 
 		res, err := f.Value(oargs...)
 		return callres{t: c.t, o: res, e: err}
-	case *objects.UserFunction:
+	case *tengo.UserFunction:
 		res, err := o.Value(oargs...)
 		return callres{t: c.t, o: res, e: err}
-	case *objects.ImmutableMap:
+	case *tengo.ImmutableMap:
 		m, ok := o.Value[funcName]
 		if !ok {
 			return callres{t: c.t, e: fmt.Errorf("function not found: %s", funcName)}
 		}
 
-		f, ok := m.(*objects.UserFunction)
+		f, ok := m.(*tengo.UserFunction)
 		if !ok {
 			return callres{t: c.t, e: fmt.Errorf("non-callable: %s", funcName)}
 		}
@@ -146,13 +147,13 @@ func (c callres) call(funcName string, args ...interface{}) callres {
 	}
 }
 
-func (c callres) expect(expected interface{}, msgAndArgs ...interface{}) bool {
-	return assert.NoError(c.t, c.e, msgAndArgs...) &&
-		assert.Equal(c.t, object(expected), c.o, msgAndArgs...)
+func (c callres) expect(expected interface{}, msgAndArgs ...interface{}) {
+	require.NoError(c.t, c.e, msgAndArgs...)
+	require.Equal(c.t, object(expected), c.o, msgAndArgs...)
 }
 
-func (c callres) expectError() bool {
-	return assert.Error(c.t, c.e)
+func (c callres) expectError() {
+	require.Error(c.t, c.e)
 }
 
 func module(t *testing.T, moduleName string) callres {
@@ -164,81 +165,78 @@ func module(t *testing.T, moduleName string) callres {
 	return callres{t: t, o: mod}
 }
 
-func object(v interface{}) objects.Object {
+func object(v interface{}) tengo.Object {
 	switch v := v.(type) {
-	case objects.Object:
+	case tengo.Object:
 		return v
 	case string:
-		return &objects.String{Value: v}
+		return &tengo.String{Value: v}
 	case int64:
-		return &objects.Int{Value: v}
+		return &tengo.Int{Value: v}
 	case int: // for convenience
-		return &objects.Int{Value: int64(v)}
+		return &tengo.Int{Value: int64(v)}
 	case bool:
 		if v {
-			return objects.TrueValue
+			return tengo.TrueValue
 		}
-		return objects.FalseValue
+		return tengo.FalseValue
 	case rune:
-		return &objects.Char{Value: v}
+		return &tengo.Char{Value: v}
 	case byte: // for convenience
-		return &objects.Char{Value: rune(v)}
+		return &tengo.Char{Value: rune(v)}
 	case float64:
-		return &objects.Float{Value: v}
+		return &tengo.Float{Value: v}
 	case []byte:
-		return &objects.Bytes{Value: v}
+		return &tengo.Bytes{Value: v}
 	case MAP:
-		objs := make(map[string]objects.Object)
+		objs := make(map[string]tengo.Object)
 		for k, v := range v {
 			objs[k] = object(v)
 		}
 
-		return &objects.Map{Value: objs}
+		return &tengo.Map{Value: objs}
 	case ARR:
-		var objs []objects.Object
+		var objs []tengo.Object
 		for _, e := range v {
 			objs = append(objs, object(e))
 		}
 
-		return &objects.Array{Value: objs}
+		return &tengo.Array{Value: objs}
 	case IMAP:
-		objs := make(map[string]objects.Object)
+		objs := make(map[string]tengo.Object)
 		for k, v := range v {
 			objs[k] = object(v)
 		}
 
-		return &objects.ImmutableMap{Value: objs}
+		return &tengo.ImmutableMap{Value: objs}
 	case IARR:
-		var objs []objects.Object
+		var objs []tengo.Object
 		for _, e := range v {
 			objs = append(objs, object(e))
 		}
 
-		return &objects.ImmutableArray{Value: objs}
+		return &tengo.ImmutableArray{Value: objs}
 	case time.Time:
-		return &objects.Time{Value: v}
+		return &tengo.Time{Value: v}
 	case []int:
-		var objs []objects.Object
+		var objs []tengo.Object
 		for _, e := range v {
-			objs = append(objs, &objects.Int{Value: int64(e)})
+			objs = append(objs, &tengo.Int{Value: int64(e)})
 		}
 
-		return &objects.Array{Value: objs}
+		return &tengo.Array{Value: objs}
 	}
 
 	panic(fmt.Errorf("unknown type: %T", v))
 }
 
 func expect(t *testing.T, input string, expected interface{}) {
-	s := script.New([]byte(input))
+	s := tengo.NewScript([]byte(input))
 	s.SetImports(stdlib.GetModuleMap(stdlib.AllModuleNames()...))
 	c, err := s.Run()
-	assert.NoError(t, err)
-	assert.NotNil(t, c)
+	require.NoError(t, err)
+	require.NotNil(t, c)
 	v := c.Get("out")
-	if !assert.NotNil(t, v) {
-		return
-	}
-
-	assert.Equal(t, expected, v.Value())
+	require.NotNil(t, v)
+	require.Equal(t, expected, v.Value())
 }

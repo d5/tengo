@@ -532,14 +532,17 @@ func stateNul(s *scanner, c byte) int {
 
 // stateError is the state after reaching a syntax error,
 // such as after reading `[1}` or `5.1.2`.
-func stateError(s *scanner, c byte) int {
+func stateError(_ *scanner, _ byte) int {
 	return scanError
 }
 
 // error records an error and switches to the error state.
 func (s *scanner) error(c byte, context string) int {
 	s.step = stateError
-	s.err = &SyntaxError{"invalid character " + quoteChar(c) + " " + context, s.bytes}
+	s.err = &SyntaxError{
+		msg:    "invalid character " + quoteChar(c) + " " + context,
+		Offset: s.bytes,
+	}
 	return scanError
 }
 

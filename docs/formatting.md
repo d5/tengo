@@ -69,9 +69,12 @@ Maps:               {key1:value1 key2:value2 ...}
 
 ## Width and Precision:
 
-Width is specified by an optional decimal number immediately preceding the verb. If absent, the width is whatever is necessary to represent the value.
+Width is specified by an optional decimal number immediately preceding the verb.
+If absent, the width is whatever is necessary to represent the value.
 
-Precision is specified after the (optional) width by a period followed by a decimal number. If no period is present, a default precision is used. A period with no following number specifies a precision of zero.
+Precision is specified after the (optional) width by a period followed by a
+decimal number. If no period is present, a default precision is used. A period
+with no following number specifies a precision of zero.
 Examples:
 ```
 %f     default width, default precision
@@ -81,19 +84,32 @@ Examples:
 %9.f   width 9, precision 0
 ```
 
-Width and precision are measured in units of Unicode code points.  Either or both of the flags may be replaced with the character '*', causing their values to be obtained from the next operand (preceding the one to format), which must be of type Int.
+Width and precision are measured in units of Unicode code points.  Either or
+both of the flags may be replaced with the character '*', causing their values
+to be obtained from the next operand (preceding the one to format), which must
+be of type Int.
 
-For most values, width is the minimum number of runes to output, padding the formatted form with spaces if necessary.
+For most values, width is the minimum number of runes to output, padding the
+formatted form with spaces if necessary.
 
-For Strings and Bytes, however, precision limits the length of the input to be formatted (not the size of the output), truncating if necessary. Normally it is measured in units of Unicode code points, but for these types when formatted with the %x or %X format it is measured in bytes.
+For Strings and Bytes, however, precision limits the length of the input to be
+formatted (not the size of the output), truncating if necessary. Normally it is
+measured in units of Unicode code points, but for these types when formatted
+with the %x or %X format it is measured in bytes.
 
-For floating-point values, width sets the minimum width of the field and precision sets the number of places after the decimal, if appropriate, except that for %g/%G precision sets the maximum number of significant digits (trailing zeros are removed).
+For floating-point values, width sets the minimum width of the field and
+precision sets the number of places after the decimal, if appropriate, except
+that for %g/%G precision sets the maximum number of significant digits
+(trailing zeros are removed).
 
 For example, given 12.345 the format %6.3f prints 12.345 while %.3g prints 12.3.
 
-The default precision for %e, %f and %#g is 6; for %g it is the smallest number of digits necessary to identify the value uniquely.
+The default precision for %e, %f and %#g is 6; for %g it is the smallest number
+of digits necessary to identify the value uniquely.
 
-For complex numbers, the width and precision apply to the two components independently and the result is parenthesized, so %f applied to 1.2+3.4i produces (1.200000+3.400000i).
+For complex numbers, the width and precision apply to the two components
+independently and the result is parenthesized, so %f applied to 1.2+3.4i
+produces (1.200000+3.400000i).
 
 ## Other flags:
 ```
@@ -113,5 +129,6 @@ for numbers, this moves the padding after the sign
 ```
 
 Flags are ignored by verbs that do not expect them.
-For example there is no alternate decimal format, so %#d and %d behave identically.
+For example there is no alternate decimal format, so %#d and %d behave
+identically.
 

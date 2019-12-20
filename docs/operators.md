@@ -122,7 +122,8 @@
 
 ### Equality
 
-Test whether two byte array contain the same data. Uses [bytes.Compare](https://golang.org/pkg/bytes/#Compare) internally.
+Test whether two byte array contain the same data. Uses
+[bytes.Compare](https://golang.org/pkg/bytes/#Compare) internally.
 
 - `(bytes) == (bytes) = (bool)`: equality
 - `(bytes) != (bytes) = (bool)`: inequality
@@ -131,7 +132,8 @@ Test whether two byte array contain the same data. Uses [bytes.Compare](https://
 
 ### Equality
 
-Tests whether two times represent the same time instance. Uses [Time.Equal](https://golang.org/pkg/time/#Time.Equal) internally.
+Tests whether two times represent the same time instance. Uses
+[Time.Equal](https://golang.org/pkg/time/#Time.Equal) internally.
 
 - `(time) == (time) = (bool)`: equality
 - `(time) != (time) = (bool)`: inequality

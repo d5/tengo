@@ -11,17 +11,22 @@
 
 ## Using Scripts
 
-Embedding and executing the Tengo code in Go is very easy. At a high level, this process is like:
+Embedding and executing the Tengo code in Go is very easy. At a high level,
+this process is like:
 
-- create a [Script](https://godoc.org/github.com/d5/tengo/script#Script) instance with your code,
-- _optionally_ add some [Script Variables](https://godoc.org/github.com/d5/tengo/script#Variable) to Script,
+- create a [Script](https://godoc.org/github.com/d5/tengo#Script) instance with
+your code,
+- _optionally_ add some
+[Script Variables](https://godoc.org/github.com/d5/tengo#Variable) to Script,
 - compile or directly run the script,
-- retrieve _output_ values from the [Compiled](https://godoc.org/github.com/d5/tengo/script#Compiled) instance.
+- retrieve _output_ values from the
+[Compiled](https://godoc.org/github.com/d5/tengo#Compiled) instance.
 
-The following is an example where a Tengo script is compiled and run with no input/output variables.
+The following is an example where a Tengo script is compiled and run with no
+input/output variables.
 
 ```golang
-import "github.com/d5/tengo/script"
+import "github.com/d5/tengo"
 
 var code = `
 reduce := func(seq, fn) {
@@ -34,24 +39,26 @@ print(reduce([1, 2, 3], func(x, s) { s += x }))
 `
 
 func main() {
-    s := script.New([]byte(code))
+    s := tengo.NewScript([]byte(code))
     if _, err := s.Run(); err != nil {
         panic(err)
     }
 }
 ```
 
-Here's another example where an input variable is added to the script, and, an output variable is accessed through [Variable.Int](https://godoc.org/github.com/d5/tengo/script#Variable.Int) function:
+Here's another example where an input variable is added to the script, and, an
+output variable is accessed through
+[Variable.Int](https://godoc.org/github.com/d5/tengo#Variable.Int) function:
 
 ```golang
 import (
 	"fmt"
 
-	"github.com/d5/tengo/script"
+	"github.com/d5/tengo"
 )
 
 func main() {
-	s := script.New([]byte(`a := b + 20`))
+	s := tengo.NewScript([]byte(`a := b + 20`))
 
 	// define variable 'b'
 	_ = s.Add("b", 10)
@@ -83,13 +90,25 @@ func main() {
 }
 ```
 
-A variable `b` is defined by the user before compilation using [Script.Add](https://godoc.org/github.com/d5/tengo/script#Script.Add) function. Then a compiled bytecode `c` is used to execute the bytecode and get the value of global variables. In this example, the value of global variable `a` is read using [Compiled.Get](https://godoc.org/github.com/d5/tengo/script#Compiled.Get) function. See [documentation](https://godoc.org/github.com/d5/tengo/script#Variable) for the full list of variable value functions.
+A variable `b` is defined by the user before compilation using
+[Script.Add](https://godoc.org/github.com/d5/tengo#Script.Add) function. Then a
+compiled bytecode `c` is used to execute the bytecode and get the value of
+global variables. In this example, the value of global variable `a` is read
+using [Compiled.Get](https://godoc.org/github.com/d5/tengo#Compiled.Get)
+function. See
+[documentation](https://godoc.org/github.com/d5/tengo#Variable) for the
+full list of variable value functions.
 
-Value of the global variables can be replaced using [Compiled.Set](https://godoc.org/github.com/d5/tengo/script#Compiled.Set) function. But it will return an error if you try to set the value of un-defined global variables _(e.g. trying to set the value of `x` in the example)_.  
+Value of the global variables can be replaced using
+[Compiled.Set](https://godoc.org/github.com/d5/tengo#Compiled.Set) function.
+But it will return an error if you try to set the value of un-defined global
+variables _(e.g. trying to set the value of `x` in the example)_.  
 
 ### Type Conversion Table
 
-When adding a Variable _([Script.Add](https://godoc.org/github.com/d5/tengo/script#Script.Add))_, Script converts Go values into Tengo values based on the following conversion table.
+When adding a Variable
+_([Script.Add](https://godoc.org/github.com/d5/tengo#Script.Add))_, Script
+converts Go values into Tengo values based on the following conversion table.
 
 | Go Type | Tengo Type | Note |
 | :--- | :--- | :--- |
@@ -113,30 +132,39 @@ When adding a Variable _([Script.Add](https://godoc.org/github.com/d5/tengo/scri
 
 ### User Types
 
-Users can add and use a custom user type in Tengo code by implementing [Object](https://godoc.org/github.com/d5/tengo/objects#Object) interface. Tengo runtime will treat the user types in the same way it does to the runtime types with no performance overhead. See [Object Types](https://github.com/d5/tengo/blob/master/docs/objects.md) for more details.
+Users can add and use a custom user type in Tengo code by implementing
+[Object](https://godoc.org/github.com/d5/tengo#Object) interface. Tengo runtime
+will treat the user types in the same way it does to the runtime types with no
+performance overhead. See
+[Object Types](https://github.com/d5/tengo/blob/master/docs/objects.md) for
+more details.
 
 ## Sandbox Environments
 
-To securely compile and execute _potentially_ unsafe script code, you can use the following Script functions.
+To securely compile and execute _potentially_ unsafe script code, you can use
+the following Script functions.
 
 #### Script.SetImports(modules *objects.ModuleMap)
 
-SetImports sets the import modules with corresponding names. Script **does not** include any modules by default. You can use this function to include the [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md).
+SetImports sets the import modules with corresponding names. Script **does not**
+include any modules by default. You can use this function to include the
+[Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md).
 
 ```golang
-s := script.New([]byte(`math := import("math"); a := math.abs(-19.84)`))
+s := tengo.NewScript([]byte(`math := import("math"); a := math.abs(-19.84)`))
 
 s.SetImports(stdlib.GetModuleMap("math"))
 // or, to include all stdlib at once
 s.SetImports(stdlib.GetModuleMap(stdlib.AllModuleNames()...))
 ```
 
-You can also include Tengo's written module using `objects.SourceModule` (which implements `objects.Importable`).
+You can also include Tengo's written module using `objects.SourceModule`
+(which implements `objects.Importable`).
 
 ```golang
-s := script.New([]byte(`double := import("double"); a := double(20)`))
+s := tengo.NewScript([]byte(`double := import("double"); a := double(20)`))
 
-mods := objects.NewModuleMap()
+mods := tengo.NewModuleMap()
 mods.AddSourceModule("double", []byte(`export func(x) { return x * 2 }`))
 s.SetImports(mods)
 ```
@@ -144,31 +172,42 @@ s.SetImports(mods)
 
 #### Script.SetMaxAllocs(n int64)
 
-SetMaxAllocs sets the maximum number of object allocations. Note this is a cumulative metric that tracks only the object creations. Set this to a negative number (e.g. `-1`) if you don't need to limit the number of allocations.
+SetMaxAllocs sets the maximum number of object allocations. Note this is a
+cumulative metric that tracks only the object creations. Set this to a negative
+number (e.g. `-1`) if you don't need to limit the number of allocations.
    
 #### Script.EnableFileImport(enable bool)
 
-EnableFileImport enables or disables module loading from the local files. It's disabled by default. 
+EnableFileImport enables or disables module loading from the local files. It's
+disabled by default. 
 
 #### tengo.MaxStringLen
 
-Sets the maximum byte-length of string values. This limit applies to all running VM instances in the process. Also it's not recommended to set or update this value while any VM is executing. 
+Sets the maximum byte-length of string values. This limit applies to all
+running VM instances in the process. Also it's not recommended to set or update
+this value while any VM is executing. 
 
 #### tengo.MaxBytesLen
 
-Sets the maximum length of bytes values. This limit applies to all running VM instances in the process. Also it's not recommended to set or update this value while any VM is executing.
+Sets the maximum length of bytes values. This limit applies to all running VM
+instances in the process. Also it's not recommended to set or update this value
+while any VM is executing.
 
 ## Concurrency
 
-A compiled script (`script.Compiled`) can be used to run the code multiple times by a goroutine. If you want to run the compiled script by multiple goroutine, you should use `Compiled.Clone` function to make a copy of Compiled instances.
+A compiled script (`Compiled`) can be used to run the code multiple
+times by a goroutine. If you want to run the compiled script by multiple
+goroutine, you should use `Compiled.Clone` function to make a copy of Compiled
+instances.
 
 #### Compiled.Clone()
 
-Clone creates a new copy of Compiled instance. Cloned copies are safe for concurrent use by multiple goroutines. 
+Clone creates a new copy of Compiled instance. Cloned copies are safe for
+concurrent use by multiple goroutines. 
 
 ```golang
 for i := 0; i < concurrency; i++ {
-    go func(compiled *script.Compiled) {
+    go func(compiled *tengo.Compiled) {
         // inputs
         _ = compiled.Set("a", rand.Intn(10))
         _ = compiled.Set("b", rand.Intn(10))
@@ -187,6 +226,11 @@ for i := 0; i < concurrency; i++ {
 
 ## Compiler and VM
 
-Although it's not recommended, you can directly create and run the Tengo [Parser](https://godoc.org/github.com/d5/tengo/compiler/parser#Parser), [Compiler](https://godoc.org/github.com/d5/tengo/compiler#Compiler), and [VM](https://godoc.org/github.com/d5/tengo/runtime#VM) for yourself instead of using Scripts and Script Variables. It's a bit more involved as you have to manage the symbol tables and global variables between them, but, basically that's what Script and Script Variable is doing internally.
+Although it's not recommended, you can directly create and run the Tengo
+[Compiler](https://godoc.org/github.com/d5/tengo#Compiler), and
+[VM](https://godoc.org/github.com/d5/tengo#VM) for yourself instead of using
+Scripts and Script Variables. It's a bit more involved as you have to manage
+the symbol tables and global variables between them, but, basically that's what
+Script and Script Variable is doing internally.
 
 _TODO: add more information here_

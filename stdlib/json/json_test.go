@@ -4,8 +4,8 @@ import (
 	gojson "encoding/json"
 	"testing"
 
-	"github.com/d5/tengo/assert"
-	"github.com/d5/tengo/objects"
+	"github.com/d5/tengo"
+	"github.com/d5/tengo/internal/require"
 	"github.com/d5/tengo/stdlib/json"
 )
 
@@ -38,16 +38,20 @@ func TestJSON(t *testing.T) {
 	testJSONEncodeDecode(t, ARR{})
 	testJSONEncodeDecode(t, ARR{0})
 	testJSONEncodeDecode(t, ARR{false})
-	testJSONEncodeDecode(t, ARR{1, 2, 3, "four", false})
-	testJSONEncodeDecode(t, ARR{1, 2, 3, "four", false, MAP{"a": 0, "b": "bee", "bool": true}})
+	testJSONEncodeDecode(t, ARR{1, 2, 3,
+		"four", false})
+	testJSONEncodeDecode(t, ARR{1, 2, 3,
+		"four", false, MAP{"a": 0, "b": "bee", "bool": true}})
 
 	testJSONEncodeDecode(t, MAP{})
 	testJSONEncodeDecode(t, MAP{"a": 0})
 	testJSONEncodeDecode(t, MAP{"a": 0, "b": "bee"})
 	testJSONEncodeDecode(t, MAP{"a": 0, "b": "bee", "bool": true})
 
-	testJSONEncodeDecode(t, MAP{"a": 0, "b": "bee", "arr": ARR{1, 2, 3, "four"}})
-	testJSONEncodeDecode(t, MAP{"a": 0, "b": "bee", "arr": ARR{1, 2, 3, MAP{"a": false, "b": 109.4}}})
+	testJSONEncodeDecode(t, MAP{"a": 0, "b": "bee",
+		"arr": ARR{1, 2, 3, "four"}})
+	testJSONEncodeDecode(t, MAP{"a": 0, "b": "bee",
+		"arr": ARR{1, 2, 3, MAP{"a": false, "b": 109.4}}})
 }
 
 func TestDecode(t *testing.T) {
@@ -76,34 +80,24 @@ func TestDecode(t *testing.T) {
 
 func testDecodeError(t *testing.T, input string) {
 	_, err := json.Decode([]byte(input))
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
-func testJSONEncodeDecode(t *testing.T, v interface{}) bool {
-	o, err := objects.FromInterface(v)
-	if !assert.NoError(t, err) {
-		return false
-	}
+func testJSONEncodeDecode(t *testing.T, v interface{}) {
+	o, err := tengo.FromInterface(v)
+	require.NoError(t, err)
 
 	b, err := json.Encode(o)
-	if !assert.NoError(t, err) {
-		return false
-	}
+	require.NoError(t, err)
 
 	a, err := json.Decode(b)
-	if !assert.NoError(t, err, string(b)) {
-		return false
-	}
+	require.NoError(t, err, string(b))
 
 	vj, err := gojson.Marshal(v)
-	if !assert.NoError(t, err) {
-		return false
-	}
+	require.NoError(t, err)
 
-	aj, err := gojson.Marshal(objects.ToInterface(a))
-	if !assert.NoError(t, err) {
-		return false
-	}
+	aj, err := gojson.Marshal(tengo.ToInterface(a))
+	require.NoError(t, err)
 
-	return assert.Equal(t, vj, aj)
+	require.Equal(t, vj, aj)
 }

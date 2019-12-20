@@ -2,7 +2,9 @@ package stdlib
 
 //go:generate go run gensrcmods.go
 
-import "github.com/d5/tengo/objects"
+import (
+	"github.com/d5/tengo"
+)
 
 // AllModuleNames returns a list of all default module names.
 func AllModuleNames() []string {
@@ -18,9 +20,8 @@ func AllModuleNames() []string {
 
 // GetModuleMap returns the module map that includes all modules
 // for the given module names.
-func GetModuleMap(names ...string) *objects.ModuleMap {
-	modules := objects.NewModuleMap()
-
+func GetModuleMap(names ...string) *tengo.ModuleMap {
+	modules := tengo.NewModuleMap()
 	for _, name := range names {
 		if mod := BuiltinModules[name]; mod != nil {
 			modules.AddBuiltinModule(name, mod)
@@ -29,6 +30,5 @@ func GetModuleMap(names ...string) *objects.ModuleMap {
 			modules.AddSourceModule(name, []byte(mod))
 		}
 	}
-
 	return modules
 }
