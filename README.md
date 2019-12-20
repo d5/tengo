@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/d5/tengolang.com/master/logo_400.png" width="200" height="200">
+  <img src="https://raw.githubusercontent.com/d5/tengolang-share/master/logo_400.png" width="200" height="200">
 </p>
 
 # The Tengo Language
