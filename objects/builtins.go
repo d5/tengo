@@ -115,4 +115,8 @@ var Builtins = []*BuiltinFunction{
 		Name:  "format",
 		Value: builtinFormat,
 	},
+	{
+		Name:  "delete",
+		Value: builtinDelete,
+	},
 }
