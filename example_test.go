@@ -7,7 +7,7 @@ import (
 	"github.com/d5/tengo"
 )
 
-func ExampleSimple() {
+func Example() {
 	// Tengo script code
 	src := `
 each := func(seq, fn) {
