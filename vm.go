@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/d5/tengo/internal"
-	"github.com/d5/tengo/internal/token"
+	"github.com/d5/tengo/parser"
+	"github.com/d5/tengo/token"
 )
 
 // frame represents a function call frame.
@@ -22,7 +22,7 @@ type VM struct {
 	stack       [StackSize]Object
 	sp          int
 	globals     []Object
-	fileSet     *internal.SourceFileSet
+	fileSet     *parser.SourceFileSet
 	frames      [MaxFrames]frame
 	framesIndex int
 	curFrame    *frame
@@ -99,16 +99,16 @@ func (v *VM) run() {
 		v.ip++
 
 		switch v.curInsts[v.ip] {
-		case internal.OpConstant:
+		case parser.OpConstant:
 			v.ip += 2
 			cidx := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
 			v.stack[v.sp] = v.constants[cidx]
 			v.sp++
-		case internal.OpNull:
+		case parser.OpNull:
 			v.stack[v.sp] = UndefinedValue
 			v.sp++
-		case internal.OpBinaryOp:
+		case parser.OpBinaryOp:
 			v.ip++
 			right := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
@@ -133,7 +133,7 @@ func (v *VM) run() {
 
 			v.stack[v.sp-2] = res
 			v.sp--
-		case internal.OpEqual:
+		case parser.OpEqual:
 			right := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 			v.sp -= 2
@@ -143,7 +143,7 @@ func (v *VM) run() {
 				v.stack[v.sp] = FalseValue
 			}
 			v.sp++
-		case internal.OpNotEqual:
+		case parser.OpNotEqual:
 			right := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 			v.sp -= 2
@@ -153,15 +153,15 @@ func (v *VM) run() {
 				v.stack[v.sp] = TrueValue
 			}
 			v.sp++
-		case internal.OpPop:
+		case parser.OpPop:
 			v.sp--
-		case internal.OpTrue:
+		case parser.OpTrue:
 			v.stack[v.sp] = TrueValue
 			v.sp++
-		case internal.OpFalse:
+		case parser.OpFalse:
 			v.stack[v.sp] = FalseValue
 			v.sp++
-		case internal.OpLNot:
+		case parser.OpLNot:
 			operand := v.stack[v.sp-1]
 			v.sp--
 			if operand.IsFalsy() {
@@ -170,7 +170,7 @@ func (v *VM) run() {
 				v.stack[v.sp] = FalseValue
 			}
 			v.sp++
-		case internal.OpBComplement:
+		case parser.OpBComplement:
 			operand := v.stack[v.sp-1]
 			v.sp--
 
@@ -189,7 +189,7 @@ func (v *VM) run() {
 					operand.TypeName())
 				return
 			}
-		case internal.OpMinus:
+		case parser.OpMinus:
 			operand := v.stack[v.sp-1]
 			v.sp--
 
@@ -217,14 +217,14 @@ func (v *VM) run() {
 					operand.TypeName())
 				return
 			}
-		case internal.OpJumpFalsy:
+		case parser.OpJumpFalsy:
 			v.ip += 2
 			v.sp--
 			if v.stack[v.sp].IsFalsy() {
 				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 				v.ip = pos - 1
 			}
-		case internal.OpAndJump:
+		case parser.OpAndJump:
 			v.ip += 2
 			if v.stack[v.sp-1].IsFalsy() {
 				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
@@ -232,7 +232,7 @@ func (v *VM) run() {
 			} else {
 				v.sp--
 			}
-		case internal.OpOrJump:
+		case parser.OpOrJump:
 			v.ip += 2
 			if v.stack[v.sp-1].IsFalsy() {
 				v.sp--
@@ -240,15 +240,15 @@ func (v *VM) run() {
 				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 				v.ip = pos - 1
 			}
-		case internal.OpJump:
+		case parser.OpJump:
 			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip = pos - 1
-		case internal.OpSetGlobal:
+		case parser.OpSetGlobal:
 			v.ip += 2
 			v.sp--
 			globalIndex := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 			v.globals[globalIndex] = v.stack[v.sp]
-		case internal.OpSetSelGlobal:
+		case parser.OpSetSelGlobal:
 			v.ip += 3
 			globalIndex := int(v.curInsts[v.ip-1]) | int(v.curInsts[v.ip-2])<<8
 			numSelectors := int(v.curInsts[v.ip])
@@ -265,13 +265,13 @@ func (v *VM) run() {
 				v.err = e
 				return
 			}
-		case internal.OpGetGlobal:
+		case parser.OpGetGlobal:
 			v.ip += 2
 			globalIndex := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 			val := v.globals[globalIndex]
 			v.stack[v.sp] = val
 			v.sp++
-		case internal.OpArray:
+		case parser.OpArray:
 			v.ip += 2
 			numElements := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
@@ -290,7 +290,7 @@ func (v *VM) run() {
 
 			v.stack[v.sp] = arr
 			v.sp++
-		case internal.OpMap:
+		case parser.OpMap:
 			v.ip += 2
 			numElements := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 			kv := make(map[string]Object)
@@ -309,7 +309,7 @@ func (v *VM) run() {
 			}
 			v.stack[v.sp] = m
 			v.sp++
-		case internal.OpError:
+		case parser.OpError:
 			value := v.stack[v.sp-1]
 			var e Object = &Error{
 				Value: value,
@@ -320,7 +320,7 @@ func (v *VM) run() {
 				return
 			}
 			v.stack[v.sp-1] = e
-		case internal.OpImmutable:
+		case parser.OpImmutable:
 			value := v.stack[v.sp-1]
 			switch value := value.(type) {
 			case *Array:
@@ -344,7 +344,7 @@ func (v *VM) run() {
 				}
 				v.stack[v.sp-1] = immutableMap
 			}
-		case internal.OpIndex:
+		case parser.OpIndex:
 			index := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 			v.sp -= 2
@@ -368,7 +368,7 @@ func (v *VM) run() {
 			}
 			v.stack[v.sp] = val
 			v.sp++
-		case internal.OpSliceIndex:
+		case parser.OpSliceIndex:
 			high := v.stack[v.sp-1]
 			low := v.stack[v.sp-2]
 			left := v.stack[v.sp-3]
@@ -535,7 +535,7 @@ func (v *VM) run() {
 				v.stack[v.sp] = val
 				v.sp++
 			}
-		case internal.OpCall:
+		case parser.OpCall:
 			numArgs := int(v.curInsts[v.ip+1])
 			v.ip++
 			value := v.stack[v.sp-1-numArgs]
@@ -576,9 +576,9 @@ func (v *VM) run() {
 				// test if it's tail-call
 				if callee == v.curFrame.fn { // recursion
 					nextOp := v.curInsts[v.ip+1]
-					if nextOp == internal.OpReturn ||
-						(nextOp == internal.OpPop &&
-							internal.OpReturn == v.curInsts[v.ip+2]) {
+					if nextOp == parser.OpReturn ||
+						(nextOp == parser.OpPop &&
+							parser.OpReturn == v.curInsts[v.ip+2]) {
 						for p := 0; p < numArgs; p++ {
 							v.stack[v.curFrame.basePointer+p] =
 								v.stack[v.sp-numArgs+p]
@@ -640,7 +640,7 @@ func (v *VM) run() {
 				v.stack[v.sp] = ret
 				v.sp++
 			}
-		case internal.OpReturn:
+		case parser.OpReturn:
 			v.ip++
 			var retVal Object
 			if int(v.curInsts[v.ip]) == 1 {
@@ -658,7 +658,7 @@ func (v *VM) run() {
 			// skip stack overflow check because (newSP) <= (oldSP)
 			v.stack[v.sp-1] = retVal
 			//v.sp++
-		case internal.OpDefineLocal:
+		case parser.OpDefineLocal:
 			v.ip++
 			localIndex := int(v.curInsts[v.ip])
 			sp := v.curFrame.basePointer + localIndex
@@ -668,7 +668,7 @@ func (v *VM) run() {
 			val := v.stack[v.sp-1]
 			v.sp--
 			v.stack[sp] = val
-		case internal.OpSetLocal:
+		case parser.OpSetLocal:
 			localIndex := int(v.curInsts[v.ip+1])
 			v.ip++
 			sp := v.curFrame.basePointer + localIndex
@@ -683,7 +683,7 @@ func (v *VM) run() {
 				val = obj
 			}
 			v.stack[sp] = val // also use a copy of popped value
-		case internal.OpSetSelLocal:
+		case parser.OpSetSelLocal:
 			localIndex := int(v.curInsts[v.ip+1])
 			numSelectors := int(v.curInsts[v.ip+2])
 			v.ip += 2
@@ -703,7 +703,7 @@ func (v *VM) run() {
 				v.err = e
 				return
 			}
-		case internal.OpGetLocal:
+		case parser.OpGetLocal:
 			v.ip++
 			localIndex := int(v.curInsts[v.ip])
 			val := v.stack[v.curFrame.basePointer+localIndex]
@@ -712,12 +712,12 @@ func (v *VM) run() {
 			}
 			v.stack[v.sp] = val
 			v.sp++
-		case internal.OpGetBuiltin:
+		case parser.OpGetBuiltin:
 			v.ip++
 			builtinIndex := int(v.curInsts[v.ip])
 			v.stack[v.sp] = builtinFuncs[builtinIndex]
 			v.sp++
-		case internal.OpClosure:
+		case parser.OpClosure:
 			v.ip += 3
 			constIndex := int(v.curInsts[v.ip-1]) | int(v.curInsts[v.ip-2])<<8
 			numFree := int(v.curInsts[v.ip])
@@ -752,24 +752,24 @@ func (v *VM) run() {
 			}
 			v.stack[v.sp] = cl
 			v.sp++
-		case internal.OpGetFreePtr:
+		case parser.OpGetFreePtr:
 			v.ip++
 			freeIndex := int(v.curInsts[v.ip])
 			val := v.curFrame.freeVars[freeIndex]
 			v.stack[v.sp] = val
 			v.sp++
-		case internal.OpGetFree:
+		case parser.OpGetFree:
 			v.ip++
 			freeIndex := int(v.curInsts[v.ip])
 			val := *v.curFrame.freeVars[freeIndex].Value
 			v.stack[v.sp] = val
 			v.sp++
-		case internal.OpSetFree:
+		case parser.OpSetFree:
 			v.ip++
 			freeIndex := int(v.curInsts[v.ip])
 			*v.curFrame.freeVars[freeIndex].Value = v.stack[v.sp-1]
 			v.sp--
-		case internal.OpGetLocalPtr:
+		case parser.OpGetLocalPtr:
 			v.ip++
 			localIndex := int(v.curInsts[v.ip])
 			sp := v.curFrame.basePointer + localIndex
@@ -783,7 +783,7 @@ func (v *VM) run() {
 			}
 			v.stack[v.sp] = freeVar
 			v.sp++
-		case internal.OpSetSelFree:
+		case parser.OpSetSelFree:
 			v.ip += 2
 			freeIndex := int(v.curInsts[v.ip-1])
 			numSelectors := int(v.curInsts[v.ip])
@@ -801,7 +801,7 @@ func (v *VM) run() {
 				v.err = e
 				return
 			}
-		case internal.OpIteratorInit:
+		case parser.OpIteratorInit:
 			var iterator Object
 			dst := v.stack[v.sp-1]
 			v.sp--
@@ -817,7 +817,7 @@ func (v *VM) run() {
 			}
 			v.stack[v.sp] = iterator
 			v.sp++
-		case internal.OpIteratorNext:
+		case parser.OpIteratorNext:
 			iterator := v.stack[v.sp-1]
 			v.sp--
 			hasMore := iterator.(Iterator).Next()
@@ -827,19 +827,19 @@ func (v *VM) run() {
 				v.stack[v.sp] = FalseValue
 			}
 			v.sp++
-		case internal.OpIteratorKey:
+		case parser.OpIteratorKey:
 			iterator := v.stack[v.sp-1]
 			v.sp--
 			val := iterator.(Iterator).Key()
 			v.stack[v.sp] = val
 			v.sp++
-		case internal.OpIteratorValue:
+		case parser.OpIteratorValue:
 			iterator := v.stack[v.sp-1]
 			v.sp--
 			val := iterator.(Iterator).Value()
 			v.stack[v.sp] = val
 			v.sp++
-		case internal.OpSuspend:
+		case parser.OpSuspend:
 			return
 		default:
 			v.err = fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])

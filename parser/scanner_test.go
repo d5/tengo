@@ -1,4 +1,4 @@
-package internal_test
+package parser_test
 
 import (
 	"fmt"
@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/d5/tengo/internal"
-	"github.com/d5/tengo/internal/require"
-	"github.com/d5/tengo/internal/token"
+	"github.com/d5/tengo/parser"
+	"github.com/d5/tengo/require"
+	"github.com/d5/tengo/token"
 )
 
-var testFileSet = internal.NewFileSet()
+var testFileSet = parser.NewFileSet()
 
 type scanResult struct {
 	Token   token.Token
@@ -151,7 +151,7 @@ func TestScanner_Scan(t *testing.T) {
 		switch tc.token {
 		case token.Comment:
 			// strip CRs in comments
-			expectedLiteral = string(internal.StripCR([]byte(tc.literal),
+			expectedLiteral = string(parser.StripCR([]byte(tc.literal),
 				tc.literal[1] == '*'))
 
 			//-style comment literal doesn't contain newline
@@ -167,7 +167,7 @@ func TestScanner_Scan(t *testing.T) {
 				// strip CRs in raw string
 				expectedLiteral = tc.literal
 				if expectedLiteral[0] == '`' {
-					expectedLiteral = string(internal.StripCR(
+					expectedLiteral = string(parser.StripCR(
 						[]byte(expectedLiteral), false))
 				}
 			} else if tc.token.IsKeyword() {
@@ -189,9 +189,9 @@ func TestScanner_Scan(t *testing.T) {
 	}
 
 	scanExpect(t, strings.Join(lines, "\n"),
-		internal.ScanComments|internal.DontInsertSemis, expected...)
+		parser.ScanComments|parser.DontInsertSemis, expected...)
 	scanExpect(t, strings.Join(lines, "\n"),
-		internal.DontInsertSemis, expectedSkipComments...)
+		parser.DontInsertSemis, expectedSkipComments...)
 }
 
 func TestStripCR(t *testing.T) {
@@ -210,7 +210,7 @@ func TestStripCR(t *testing.T) {
 		{"/*\r/\r*\r/*/", "/*/*\r/*/"},
 		{"/*\r\r\r\r*/", "/**/"},
 	} {
-		actual := string(internal.StripCR([]byte(tc.input),
+		actual := string(parser.StripCR([]byte(tc.input),
 			len(tc.input) >= 2 && tc.input[1] == '*'))
 		require.Equal(t, tc.expect, actual)
 	}
@@ -219,15 +219,15 @@ func TestStripCR(t *testing.T) {
 func scanExpect(
 	t *testing.T,
 	input string,
-	mode internal.ScanMode,
+	mode parser.ScanMode,
 	expected ...scanResult,
 ) {
 	testFile := testFileSet.AddFile("test", -1, len(input))
 
-	s := internal.NewScanner(
+	s := parser.NewScanner(
 		testFile,
 		[]byte(input),
-		func(_ internal.SourceFilePos, msg string) { require.Fail(t, msg) },
+		func(_ parser.SourceFilePos, msg string) { require.Fail(t, msg) },
 		mode)
 
 	for idx, e := range expected {

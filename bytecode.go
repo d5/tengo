@@ -6,12 +6,12 @@ import (
 	"io"
 	"reflect"
 
-	"github.com/d5/tengo/internal"
+	"github.com/d5/tengo/parser"
 )
 
 // Bytecode is a compiled instructions and constants.
 type Bytecode struct {
-	FileSet      *internal.SourceFileSet
+	FileSet      *parser.SourceFileSet
 	MainFunction *CompiledFunction
 	Constants    []Object
 }
@@ -40,7 +40,7 @@ func (b *Bytecode) CountObjects() int {
 // FormatInstructions returns human readable string representations of
 // compiled instructions.
 func (b *Bytecode) FormatInstructions() []string {
-	return internal.FormatInstructions(b.MainFunction.Instructions, 0)
+	return FormatInstructions(b.MainFunction.Instructions, 0)
 }
 
 // FormatConstants returns human readable string representations of
@@ -51,7 +51,7 @@ func (b *Bytecode) FormatConstants() (output []string) {
 		case *CompiledFunction:
 			output = append(output, fmt.Sprintf(
 				"[% 3d] (Compiled Function|%p)", cidx, &cn))
-			for _, l := range internal.FormatInstructions(cn.Instructions, 0) {
+			for _, l := range FormatInstructions(cn.Instructions, 0) {
 				output = append(output, fmt.Sprintf("     %s", l))
 			}
 		default:
@@ -239,25 +239,25 @@ func updateConstIndexes(insts []byte, indexMap map[int]int) {
 	i := 0
 	for i < len(insts) {
 		op := insts[i]
-		numOperands := internal.OpcodeOperands[op]
-		_, read := internal.ReadOperands(numOperands, insts[i+1:])
+		numOperands := parser.OpcodeOperands[op]
+		_, read := parser.ReadOperands(numOperands, insts[i+1:])
 
 		switch op {
-		case internal.OpConstant:
+		case parser.OpConstant:
 			curIdx := int(insts[i+2]) | int(insts[i+1])<<8
 			newIdx, ok := indexMap[curIdx]
 			if !ok {
 				panic(fmt.Errorf("constant index not found: %d", curIdx))
 			}
-			copy(insts[i:], internal.MakeInstruction(op, newIdx))
-		case internal.OpClosure:
+			copy(insts[i:], MakeInstruction(op, newIdx))
+		case parser.OpClosure:
 			curIdx := int(insts[i+2]) | int(insts[i+1])<<8
 			numFree := int(insts[i+3])
 			newIdx, ok := indexMap[curIdx]
 			if !ok {
 				panic(fmt.Errorf("constant index not found: %d", curIdx))
 			}
-			copy(insts[i:], internal.MakeInstruction(op, newIdx, numFree))
+			copy(insts[i:], MakeInstruction(op, newIdx, numFree))
 		}
 
 		i += 1 + read
@@ -272,8 +272,8 @@ func inferModuleName(mod *ImmutableMap) string {
 }
 
 func init() {
-	gob.Register(&internal.SourceFileSet{})
-	gob.Register(&internal.SourceFile{})
+	gob.Register(&parser.SourceFileSet{})
+	gob.Register(&parser.SourceFile{})
 	gob.Register(&Array{})
 	gob.Register(&Bool{})
 	gob.Register(&Bytes{})

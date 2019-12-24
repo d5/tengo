@@ -1,9 +1,9 @@
-package internal
+package parser
 
 import (
 	"strings"
 
-	"github.com/d5/tengo/internal/token"
+	"github.com/d5/tengo/token"
 )
 
 // Expr represents an expression node in the AST.

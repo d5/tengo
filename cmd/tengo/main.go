@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/internal"
+	"github.com/d5/tengo/parser"
 	"github.com/d5/tengo/stdlib"
 )
 
@@ -148,9 +148,9 @@ func RunCompiled(modules *tengo.ModuleMap, data []byte) (err error) {
 // RunREPL starts REPL.
 func RunREPL(modules *tengo.ModuleMap, in io.Reader, out io.Writer) {
 	stdin := bufio.NewScanner(in)
-	fileSet := internal.NewFileSet()
+	fileSet := parser.NewFileSet()
 	globals := make([]tengo.Object, tengo.GlobalsSize)
-	symbolTable := internal.NewSymbolTable()
+	symbolTable := tengo.NewSymbolTable()
 	for idx, fn := range tengo.GetAllBuiltinFunctions() {
 		symbolTable.DefineBuiltin(idx, fn.Name)
 	}
@@ -185,7 +185,7 @@ func RunREPL(modules *tengo.ModuleMap, in io.Reader, out io.Writer) {
 
 		line := stdin.Text()
 		srcFile := fileSet.AddFile("repl", -1, len(line))
-		p := internal.NewParser(srcFile, []byte(line), nil)
+		p := parser.NewParser(srcFile, []byte(line), nil)
 		file, err := p.ParseFile()
 		if err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
@@ -214,10 +214,10 @@ func compileSrc(
 	src []byte,
 	filename string,
 ) (*tengo.Bytecode, error) {
-	fileSet := internal.NewFileSet()
+	fileSet := parser.NewFileSet()
 	srcFile := fileSet.AddFile(filename, -1, len(src))
 
-	p := internal.NewParser(srcFile, src, nil)
+	p := parser.NewParser(srcFile, src, nil)
 	file, err := p.ParseFile()
 	if err != nil {
 		return nil, err
@@ -267,23 +267,23 @@ func doHelp() {
 	fmt.Println()
 }
 
-func addPrints(file *internal.File) *internal.File {
-	var stmts []internal.Stmt
+func addPrints(file *parser.File) *parser.File {
+	var stmts []parser.Stmt
 	for _, s := range file.Stmts {
 		switch s := s.(type) {
-		case *internal.ExprStmt:
-			stmts = append(stmts, &internal.ExprStmt{
-				Expr: &internal.CallExpr{
-					Func: &internal.Ident{Name: "__repl_println__"},
-					Args: []internal.Expr{s.Expr},
+		case *parser.ExprStmt:
+			stmts = append(stmts, &parser.ExprStmt{
+				Expr: &parser.CallExpr{
+					Func: &parser.Ident{Name: "__repl_println__"},
+					Args: []parser.Expr{s.Expr},
 				},
 			})
-		case *internal.AssignStmt:
+		case *parser.AssignStmt:
 			stmts = append(stmts, s)
 
-			stmts = append(stmts, &internal.ExprStmt{
-				Expr: &internal.CallExpr{
-					Func: &internal.Ident{
+			stmts = append(stmts, &parser.ExprStmt{
+				Expr: &parser.CallExpr{
+					Func: &parser.Ident{
 						Name: "__repl_println__",
 					},
 					Args: s.LHS,
@@ -293,7 +293,7 @@ func addPrints(file *internal.File) *internal.File {
 			stmts = append(stmts, s)
 		}
 	}
-	return &internal.File{
+	return &parser.File{
 		InputFile: file.InputFile,
 		Stmts:     stmts,
 	}

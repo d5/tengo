@@ -1,4 +1,4 @@
-package internal
+package parser
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/d5/tengo/internal/token"
+	"github.com/d5/tengo/token"
 )
 
 type bailout struct{}
@@ -20,37 +20,37 @@ var stmtStart = map[token.Token]bool{
 	token.Export:   true,
 }
 
-// ParserError represents a parser error.
-type ParserError struct {
+// Error represents a parser error.
+type Error struct {
 	Pos SourceFilePos
 	Msg string
 }
 
-func (e ParserError) Error() string {
+func (e Error) Error() string {
 	if e.Pos.Filename != "" || e.Pos.IsValid() {
 		return fmt.Sprintf("Parse Error: %s\n\tat %s", e.Msg, e.Pos)
 	}
 	return fmt.Sprintf("Parse Error: %s", e.Msg)
 }
 
-// ParserErrorList is a collection of parser errors.
-type ParserErrorList []*ParserError
+// ErrorList is a collection of parser errors.
+type ErrorList []*Error
 
 // Add adds a new parser error to the collection.
-func (p *ParserErrorList) Add(pos SourceFilePos, msg string) {
-	*p = append(*p, &ParserError{pos, msg})
+func (p *ErrorList) Add(pos SourceFilePos, msg string) {
+	*p = append(*p, &Error{pos, msg})
 }
 
 // Len returns the number of elements in the collection.
-func (p ParserErrorList) Len() int {
+func (p ErrorList) Len() int {
 	return len(p)
 }
 
-func (p ParserErrorList) Swap(i, j int) {
+func (p ErrorList) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
 
-func (p ParserErrorList) Less(i, j int) bool {
+func (p ErrorList) Less(i, j int) bool {
 	e := &p[i].Pos
 	f := &p[j].Pos
 
@@ -67,11 +67,11 @@ func (p ParserErrorList) Less(i, j int) bool {
 }
 
 // Sort sorts the collection.
-func (p ParserErrorList) Sort() {
+func (p ErrorList) Sort() {
 	sort.Sort(p)
 }
 
-func (p ParserErrorList) Error() string {
+func (p ErrorList) Error() string {
 	switch len(p) {
 	case 0:
 		return "no errors"
@@ -82,7 +82,7 @@ func (p ParserErrorList) Error() string {
 }
 
 // Err returns an error.
-func (p ParserErrorList) Err() error {
+func (p ErrorList) Err() error {
 	if len(p) == 0 {
 		return nil
 	}
@@ -93,7 +93,7 @@ func (p ParserErrorList) Err() error {
 // implementation.
 type Parser struct {
 	file      *SourceFile
-	errors    ParserErrorList
+	errors    ErrorList
 	scanner   *Scanner
 	pos       Pos
 	token     token.Token
