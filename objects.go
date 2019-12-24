@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/d5/tengo/internal"
-	"github.com/d5/tengo/internal/token"
+	"github.com/d5/tengo/parser"
+	"github.com/d5/tengo/token"
 )
 
 var (
@@ -574,7 +574,7 @@ type CompiledFunction struct {
 	NumLocals     int // number of local variables (including function parameters)
 	NumParameters int
 	VarArgs       bool
-	SourceMap     map[int]internal.Pos
+	SourceMap     map[int]parser.Pos
 	Free          []*ObjectPtr
 }
 
@@ -605,14 +605,14 @@ func (o *CompiledFunction) Equals(_ Object) bool {
 }
 
 // SourcePos returns the source position of the instruction at ip.
-func (o *CompiledFunction) SourcePos(ip int) internal.Pos {
+func (o *CompiledFunction) SourcePos(ip int) parser.Pos {
 	for ip >= 0 {
 		if p, ok := o.SourceMap[ip]; ok {
 			return p
 		}
 		ip--
 	}
-	return internal.NoPos
+	return parser.NoPos
 }
 
 // CanCall returns whether the Object can be Called.

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/internal"
+	"github.com/d5/tengo/parser"
 )
 
 func main() {
@@ -163,7 +163,7 @@ func runBench(
 	result tengo.Object,
 	err error,
 ) {
-	var astFile *internal.File
+	var astFile *parser.File
 	parseTime, astFile, err = parse(input)
 	if err != nil {
 		return
@@ -180,13 +180,13 @@ func runBench(
 	return
 }
 
-func parse(input []byte) (time.Duration, *internal.File, error) {
-	fileSet := internal.NewFileSet()
+func parse(input []byte) (time.Duration, *parser.File, error) {
+	fileSet := parser.NewFileSet()
 	inputFile := fileSet.AddFile("bench", -1, len(input))
 
 	start := time.Now()
 
-	p := internal.NewParser(inputFile, input, nil)
+	p := parser.NewParser(inputFile, input, nil)
 	file, err := p.ParseFile()
 	if err != nil {
 		return time.Since(start), nil, err
@@ -195,8 +195,8 @@ func parse(input []byte) (time.Duration, *internal.File, error) {
 	return time.Since(start), file, nil
 }
 
-func compileFile(file *internal.File) (time.Duration, *tengo.Bytecode, error) {
-	symTable := internal.NewSymbolTable()
+func compileFile(file *parser.File) (time.Duration, *tengo.Bytecode, error) {
+	symTable := tengo.NewSymbolTable()
 	symTable.Define("out")
 
 	start := time.Now()

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/internal"
-	"github.com/d5/tengo/internal/require"
+	"github.com/d5/tengo/parser"
+	"github.com/d5/tengo/require"
 )
 
 type srcfile struct {
@@ -23,20 +23,20 @@ func TestBytecode(t *testing.T) {
 			&tengo.Char{Value: 'y'},
 			&tengo.Float{Value: 93.11},
 			compiledFunction(1, 0,
-				internal.MakeInstruction(internal.OpConstant, 3),
-				internal.MakeInstruction(internal.OpSetLocal, 0),
-				internal.MakeInstruction(internal.OpGetGlobal, 0),
-				internal.MakeInstruction(internal.OpGetFree, 0)),
+				tengo.MakeInstruction(parser.OpConstant, 3),
+				tengo.MakeInstruction(parser.OpSetLocal, 0),
+				tengo.MakeInstruction(parser.OpGetGlobal, 0),
+				tengo.MakeInstruction(parser.OpGetFree, 0)),
 			&tengo.Float{Value: 39.2},
 			&tengo.Int{Value: 192},
 			&tengo.String{Value: "bar"})))
 
 	testBytecodeSerialization(t, bytecodeFileSet(
 		concatInsts(
-			internal.MakeInstruction(internal.OpConstant, 0),
-			internal.MakeInstruction(internal.OpSetGlobal, 0),
-			internal.MakeInstruction(internal.OpConstant, 6),
-			internal.MakeInstruction(internal.OpPop)),
+			tengo.MakeInstruction(parser.OpConstant, 0),
+			tengo.MakeInstruction(parser.OpSetGlobal, 0),
+			tengo.MakeInstruction(parser.OpConstant, 6),
+			tengo.MakeInstruction(parser.OpPop)),
 		objectsArray(
 			&tengo.Int{Value: 55},
 			&tengo.Int{Value: 66},
@@ -99,29 +99,29 @@ func TestBytecode(t *testing.T) {
 				},
 			},
 			compiledFunction(1, 0,
-				internal.MakeInstruction(internal.OpConstant, 3),
-				internal.MakeInstruction(internal.OpSetLocal, 0),
-				internal.MakeInstruction(internal.OpGetGlobal, 0),
-				internal.MakeInstruction(internal.OpGetFree, 0),
-				internal.MakeInstruction(internal.OpBinaryOp, 11),
-				internal.MakeInstruction(internal.OpGetFree, 1),
-				internal.MakeInstruction(internal.OpBinaryOp, 11),
-				internal.MakeInstruction(internal.OpGetLocal, 0),
-				internal.MakeInstruction(internal.OpBinaryOp, 11),
-				internal.MakeInstruction(internal.OpReturn, 1)),
+				tengo.MakeInstruction(parser.OpConstant, 3),
+				tengo.MakeInstruction(parser.OpSetLocal, 0),
+				tengo.MakeInstruction(parser.OpGetGlobal, 0),
+				tengo.MakeInstruction(parser.OpGetFree, 0),
+				tengo.MakeInstruction(parser.OpBinaryOp, 11),
+				tengo.MakeInstruction(parser.OpGetFree, 1),
+				tengo.MakeInstruction(parser.OpBinaryOp, 11),
+				tengo.MakeInstruction(parser.OpGetLocal, 0),
+				tengo.MakeInstruction(parser.OpBinaryOp, 11),
+				tengo.MakeInstruction(parser.OpReturn, 1)),
 			compiledFunction(1, 0,
-				internal.MakeInstruction(internal.OpConstant, 2),
-				internal.MakeInstruction(internal.OpSetLocal, 0),
-				internal.MakeInstruction(internal.OpGetFree, 0),
-				internal.MakeInstruction(internal.OpGetLocal, 0),
-				internal.MakeInstruction(internal.OpClosure, 4, 2),
-				internal.MakeInstruction(internal.OpReturn, 1)),
+				tengo.MakeInstruction(parser.OpConstant, 2),
+				tengo.MakeInstruction(parser.OpSetLocal, 0),
+				tengo.MakeInstruction(parser.OpGetFree, 0),
+				tengo.MakeInstruction(parser.OpGetLocal, 0),
+				tengo.MakeInstruction(parser.OpClosure, 4, 2),
+				tengo.MakeInstruction(parser.OpReturn, 1)),
 			compiledFunction(1, 0,
-				internal.MakeInstruction(internal.OpConstant, 1),
-				internal.MakeInstruction(internal.OpSetLocal, 0),
-				internal.MakeInstruction(internal.OpGetLocal, 0),
-				internal.MakeInstruction(internal.OpClosure, 5, 1),
-				internal.MakeInstruction(internal.OpReturn, 1))),
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpSetLocal, 0),
+				tengo.MakeInstruction(parser.OpGetLocal, 0),
+				tengo.MakeInstruction(parser.OpClosure, 5, 1),
+				tengo.MakeInstruction(parser.OpReturn, 1))),
 		fileSet(srcfile{name: "file1", size: 100},
 			srcfile{name: "file2", size: 200})))
 }
@@ -133,10 +133,10 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				&tengo.Char{Value: 'y'},
 				&tengo.Float{Value: 93.11},
 				compiledFunction(1, 0,
-					internal.MakeInstruction(internal.OpConstant, 3),
-					internal.MakeInstruction(internal.OpSetLocal, 0),
-					internal.MakeInstruction(internal.OpGetGlobal, 0),
-					internal.MakeInstruction(internal.OpGetFree, 0)),
+					tengo.MakeInstruction(parser.OpConstant, 3),
+					tengo.MakeInstruction(parser.OpSetLocal, 0),
+					tengo.MakeInstruction(parser.OpGetGlobal, 0),
+					tengo.MakeInstruction(parser.OpGetFree, 0)),
 				&tengo.Float{Value: 39.2},
 				&tengo.Int{Value: 192},
 				&tengo.String{Value: "bar"})),
@@ -145,10 +145,10 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				&tengo.Char{Value: 'y'},
 				&tengo.Float{Value: 93.11},
 				compiledFunction(1, 0,
-					internal.MakeInstruction(internal.OpConstant, 3),
-					internal.MakeInstruction(internal.OpSetLocal, 0),
-					internal.MakeInstruction(internal.OpGetGlobal, 0),
-					internal.MakeInstruction(internal.OpGetFree, 0)),
+					tengo.MakeInstruction(parser.OpConstant, 3),
+					tengo.MakeInstruction(parser.OpSetLocal, 0),
+					tengo.MakeInstruction(parser.OpGetGlobal, 0),
+					tengo.MakeInstruction(parser.OpGetFree, 0)),
 				&tengo.Float{Value: 39.2},
 				&tengo.Int{Value: 192},
 				&tengo.String{Value: "bar"})))
@@ -156,63 +156,63 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 	testBytecodeRemoveDuplicates(t,
 		bytecode(
 			concatInsts(
-				internal.MakeInstruction(internal.OpConstant, 0),
-				internal.MakeInstruction(internal.OpConstant, 1),
-				internal.MakeInstruction(internal.OpConstant, 2),
-				internal.MakeInstruction(internal.OpConstant, 3),
-				internal.MakeInstruction(internal.OpConstant, 4),
-				internal.MakeInstruction(internal.OpConstant, 5),
-				internal.MakeInstruction(internal.OpConstant, 6),
-				internal.MakeInstruction(internal.OpConstant, 7),
-				internal.MakeInstruction(internal.OpConstant, 8),
-				internal.MakeInstruction(internal.OpClosure, 4, 1)),
+				tengo.MakeInstruction(parser.OpConstant, 0),
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpConstant, 2),
+				tengo.MakeInstruction(parser.OpConstant, 3),
+				tengo.MakeInstruction(parser.OpConstant, 4),
+				tengo.MakeInstruction(parser.OpConstant, 5),
+				tengo.MakeInstruction(parser.OpConstant, 6),
+				tengo.MakeInstruction(parser.OpConstant, 7),
+				tengo.MakeInstruction(parser.OpConstant, 8),
+				tengo.MakeInstruction(parser.OpClosure, 4, 1)),
 			objectsArray(
 				&tengo.Int{Value: 1},
 				&tengo.Float{Value: 2.0},
 				&tengo.Char{Value: '3'},
 				&tengo.String{Value: "four"},
 				compiledFunction(1, 0,
-					internal.MakeInstruction(internal.OpConstant, 3),
-					internal.MakeInstruction(internal.OpConstant, 7),
-					internal.MakeInstruction(internal.OpSetLocal, 0),
-					internal.MakeInstruction(internal.OpGetGlobal, 0),
-					internal.MakeInstruction(internal.OpGetFree, 0)),
+					tengo.MakeInstruction(parser.OpConstant, 3),
+					tengo.MakeInstruction(parser.OpConstant, 7),
+					tengo.MakeInstruction(parser.OpSetLocal, 0),
+					tengo.MakeInstruction(parser.OpGetGlobal, 0),
+					tengo.MakeInstruction(parser.OpGetFree, 0)),
 				&tengo.Int{Value: 1},
 				&tengo.Float{Value: 2.0},
 				&tengo.Char{Value: '3'},
 				&tengo.String{Value: "four"})),
 		bytecode(
 			concatInsts(
-				internal.MakeInstruction(internal.OpConstant, 0),
-				internal.MakeInstruction(internal.OpConstant, 1),
-				internal.MakeInstruction(internal.OpConstant, 2),
-				internal.MakeInstruction(internal.OpConstant, 3),
-				internal.MakeInstruction(internal.OpConstant, 4),
-				internal.MakeInstruction(internal.OpConstant, 0),
-				internal.MakeInstruction(internal.OpConstant, 1),
-				internal.MakeInstruction(internal.OpConstant, 2),
-				internal.MakeInstruction(internal.OpConstant, 3),
-				internal.MakeInstruction(internal.OpClosure, 4, 1)),
+				tengo.MakeInstruction(parser.OpConstant, 0),
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpConstant, 2),
+				tengo.MakeInstruction(parser.OpConstant, 3),
+				tengo.MakeInstruction(parser.OpConstant, 4),
+				tengo.MakeInstruction(parser.OpConstant, 0),
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpConstant, 2),
+				tengo.MakeInstruction(parser.OpConstant, 3),
+				tengo.MakeInstruction(parser.OpClosure, 4, 1)),
 			objectsArray(
 				&tengo.Int{Value: 1},
 				&tengo.Float{Value: 2.0},
 				&tengo.Char{Value: '3'},
 				&tengo.String{Value: "four"},
 				compiledFunction(1, 0,
-					internal.MakeInstruction(internal.OpConstant, 3),
-					internal.MakeInstruction(internal.OpConstant, 2),
-					internal.MakeInstruction(internal.OpSetLocal, 0),
-					internal.MakeInstruction(internal.OpGetGlobal, 0),
-					internal.MakeInstruction(internal.OpGetFree, 0)))))
+					tengo.MakeInstruction(parser.OpConstant, 3),
+					tengo.MakeInstruction(parser.OpConstant, 2),
+					tengo.MakeInstruction(parser.OpSetLocal, 0),
+					tengo.MakeInstruction(parser.OpGetGlobal, 0),
+					tengo.MakeInstruction(parser.OpGetFree, 0)))))
 
 	testBytecodeRemoveDuplicates(t,
 		bytecode(
 			concatInsts(
-				internal.MakeInstruction(internal.OpConstant, 0),
-				internal.MakeInstruction(internal.OpConstant, 1),
-				internal.MakeInstruction(internal.OpConstant, 2),
-				internal.MakeInstruction(internal.OpConstant, 3),
-				internal.MakeInstruction(internal.OpConstant, 4)),
+				tengo.MakeInstruction(parser.OpConstant, 0),
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpConstant, 2),
+				tengo.MakeInstruction(parser.OpConstant, 3),
+				tengo.MakeInstruction(parser.OpConstant, 4)),
 			objectsArray(
 				&tengo.Int{Value: 1},
 				&tengo.Int{Value: 2},
@@ -221,11 +221,11 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				&tengo.Int{Value: 3})),
 		bytecode(
 			concatInsts(
-				internal.MakeInstruction(internal.OpConstant, 0),
-				internal.MakeInstruction(internal.OpConstant, 1),
-				internal.MakeInstruction(internal.OpConstant, 2),
-				internal.MakeInstruction(internal.OpConstant, 0),
-				internal.MakeInstruction(internal.OpConstant, 2)),
+				tengo.MakeInstruction(parser.OpConstant, 0),
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpConstant, 2),
+				tengo.MakeInstruction(parser.OpConstant, 0),
+				tengo.MakeInstruction(parser.OpConstant, 2)),
 			objectsArray(
 				&tengo.Int{Value: 1},
 				&tengo.Int{Value: 2},
@@ -241,19 +241,19 @@ func TestBytecode_CountObjects(t *testing.T) {
 			&tengo.Int{Value: 77},
 			&tengo.Int{Value: 88},
 			compiledFunction(1, 0,
-				internal.MakeInstruction(internal.OpConstant, 3),
-				internal.MakeInstruction(internal.OpReturn, 1)),
+				tengo.MakeInstruction(parser.OpConstant, 3),
+				tengo.MakeInstruction(parser.OpReturn, 1)),
 			compiledFunction(1, 0,
-				internal.MakeInstruction(internal.OpConstant, 2),
-				internal.MakeInstruction(internal.OpReturn, 1)),
+				tengo.MakeInstruction(parser.OpConstant, 2),
+				tengo.MakeInstruction(parser.OpReturn, 1)),
 			compiledFunction(1, 0,
-				internal.MakeInstruction(internal.OpConstant, 1),
-				internal.MakeInstruction(internal.OpReturn, 1))))
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpReturn, 1))))
 	require.Equal(t, 7, b.CountObjects())
 }
 
-func fileSet(files ...srcfile) *internal.SourceFileSet {
-	fileSet := internal.NewFileSet()
+func fileSet(files ...srcfile) *parser.SourceFileSet {
+	fileSet := parser.NewFileSet()
 	for _, f := range files {
 		fileSet.AddFile(f.name, -1, f.size)
 	}
@@ -263,7 +263,7 @@ func fileSet(files ...srcfile) *internal.SourceFileSet {
 func bytecodeFileSet(
 	instructions []byte,
 	constants []tengo.Object,
-	fileSet *internal.SourceFileSet,
+	fileSet *parser.SourceFileSet,
 ) *tengo.Bytecode {
 	return &tengo.Bytecode{
 		FileSet:      fileSet,

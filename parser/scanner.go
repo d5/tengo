@@ -1,11 +1,11 @@
-package internal
+package parser
 
 import (
 	"fmt"
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/d5/tengo/internal/token"
+	"github.com/d5/tengo/token"
 )
 
 // byte order mark

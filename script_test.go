@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/internal/require"
-	"github.com/d5/tengo/internal/token"
+	"github.com/d5/tengo/require"
 	"github.com/d5/tengo/stdlib"
+	"github.com/d5/tengo/token"
 )
 
 func TestScript_Add(t *testing.T) {

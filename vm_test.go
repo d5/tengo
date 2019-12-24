@@ -11,10 +11,10 @@ import (
 	"testing"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/internal"
-	"github.com/d5/tengo/internal/require"
-	"github.com/d5/tengo/internal/token"
+	"github.com/d5/tengo/parser"
+	"github.com/d5/tengo/require"
 	"github.com/d5/tengo/stdlib"
+	"github.com/d5/tengo/token"
 )
 
 const testOut = "out"
@@ -3276,7 +3276,7 @@ func (o *vmTracer) Write(p []byte) (n int, err error) {
 }
 
 func traceCompileRun(
-	file *internal.File,
+	file *parser.File,
 	symbols map[string]tengo.Object,
 	modules *tengo.ModuleMap,
 	maxAllocs int64,
@@ -3306,7 +3306,7 @@ func traceCompileRun(
 
 	globals := make([]tengo.Object, tengo.GlobalsSize)
 
-	symTable := internal.NewSymbolTable()
+	symTable := tengo.NewSymbolTable()
 	for name, value := range symbols {
 		sym := symTable.Define(name)
 
@@ -3371,11 +3371,11 @@ func formatGlobals(globals []tengo.Object) (formatted []string) {
 	return
 }
 
-func parse(t *testing.T, input string) *internal.File {
-	testFileSet := internal.NewFileSet()
+func parse(t *testing.T, input string) *parser.File {
+	testFileSet := parser.NewFileSet()
 	testFile := testFileSet.AddFile("test", -1, len(input))
 
-	p := internal.NewParser(testFile, []byte(input), nil)
+	p := parser.NewParser(testFile, []byte(input), nil)
 	file, err := p.ParseFile()
 	require.NoError(t, err)
 	return file

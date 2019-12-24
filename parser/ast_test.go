@@ -1,14 +1,14 @@
-package internal_test
+package parser_test
 
 import (
 	"testing"
 
-	"github.com/d5/tengo/internal"
+	"github.com/d5/tengo/parser"
 )
 
 func TestIdentListString(t *testing.T) {
-	identListVar := &internal.IdentList{
-		List: []*internal.Ident{
+	identListVar := &parser.IdentList{
+		List: []*parser.Ident{
 			{Name: "a"},
 			{Name: "b"},
 			{Name: "c"},
@@ -22,8 +22,8 @@ func TestIdentListString(t *testing.T) {
 			identListVar, expectedVar, str)
 	}
 
-	identList := &internal.IdentList{
-		List: []*internal.Ident{
+	identList := &parser.IdentList{
+		List: []*parser.Ident{
 			{Name: "a"},
 			{Name: "b"},
 			{Name: "c"},

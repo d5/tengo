@@ -121,7 +121,6 @@ each([a, b, c, d], func(x) {
 	mul := compiled.Get("mul")
 	fmt.Println(sum, mul) // "22 288"
 }
-
 ```
 
 ## References

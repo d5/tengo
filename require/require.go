@@ -11,8 +11,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/internal"
-	"github.com/d5/tengo/internal/token"
+	"github.com/d5/tengo/parser"
+	"github.com/d5/tengo/token"
 )
 
 // NoError asserts err is not an error.
@@ -120,12 +120,12 @@ func Equal(
 		if expected != actual.(rune) {
 			failExpectedActual(t, expected, actual, msg...)
 		}
-	case *internal.Symbol:
-		if !equalSymbol(expected, actual.(*internal.Symbol)) {
+	case *tengo.Symbol:
+		if !equalSymbol(expected, actual.(*tengo.Symbol)) {
 			failExpectedActual(t, expected, actual, msg...)
 		}
-	case internal.Pos:
-		if expected != actual.(internal.Pos) {
+	case parser.Pos:
+		if expected != actual.(parser.Pos) {
 			failExpectedActual(t, expected, actual, msg...)
 		}
 	case token.Token:
@@ -176,14 +176,14 @@ func Equal(
 		if !expected.Equals(actual.(tengo.Object)) {
 			failExpectedActual(t, expected, actual, msg...)
 		}
-	case *internal.SourceFileSet:
-		equalFileSet(t, expected, actual.(*internal.SourceFileSet), msg...)
-	case *internal.SourceFile:
-		Equal(t, expected.Name, actual.(*internal.SourceFile).Name, msg...)
-		Equal(t, expected.Base, actual.(*internal.SourceFile).Base, msg...)
-		Equal(t, expected.Size, actual.(*internal.SourceFile).Size, msg...)
+	case *parser.SourceFileSet:
+		equalFileSet(t, expected, actual.(*parser.SourceFileSet), msg...)
+	case *parser.SourceFile:
+		Equal(t, expected.Name, actual.(*parser.SourceFile).Name, msg...)
+		Equal(t, expected.Base, actual.(*parser.SourceFile).Base, msg...)
+		Equal(t, expected.Size, actual.(*parser.SourceFile).Size, msg...)
 		True(t, equalIntSlice(expected.Lines,
-			actual.(*internal.SourceFile).Lines), msg...)
+			actual.(*parser.SourceFile).Lines), msg...)
 	case error:
 		if expected != actual.(error) {
 			failExpectedActual(t, expected, actual, msg...)
@@ -253,7 +253,7 @@ func equalStringSlice(a, b []string) bool {
 	return true
 }
 
-func equalSymbol(a, b *internal.Symbol) bool {
+func equalSymbol(a, b *tengo.Symbol) bool {
 	return a.Name == b.Name &&
 		a.Index == b.Index &&
 		a.Scope == b.Scope
@@ -272,7 +272,7 @@ func equalObjectSlice(
 
 func equalFileSet(
 	t *testing.T,
-	expected, actual *internal.SourceFileSet,
+	expected, actual *parser.SourceFileSet,
 	msg ...interface{},
 ) {
 	Equal(t, len(expected.Files), len(actual.Files), msg...)
@@ -303,8 +303,8 @@ func equalCompiledFunction(
 	expectedT := expected.(*tengo.CompiledFunction)
 	actualT := actual.(*tengo.CompiledFunction)
 	Equal(t,
-		internal.FormatInstructions(expectedT.Instructions, 0),
-		internal.FormatInstructions(actualT.Instructions, 0), msg...)
+		tengo.FormatInstructions(expectedT.Instructions, 0),
+		tengo.FormatInstructions(actualT.Instructions, 0), msg...)
 }
 
 func isNil(v interface{}) bool {

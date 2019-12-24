@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/d5/tengo/internal"
+	"github.com/d5/tengo/parser"
 )
 
 // Script can simplify compilation and execution of embedded scripts.
@@ -83,9 +83,9 @@ func (s *Script) Compile() (*Compiled, error) {
 		return nil, err
 	}
 
-	fileSet := internal.NewFileSet()
+	fileSet := parser.NewFileSet()
 	srcFile := fileSet.AddFile("(main)", -1, len(s.input))
-	p := internal.NewParser(srcFile, s.input, nil)
+	p := parser.NewParser(srcFile, s.input, nil)
 	file, err := p.ParseFile()
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (s *Script) Compile() (*Compiled, error) {
 	globalIndexes := make(map[string]int, len(globals))
 	for _, name := range symbolTable.Names() {
 		symbol, _, _ := symbolTable.Resolve(name)
-		if symbol.Scope == internal.ScopeGlobal {
+		if symbol.Scope == ScopeGlobal {
 			globalIndexes[name] = symbol.Index
 		}
 	}
@@ -152,7 +152,7 @@ func (s *Script) RunContext(
 }
 
 func (s *Script) prepCompile() (
-	symbolTable *internal.SymbolTable,
+	symbolTable *SymbolTable,
 	globals []Object,
 	err error,
 ) {
@@ -161,7 +161,7 @@ func (s *Script) prepCompile() (
 		names = append(names, name)
 	}
 
-	symbolTable = internal.NewSymbolTable()
+	symbolTable = NewSymbolTable()
 	for idx, fn := range builtinFuncs {
 		symbolTable.DefineBuiltin(idx, fn.Name)
 	}

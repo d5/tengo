@@ -1,10 +1,14 @@
-package internal
+package tengo
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/d5/tengo/parser"
+)
 
 // MakeInstruction returns a bytecode for an opcode and the operands.
-func MakeInstruction(opcode Opcode, operands ...int) []byte {
-	numOperands := OpcodeOperands[opcode]
+func MakeInstruction(opcode parser.Opcode, operands ...int) []byte {
+	numOperands := parser.OpcodeOperands[opcode]
 
 	totalLen := 1
 	for _, w := range numOperands {
@@ -36,19 +40,19 @@ func FormatInstructions(b []byte, posOffset int) []string {
 
 	i := 0
 	for i < len(b) {
-		numOperands := OpcodeOperands[b[i]]
-		operands, read := ReadOperands(numOperands, b[i+1:])
+		numOperands := parser.OpcodeOperands[b[i]]
+		operands, read := parser.ReadOperands(numOperands, b[i+1:])
 
 		switch len(numOperands) {
 		case 0:
 			out = append(out, fmt.Sprintf("%04d %-7s",
-				posOffset+i, OpcodeNames[b[i]]))
+				posOffset+i, parser.OpcodeNames[b[i]]))
 		case 1:
 			out = append(out, fmt.Sprintf("%04d %-7s %-5d",
-				posOffset+i, OpcodeNames[b[i]], operands[0]))
+				posOffset+i, parser.OpcodeNames[b[i]], operands[0]))
 		case 2:
 			out = append(out, fmt.Sprintf("%04d %-7s %-5d %-5d",
-				posOffset+i, OpcodeNames[b[i]],
+				posOffset+i, parser.OpcodeNames[b[i]],
 				operands[0], operands[1]))
 		}
 		i += 1 + read

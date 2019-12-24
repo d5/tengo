@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/internal/require"
-	"github.com/d5/tengo/internal/token"
+	"github.com/d5/tengo/require"
+	"github.com/d5/tengo/token"
 )
 
 func TestObject_TypeName(t *testing.T) {

@@ -1,4 +1,4 @@
-package internal_test
+package parser_test
 
 import (
 	"fmt"
@@ -7,20 +7,20 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/d5/tengo/internal"
-	"github.com/d5/tengo/internal/require"
-	"github.com/d5/tengo/internal/token"
+	. "github.com/d5/tengo/parser"
+	"github.com/d5/tengo/require"
+	"github.com/d5/tengo/token"
 )
 
 func TestParserError(t *testing.T) {
-	err := &ParserError{Pos: SourceFilePos{
+	err := &Error{Pos: SourceFilePos{
 		Offset: 10, Line: 1, Column: 10,
 	}, Msg: "test"}
 	require.Equal(t, "Parse Error: test\n\tat 1:10", err.Error())
 }
 
 func TestParserErrorList(t *testing.T) {
-	var list ParserErrorList
+	var list ErrorList
 	list.Add(SourceFilePos{Offset: 20, Line: 2, Column: 10}, "error 2")
 	list.Add(SourceFilePos{Offset: 30, Line: 3, Column: 10}, "error 3")
 	list.Add(SourceFilePos{Offset: 10, Line: 1, Column: 10}, "error 1")

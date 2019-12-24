@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/internal/require"
+	"github.com/d5/tengo/require"
 )
 
 func TestRand(t *testing.T) {

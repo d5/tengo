@@ -1,10 +1,10 @@
-package internal_test
+package tengo_test
 
 import (
 	"testing"
 
-	"github.com/d5/tengo/internal"
-	"github.com/d5/tengo/internal/require"
+	"github.com/d5/tengo"
+	"github.com/d5/tengo/require"
 )
 
 func TestSymbolTable(t *testing.T) {
@@ -93,37 +93,37 @@ func TestSymbolTable(t *testing.T) {
 
 func symbol(
 	name string,
-	scope internal.SymbolScope,
+	scope tengo.SymbolScope,
 	index int,
-) *internal.Symbol {
-	return &internal.Symbol{
+) *tengo.Symbol {
+	return &tengo.Symbol{
 		Name:  name,
 		Scope: scope,
 		Index: index,
 	}
 }
 
-func globalSymbol(name string, index int) *internal.Symbol {
-	return symbol(name, internal.ScopeGlobal, index)
+func globalSymbol(name string, index int) *tengo.Symbol {
+	return symbol(name, tengo.ScopeGlobal, index)
 }
 
-func localSymbol(name string, index int) *internal.Symbol {
-	return symbol(name, internal.ScopeLocal, index)
+func localSymbol(name string, index int) *tengo.Symbol {
+	return symbol(name, tengo.ScopeLocal, index)
 }
 
-func freeSymbol(name string, index int) *internal.Symbol {
-	return symbol(name, internal.ScopeFree, index)
+func freeSymbol(name string, index int) *tengo.Symbol {
+	return symbol(name, tengo.ScopeFree, index)
 }
 
-func symbolTable() *internal.SymbolTable {
-	return internal.NewSymbolTable()
+func symbolTable() *tengo.SymbolTable {
+	return tengo.NewSymbolTable()
 }
 
 func resolveExpect(
 	t *testing.T,
-	symbolTable *internal.SymbolTable,
+	symbolTable *tengo.SymbolTable,
 	name string,
-	expectedSymbol *internal.Symbol,
+	expectedSymbol *tengo.Symbol,
 	expectedDepth int,
 ) {
 	actualSymbol, actualDepth, ok := symbolTable.Resolve(name)

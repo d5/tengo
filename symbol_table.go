@@ -1,33 +1,4 @@
-package internal
-
-import "fmt"
-
-// CompilationScope represents a compiled instructions and the last two
-// instructions that were emitted.
-type CompilationScope struct {
-	Instructions []byte
-	SymbolInit   map[string]bool
-	SourceMap    map[int]Pos
-}
-
-// Loop represents a loop construct that the compiler uses to track the current
-// loop.
-type Loop struct {
-	Continues []int
-	Breaks    []int
-}
-
-// CompilerError represents a compiler error.
-type CompilerError struct {
-	FileSet *SourceFileSet
-	Node    Node
-	Err     error
-}
-
-func (e *CompilerError) Error() string {
-	filePos := e.FileSet.Position(e.Node.Pos())
-	return fmt.Sprintf("Compile Error: %s\n\tat %s", e.Err.Error(), filePos)
-}
+package tengo
 
 // SymbolScope represents a symbol scope.
 type SymbolScope string

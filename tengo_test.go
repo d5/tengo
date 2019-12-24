@@ -6,16 +6,16 @@ import (
 	"time"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/internal"
-	"github.com/d5/tengo/internal/require"
+	"github.com/d5/tengo/parser"
+	"github.com/d5/tengo/require"
 )
 
 func TestInstructions_String(t *testing.T) {
 	assertInstructionString(t,
 		[][]byte{
-			internal.MakeInstruction(internal.OpConstant, 1),
-			internal.MakeInstruction(internal.OpConstant, 2),
-			internal.MakeInstruction(internal.OpConstant, 65535),
+			tengo.MakeInstruction(parser.OpConstant, 1),
+			tengo.MakeInstruction(parser.OpConstant, 2),
+			tengo.MakeInstruction(parser.OpConstant, 65535),
 		},
 		`0000 CONST   1    
 0003 CONST   2    
@@ -23,9 +23,9 @@ func TestInstructions_String(t *testing.T) {
 
 	assertInstructionString(t,
 		[][]byte{
-			internal.MakeInstruction(internal.OpBinaryOp, 11),
-			internal.MakeInstruction(internal.OpConstant, 2),
-			internal.MakeInstruction(internal.OpConstant, 65535),
+			tengo.MakeInstruction(parser.OpBinaryOp, 11),
+			tengo.MakeInstruction(parser.OpConstant, 2),
+			tengo.MakeInstruction(parser.OpConstant, 65535),
 		},
 		`0000 BINARYOP 11   
 0002 CONST   2    
@@ -33,10 +33,10 @@ func TestInstructions_String(t *testing.T) {
 
 	assertInstructionString(t,
 		[][]byte{
-			internal.MakeInstruction(internal.OpBinaryOp, 11),
-			internal.MakeInstruction(internal.OpGetLocal, 1),
-			internal.MakeInstruction(internal.OpConstant, 2),
-			internal.MakeInstruction(internal.OpConstant, 65535),
+			tengo.MakeInstruction(parser.OpBinaryOp, 11),
+			tengo.MakeInstruction(parser.OpGetLocal, 1),
+			tengo.MakeInstruction(parser.OpConstant, 2),
+			tengo.MakeInstruction(parser.OpConstant, 65535),
 		},
 		`0000 BINARYOP 11   
 0002 GETL    1    
@@ -45,15 +45,15 @@ func TestInstructions_String(t *testing.T) {
 }
 
 func TestMakeInstruction(t *testing.T) {
-	makeInstruction(t, []byte{internal.OpConstant, 0, 0},
-		internal.OpConstant, 0)
-	makeInstruction(t, []byte{internal.OpConstant, 0, 1},
-		internal.OpConstant, 1)
-	makeInstruction(t, []byte{internal.OpConstant, 255, 254},
-		internal.OpConstant, 65534)
-	makeInstruction(t, []byte{internal.OpPop}, internal.OpPop)
-	makeInstruction(t, []byte{internal.OpTrue}, internal.OpTrue)
-	makeInstruction(t, []byte{internal.OpFalse}, internal.OpFalse)
+	makeInstruction(t, []byte{parser.OpConstant, 0, 0},
+		parser.OpConstant, 0)
+	makeInstruction(t, []byte{parser.OpConstant, 0, 1},
+		parser.OpConstant, 1)
+	makeInstruction(t, []byte{parser.OpConstant, 255, 254},
+		parser.OpConstant, 65534)
+	makeInstruction(t, []byte{parser.OpPop}, parser.OpPop)
+	makeInstruction(t, []byte{parser.OpTrue}, parser.OpTrue)
+	makeInstruction(t, []byte{parser.OpFalse}, parser.OpFalse)
 }
 
 func TestNumObjects(t *testing.T) {
@@ -123,15 +123,15 @@ func assertInstructionString(
 		concatted = append(concatted, e...)
 	}
 	require.Equal(t, expected, strings.Join(
-		internal.FormatInstructions(concatted, 0), "\n"))
+		tengo.FormatInstructions(concatted, 0), "\n"))
 }
 
 func makeInstruction(
 	t *testing.T,
 	expected []byte,
-	opcode internal.Opcode,
+	opcode parser.Opcode,
 	operands ...int,
 ) {
-	inst := internal.MakeInstruction(opcode, operands...)
+	inst := tengo.MakeInstruction(opcode, operands...)
 	require.Equal(t, expected, inst)
 }

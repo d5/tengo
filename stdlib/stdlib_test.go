@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/d5/tengo"
-	"github.com/d5/tengo/internal/require"
+	"github.com/d5/tengo/require"
 	"github.com/d5/tengo/stdlib"
 )
 
