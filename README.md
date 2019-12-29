@@ -75,6 +75,10 @@ _* See [here](https://github.com/d5/tengobench) for commands/codes used_
 
 ## Quick Start
 
+```
+go get github.com/d5/tengo/v2
+```
+
 A simple Go example code that compiles/runs Tengo script code with some input/output values:
 
 ```golang
