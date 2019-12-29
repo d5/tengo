@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/d5/tengo/parser"
+	"github.com/d5/tengo/v2/parser"
 )
 
 // Script can simplify compilation and execution of embedded scripts.

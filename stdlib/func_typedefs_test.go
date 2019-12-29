@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/d5/tengo"
-	"github.com/d5/tengo/require"
-	"github.com/d5/tengo/stdlib"
+	"github.com/d5/tengo/v2"
+	"github.com/d5/tengo/v2/require"
+	"github.com/d5/tengo/v2/stdlib"
 )
 
 func TestFuncAIR(t *testing.T) {

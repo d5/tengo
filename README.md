@@ -84,7 +84,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/d5/tengo"
+	"github.com/d5/tengo/v2"
 )
 
 func main() {

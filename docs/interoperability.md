@@ -26,7 +26,7 @@ The following is an example where a Tengo script is compiled and run with no
 input/output variables.
 
 ```golang
-import "github.com/d5/tengo"
+import "github.com/d5/tengo/v2"
 
 var code = `
 reduce := func(seq, fn) {
@@ -54,7 +54,7 @@ output variable is accessed through
 import (
 	"fmt"
 
-	"github.com/d5/tengo"
+	"github.com/d5/tengo/v2"
 )
 
 func main() {
