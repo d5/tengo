@@ -3,7 +3,7 @@ package stdlib
 import (
 	"fmt"
 
-	"github.com/d5/tengo"
+	"github.com/d5/tengo/v2"
 )
 
 // FuncAR transform a function of 'func()' signature into CallableFunc type.

@@ -3,9 +3,9 @@ package tengo_test
 import (
 	"testing"
 
-	"github.com/d5/tengo"
-	"github.com/d5/tengo/require"
-	"github.com/d5/tengo/token"
+	"github.com/d5/tengo/v2"
+	"github.com/d5/tengo/v2/require"
+	"github.com/d5/tengo/v2/token"
 )
 
 func TestObject_TypeName(t *testing.T) {

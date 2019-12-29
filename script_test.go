@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/d5/tengo"
-	"github.com/d5/tengo/require"
-	"github.com/d5/tengo/stdlib"
-	"github.com/d5/tengo/token"
+	"github.com/d5/tengo/v2"
+	"github.com/d5/tengo/v2/require"
+	"github.com/d5/tengo/v2/stdlib"
+	"github.com/d5/tengo/v2/token"
 )
 
 func TestScript_Add(t *testing.T) {
