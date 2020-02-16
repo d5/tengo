@@ -532,13 +532,8 @@ func builtinDelete(args ...Object) (Object, error) {
 				return nil, ErrIndexOutOfBounds
 			}
 			idx := int(idx.Value)
-			if idx > arrLen-1 {
+			if idx >= arrLen || idx < 0 {
 				return nil, ErrIndexOutOfBounds
-			}
-			if idx < 0 {
-				if idx = arrLen + idx; idx < 0 {
-					return nil, ErrIndexOutOfBounds
-				}
 			}
 			if idx < arrLen-1 {
 				copy(arr[idx:], arr[idx+1:])

@@ -81,13 +81,8 @@ func Test_builtinDelete(t *testing.T) {
 			want:   UndefinedValue,
 			target: &Array{Value: []Object{&Int{Value: 1}}}},
 		{name: "array-negative", args: args{[]Object{
-			&Array{Value: []Object{&Int{Value: 2}, &String{Value: "xyz"}}}, &Int{Value: -1}}}, wantErr: false,
-			want:   UndefinedValue,
-			target: &Array{Value: []Object{&Int{Value: 2}}}},
-		{name: "array-negative2", args: args{[]Object{
-			&Array{Value: []Object{&Int{Value: 2}, &String{Value: "abc"}}}, &Int{Value: -2}}}, wantErr: false,
-			want:   UndefinedValue,
-			target: &Array{Value: []Object{&String{Value: "abc"}}}},
+			&Array{Value: []Object{&Int{Value: 2}, &String{Value: "xyz"}}}, &Int{Value: -1}}}, wantErr: true,
+			wantedErr: ErrIndexOutOfBounds},
 		{name: "array-out-of-bounds", args: args{[]Object{
 			&Array{Value: []Object{&Int{Value: 3}, &String{Value: "def"}}}, &Int{Value: 2}}}, wantErr: true,
 			wantedErr: ErrIndexOutOfBounds},

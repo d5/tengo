@@ -737,6 +737,7 @@ func TestBuiltinFunction(t *testing.T) {
 	expectError(t, `delete([], 1)`, nil, tengo.ErrIndexOutOfBounds.Error())
 	expectError(t, `delete([1], 1)`, nil, tengo.ErrIndexOutOfBounds.Error())
 	expectError(t, `delete([1], -2)`, nil, tengo.ErrIndexOutOfBounds.Error())
+	expectError(t, `delete([1, "2"], -1)`, nil, tengo.ErrIndexOutOfBounds.Error())
 
 	expectRun(t, `out = delete({}, "")`, nil, tengo.UndefinedValue)
 	expectRun(t, `out = {key1: 1}; delete(out, "key1")`, nil, MAP{})
@@ -747,10 +748,7 @@ func TestBuiltinFunction(t *testing.T) {
 	expectRun(t, `out = [1, "2", [3]]; delete(out, 2)`, nil, ARR{1, "2"})
 	expectRun(t, `out = [1, "2", [3]]; delete(out[2], 0)`, nil, ARR{1, "2", ARR{}})
 	expectRun(t, `out = [1, "2", {a: "b", c: 10}]; delete(out[2], "c")`, nil, ARR{1, "2", MAP{"a": "b"}})
-	expectRun(t, `out = [1, "2", [3]]; delete(out, -1)`, nil, ARR{1, "2"})
-	expectRun(t, `out = [1, "2", [3]]; delete(out, -2)`, nil, ARR{1, ARR{3}})
-	expectRun(t, `out = [1, "2", [3]]; delete(out, -3)`, nil, ARR{"2", ARR{3}})
-	expectRun(t, `out = [1, "2", [3, 4], {a: "b", c: 4}]; delete(out, -3); delete(out[2], "a"); delete(out[1], 0);`,
+	expectRun(t, `out = [1, "2", [3, 4], {a: "b", c: 4}]; delete(out, 1); delete(out[2], "a"); delete(out[1], 0);`,
 		nil, ARR{1, ARR{4}, MAP{"c": 4}})
 }
 
