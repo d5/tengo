@@ -48,10 +48,9 @@ v = append(v, 2, 3) // v == [1, 2, 3]
 ## delete
 
 Deletes keys of a map type or index of an array type. First argument must be a map or array type.
-Second argument must be a string if first argument is map, or an integer if first argument is an array, otherwise runtime error is generated.
+Second argument must be a string if first argument is map, or a non negative integer if first argument is an array, otherwise runtime error is generated.
 (Like Go's `delete` builtin except slice index deletions.)
 `delete` returns `undefined` value if successful, it mutates given map or array.
-Negative indices are accepted for arrays.
 If array indeces are out of bounds or number of arguments is not two, runtime error is generated!
 
 ```golang
@@ -67,7 +66,7 @@ delete(v, "missing") // v == {"key": "value"}
 ```golang
 v := [1, "2", [3]]
 delete(v, 1) // v == [1, [3]]
-delete(v, -1) // v == [1]
+delete(v, -1) // runtime error !
 delete(v, "value") // runtime error !
 ```
 
