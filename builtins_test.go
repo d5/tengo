@@ -64,7 +64,8 @@ func Test_builtinDelete(t *testing.T) {
 			target: &Map{Value: map[string]Object{"key2": &Int{Value: 10}}},
 		},
 		//Array
-		{name: "nil-array-zero-index", args: args{[]Object{&Array{}, &Int{}}}, want: UndefinedValue},
+		{name: "nil-array-zero-index", args: args{[]Object{&Array{}, &Int{}}}, wantErr: true,
+			wantedErr: ErrIndexOutOfBounds},
 		{name: "array-str-index", args: args{[]Object{&Array{}, &String{}}}, wantErr: true,
 			wantedErr: ErrInvalidArgumentType{Name: "second", Expected: "int", Found: "string"}},
 		{name: "array-one", args: args{[]Object{

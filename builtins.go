@@ -529,8 +529,7 @@ func builtinDelete(args ...Object) (Object, error) {
 			arr := arg.Value
 			arrLen := len(arr)
 			if arrLen == 0 {
-				// ignore empty array silently like Maps
-				return UndefinedValue, nil
+				return nil, ErrIndexOutOfBounds
 			}
 			idx := int(idx.Value)
 			if idx > arrLen-1 {
