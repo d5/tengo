@@ -45,6 +45,39 @@ v := [1]
 v = append(v, 2, 3) // v == [1, 2, 3]
 ```
 
+## delete
+
+Deletes keys of a map type or index of an array type. First argument must be a map or array type.
+Second argument must be a string if first argument is map, or an integer if first argument is an array, otherwise runtime error is generated.
+(Like Go's `delete` builtin except slice index deletions.)
+`delete` returns `undefined` value if successful, it mutates given map or array.
+Negative indices are accepted for arrays.
+If array indeces are out of bounds or number of arguments is not two, runtime error is generated!
+
+```golang
+v := {key: "value"}
+delete(v, "key") // v == {}
+```
+
+```golang
+v := {key: "value"}
+delete(v, "missing") // v == {"key": "value"}
+```
+
+```golang
+v := [1, "2", [3]]
+delete(v, 1) // v == [1, [3]]
+delete(v, -1) // v == [1]
+delete(v, "value") // runtime error !
+```
+
+```golang
+delete({}) // runtime error, second argument is missing
+delete([]) // runtime error, second argument is missing
+delete({}, 1) // runtime error, second argument must be a string type
+delete([], "key") // runtime error, second argument must be a int type
+```
+
 ## type_name
 
 Returns the type_name of an object.
