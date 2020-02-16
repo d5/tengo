@@ -726,6 +726,32 @@ func TestBuiltinFunction(t *testing.T) {
 	expectError(t, `format("%s", "1234567890")`,
 		nil, "exceeding string size limit")
 	tengo.MaxStringLen = 2147483647
+
+	// delete
+	expectError(t, `delete()`, nil, tengo.ErrWrongNumArguments.Error())
+	expectError(t, `delete(1)`, nil, tengo.ErrWrongNumArguments.Error())
+	expectError(t, `delete(1, 2, 3)`, nil, tengo.ErrWrongNumArguments.Error())
+	expectError(t, `delete(1, 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete({}, 1)`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete([], "")`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete([], 1)`, nil, tengo.ErrIndexOutOfBounds.Error())
+	expectError(t, `delete([1], 1)`, nil, tengo.ErrIndexOutOfBounds.Error())
+	expectError(t, `delete([1], -2)`, nil, tengo.ErrIndexOutOfBounds.Error())
+
+	expectRun(t, `out = delete({}, "")`, nil, tengo.UndefinedValue)
+	expectRun(t, `out = {key1: 1}; delete(out, "key1")`, nil, MAP{})
+	expectRun(t, `out = {key1: 1, key2: "2"}; delete(out, "key1")`, nil, MAP{"key2": "2"})
+	expectRun(t, `out = {key1: [1, 2]}; delete(out.key1, 0)`, nil, MAP{"key1": ARR{2}})
+
+	expectRun(t, `out = [1, "2", [3]]; delete(out, 0)`, nil, ARR{"2", ARR{3}})
+	expectRun(t, `out = [1, "2", [3]]; delete(out, 2)`, nil, ARR{1, "2"})
+	expectRun(t, `out = [1, "2", [3]]; delete(out[2], 0)`, nil, ARR{1, "2", ARR{}})
+	expectRun(t, `out = [1, "2", {a: "b", c: 10}]; delete(out[2], "c")`, nil, ARR{1, "2", MAP{"a": "b"}})
+	expectRun(t, `out = [1, "2", [3]]; delete(out, -1)`, nil, ARR{1, "2"})
+	expectRun(t, `out = [1, "2", [3]]; delete(out, -2)`, nil, ARR{1, ARR{3}})
+	expectRun(t, `out = [1, "2", [3]]; delete(out, -3)`, nil, ARR{"2", ARR{3}})
+	expectRun(t, `out = [1, "2", [3, 4], {a: "b", c: 4}]; delete(out, -3); delete(out[2], "a"); delete(out[1], 0);`,
+		nil, ARR{1, ARR{4}, MAP{"c": 4}})
 }
 
 func TestBytesN(t *testing.T) {
