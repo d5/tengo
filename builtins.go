@@ -14,6 +14,10 @@ var builtinFuncs = []*BuiltinFunction{
 		Value: builtinAppend,
 	},
 	{
+		Name:  "delete",
+		Value: builtinDelete,
+	},
+	{
 		Name:  "string",
 		Value: builtinString,
 	},
@@ -496,6 +500,63 @@ func builtinAppend(args ...Object) (Object, error) {
 		return nil, ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "array",
+			Found:    arg.TypeName(),
+		}
+	}
+}
+
+// builtinDelete deletes Map keys or Array indeces
+// usage: delete(map, "key") or delete(array, index)
+// map key must be a string or array index must be an integer
+func builtinDelete(args ...Object) (Object, error) {
+	argsLen := len(args)
+	if argsLen != 2 {
+		return nil, ErrWrongNumArguments
+	}
+	switch arg := args[0].(type) {
+	case *Map:
+		if key, ok := args[1].(*String); ok {
+			delete(arg.Value, key.Value)
+			return UndefinedValue, nil
+		}
+		return nil, ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string",
+			Found:    args[1].TypeName(),
+		}
+	case *Array:
+		if idx, ok := args[1].(*Int); ok {
+			arr := arg.Value
+			arrLen := len(arr)
+			if arrLen == 0 {
+				// ignore empty array silently like Maps
+				return UndefinedValue, nil
+			}
+			idx := int(idx.Value)
+			if idx > arrLen-1 {
+				return nil, ErrIndexOutOfBounds
+			}
+			if idx < 0 {
+				if idx = arrLen + idx; idx < 0 {
+					return nil, ErrIndexOutOfBounds
+				}
+			}
+			if idx < arrLen-1 {
+				copy(arr[idx:], arr[idx+1:])
+			}
+			arr[arrLen-1] = nil
+			arg.Value = arr[:arrLen-1]
+			return UndefinedValue, nil
+		}
+		return nil, ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "int",
+			Found:    args[1].TypeName(),
+		}
+	default:
+		return nil, ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "map|array",
 			Found:    arg.TypeName(),
 		}
 	}
