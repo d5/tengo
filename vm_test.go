@@ -726,6 +726,40 @@ func TestBuiltinFunction(t *testing.T) {
 	expectError(t, `format("%s", "1234567890")`,
 		nil, "exceeding string size limit")
 	tengo.MaxStringLen = 2147483647
+
+	// delete
+	expectError(t, `delete()`, nil, tengo.ErrWrongNumArguments.Error())
+	expectError(t, `delete(1)`, nil, tengo.ErrWrongNumArguments.Error())
+	expectError(t, `delete(1, 2, 3)`, nil, tengo.ErrWrongNumArguments.Error())
+	expectError(t, `delete({}, "", 3)`, nil, tengo.ErrWrongNumArguments.Error())
+	expectError(t, `delete(1, 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(1.0, 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete("str", 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(bytes("str"), 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(error("err"), 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(true, 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(char('c'), 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(undefined, 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(time(1257894000), 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(immutable({}), "key")`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(immutable([]), "")`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete([], "")`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete({}, 1)`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, 1.0)`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, undefined)`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, [])`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, {})`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, error("err"))`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, bytes("str"))`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, char(35))`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, time(1257894000))`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, immutable({}))`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, immutable([]))`, nil, `invalid type for argument 'second'`)
+
+	expectRun(t, `out = delete({}, "")`, nil, tengo.UndefinedValue)
+	expectRun(t, `out = {key1: 1}; delete(out, "key1")`, nil, MAP{})
+	expectRun(t, `out = {key1: 1, key2: "2"}; delete(out, "key1")`, nil, MAP{"key2": "2"})
+	expectRun(t, `out = [1, "2", {a: "b", c: 10}]; delete(out[2], "c")`, nil, ARR{1, "2", MAP{"a": "b"}})
 }
 
 func TestBytesN(t *testing.T) {

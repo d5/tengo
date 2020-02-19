@@ -45,6 +45,28 @@ v := [1]
 v = append(v, 2, 3) // v == [1, 2, 3]
 ```
 
+## delete
+
+Deletes the element with the specified key from the map type.
+First argument must be a map type and second argument must be a string type.
+(Like Go's `delete` builtin except keys are always string).
+`delete` returns `undefined` value if successful and it mutates given map.
+
+```golang
+v := {key: "value"}
+delete(v, "key") // v == {}
+```
+
+```golang
+v := {key: "value"}
+delete(v, "missing") // v == {"key": "value"}
+```
+
+```golang
+delete({}) // runtime error, second argument is missing
+delete({}, 1) // runtime error, second argument must be a string type
+```
+
 ## type_name
 
 Returns the type_name of an object.

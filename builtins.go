@@ -14,6 +14,10 @@ var builtinFuncs = []*BuiltinFunction{
 		Value: builtinAppend,
 	},
 	{
+		Name:  "delete",
+		Value: builtinDelete,
+	},
+	{
 		Name:  "string",
 		Value: builtinString,
 	},
@@ -496,6 +500,34 @@ func builtinAppend(args ...Object) (Object, error) {
 		return nil, ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "array",
+			Found:    arg.TypeName(),
+		}
+	}
+}
+
+// builtinDelete deletes Map keys
+// usage: delete(map, "key")
+// key must be a string
+func builtinDelete(args ...Object) (Object, error) {
+	argsLen := len(args)
+	if argsLen != 2 {
+		return nil, ErrWrongNumArguments
+	}
+	switch arg := args[0].(type) {
+	case *Map:
+		if key, ok := args[1].(*String); ok {
+			delete(arg.Value, key.Value)
+			return UndefinedValue, nil
+		}
+		return nil, ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string",
+			Found:    args[1].TypeName(),
+		}
+	default:
+		return nil, ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "map",
 			Found:    arg.TypeName(),
 		}
 	}
