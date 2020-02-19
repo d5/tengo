@@ -20,7 +20,7 @@ func Test_builtinDelete(t *testing.T) {
 	}{
 		//Map
 		{name: "invalid-arg", args: args{[]Object{&String{}, &String{}}}, wantErr: true,
-			wantedErr: ErrInvalidArgumentType{Name: "first", Expected: "map|array", Found: "string"}},
+			wantedErr: ErrInvalidArgumentType{Name: "first", Expected: "map", Found: "string"}},
 		{name: "no-args", wantErr: true, wantedErr: ErrWrongNumArguments},
 		{name: "empty-args", args: args{[]Object{}}, wantErr: true, wantedErr: ErrWrongNumArguments},
 		{name: "3-args", args: args{[]Object{(*Map)(nil), (*String)(nil), (*String)(nil)}}, wantErr: true, wantedErr: ErrWrongNumArguments},
@@ -63,32 +63,6 @@ func Test_builtinDelete(t *testing.T) {
 			want:   UndefinedValue,
 			target: &Map{Value: map[string]Object{"key2": &Int{Value: 10}}},
 		},
-		//Array
-		{name: "nil-array-zero-index", args: args{[]Object{&Array{}, &Int{}}}, wantErr: true,
-			wantedErr: ErrIndexOutOfBounds},
-		{name: "array-str-index", args: args{[]Object{&Array{}, &String{}}}, wantErr: true,
-			wantedErr: ErrInvalidArgumentType{Name: "second", Expected: "int", Found: "string"}},
-		{name: "array-one", args: args{[]Object{
-			&Array{Value: []Object{&Int{Value: 1}}}, &Int{Value: 0}}}, wantErr: false,
-			want:   UndefinedValue,
-			target: &Array{Value: []Object{}}},
-		{name: "array-multi", args: args{[]Object{
-			&Array{Value: []Object{&Int{Value: 1}, &String{Value: "xyz"}}}, &Int{Value: 0}}}, wantErr: false,
-			want:   UndefinedValue,
-			target: &Array{Value: []Object{&String{Value: "xyz"}}}},
-		{name: "array-multi2", args: args{[]Object{
-			&Array{Value: []Object{&Int{Value: 1}, &String{Value: "xyz"}}}, &Int{Value: 1}}}, wantErr: false,
-			want:   UndefinedValue,
-			target: &Array{Value: []Object{&Int{Value: 1}}}},
-		{name: "array-negative", args: args{[]Object{
-			&Array{Value: []Object{&Int{Value: 2}, &String{Value: "xyz"}}}, &Int{Value: -1}}}, wantErr: true,
-			wantedErr: ErrIndexOutOfBounds},
-		{name: "array-out-of-bounds", args: args{[]Object{
-			&Array{Value: []Object{&Int{Value: 3}, &String{Value: "def"}}}, &Int{Value: 2}}}, wantErr: true,
-			wantedErr: ErrIndexOutOfBounds},
-		{name: "array-out-of-bounds-negative", args: args{[]Object{
-			&Array{Value: []Object{&Int{Value: 4}, &String{Value: "ghi"}}}, &Int{Value: -3}}}, wantErr: true,
-			wantedErr: ErrIndexOutOfBounds},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

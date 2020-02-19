@@ -505,9 +505,9 @@ func builtinAppend(args ...Object) (Object, error) {
 	}
 }
 
-// builtinDelete deletes Map keys or Array indeces
-// usage: delete(map, "key") or delete(array, index)
-// map key must be a string or array index must be an integer
+// builtinDelete deletes Map keys
+// usage: delete(map, "key")
+// key must be a string
 func builtinDelete(args ...Object) (Object, error) {
 	argsLen := len(args)
 	if argsLen != 2 {
@@ -524,33 +524,10 @@ func builtinDelete(args ...Object) (Object, error) {
 			Expected: "string",
 			Found:    args[1].TypeName(),
 		}
-	case *Array:
-		if idx, ok := args[1].(*Int); ok {
-			arr := arg.Value
-			arrLen := len(arr)
-			if arrLen == 0 {
-				return nil, ErrIndexOutOfBounds
-			}
-			idx := int(idx.Value)
-			if idx >= arrLen || idx < 0 {
-				return nil, ErrIndexOutOfBounds
-			}
-			if idx < arrLen-1 {
-				copy(arr[idx:], arr[idx+1:])
-			}
-			arr[arrLen-1] = nil
-			arg.Value = arr[:arrLen-1]
-			return UndefinedValue, nil
-		}
-		return nil, ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "int",
-			Found:    args[1].TypeName(),
-		}
 	default:
 		return nil, ErrInvalidArgumentType{
 			Name:     "first",
-			Expected: "map|array",
+			Expected: "map",
 			Found:    arg.TypeName(),
 		}
 	}
