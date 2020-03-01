@@ -69,13 +69,26 @@ delete({}, 1) // runtime error, second argument must be a string type
 
 ## splice
 
-Deletes and/or changes the contents of a given array and returns deleted items as a new array.
-`splice` is similar to JS `Array.prototype.splice()` except splice is a builtin function and first argument must an array.
-First argument must be an array, and if second and third arguments are provided those must be integers otherwise runtime error is returned.
+Deletes and/or changes the contents of a given array and returns
+deleted items as a new array. `splice` is similar to
+JS `Array.prototype.splice()` except splice is a builtin function and
+first argument must an array. First argument must be an array, and
+if second and third arguments are provided those must be integers
+otherwise runtime error is returned.
 
 Usage:
 
 `deleted_items := splice(array[, start[, delete_count[, item1[, item2[, ...]]]])`
+
+```golang
+v := [1, 2, 3]
+items := splice(v, 0) // items == [1, 2, 3], v == []
+```
+
+```golang
+v := [1, 2, 3]
+items := splice(v, 1) // items == [2, 3], v == [1]
+```
 
 ```golang
 v := [1, 2, 3]

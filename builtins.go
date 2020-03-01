@@ -538,7 +538,8 @@ func builtinDelete(args ...Object) (Object, error) {
 }
 
 // builtinSplice deletes and changes given Array, returns deleted items.
-// usage: deleted_items := splice(array[, start[, delete_count[, item1[, item2[, ...]]]])
+// usage:
+// deleted_items := splice(array[,start[,delete_count[,item1[,item2[,...]]]])
 func builtinSplice(args ...Object) (Object, error) {
 	var (
 		argsLen  = len(args)
@@ -559,6 +560,7 @@ func builtinSplice(args ...Object) (Object, error) {
 				Found:    args[0].TypeName(),
 			}
 		}
+		delCount = len(array.Value)
 	}
 	if argsLen > 1 {
 		arg1, ok := args[1].(*Int)
@@ -582,7 +584,8 @@ func builtinSplice(args ...Object) (Object, error) {
 			startIdx = v
 		}
 	} else {
-		// if only array is provided (arg[0]) then delCount must be zero like JS Array.splice() do
+		// if only array is provided (arg[0]) then delCount must be zero
+		// like JS Array.splice() do
 		delCount = 0
 	}
 
