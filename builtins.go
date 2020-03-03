@@ -541,27 +541,22 @@ func builtinDelete(args ...Object) (Object, error) {
 // usage:
 // deleted_items := splice(array[,start[,delete_count[,item1[,item2[,...]]]])
 func builtinSplice(args ...Object) (Object, error) {
-	var (
-		argsLen  = len(args)
-		array    *Array
-		startIdx int
-		delCount int = 1
-	)
+	argsLen := len(args)
 	if argsLen == 0 {
 		return nil, ErrWrongNumArguments
 	}
-	if argsLen > 0 {
-		var ok bool
-		array, ok = args[0].(*Array)
-		if !ok {
-			return nil, ErrInvalidArgumentType{
-				Name:     "first",
-				Expected: "array",
-				Found:    args[0].TypeName(),
-			}
+
+	array, ok := args[0].(*Array)
+	if !ok {
+		return nil, ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "array",
+			Found:    args[0].TypeName(),
 		}
-		delCount = len(array.Value)
 	}
+	arrayLen := len(array.Value)
+
+	var startIdx int
 	if argsLen > 1 {
 		arg1, ok := args[1].(*Int)
 		if !ok {
@@ -571,24 +566,13 @@ func builtinSplice(args ...Object) (Object, error) {
 				Found:    args[1].TypeName(),
 			}
 		}
-		if arg1.Value < 0 {
-			return nil, ErrInvalidArgumentType{
-				Name:     "second",
-				Expected: "non-negative int",
-				Found:    "negative " + args[1].TypeName(),
-			}
-		}
-		// truncated
 		startIdx = int(arg1.Value)
-		if v := len(array.Value); startIdx > v {
-			startIdx = v
+		if startIdx < 0 || startIdx > arrayLen {
+			return nil, ErrIndexOutOfBounds
 		}
-	} else {
-		// if only array is provided (arg[0]) then delCount must be zero
-		// like JS Array.splice() do
-		delCount = 0
 	}
 
+	delCount := len(array.Value)
 	if argsLen > 2 {
 		arg2, ok := args[2].(*Int)
 		if !ok {
@@ -600,37 +584,28 @@ func builtinSplice(args ...Object) (Object, error) {
 		}
 		delCount = int(arg2.Value)
 		if delCount < 0 {
-			delCount = 0
+			return nil, ErrIndexOutOfBounds
 		}
 	}
-
 	// if count of to be deleted items is bigger than expected, truncate it
-	if v := len(array.Value); startIdx+delCount > v {
-		delCount = v - startIdx
+	if startIdx+delCount > arrayLen {
+		delCount = arrayLen - startIdx
 	}
-
-	var (
-		items   []Object
-		deleted = make([]Object, 0, delCount)
-		endIdx  = startIdx + delCount
-	)
-
-	deleted = append(deleted, array.Value[startIdx:endIdx]...)
-
-	if argsLen > 3 {
-		items = make([]Object, argsLen-3)
-		for i := 3; i < argsLen; i++ {
-			items[i-3] = args[i]
-		}
-	}
-	// reference cleanup
-	for i := startIdx; i < endIdx; i++ {
-		array.Value[i] = nil
-	}
+	// delete items
+	endIdx := startIdx + delCount
+	deleted := append([]Object{}, array.Value[startIdx:endIdx]...)
 
 	head := array.Value[:startIdx]
-	tail := append([]Object{}, array.Value[endIdx:]...)
-	items = append(items, tail...)
+	var items []Object
+	if argsLen > 3 {
+		items = make([]Object, 0, argsLen-3)
+		for i := 3; i < argsLen; i++ {
+			items = append(items, args[i])
+		}
+	}
+	items = append(items, array.Value[endIdx:]...)
 	array.Value = append(head, items...)
+
+	// return deleted items
 	return &Array{Value: deleted}, nil
 }

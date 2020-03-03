@@ -846,14 +846,16 @@ func TestBuiltinFunction(t *testing.T) {
 		`invalid type for argument 'third'`)
 	expectError(t, `splice([], 0, immutable({}))`, nil,
 		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 1)`, nil, tengo.ErrIndexOutOfBounds.Error())
+	expectError(t, `splice([1, 2, 3], 0, -1)`, nil,
+		tengo.ErrIndexOutOfBounds.Error())
+	expectError(t, `splice([1, 2, 3], 99, 0, "a", "b")`, nil,
+		tengo.ErrIndexOutOfBounds.Error())
 	expectRun(t, `out = []; splice(out)`, nil, ARR{})
-	expectRun(t, `out = []; splice(out, 1)`, nil, ARR{})
 	expectRun(t, `out = ["a"]; splice(out, 1)`, nil, ARR{"a"})
 	expectRun(t, `out = ["a"]; out = splice(out, 1)`, nil, ARR{})
 	expectRun(t, `out = [1, 2, 3]; splice(out, 0, 1)`, nil, ARR{2, 3})
 	expectRun(t, `out = [1, 2, 3]; out = splice(out, 0, 1)`, nil, ARR{1})
-	expectRun(t, `out = [1, 2, 3]; splice(out, 0, -1)`, nil, ARR{1, 2, 3})
-	expectRun(t, `out = [1, 2, 3]; out = splice(out, 0, -1)`, nil, ARR{})
 	expectRun(t, `out = [1, 2, 3]; splice(out, 0, 0, "a", "b")`, nil,
 		ARR{"a", "b", 1, 2, 3})
 	expectRun(t, `out = [1, 2, 3]; out = splice(out, 0, 0, "a", "b")`, nil,
@@ -862,15 +864,11 @@ func TestBuiltinFunction(t *testing.T) {
 		ARR{1, "a", "b", 2, 3})
 	expectRun(t, `out = [1, 2, 3]; out = splice(out, 1, 0, "a", "b")`, nil,
 		ARR{})
-	expectRun(t, `out = [1, 2, 3]; splice(out, 1, -1, "a", "b")`, nil,
+	expectRun(t, `out = [1, 2, 3]; splice(out, 1, 0, "a", "b")`, nil,
 		ARR{1, "a", "b", 2, 3})
-	expectRun(t, `out = [1, 2, 3]; out = splice(out, 1, -1, "a", "b")`, nil,
-		ARR{})
 	expectRun(t, `out = [1, 2, 3]; splice(out, 2, 0, "a", "b")`, nil,
 		ARR{1, 2, "a", "b", 3})
 	expectRun(t, `out = [1, 2, 3]; splice(out, 3, 0, "a", "b")`, nil,
-		ARR{1, 2, 3, "a", "b"})
-	expectRun(t, `out = [1, 2, 3]; splice(out, 99, 0, "a", "b")`, nil,
 		ARR{1, 2, 3, "a", "b"})
 	expectRun(t, `array := [1, 2, 3]; deleted := splice(array, 1, 1, "a", "b");
 				out = [deleted, array]`, nil, ARR{ARR{2}, ARR{1, "a", "b", 3}})
@@ -878,8 +876,7 @@ func TestBuiltinFunction(t *testing.T) {
 		out = [deleted, array]`, nil, ARR{ARR{2, 3}, ARR{1}})
 	expectRun(t, `out = []; splice(out, 0, 0, "a", "b")`, nil, ARR{"a", "b"})
 	expectRun(t, `out = []; splice(out, 0, 1, "a", "b")`, nil, ARR{"a", "b"})
-	expectRun(t, `out = []; splice(out, 0, -1, "a", "b")`, nil, ARR{"a", "b"})
-	expectRun(t, `out = []; out = splice(out, 0, -1, "a", "b")`, nil, ARR{})
+	expectRun(t, `out = []; out = splice(out, 0, 0, "a", "b")`, nil, ARR{})
 	expectRun(t, `out = splice(splice([1, 2, 3], 0, 3), 1, 3)`, nil, ARR{2, 3})
 	// splice doc examples
 	expectRun(t, `v := [1, 2, 3]; deleted := splice(v, 0);
