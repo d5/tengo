@@ -28,7 +28,7 @@ Here's a list of all available value types in Tengo.
 | float | 64-bit floating point value | `float64` |
 | bool | boolean value | `bool` |
 | char | unicode character | `rune` |
-| string | unicode string | `string` | 
+| string | unicode string | `string` |
 | bytes | byte array | `[]byte` |
 | error | [error](#error-values) value | - |
 | time | time value | `time.Time` |
@@ -40,39 +40,39 @@ Here's a list of all available value types in Tengo.
 | function | [function](#function-values) value | - |  
 | _user-defined_ | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/objects.md) | - |
 
-#### Error Values
+### Error Values
 
 In Tengo, an error can be represented using "error" typed values. An error
 value is created using `error` expression, and, it must have an underlying
 value. The underlying value of an error value can be access using `.value`
 selector.  
- 
+
 ```golang
 err1 := error("oops")    // error with string value
 err2 := error(1+2+3)     // error with int value
 if is_error(err1) {      // 'is_error' builtin function
-  err_val := err1.value  // get underlying value 
+  err_val := err1.value  // get underlying value
 }  
 ```
 
-#### Immutable Values
+### Immutable Values
 
 In Tengo, basically all values (except for array and map) are immutable.
 
 ```golang
 s := "12345"
-s[1] = 'b'    // illegal: String is immutable 
+s[1] = 'b'    // illegal: String is immutable
 
 a := [1, 2, 3]
 a[1] = "two"  // ok: a is now [1, "two", 3]
-``` 
+```
 
 An array or map value can be made immutable using `immutable` expression.
 
 ```golang
 b := immutable([1, 2, 3])
 b[1] = "foo"  // illegal: 'b' references to an immutable array.
-``` 
+```
 
 Note that re-assigning a new value to the variable has nothing to do with the
 value immutability.
@@ -94,17 +94,17 @@ a := immutable({b: 4, c: [1, 2, 3]})
 a.b = 5        // illegal
 a.c[1] = 5     // ok: because 'a.c' is not immutable
 
-a = immutable({b: 4, c: immutable([1, 2, 3])}) 
+a = immutable({b: 4, c: immutable([1, 2, 3])})
 a.c[1] = 5     // illegal
 ```
 
-#### Undefined Values
- 
+### Undefined Values
+
 In Tengo, an "undefined" value can be used to represent an unexpected or
 non-existing value:  
 
 - A function that does not return a value explicitly considered to return
-`undefined` value. 
+`undefined` value.
 - Indexer or selector on composite value types may return `undefined` if the
 key or index does not exist.  
 - Type conversion builtin functions without a default value will return
@@ -117,7 +117,7 @@ c := {a: "foo"}["b"]        // c == undefined
 d := int("foo")             // d == undefined
 ```
 
-#### Array Values
+### Array Values
 
 In Tengo, array is an ordered list of values of any types. Elements of an array
 can be accessed using indexer `[]`.
@@ -127,10 +127,10 @@ can be accessed using indexer `[]`.
 [1, 2, 3][2]       // == 3
 [1, 2, 3][3]       // == undefined
 
-["foo", "bar", [1, 2, 3]   // ok: array with an array element
-``` 
+["foo", "bar", [1, 2, 3]]   // ok: array with an array element
+```
 
-#### Map Values
+### Map Values
 
 In Tengo, map is a set of key-value pairs where key is string and the value is
 of any value types. Value of a map can be accessed using indexer `[]` or
@@ -145,11 +145,11 @@ m.x                                   // == undefined
 {a: [1,2,3], b: {c: "foo", d: "bar"}} // ok: map with an array element and a map element  
 ```  
 
-#### Function Values
+### Function Values
 
 In Tengo, function is a callable value with a number of function arguments and
 a return value. Just like any other values, functions can be passed into or
-returned from another function.   
+returned from another function.
 
 ```golang
 my_func := func(arg1, arg2) {
@@ -162,7 +162,7 @@ adder := func(base) {
 add5 := adder(5)
 nine := add5(4)    // == 9
 ```
- 
+
 Unlike Go, Tengo does not have declarations. So the following code is illegal:
 
 ```golang
@@ -199,10 +199,10 @@ illegal := func(a..., b) { /*... */ }
 A value can be assigned to a variable using assignment operator `:=` and `=`.
 
 - `:=` operator defines a new variable in the scope and assigns a value.
-- `=` operator assigns a new value to an existing variable in the scope. 
+- `=` operator assigns a new value to an existing variable in the scope.
 
 Variables are defined either in global scope (defined outside function) or in
-local scope (defined inside function). 
+local scope (defined inside function).
 
 ```golang
 a := "foo"      // define 'a' in global scope
@@ -212,11 +212,11 @@ func() {        // function scope A
   
   func() {      // function scope B
     c := 19.84  // define 'c' in function scope B
-    
-    a = "bee"   // ok: assign new value to 'a' from global scope 
+
+    a = "bee"   // ok: assign new value to 'a' from global scope
     b = 20      // ok: assign new value to 'b' from function scope A
-    
-    b := true   // ok: define new 'b' in function scope B 
+
+    b := true   // ok: define new 'b' in function scope B
                 //     (shadowing 'b' from function scope A)
   }
   
@@ -246,7 +246,7 @@ a = [1, 2, 3]   // re-assigned 'array'
 Although the type is not directly specified in Tengo, one can use type
 conversion
 [builtin functions](https://github.com/d5/tengo/blob/master/docs/builtins.md)
-to convert between value types. 
+to convert between value types.
 
 ```golang
 s1 := string(1984)    // "1984"
@@ -346,7 +346,7 @@ comparison operators, `&&` (logical AND), and finally `||` (logical OR):
 | 1 | `\|\|` |
 
 Like Go, `++` and `--` operators form statements, not expressions, they fall
-outside the operator hierarchy. 
+outside the operator hierarchy.
 
 ### Selector and Indexer
 
@@ -368,7 +368,7 @@ m.x = 5          // add 'x' to map 'm'
 m["b"][5]        // == undefined
 m["b"][5].d      // == undefined
 m.b[5] = 0       // == undefined
-m.x.y.z          // == undefined 
+m.x.y.z          // == undefined
 ```
 
 Like Go, one can use slice operator `[:]` for sequence value types such as
@@ -382,16 +382,15 @@ d := "hello world"[2:10]     // == "llo worl"
 c := [1, 2, 3, 4, 5][-1:10]  // == [1, 2, 3, 4, 5]
 ```
 
-
 ## Statements
 
 ### If Statement
 
-"If" statement is very similar to Go. 
+"If" statement is very similar to Go.
 
 ```golang
 if a < 0 {
-  // execute if 'a' is negative 
+  // execute if 'a' is negative
 } else if a == 0 {
   // execute if 'a' is zero
 } else {
@@ -400,7 +399,7 @@ if a < 0 {
 ```
 
 Like Go, the condition expression may be preceded by a simple statement,
-which executes before the expression is evaluated. 
+which executes before the expression is evaluated.
 
 ```golang
 if a := foo(); a < 0 {
@@ -410,7 +409,7 @@ if a := foo(); a < 0 {
 
 ### For Statement
 
-"For" statement is very similar to Go. 
+"For" statement is very similar to Go.
 
 ```golang
 // for (init); (condition); (post) {}
@@ -442,7 +441,7 @@ for v in [1, 2, 3] {          // array: element
 for i, v in [1, 2, 3] {       // array: index and element
   // 'i' is index
   // 'v' is value  
-} 
+}
 for k, v in {k1: 1, k2: 2} {  // map: key and value
   // 'k' is key
   // 'v' is value
@@ -452,13 +451,13 @@ for k, v in {k1: 1, k2: 2} {  // map: key and value
 ## Modules
 
 Module is the basic compilation unit in Tengo. A module can import another
-module using `import` expression. 
+module using `import` expression.
 
 Main module:
 
 ```golang
 sum := import("./sum")  // load module from a local file
-fmt.print(sum(10))      // module function 
+fmt.print(sum(10))      // module function
 ```
 
 Another module in `sum.tengo` file:
@@ -473,7 +472,7 @@ export func(x) {
 
 In Tengo, modules are very similar to functions.
 
-- `import` expression loads the module code and execute it like a function. 
+- `import` expression loads the module code and execute it like a function.
 - Module should return a value using `export` statement.
   - Module can return `export` a value of any types: int, map, function, etc.
   - `export` in a module is like `return` in a function: it stops execution and
@@ -492,15 +491,15 @@ well.
 math := import("math")
 a := math.abs(-19.84)  // == 19.84
 ```
- 
+
 ## Comments
 
 Like Go, Tengo supports line comments (`//...`) and block comments
 (`/* ... */`).
 
 ```golang
-/* 
-  multi-line block comments 
+/*
+  multi-line block comments
 */
 
 a := 5    // line comments
@@ -521,5 +520,5 @@ Unlike Go, Tengo does not have the following:
 - Switch statement
 - Goto statement
 - Defer statement
-- Panic 
+- Panic
 - Type assertion

@@ -146,14 +146,13 @@ for more details on type conversion.
 x := string(123) //  x == "123"
 ```
 
-
 Optionally it can take the second argument, which will be returned if the first
 argument cannot be converted to string. Note that the second argument does not
 have to be string.
 
 ```golang
 v = string(undefined, "foo")  // v == "foo"
-v = string(undefined, false)  // v == false 
+v = string(undefined, false)  // v == false
 ```
 
 ## int
@@ -172,7 +171,7 @@ to be int.
 
 ```golang
 v = int(undefined, 10)    // v == 10
-v = int(undefined, false) // v == false 
+v = int(undefined, false) // v == false
 ```
 
 ## bool
@@ -201,7 +200,7 @@ have to be float.
 
 ```golang
 v = float(undefined, 19.84)    // v == 19.84
-v = float(undefined, false)    // v == false 
+v = float(undefined, false)    // v == false
 ```
 
 ## char
@@ -220,7 +219,7 @@ have to be float.
 
 ```golang
 v = char(undefined, 'X')    // v == 'X'
-v = char(undefined, false)  // v == false 
+v = char(undefined, false)  // v == false
 ```
 
 ## bytes
@@ -239,7 +238,7 @@ have to be float.
 
 ```golang
 v = bytes(undefined, bytes("foo"))    // v == bytes("foo")
-v = bytes(undefined, false)           // v == false 
+v = bytes(undefined, false)           // v == false
 ```
 
 If you pass an int to `bytes()` function, it will create a new byte object with
@@ -293,7 +292,7 @@ Returns `true` if the object's type is undefined. Or it returns `false`.
 
 Returns `true` if the object's type is function or closure. Or it returns
 `false`. Note that `is_function` returns `false` for builtin functions and
-user-provided callable objects. 
+user-provided callable objects.
 
 ## is_callable
 

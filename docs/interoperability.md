@@ -1,6 +1,6 @@
 # Interoperability  
 
-## Table of Contents 
+## Table of Contents
 
 - [Using Scripts](#using-scripts)
   - [Type Conversion Table](#type-conversion-table)
@@ -52,41 +52,41 @@ output variable is accessed through
 
 ```golang
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/d5/tengo/v2"
+    "github.com/d5/tengo/v2"
 )
 
 func main() {
-	s := tengo.NewScript([]byte(`a := b + 20`))
+    s := tengo.NewScript([]byte(`a := b + 20`))
 
-	// define variable 'b'
-	_ = s.Add("b", 10)
+    // define variable 'b'
+    _ = s.Add("b", 10)
 
-	// compile the source
-	c, err := s.Compile()
-	if err != nil {
-		panic(err)
-	}
+    // compile the source
+    c, err := s.Compile()
+    if err != nil {
+        panic(err)
+    }
 
-	// run the compiled bytecode
-	// a compiled bytecode 'c' can be executed multiple times without re-compiling it
-	if err := c.Run(); err != nil {
-		panic(err)
-	}
+    // run the compiled bytecode
+    // a compiled bytecode 'c' can be executed multiple times without re-compiling it
+    if err := c.Run(); err != nil {
+        panic(err)
+    }
 
-	// retrieve value of 'a'
-	a := c.Get("a")
-	fmt.Println(a.Int())           // prints "30"
-	
-	// re-run after replacing value of 'b'
-	if err := c.Set("b", 20); err != nil {
-		panic(err)
-	}
-	if err := c.Run(); err != nil {
-		panic(err)
-	}
-	fmt.Println(c.Get("a").Int())  // prints "40"
+    // retrieve value of 'a'
+    a := c.Get("a")
+    fmt.Println(a.Int())           // prints "30"
+
+    // re-run after replacing value of 'b'
+    if err := c.Set("b", 20); err != nil {
+        panic(err)
+    }
+    if err := c.Run(); err != nil {
+        panic(err)
+    }
+    fmt.Println(c.Get("a").Int())  // prints "40"
 }
 ```
 
@@ -129,7 +129,6 @@ converts Go values into Tengo values based on the following conversion table.
 |`[]interface{}`|`Array`|individual elements converted to Tengo objects|
 |`Object`|`Object`|_(no type conversion performed)_|
 
-
 ### User Types
 
 Users can add and use a custom user type in Tengo code by implementing
@@ -144,7 +143,7 @@ more details.
 To securely compile and execute _potentially_ unsafe script code, you can use
 the following Script functions.
 
-#### Script.SetImports(modules *objects.ModuleMap)
+### Script.SetImports(modules *objects.ModuleMap)
 
 SetImports sets the import modules with corresponding names. Script **does not**
 include any modules by default. You can use this function to include the
@@ -169,25 +168,24 @@ mods.AddSourceModule("double", []byte(`export func(x) { return x * 2 }`))
 s.SetImports(mods)
 ```
 
-
-#### Script.SetMaxAllocs(n int64)
+### Script.SetMaxAllocs(n int64)
 
 SetMaxAllocs sets the maximum number of object allocations. Note this is a
 cumulative metric that tracks only the object creations. Set this to a negative
 number (e.g. `-1`) if you don't need to limit the number of allocations.
-   
-#### Script.EnableFileImport(enable bool)
+
+### Script.EnableFileImport(enable bool)
 
 EnableFileImport enables or disables module loading from the local files. It's
-disabled by default. 
+disabled by default.
 
-#### tengo.MaxStringLen
+### tengo.MaxStringLen
 
 Sets the maximum byte-length of string values. This limit applies to all
 running VM instances in the process. Also it's not recommended to set or update
-this value while any VM is executing. 
+this value while any VM is executing.
 
-#### tengo.MaxBytesLen
+### tengo.MaxBytesLen
 
 Sets the maximum length of bytes values. This limit applies to all running VM
 instances in the process. Also it's not recommended to set or update this value
@@ -200,7 +198,7 @@ times by a goroutine. If you want to run the compiled script by multiple
 goroutine, you should use `Compiled.Clone` function to make a copy of Compiled
 instances.
 
-#### Compiled.Clone()
+### Compiled.Clone()
 
 Clone creates a new copy of Compiled instance. Cloned copies are safe for
 concurrent use by multiple goroutines. 
@@ -212,17 +210,17 @@ for i := 0; i < concurrency; i++ {
         _ = compiled.Set("a", rand.Intn(10))
         _ = compiled.Set("b", rand.Intn(10))
         _ = compiled.Set("c", rand.Intn(10))
-        
+
         if err := compiled.Run(); err != nil {
             panic(err)
         }
-        
+
         // outputs
         d = compiled.Get("d").Int()
         e = compiled.Get("e").Int()
     }(compiled.Clone()) // Pass the cloned copy of Compiled
 }
-``` 
+```
 
 ## Compiler and VM
 

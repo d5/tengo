@@ -36,70 +36,69 @@ os := import("os")
 - `path_list_separator`
 - `dev_null`
 
-
 ## Functions
 
 - `args() => [string]`: returns command-line arguments, starting with the
   program name.
 - `chdir(dir string) => error`: changes the current working directory to the
   named directory.
-- `chmod(name string, mode int) => error `: changes the mode of the named file
+- `chmod(name string, mode int) => error`: changes the mode of the named file
   to mode.
-- `chown(name string, uid int, gid int) => error `: changes the numeric uid and
+- `chown(name string, uid int, gid int) => error`: changes the numeric uid and
   gid of the named file.
 - `clearenv()`: deletes all environment variables.
-- `environ() => [string] `: returns a copy of strings representing the
+- `environ() => [string]`: returns a copy of strings representing the
   environment.
-- `exit(code int) `: causes the current program to exit with the given status
+- `exit(code int)`: causes the current program to exit with the given status
   code.
-- `expand_env(s string) => string `: replaces ${var} or $var in the string
+- `expand_env(s string) => string`: replaces ${var} or $var in the string
   according to the values of the current environment variables.
-- `getegid() => int `: returns the numeric effective group id of the caller.
-- `getenv(key string) => string `: retrieves the value of the environment
+- `getegid() => int`: returns the numeric effective group id of the caller.
+- `getenv(key string) => string`: retrieves the value of the environment
   variable named by the key.
-- `geteuid() => int `: returns the numeric effective user id of the caller.
-- `getgid() => int `: returns the numeric group id of the caller.
-- `getgroups() => [int]/error `: returns a list of the numeric ids of groups
+- `geteuid() => int`: returns the numeric effective user id of the caller.
+- `getgid() => int`: returns the numeric group id of the caller.
+- `getgroups() => [int]/error`: returns a list of the numeric ids of groups
   that the caller belongs to.
-- `getpagesize() => int `: returns the underlying system's memory page size.
-- `getpid() => int `: returns the process id of the caller.
-- `getppid() => int `: returns the process id of the caller's parent.
-- `getuid() => int `: returns the numeric user id of the caller.
-- `getwd() => string/error `: returns a rooted path name corresponding to the
+- `getpagesize() => int`: returns the underlying system's memory page size.
+- `getpid() => int`: returns the process id of the caller.
+- `getppid() => int`: returns the process id of the caller's parent.
+- `getuid() => int`: returns the numeric user id of the caller.
+- `getwd() => string/error`: returns a rooted path name corresponding to the
   current directory.
-- `hostname() => string/error `: returns the host name reported by the kernel.
-- `lchown(name string, uid int, gid int) => error `: changes the numeric uid
+- `hostname() => string/error`: returns the host name reported by the kernel.
+- `lchown(name string, uid int, gid int) => error`: changes the numeric uid
   and gid of the named file.
-- `link(oldname string, newname string) => error `: creates newname as a hard
+- `link(oldname string, newname string) => error`: creates newname as a hard
   link to the oldname file.
 - `lookup_env(key string) => string/false`: retrieves the value of the
   environment variable named by the key.
-- `mkdir(name string, perm int) => error `: creates a new directory with the
+- `mkdir(name string, perm int) => error`: creates a new directory with the
   specified name and permission bits (before umask).
-- `mkdir_all(name string, perm int) => error `: creates a directory named path,
+- `mkdir_all(name string, perm int) => error`: creates a directory named path,
   along with any necessary parents, and returns nil, or else returns an error.
-- `read_file(name string) => bytes/error `: reads the contents of a file into
+- `read_file(name string) => bytes/error`: reads the contents of a file into
   a byte array
-- `readlink(name string) => string/error `: returns the destination of the
+- `readlink(name string) => string/error`: returns the destination of the
   named symbolic link.
-- `remove(name string) => error `: removes the named file or (empty) directory.
-- `remove_all(name string) => error `: removes path and any children it
+- `remove(name string) => error`: removes the named file or (empty) directory.
+- `remove_all(name string) => error`: removes path and any children it
   contains.
-- `rename(oldpath string, newpath string) => error `: renames (moves) oldpath
+- `rename(oldpath string, newpath string) => error`: renames (moves) oldpath
   to newpath.
-- `setenv(key string, value string) => error `: sets the value of the
+- `setenv(key string, value string) => error`: sets the value of the
   environment variable named by the key.
 - `stat(filename string) => FileInfo/error`: returns a file info structure
   describing the file
-- `symlink(oldname string newname string) => error `: creates newname as a
+- `symlink(oldname string newname string) => error`: creates newname as a
   symbolic link to oldname.
-- `temp_dir() => string `: returns the default directory to use for temporary
+- `temp_dir() => string`: returns the default directory to use for temporary
   files.
-- `truncate(name string, size int) => error `: changes the size of the named
+- `truncate(name string, size int) => error`: changes the size of the named
   file.
-- `unsetenv(key string) => error `: unsets a single environment variable.
+- `unsetenv(key string) => error`: unsets a single environment variable.
 - `create(name string) => File/error`: creates the named file with mode 0666
-  (before umask), truncating it if it already exists. 
+  (before umask), truncating it if it already exists.
 - `open(name string) => File/error`: opens the named file for reading. If
   successful, methods on the returned file can be used for reading; the
   associated file descriptor has mode O_RDONLY.
@@ -117,7 +116,6 @@ os := import("os")
   named file in the directories named by the PATH environment variable.
 - `exec(name string, args...) => Command/error`: returns the Command to execute
   the named program with the given arguments.
-
 
 ## File
 
@@ -153,7 +151,7 @@ proc := start_process("app", ["arg1", "arg2"], "dir", [])
 proc.wait()
 ```
 
-- `kill() => error`: causes the Process to exit immediately. 
+- `kill() => error`: causes the Process to exit immediately.
 - `release() => error`: releases any resources associated with the process,
   rendering it unusable in the future.
 - `signal(signal int) => error`: sends a signal to the Process.

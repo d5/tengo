@@ -12,7 +12,7 @@ go get github.com/d5/tengo/cmd/tengo
 ```
 
 Or, you can download the precompiled binaries from
-[here](https://github.com/d5/tengo/releases/latest). 
+[here](https://github.com/d5/tengo/releases/latest).
 
 ## Compiling and Executing Tengo Code
 
@@ -27,7 +27,7 @@ Or, you can compile the code into a binary file and execute it later.
 
 ```bash
 tengo -o myapp myapp.tengo   # compile 'myapp.tengo' into binary file 'myapp'
-tengo myapp                  # execute the compiled binary `myapp`	
+tengo myapp                  # execute the compiled binary `myapp`
 ```
 
 ## Tengo REPL

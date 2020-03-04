@@ -2,21 +2,24 @@
 
 The format 'verbs' are derived from Go's but are simpler.
 
-## The verbs:
+## The verbs
 
-## General:
+## General
+
 ```
 %v  the value in a default format
 %T  a Go-syntax representation of the type of the value
 %%  a literal percent sign; consumes no value
 ```
 
-## Boolean:
+## Boolean
+
 ```
 %t  the word true or false
 ```
 
-## Integer:
+## Integer
+
 ```
 %b  base 2
 %c  the character represented by the corresponding Unicode code point
@@ -29,7 +32,8 @@ The format 'verbs' are derived from Go's but are simpler.
 %U  Unicode format: U+1234; same as "U+%04X"
 ```
 
-## Float:
+## Float
+
 ```
 %b  decimalless scientific notation with exponent a power of two,
 in the manner of Go's strconv.FormatFloat with the 'b' format,
@@ -44,7 +48,8 @@ e.g. -123456p-78
 %X  upper-case hexadecimal notation, e.g. -0X1.23ABCP+20
 ```
 
-## String and Bytes:
+## String and Bytes
+
 ```
 %s  the uninterpreted bytes of the string or slice
 %q  a double-quoted string safely escaped with Go syntax
@@ -52,7 +57,8 @@ e.g. -123456p-78
 %X  base 16, upper-case, two characters per byte
 ```
 
-## Default format for %v:
+## Default format for %v
+
 ```
 Bool:                    %t
 Int:                     %d
@@ -60,14 +66,14 @@ Float:                   %g
 String:                  %s
 ```
 
-## Compound Objects:
+## Compound Objects
+
 ```
 Array:              [elem0 elem1 ...]
 Maps:               {key1:value1 key2:value2 ...}
 ```
 
-
-## Width and Precision:
+## Width and Precision
 
 Width is specified by an optional decimal number immediately preceding the verb.
 If absent, the width is whatever is necessary to represent the value.
@@ -111,7 +117,8 @@ For complex numbers, the width and precision apply to the two components
 independently and the result is parenthesized, so %f applied to 1.2+3.4i
 produces (1.200000+3.400000i).
 
-## Other flags:
+## Other flags
+
 ```
 +   always print a sign for numeric values;
 guarantee ASCII-only output for %q (%+q)

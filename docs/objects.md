@@ -25,6 +25,7 @@ generally a good idea to keep it short but distinguishable from other types.
 ```golang
 String() string
 ```
+
 String method should return a string representation of the underlying value.
 The value returned by String method will be used whenever string formatting for
 the value is required, most commonly when being converted into String value.
@@ -46,13 +47,13 @@ If BinaryOp method returns an error `err` (the second return value), it will be
 treated as a run-time error, which will halt the execution (`VM.Run() error`)
 and will return the error to the user. All runtime type implementations, for
 example, will return an `ErrInvalidOperator` error when the given operator is
-not supported by the type. 
+not supported by the type.
 
 Alternatively the method can return an `Error` value as its result `res`
 (the first return value), which will not halt the runtime and will be treated
 like any other values. As a dynamically typed language, the receiver (another
 expression or statement) can determine how to translate `Error` value returned
-from binary operator expression. 
+from binary operator expression.
 
 ```golang
 IsFalsy() bool
@@ -222,7 +223,6 @@ See
 [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md)
 for more details on these runtime types.
 
-
 ## User Object Types
 
 Users can easily extend and add their own types by implementing the same
@@ -234,58 +234,58 @@ Here's an example user type implementation, `StringArray`:
 
 ```golang
 type StringArray struct {
-	tengo.ObjectImpl
-	Value []string
+    tengo.ObjectImpl
+    Value []string
 }
 
 func (o *StringArray) String() string {
-	return strings.Join(o.Value, ", ")
+    return strings.Join(o.Value, ", ")
 }
 
 func (o *StringArray) BinaryOp(op token.Token, rhs tengo.Object) (tengo.Object, error) {
-	if rhs, ok := rhs.(*StringArray); ok {
-		switch op {
-		case token.Add:
-			if len(rhs.Value) == 0 {
-				return o, nil
-			}
-			return &StringArray{Value: append(o.Value, rhs.Value...)}, nil
-		}
-	}
+    if rhs, ok := rhs.(*StringArray); ok {
+        switch op {
+        case token.Add:
+            if len(rhs.Value) == 0 {
+                return o, nil
+            }
+            return &StringArray{Value: append(o.Value, rhs.Value...)}, nil
+        }
+    }
 
-	return nil, tengo.ErrInvalidOperator
+    return nil, tengo.ErrInvalidOperator
 }
 
 func (o *StringArray) IsFalsy() bool {
-	return len(o.Value) == 0
+    return len(o.Value) == 0
 }
 
 func (o *StringArray) Equals(x tengo.Object) bool {
-	if x, ok := x.(*StringArray); ok {
-		if len(o.Value) != len(x.Value) {
-			return false
-		}
+    if x, ok := x.(*StringArray); ok {
+        if len(o.Value) != len(x.Value) {
+            return false
+        }
 
-		for i, v := range o.Value {
-			if v != x.Value[i] {
-				return false
-			}
-		}
+        for i, v := range o.Value {
+            if v != x.Value[i] {
+                return false
+            }
+        }
 
-		return true
-	}
+        return true
+    }
 
-	return false
+    return false
 }
 
 func (o *StringArray) Copy() tengo.Object {
-	return &StringArray{
-		Value: append([]string{}, o.Value...),
-	}
+    return &StringArray{
+        Value: append([]string{}, o.Value...),
+    }
 }
 
 func (o *StringArray) TypeName() string {
-	return "string-array"
+    return "string-array"
 }
 ```
 
@@ -297,7 +297,7 @@ to add `StringArray` to the script:
 ```golang
 // script that uses 'my_list'
 s := tengo.NewScript([]byte(`
-	print(my_list + "three")
+    print(my_list + "three")
 `))
 
 myList := &StringArray{Value: []string{"one", "two"}}
@@ -309,46 +309,46 @@ It can also implement `IndexGet` and `IndexSet`:
 
 ```golang
 func (o *StringArray) IndexGet(index tengo.Object) (tengo.Object, error) {
-	intIdx, ok := index.(*tengo.Int)
-	if ok {
-		if intIdx.Value >= 0 && intIdx.Value < int64(len(o.Value)) {
-			return &tengo.String{Value: o.Value[intIdx.Value]}, nil
-		}
+    intIdx, ok := index.(*tengo.Int)
+    if ok {
+        if intIdx.Value >= 0 && intIdx.Value < int64(len(o.Value)) {
+            return &tengo.String{Value: o.Value[intIdx.Value]}, nil
+        }
 
-		return nil, tengo.ErrIndexOutOfBounds
-	}
+        return nil, tengo.ErrIndexOutOfBounds
+    }
 
-	strIdx, ok := index.(*tengo.String)
-	if ok {
-		for vidx, str := range o.Value {
-			if strIdx.Value == str {
-				return &tengo.Int{Value: int64(vidx)}, nil
-			}
-		}
+    strIdx, ok := index.(*tengo.String)
+    if ok {
+        for vidx, str := range o.Value {
+            if strIdx.Value == str {
+                return &tengo.Int{Value: int64(vidx)}, nil
+            }
+        }
 
-		return tengo.UndefinedValue, nil
-	}
+        return tengo.UndefinedValue, nil
+    }
 
-	return nil, tengo.ErrInvalidIndexType
+    return nil, tengo.ErrInvalidIndexType
 }
 
 func (o *StringArray) IndexSet(index, value tengo.Object) error {
-	strVal, ok := tengo.ToString(value)
-	if !ok {
-		return tengo.ErrInvalidIndexValueType
-	}
+    strVal, ok := tengo.ToString(value)
+    if !ok {
+        return tengo.ErrInvalidIndexValueType
+    }
 
-	intIdx, ok := index.(*tengo.Int)
-	if ok {
-		if intIdx.Value >= 0 && intIdx.Value < int64(len(o.Value)) {
-			o.Value[intIdx.Value] = strVal
-			return nil
-		}
+    intIdx, ok := index.(*tengo.Int)
+    if ok {
+        if intIdx.Value >= 0 && intIdx.Value < int64(len(o.Value)) {
+            o.Value[intIdx.Value] = strVal
+            return nil
+        }
 
-		return tengo.ErrIndexOutOfBounds
-	}
+        return tengo.ErrIndexOutOfBounds
+    }
 
-	return tengo.ErrInvalidIndexType
+    return tengo.ErrInvalidIndexType
 }
 ```
 
@@ -356,30 +356,30 @@ If we implement `CamCall` and `Call`:
 
 ```golang
 func (o *StringArray) CanCall() bool {
-	return true
+    return true
 }
 
 func (o *StringArray) Call(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
+    if len(args) != 1 {
+        return nil, tengo.ErrWrongNumArguments
+    }
 
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
+    s1, ok := tengo.ToString(args[0])
+    if !ok {
+        return nil, tengo.ErrInvalidArgumentType{
+            Name:     "first",
+            Expected: "string",
+            Found:    args[0].TypeName(),
+        }
+    }
 
-	for i, v := range o.Value {
-		if v == s1 {
-			return &tengo.Int{Value: int64(i)}, nil
-		}
-	}
+    for i, v := range o.Value {
+        if v == s1 {
+            return &tengo.Int{Value: int64(i)}, nil
+        }
+    }
 
-	return tengo.UndefinedValue, nil
+    return tengo.UndefinedValue, nil
 }
 ```
 
@@ -387,7 +387,7 @@ Then it can be "invoked":
 
 ```golang
 s := tengo.NewScript([]byte(`
-	print(my_list("two"))
+    print(my_list("two"))
 `))
 
 myList := &StringArray{Value: []string{"one", "two", "three"}}
@@ -399,36 +399,36 @@ We can also make `StringArray` iterable:
 
 ```golang
 func (o *StringArray) CanIterate() bool {
-	return true
+    return true
 }
 
 func (o *StringArray) Iterate() tengo.Iterator {
-	return &StringArrayIterator{
-		strArr: o,
-	}
+    return &StringArrayIterator{
+        strArr: o,
+    }
 }
 
 type StringArrayIterator struct {
-	tengo.ObjectImpl
-	strArr *StringArray
-	idx    int
+    tengo.ObjectImpl
+    strArr *StringArray
+    idx    int
 }
 
 func (i *StringArrayIterator) TypeName() string {
-	return "string-array-iterator"
+    return "string-array-iterator"
 }
 
 func (i *StringArrayIterator) Next() bool {
-	i.idx++
-	return i.idx <= len(i.strArr.Value)
+    i.idx++
+    return i.idx <= len(i.strArr.Value)
 }
 
 func (i *StringArrayIterator) Key() tengo.Object {
-	return &tengo.Int{Value: int64(i.idx - 1)}
+    return &tengo.Int{Value: int64(i.idx - 1)}
 }
 
 func (i *StringArrayIterator) Value() tengo.Object {
-	return &tengo.String{Value: i.strArr.Value[i.idx-1]}
+    return &tengo.String{Value: i.strArr.Value[i.idx-1]}
 }
 ```
 
@@ -438,5 +438,3 @@ ObjectImpl represents a default Object Implementation. To defined a new value
 type, one can embed ObjectImpl in their type declarations to avoid implementing
 all non-significant methods. TypeName() and String() methods still need to be
 implemented.
-
-

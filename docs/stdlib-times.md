@@ -22,28 +22,28 @@ times := import("times")
 - `format_stamp_micro`: time format "Jan _2 15:04:05.000000"
 - `format_stamp_nano`: time format "Jan _2 15:04:05.000000000"
 - `nanosecond`
-- `microsecond` 
-- `millisecond` 
+- `microsecond`
+- `millisecond`
 - `second`
-- `minute` 
+- `minute`
 - `hour`
-- `january` 
-- `february` 
+- `january`
+- `february`
 - `march`
-- `april` 
+- `april`
 - `may`
-- `june` 
-- `july` 
-- `august` 
-- `september` 
+- `june`
+- `july`
+- `august`
+- `september`
 - `october`
-- `november` 
-- `december` 
+- `november`
+- `december`
 
 ## Functions
 
 - `sleep(duration int)`: pauses the current goroutine for at least the duration
-  d. A negative or zero duration causes Sleep to return immediately. 
+  d. A negative or zero duration causes Sleep to return immediately.
 - `parse_duration(s string) => int`: parses a duration string. A duration
   string is a possibly signed sequence of decimal numbers, each with optional
   fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m". Valid time
@@ -51,7 +51,7 @@ times := import("times")
 - `since(t time) => int`: returns the time elapsed since t.
 - `until(t time) => int`: returns the duration until t.
 - `duration_hours(duration int) => float`: returns the duration as a floating
-  point number of hours. 
+  point number of hours.
 - `duration_minutes(duration int) => float`: returns the duration as a floating
   point number of minutes.
 - `duration_nanoseconds(duration int) => int`: returns the duration as an
@@ -64,7 +64,7 @@ times := import("times")
   ("January", "February", ...).
 - `date(year int, month int, day int, hour int, min int, sec int, nsec int) => time`:
   returns the Time corresponding to "yyyy-mm-dd hh:mm:ss + nsec nanoseconds".
-  Current location is used. 
+  Current location is used.
 - `now() => time`: returns the current local time.
 - `parse(format string, s string) => time`: parses a formatted string and
   returns the time value it represents. The layout defines the format by
@@ -79,7 +79,7 @@ times := import("times")
 - `add_date(t time, years int, months int, days int) => time`: returns the time
   corresponding to adding the given number of years, months, and days to t. For
   example, AddDate(-1, 2, 3) applied to January 1, 2011 returns March 4, 2010.
-- `sub(t time, u time) => int`: returns the duration t-u. 
+- `sub(t time, u time) => int`: returns the duration t-u.
 - `after(t time, u time) => bool`: reports whether the time instant t is after
   u.
 - `before(t time, u time) => bool`: reports whether the time instant t is

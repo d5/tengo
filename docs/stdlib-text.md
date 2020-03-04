@@ -13,7 +13,7 @@ text := import("text")
   that contains matching text, begin and end (exclusive) index.
 - `re_replace(pattern string, text string, repl string) => string/error`:
   returns a copy of src, replacing matches of the pattern with the replacement
-  string repl. 
+  string repl.
 - `re_split(pattern string, text string, count int) => [string]/error`: slices
   s into substrings separated by the expression and returns a slice of the
   substrings between those expression matches.
@@ -103,7 +103,7 @@ text := import("text")
   value of b.
 - `format_float(f float, fmt string, prec int, bits int) => string`: converts
   the floating-point number f to a string, according to the format fmt and
-  precision prec. 
+  precision prec.
 - `format_int(i int, base int) => string`: returns the string representation of
   i in the given base, for 2 <= base <= 36. The result uses the lower-case
   letters 'a' to 'z' for digit values >= 10.

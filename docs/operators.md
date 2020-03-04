@@ -7,7 +7,7 @@
 - `(int) == (int) = (bool)`: equality
 - `(int) != (int) = (bool)`: inequality
 
-### Arithmetic Operators 
+### Arithmetic Operators
 
 - `(int) + (int) = (int)`: sum
 - `(int) - (int) = (int)`: difference
@@ -52,8 +52,8 @@
 - `(float) == (float) = (bool)`: equality
 - `(float) != (float) = (bool)`: inequality
 
-### Arithmetic Operators 
-   
+### Arithmetic Operators
+
 - `(float) + (float) = (float)`: sum
 - `(float) - (float) = (float)`: difference
 - `(float) * (float) = (float)`: product
