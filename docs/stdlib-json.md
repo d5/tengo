@@ -16,7 +16,6 @@ json := import("json")
 - `html_escape(b string/bytes) => bytes`: Return an HTML-safe form of input
   JSON bytes string.
 
-
 ## Examples
 
 ```golang
@@ -26,5 +25,5 @@ encoded := json.encode({a: 1, b: [2, 3, 4]})  // JSON-encoded bytes string
 indentded := json.indent(encoded)             // indented form
 html_safe := json.html_escape(encoded)        // HTML escaped form
 
-decoded := json.decode(encoded)               // {a: 1, b: [2, 3, 4]} 
-``` 
+decoded := json.decode(encoded)               // {a: 1, b: [2, 3, 4]}
+```

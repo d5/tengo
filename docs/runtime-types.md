@@ -16,6 +16,7 @@
 - **Undefined**: undefined
 
 ## Type Conversion/Coercion Table
+
 |src\dst  |Int      |String        |Float    |Bool      |Char   |Bytes  |Array  |Map    |Time   |Error  |Undefined|
 | :---:   | :---:   | :---:        | :---:   | :---:    | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |Int      |   -     |_strconv_     |float64(v)|!IsFalsy()| rune(v)|**X**|**X**|**X**|_time.Unix()_|**X**|**X**|
@@ -34,7 +35,7 @@ _* **X**: No conversion; Typed value functions for `Variable` will
 return zero values._  
 _* strconv: converted using Go's conversion functions from `strconv` package._  
 _* IsFalsy(): use [Object.IsFalsy()](#objectisfalsy) function_  
-_* String(): use `Object.String()` function_    
+_* String(): use `Object.String()` function_
 _* time.Unix(): use `time.Unix(v, 0)` to convert to Time_
 
 ## Object.IsFalsy()

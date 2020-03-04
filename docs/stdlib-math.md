@@ -33,8 +33,8 @@ math := import("math")
 - `ceil(x float) => float`: returns the least integer value greater than or
   equal to x.
 - `copysign(x float, y float) => float`: returns a value with the magnitude of
-  x and the sign of y. 
-- `cos(x float) => float`: returns the cosine of the radian argument x. 
+  x and the sign of y.
+- `cos(x float) => float`: returns the cosine of the radian argument x.
 - `cosh(x float) => float`: returns the hyperbolic cosine of x.
 - `dim(x float, y float) => float`: returns the maximum of x-y or 0.
 - `erf(x float) => float`: returns the error function of x.
@@ -42,11 +42,11 @@ math := import("math")
 - `exp(x float) => float`: returns e**x, the base-e exponential of x.
 - `exp2(x float) => float`: returns 2**x, the base-2 exponential of x.
 - `expm1(x float) => float`: returns e**x - 1, the base-e exponential of x
-  minus 1. It is more accurate than Exp(x) - 1 when x is near zero. 
+  minus 1. It is more accurate than Exp(x) - 1 when x is near zero.
 - `floor(x float) => float`: returns the greatest integer value less than or
   equal to x.
 - `gamma(x float) => float`: returns the Gamma function of x.
-- `hypot(p float, q float) => float`: returns Sqrt(p * p + q * q), taking care
+- `hypot(p float, q float) => float`: returns `Sqrt(p * p + q * q)`, taking care
   to avoid unnecessary overflow and underflow.
 - `ilogb(x float) => float`: returns the binary exponent of x as an integer.
 - `inf(sign int) => float`: returns positive infinity if sign >= 0, negative
