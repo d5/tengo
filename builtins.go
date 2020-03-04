@@ -18,6 +18,10 @@ var builtinFuncs = []*BuiltinFunction{
 		Value: builtinDelete,
 	},
 	{
+		Name:  "splice",
+		Value: builtinSplice,
+	},
+	{
 		Name:  "string",
 		Value: builtinString,
 	},
@@ -531,4 +535,77 @@ func builtinDelete(args ...Object) (Object, error) {
 			Found:    arg.TypeName(),
 		}
 	}
+}
+
+// builtinSplice deletes and changes given Array, returns deleted items.
+// usage:
+// deleted_items := splice(array[,start[,delete_count[,item1[,item2[,...]]]])
+func builtinSplice(args ...Object) (Object, error) {
+	argsLen := len(args)
+	if argsLen == 0 {
+		return nil, ErrWrongNumArguments
+	}
+
+	array, ok := args[0].(*Array)
+	if !ok {
+		return nil, ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "array",
+			Found:    args[0].TypeName(),
+		}
+	}
+	arrayLen := len(array.Value)
+
+	var startIdx int
+	if argsLen > 1 {
+		arg1, ok := args[1].(*Int)
+		if !ok {
+			return nil, ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "int",
+				Found:    args[1].TypeName(),
+			}
+		}
+		startIdx = int(arg1.Value)
+		if startIdx < 0 || startIdx > arrayLen {
+			return nil, ErrIndexOutOfBounds
+		}
+	}
+
+	delCount := len(array.Value)
+	if argsLen > 2 {
+		arg2, ok := args[2].(*Int)
+		if !ok {
+			return nil, ErrInvalidArgumentType{
+				Name:     "third",
+				Expected: "int",
+				Found:    args[2].TypeName(),
+			}
+		}
+		delCount = int(arg2.Value)
+		if delCount < 0 {
+			return nil, ErrIndexOutOfBounds
+		}
+	}
+	// if count of to be deleted items is bigger than expected, truncate it
+	if startIdx+delCount > arrayLen {
+		delCount = arrayLen - startIdx
+	}
+	// delete items
+	endIdx := startIdx + delCount
+	deleted := append([]Object{}, array.Value[startIdx:endIdx]...)
+
+	head := array.Value[:startIdx]
+	var items []Object
+	if argsLen > 3 {
+		items = make([]Object, 0, argsLen-3)
+		for i := 3; i < argsLen; i++ {
+			items = append(items, args[i])
+		}
+	}
+	items = append(items, array.Value[endIdx:]...)
+	array.Value = append(head, items...)
+
+	// return deleted items
+	return &Array{Value: deleted}, nil
 }

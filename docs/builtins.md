@@ -67,6 +67,65 @@ delete({}) // runtime error, second argument is missing
 delete({}, 1) // runtime error, second argument must be a string type
 ```
 
+## splice
+
+Deletes and/or changes the contents of a given array and returns
+deleted items as a new array. `splice` is similar to
+JS `Array.prototype.splice()` except splice is a builtin function and
+first argument must an array. First argument must be an array, and
+if second and third arguments are provided those must be integers
+otherwise runtime error is returned.
+
+Usage:
+
+`deleted_items := splice(array[, start[, delete_count[, item1[, item2[, ...]]]])`
+
+```golang
+v := [1, 2, 3]
+items := splice(v, 0) // items == [1, 2, 3], v == []
+```
+
+```golang
+v := [1, 2, 3]
+items := splice(v, 1) // items == [2, 3], v == [1]
+```
+
+```golang
+v := [1, 2, 3]
+items := splice(v, 0, 1) // items == [1], v == [2, 3]
+```
+
+```golang
+// deleting
+v := ["a", "b", "c"]
+items := splice(v, 1, 2) // items == ["b", "c"], v == ["a"]
+// splice(v, 1, 3) or splice(v, 1, 99) has same effect for this example
+```
+
+```golang
+// appending
+v := ["a", "b", "c"]
+items := splice(v, 3, 0, "d", "e") // items == [], v == ["a", "b", "c", "d", "e"]
+```
+
+```golang
+// replacing
+v := ["a", "b", "c"]
+items := splice(v, 2, 1, "d") // items == ["c"], v == ["a", "b", "d"]
+```
+
+```golang
+// inserting
+v := ["a", "b", "c"]
+items := splice(v, 0, 0, "d", "e") // items == [], v == ["d", "e", "a", "b", "c"]
+```
+
+```golang
+// deleting and inserting
+v := ["a", "b", "c"]
+items := splice(v, 1, 1, "d", "e") // items == ["b"], v == ["a", "d", "e", "c"]
+```
+
 ## type_name
 
 Returns the type_name of an object.

@@ -735,31 +735,164 @@ func TestBuiltinFunction(t *testing.T) {
 	expectError(t, `delete(1, 1)`, nil, `invalid type for argument 'first'`)
 	expectError(t, `delete(1.0, 1)`, nil, `invalid type for argument 'first'`)
 	expectError(t, `delete("str", 1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete(bytes("str"), 1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete(error("err"), 1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(bytes("str"), 1)`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `delete(error("err"), 1)`, nil,
+		`invalid type for argument 'first'`)
 	expectError(t, `delete(true, 1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete(char('c'), 1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete(undefined, 1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete(time(1257894000), 1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete(immutable({}), "key")`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete(immutable([]), "")`, nil, `invalid type for argument 'first'`)
+	expectError(t, `delete(char('c'), 1)`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `delete(undefined, 1)`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `delete(time(1257894000), 1)`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `delete(immutable({}), "key")`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `delete(immutable([]), "")`, nil,
+		`invalid type for argument 'first'`)
 	expectError(t, `delete([], "")`, nil, `invalid type for argument 'first'`)
 	expectError(t, `delete({}, 1)`, nil, `invalid type for argument 'second'`)
 	expectError(t, `delete({}, 1.0)`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, undefined)`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, undefined)`, nil,
+		`invalid type for argument 'second'`)
 	expectError(t, `delete({}, [])`, nil, `invalid type for argument 'second'`)
 	expectError(t, `delete({}, {})`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, error("err"))`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, bytes("str"))`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, char(35))`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, time(1257894000))`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, immutable({}))`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, immutable([]))`, nil, `invalid type for argument 'second'`)
+	expectError(t, `delete({}, error("err"))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `delete({}, bytes("str"))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `delete({}, char(35))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `delete({}, time(1257894000))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `delete({}, immutable({}))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `delete({}, immutable([]))`, nil,
+		`invalid type for argument 'second'`)
 
 	expectRun(t, `out = delete({}, "")`, nil, tengo.UndefinedValue)
 	expectRun(t, `out = {key1: 1}; delete(out, "key1")`, nil, MAP{})
-	expectRun(t, `out = {key1: 1, key2: "2"}; delete(out, "key1")`, nil, MAP{"key2": "2"})
-	expectRun(t, `out = [1, "2", {a: "b", c: 10}]; delete(out[2], "c")`, nil, ARR{1, "2", MAP{"a": "b"}})
+	expectRun(t, `out = {key1: 1, key2: "2"}; delete(out, "key1")`, nil,
+		MAP{"key2": "2"})
+	expectRun(t, `out = [1, "2", {a: "b", c: 10}]; delete(out[2], "c")`, nil,
+		ARR{1, "2", MAP{"a": "b"}})
+
+	// splice
+	expectError(t, `splice()`, nil, tengo.ErrWrongNumArguments.Error())
+	expectError(t, `splice(1)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `splice(1.0)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `splice("str")`, nil, `invalid type for argument 'first'`)
+	expectError(t, `splice(bytes("str"))`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `splice(error("err"))`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `splice(true)`, nil, `invalid type for argument 'first'`)
+	expectError(t, `splice(char('c'))`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `splice(undefined)`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `splice(time(1257894000))`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `splice(immutable({}))`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `splice(immutable([]))`, nil,
+		`invalid type for argument 'first'`)
+	expectError(t, `splice({})`, nil, `invalid type for argument 'first'`)
+	expectError(t, `splice([], 1.0)`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], "str")`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], bytes("str"))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], error("error"))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], false)`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], char('d'))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], undefined)`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], time(0))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], [])`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], {})`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], immutable([]))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], immutable({}))`, nil,
+		`invalid type for argument 'second'`)
+	expectError(t, `splice([], 0, 1.0)`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, "string")`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, bytes("string"))`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, error("string"))`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, true)`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, char('f'))`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, undefined)`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, time(0))`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, [])`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, {})`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, immutable([]))`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 0, immutable({}))`, nil,
+		`invalid type for argument 'third'`)
+	expectError(t, `splice([], 1)`, nil, tengo.ErrIndexOutOfBounds.Error())
+	expectError(t, `splice([1, 2, 3], 0, -1)`, nil,
+		tengo.ErrIndexOutOfBounds.Error())
+	expectError(t, `splice([1, 2, 3], 99, 0, "a", "b")`, nil,
+		tengo.ErrIndexOutOfBounds.Error())
+	expectRun(t, `out = []; splice(out)`, nil, ARR{})
+	expectRun(t, `out = ["a"]; splice(out, 1)`, nil, ARR{"a"})
+	expectRun(t, `out = ["a"]; out = splice(out, 1)`, nil, ARR{})
+	expectRun(t, `out = [1, 2, 3]; splice(out, 0, 1)`, nil, ARR{2, 3})
+	expectRun(t, `out = [1, 2, 3]; out = splice(out, 0, 1)`, nil, ARR{1})
+	expectRun(t, `out = [1, 2, 3]; splice(out, 0, 0, "a", "b")`, nil,
+		ARR{"a", "b", 1, 2, 3})
+	expectRun(t, `out = [1, 2, 3]; out = splice(out, 0, 0, "a", "b")`, nil,
+		ARR{})
+	expectRun(t, `out = [1, 2, 3]; splice(out, 1, 0, "a", "b")`, nil,
+		ARR{1, "a", "b", 2, 3})
+	expectRun(t, `out = [1, 2, 3]; out = splice(out, 1, 0, "a", "b")`, nil,
+		ARR{})
+	expectRun(t, `out = [1, 2, 3]; splice(out, 1, 0, "a", "b")`, nil,
+		ARR{1, "a", "b", 2, 3})
+	expectRun(t, `out = [1, 2, 3]; splice(out, 2, 0, "a", "b")`, nil,
+		ARR{1, 2, "a", "b", 3})
+	expectRun(t, `out = [1, 2, 3]; splice(out, 3, 0, "a", "b")`, nil,
+		ARR{1, 2, 3, "a", "b"})
+	expectRun(t, `array := [1, 2, 3]; deleted := splice(array, 1, 1, "a", "b");
+				out = [deleted, array]`, nil, ARR{ARR{2}, ARR{1, "a", "b", 3}})
+	expectRun(t, `array := [1, 2, 3]; deleted := splice(array, 1); 
+		out = [deleted, array]`, nil, ARR{ARR{2, 3}, ARR{1}})
+	expectRun(t, `out = []; splice(out, 0, 0, "a", "b")`, nil, ARR{"a", "b"})
+	expectRun(t, `out = []; splice(out, 0, 1, "a", "b")`, nil, ARR{"a", "b"})
+	expectRun(t, `out = []; out = splice(out, 0, 0, "a", "b")`, nil, ARR{})
+	expectRun(t, `out = splice(splice([1, 2, 3], 0, 3), 1, 3)`, nil, ARR{2, 3})
+	// splice doc examples
+	expectRun(t, `v := [1, 2, 3]; deleted := splice(v, 0);
+		out = [deleted, v]`, nil, ARR{ARR{1, 2, 3}, ARR{}})
+	expectRun(t, `v := [1, 2, 3]; deleted := splice(v, 1);
+		out = [deleted, v]`, nil, ARR{ARR{2, 3}, ARR{1}})
+	expectRun(t, `v := [1, 2, 3]; deleted := splice(v, 0, 1);
+		out = [deleted, v]`, nil, ARR{ARR{1}, ARR{2, 3}})
+	expectRun(t, `v := ["a", "b", "c"]; deleted := splice(v, 1, 2);
+		out = [deleted, v]`, nil, ARR{ARR{"b", "c"}, ARR{"a"}})
+	expectRun(t, `v := ["a", "b", "c"]; deleted := splice(v, 2, 1, "d");
+		out = [deleted, v]`, nil, ARR{ARR{"c"}, ARR{"a", "b", "d"}})
+	expectRun(t, `v := ["a", "b", "c"]; deleted := splice(v, 0, 0, "d", "e");
+		out = [deleted, v]`, nil, ARR{ARR{}, ARR{"d", "e", "a", "b", "c"}})
+	expectRun(t, `v := ["a", "b", "c"]; deleted := splice(v, 1, 1, "d", "e");
+		out = [deleted, v]`, nil, ARR{ARR{"b"}, ARR{"a", "d", "e", "c"}})
 }
 
 func TestBytesN(t *testing.T) {
