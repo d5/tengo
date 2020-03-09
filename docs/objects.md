@@ -352,7 +352,7 @@ func (o *StringArray) IndexSet(index, value tengo.Object) error {
 }
 ```
 
-If we implement `CamCall` and `Call`:
+If we implement `CanCall` and `Call`:
 
 ```golang
 func (o *StringArray) CanCall() bool {
