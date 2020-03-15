@@ -604,9 +604,7 @@ func (v *VM) run() {
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.NumLocals
 			} else {
-				var args []Object
-				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
-				ret, e := value.Call(args...)
+				ret, e := value.Call(v.stack[v.sp-numArgs : v.sp]...)
 				v.sp -= numArgs + 1
 
 				// runtime error
