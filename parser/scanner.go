@@ -193,9 +193,6 @@ func (s *Scanner) Scan() (
 				tok = s.switch2(token.Quo, token.QuoAssign)
 			}
 		case '#':
-			if s.ch != '!' {
-				s.ch = '!'
-			}
 			comment := s.scanComment()
 			if s.mode&ScanComments == 0 {
 				// skip comment
@@ -309,8 +306,7 @@ func (s *Scanner) scanComment() string {
 	}
 
 	// #! shebang & #-style comment support
-	if s.ch == '!' {
-		s.next()
+	if s.src[offs] == '#' {
 		for s.ch != '\n' && s.ch >= 0 {
 			if s.ch == '\r' {
 				numCR++
