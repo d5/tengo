@@ -32,6 +32,14 @@ func TestScanner_Scan(t *testing.T) {
 		{token.Comment, "/**\r/*/"},
 		{token.Comment, "/**\r\r/*/"},
 		{token.Comment, "//\r\n"},
+		{token.Comment, "#\n"},
+		{token.Comment, "#\r\n"},
+		{token.Comment, "#!\n"},
+		{token.Comment, "#!\r\n"},
+		{token.Comment, "# a comment\n"},
+		{token.Comment, "# a comment\r\n"},
+		{token.Comment, "#a comment\n"},
+		{token.Comment, "#a comment\r\n"},
 		{token.Ident, "foobar"},
 		{token.Ident, "a۰۱۸"},
 		{token.Ident, "foo६४"},
@@ -155,7 +163,7 @@ func TestScanner_Scan(t *testing.T) {
 				tc.literal[1] == '*'))
 
 			//-style comment literal doesn't contain newline
-			if expectedLiteral[1] == '/' {
+			if expectedLiteral[0] == '#' || expectedLiteral[1] == '/' {
 				expectedLiteral = expectedLiteral[:len(expectedLiteral)-1]
 			}
 		case token.Ident:
