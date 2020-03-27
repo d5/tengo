@@ -192,6 +192,18 @@ func (s *Scanner) Scan() (
 			} else {
 				tok = s.switch2(token.Quo, token.QuoAssign)
 			}
+		case '#':
+			if s.ch != '!' {
+				s.ch = '!'
+			}
+			comment := s.scanComment()
+			if s.mode&ScanComments == 0 {
+				// skip comment
+				s.insertSemi = false // newline consumed
+				return s.Scan()
+			}
+			tok = token.Comment
+			literal = comment
 		case '%':
 			tok = s.switch2(token.Rem, token.RemAssign)
 		case '^':
@@ -286,6 +298,18 @@ func (s *Scanner) scanComment() string {
 	if s.ch == '/' {
 		//-style comment
 		// (the final '\n' is not considered part of the comment)
+		s.next()
+		for s.ch != '\n' && s.ch >= 0 {
+			if s.ch == '\r' {
+				numCR++
+			}
+			s.next()
+		}
+		goto exit
+	}
+
+	// #! shebang & #-style comment support
+	if s.ch == '!' {
 		s.next()
 		for s.ch != '\n' && s.ch >= 0 {
 			if s.ch == '\r' {
