@@ -136,3 +136,4 @@ each([a, b, c, d], func(x) {
 - [Interoperability](https://github.com/d5/tengo/blob/master/docs/interoperability.md)
 - [Tengo CLI](https://github.com/d5/tengo/blob/master/docs/tengo-cli.md)
 - [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md)
+- Syntax Highlighters: [VSCode](https://github.com/lissein/vscode-tengo), [Atom](https://github.com/d5/tengo-atom)
