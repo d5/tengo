@@ -67,7 +67,10 @@ func main() {
 			os.Exit(1)
 		}
 	} else if filepath.Ext(inputFile) == sourceFileExt {
-		inputData = skipShebang(inputData)
+		if len(inputData) > 1 &&
+			bytes.Compare(inputData[:2], []byte("#!")) == 0 {
+			copy(inputData, "//")
+		}
 		err := CompileAndRun(modules, inputData, inputFile)
 		if err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
@@ -307,31 +310,4 @@ func basename(s string) string {
 		return s[:n]
 	}
 	return s
-}
-
-func skipShebang(inputData []byte) []byte {
-	size := len(inputData)
-	i := 0
-	for i < size {
-		switch inputData[i] {
-		case ' ', '\t', '\r':
-			i++
-			continue
-		case '#':
-			i++
-			if i < size && inputData[i] == '!' {
-				i++
-				// ignore bytes between #! and \n char.
-				for ; i < size; i++ {
-					if inputData[i] == '\n' {
-						// do not consume \n, line numbers would be wrong.
-						return inputData[i:]
-					}
-				}
-			}
-			// ignore if no shebang
-		}
-		break
-	}
-	return inputData
 }
