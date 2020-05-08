@@ -30,6 +30,28 @@ tengo -o myapp myapp.tengo   # compile 'myapp.tengo' into binary file 'myapp'
 tengo myapp                  # execute the compiled binary `myapp`
 ```
 
+Or, you can make tengo source file executable
+
+```bash
+# copy tengo executable to a dir where PATH environment variable includes
+cp tengo /usr/local/bin/
+
+# add shebang line to source file
+cat > myapp.tengo << EOF
+#!/usr/local/bin/tengo
+fmt := import("fmt")
+fmt.println("Hello World!")
+EOF
+
+# make myapp.tengo file executable
+chmod +x myapp.tengo
+
+# run your script
+./myapp.tengo
+```
+
+**Note: Your source file must have `.tengo` extension.**
+
 ## Tengo REPL
 
 You can run Tengo [REPL](https://en.wikipedia.org/wiki/Read–eval–print_loop)

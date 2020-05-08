@@ -67,6 +67,10 @@ func main() {
 			os.Exit(1)
 		}
 	} else if filepath.Ext(inputFile) == sourceFileExt {
+		if len(inputData) > 1 &&
+			bytes.Compare(inputData[:2], []byte("#!")) == 0 {
+			copy(inputData, "//")
+		}
 		err := CompileAndRun(modules, inputData, inputFile)
 		if err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
