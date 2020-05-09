@@ -140,11 +140,7 @@ each([a, b, c, d], func(x) {
 - [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md)
 - Syntax Highlighters: [VSCode](https://github.com/lissein/vscode-tengo), [Atom](https://github.com/d5/tengo-atom)
 
----
+##
 
-<p align="center">
-	<strong><em>Like writing Go code? Come work at Skool. <a href="https://jobs.lever.co/skool" target="_blank">We&apos;re hiring!</a></em></strong>
-</p>
-
----
+:hearts: Like writing Go code? Come work at Skool. [We're hiring!](https://jobs.lever.co/skool)
 
