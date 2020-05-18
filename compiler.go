@@ -1086,6 +1086,8 @@ func (c *Compiler) fork(
 	child := NewCompiler(file, symbolTable, nil, c.modules, c.trace)
 	child.modulePath = modulePath // module file path
 	child.parent = c              // parent to set to current compiler
+	// Fixes #281 inherit file import from parent compiler
+	child.allowFileImport = c.allowFileImport
 	return child
 }
 
