@@ -1192,6 +1192,7 @@ func (c *Compiler) optimizeFunc(node parser.Node) {
 	var lastOp parser.Opcode
 	var appendReturn bool
 	endPos := len(c.scopes[c.scopeIndex].Instructions)
+	newEndPost := len(newInsts)
 	iterateInstructions(newInsts,
 		func(pos int, opcode parser.Opcode, operands []int) bool {
 			switch opcode {
@@ -1204,6 +1205,8 @@ func (c *Compiler) optimizeFunc(node parser.Node) {
 				} else if endPos == operands[0] {
 					// there's a jump instruction that jumps to the end of
 					// function compiler should append "return".
+					copy(newInsts[pos:],
+						MakeInstruction(opcode, newEndPost))
 					appendReturn = true
 				} else {
 					panic(fmt.Errorf("invalid jump position: %d", newDst))
