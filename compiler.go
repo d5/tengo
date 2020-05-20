@@ -539,11 +539,6 @@ func (c *Compiler) Compile(node parser.Node) error {
 				moduleName += ".tengo"
 			}
 
-			if !filepath.IsAbs(c.importDir) {
-				if p, err := filepath.Abs(c.importDir); err == nil {
-					c.importDir = p
-				}
-			}
 			moduleName = filepath.Join(c.importDir, moduleName)
 			modulePath, err := filepath.Abs(moduleName)
 			if err != nil {
@@ -648,8 +643,11 @@ func (c *Compiler) SetImportDir(dir string) {
 	c.importDir = dir
 }
 
-func (c *Compiler) resolveModuleLink(node parser.Node,
-	modulePath string, level int) (string, error) {
+func (c *Compiler) resolveModuleLink(
+	node parser.Node,
+	modulePath string,
+	level int,
+) (string, error) {
 	if level == 2 {
 		return "", c.errorf(node,
 			"module symbolic link max level is reached with \"%s\"", modulePath)
@@ -998,8 +996,10 @@ func (c *Compiler) checkCyclicImports(
 
 func (c *Compiler) compileModule(
 	node parser.Node,
-	moduleName, modulePath string,
-	src []byte, isFile bool,
+	moduleName,
+	modulePath string,
+	src []byte,
+	isFile bool,
 ) (*CompiledFunction, error) {
 	if err := c.checkCyclicImports(node, modulePath); err != nil {
 		return nil, err
