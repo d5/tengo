@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -44,6 +45,7 @@ type Compiler struct {
 	file            *parser.SourceFile
 	parent          *Compiler
 	modulePath      string
+	importDir       string
 	constants       []Object
 	symbolTable     *SymbolTable
 	scopes          []compilationScope
@@ -520,7 +522,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 			switch v := v.(type) {
 			case []byte: // module written in Tengo
 				compiled, err := c.compileModule(node,
-					node.ModuleName, node.ModuleName, v)
+					node.ModuleName, node.ModuleName, v, false)
 				if err != nil {
 					return err
 				}
@@ -537,24 +539,31 @@ func (c *Compiler) Compile(node parser.Node) error {
 				moduleName += ".tengo"
 			}
 
+			if !filepath.IsAbs(c.importDir) {
+				if p, err := filepath.Abs(c.importDir); err == nil {
+					c.importDir = p
+				}
+			}
+			moduleName = filepath.Join(c.importDir, moduleName)
 			modulePath, err := filepath.Abs(moduleName)
 			if err != nil {
-				return c.errorf(node, "module file path error: %s",
-					err.Error())
+				return c.errorf(node, "module file path error: %s in \"%s\"",
+					err.Error(), c.importDir)
 			}
 
-			if err := c.checkCyclicImports(node, modulePath); err != nil {
+			modulePath, err = c.resolveModuleLink(node, modulePath, 0)
+			if err != nil {
 				return err
 			}
 
-			moduleSrc, err := ioutil.ReadFile(moduleName)
+			moduleSrc, err := ioutil.ReadFile(modulePath)
 			if err != nil {
-				return c.errorf(node, "module file read error: %s",
-					err.Error())
+				return c.errorf(node, "module file read error: %s in \"%s\"",
+					err.Error(), modulePath)
 			}
 
 			compiled, err := c.compileModule(node,
-				moduleName, modulePath, moduleSrc)
+				modulePath, modulePath, moduleSrc, true)
 			if err != nil {
 				return err
 			}
@@ -632,6 +641,40 @@ func (c *Compiler) Bytecode() *Bytecode {
 // Local file modules are disabled by default.
 func (c *Compiler) EnableFileImport(enable bool) {
 	c.allowFileImport = enable
+}
+
+// SetImportDir sets the initial import directory path for file imports.
+func (c *Compiler) SetImportDir(dir string) {
+	c.importDir = dir
+}
+
+func (c *Compiler) resolveModuleLink(node parser.Node,
+	modulePath string, level int) (string, error) {
+	if level == 2 {
+		return "", c.errorf(node,
+			"module symbolic link max level is reached with \"%s\"", modulePath)
+	}
+	if info, err := os.Lstat(modulePath); err != nil {
+		return "", c.errorf(node, "module file lstat error: %s in \"%s\"",
+			err.Error(), modulePath)
+	} else if info != nil && info.Mode()&os.ModeSymlink != 0 {
+		dst, err := os.Readlink(modulePath)
+		if err != nil {
+			return "", c.errorf(node,
+				"module file readlink error: %s in \"%s\"",
+				err.Error(), modulePath)
+		}
+		dst = filepath.Join(c.importDir, dst)
+		p, err := filepath.Abs(dst)
+		if err != nil {
+			return "", c.errorf(node,
+				"module file path error: %s in \"%s\"",
+				err.Error(), dst)
+		}
+		level++
+		return c.resolveModuleLink(node, p, level)
+	}
+	return modulePath, nil
 }
 
 func (c *Compiler) compileAssign(
@@ -956,7 +999,7 @@ func (c *Compiler) checkCyclicImports(
 func (c *Compiler) compileModule(
 	node parser.Node,
 	moduleName, modulePath string,
-	src []byte,
+	src []byte, isFile bool,
 ) (*CompiledFunction, error) {
 	if err := c.checkCyclicImports(node, modulePath); err != nil {
 		return nil, err
@@ -984,7 +1027,7 @@ func (c *Compiler) compileModule(
 	symbolTable = symbolTable.Fork(false)
 
 	// compile module
-	moduleCompiler := c.fork(modFile, modulePath, symbolTable)
+	moduleCompiler := c.fork(modFile, modulePath, symbolTable, isFile)
 	if err := moduleCompiler.Compile(file); err != nil {
 		return nil, err
 	}
@@ -1082,12 +1125,25 @@ func (c *Compiler) fork(
 	file *parser.SourceFile,
 	modulePath string,
 	symbolTable *SymbolTable,
+	isFile bool,
 ) *Compiler {
 	child := NewCompiler(file, symbolTable, nil, c.modules, c.trace)
 	child.modulePath = modulePath // module file path
 	child.parent = c              // parent to set to current compiler
 	child.allowFileImport = c.allowFileImport
+	if isFile {
+		child.importDir = filepath.Dir(modulePath)
+	} else {
+		child.importDir = c.initialImportDir()
+	}
 	return child
+}
+
+func (c *Compiler) initialImportDir() string {
+	if c.parent == nil {
+		return c.importDir
+	}
+	return c.parent.initialImportDir()
 }
 
 func (c *Compiler) error(node parser.Node, err error) error {

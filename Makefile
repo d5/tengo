@@ -6,6 +6,8 @@ lint:
 
 test: generate lint
 	go test -race -cover ./...
+	go build ./cmd/tengo
+	./tengo ./cmd/tengo/testdata/test.tengo
 
 fmt:
 	go fmt ./...

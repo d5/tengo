@@ -1,0 +1,15 @@
+#!/usr/bin/env tengo
+
+os := import("os")
+one := import("one")
+fmt := import("fmt")
+text := import("text")
+expected := ["test", "one", "two", "three", "four", "five"]
+expected = text.join(expected, " ")
+if v := one.fn("test"); v != expected {
+    fmt.printf("relative import test error:\n\texpected: %v\n\tgot     : %v\n",
+                expected, v)
+    os.exit(1)
+}
+args := text.join(os.args(), " ")
+fmt.println("ok\t", args)

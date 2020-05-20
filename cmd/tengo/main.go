@@ -55,8 +55,32 @@ func main() {
 	inputData, err := ioutil.ReadFile(inputFile)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr,
-			"Error reading input file: %s", err.Error())
+			"Error reading input file: %s\n", err.Error())
 		os.Exit(1)
+	}
+
+	if compileOutput != "" {
+		if compileOutput, err = filepath.Abs(compileOutput); err != nil {
+			fmt.Fprintf(os.Stderr,
+				"Error file path: %s\n", err.Error())
+			os.Exit(1)
+		}
+	}
+
+	inputFile, err = filepath.Abs(inputFile)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error file path: %s\n", err)
+		os.Exit(1)
+	}
+
+	if err := os.Chdir(filepath.Dir(inputFile)); err != nil {
+		fmt.Fprintf(os.Stderr,
+			"Error changing current working directory: %s\n", err)
+		os.Exit(1)
+	}
+
+	if len(inputData) > 1 && string(inputData[:2]) == "#!" {
+		copy(inputData, "//")
 	}
 
 	if compileOutput != "" {
@@ -67,9 +91,6 @@ func main() {
 			os.Exit(1)
 		}
 	} else if filepath.Ext(inputFile) == sourceFileExt {
-		if len(inputData) > 1 && string(inputData[:2]) == "#!" {
-			copy(inputData, "//")
-		}
 		err := CompileAndRun(modules, inputData, inputFile)
 		if err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
