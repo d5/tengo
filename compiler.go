@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -546,11 +545,6 @@ func (c *Compiler) Compile(node parser.Node) error {
 					err.Error(), c.importDir)
 			}
 
-			modulePath, err = c.resolveModuleLink(node, modulePath, 0)
-			if err != nil {
-				return err
-			}
-
 			moduleSrc, err := ioutil.ReadFile(modulePath)
 			if err != nil {
 				return c.errorf(node, "module file read error: %s in \"%s\"",
@@ -641,38 +635,6 @@ func (c *Compiler) EnableFileImport(enable bool) {
 // SetImportDir sets the initial import directory path for file imports.
 func (c *Compiler) SetImportDir(dir string) {
 	c.importDir = dir
-}
-
-func (c *Compiler) resolveModuleLink(
-	node parser.Node,
-	modulePath string,
-	level int,
-) (string, error) {
-	if level == 2 {
-		return "", c.errorf(node,
-			"module symbolic link max level is reached with \"%s\"", modulePath)
-	}
-	if info, err := os.Lstat(modulePath); err != nil {
-		return "", c.errorf(node, "module file lstat error: %s in \"%s\"",
-			err.Error(), modulePath)
-	} else if info != nil && info.Mode()&os.ModeSymlink != 0 {
-		dst, err := os.Readlink(modulePath)
-		if err != nil {
-			return "", c.errorf(node,
-				"module file readlink error: %s in \"%s\"",
-				err.Error(), modulePath)
-		}
-		dst = filepath.Join(c.importDir, dst)
-		p, err := filepath.Abs(dst)
-		if err != nil {
-			return "", c.errorf(node,
-				"module file path error: %s in \"%s\"",
-				err.Error(), dst)
-		}
-		level++
-		return c.resolveModuleLink(node, p, level)
-	}
-	return modulePath, nil
 }
 
 func (c *Compiler) compileAssign(
@@ -996,7 +958,7 @@ func (c *Compiler) checkCyclicImports(
 
 func (c *Compiler) compileModule(
 	node parser.Node,
-	moduleName,
+	moduleName string,
 	modulePath string,
 	src []byte,
 	isFile bool,
