@@ -44,6 +44,7 @@ type Compiler struct {
 	file            *parser.SourceFile
 	parent          *Compiler
 	modulePath      string
+	importDir       string
 	constants       []Object
 	symbolTable     *SymbolTable
 	scopes          []compilationScope
@@ -520,7 +521,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 			switch v := v.(type) {
 			case []byte: // module written in Tengo
 				compiled, err := c.compileModule(node,
-					node.ModuleName, node.ModuleName, v)
+					node.ModuleName, v, false)
 				if err != nil {
 					return err
 				}
@@ -537,24 +538,20 @@ func (c *Compiler) Compile(node parser.Node) error {
 				moduleName += ".tengo"
 			}
 
-			modulePath, err := filepath.Abs(moduleName)
+			modulePath, err := filepath.Abs(
+				filepath.Join(c.importDir, moduleName))
 			if err != nil {
 				return c.errorf(node, "module file path error: %s",
 					err.Error())
 			}
 
-			if err := c.checkCyclicImports(node, modulePath); err != nil {
-				return err
-			}
-
-			moduleSrc, err := ioutil.ReadFile(moduleName)
+			moduleSrc, err := ioutil.ReadFile(modulePath)
 			if err != nil {
 				return c.errorf(node, "module file read error: %s",
 					err.Error())
 			}
 
-			compiled, err := c.compileModule(node,
-				moduleName, modulePath, moduleSrc)
+			compiled, err := c.compileModule(node, modulePath, moduleSrc, true)
 			if err != nil {
 				return err
 			}
@@ -632,6 +629,11 @@ func (c *Compiler) Bytecode() *Bytecode {
 // Local file modules are disabled by default.
 func (c *Compiler) EnableFileImport(enable bool) {
 	c.allowFileImport = enable
+}
+
+// SetImportDir sets the initial import directory path for file imports.
+func (c *Compiler) SetImportDir(dir string) {
+	c.importDir = dir
 }
 
 func (c *Compiler) compileAssign(
@@ -957,8 +959,9 @@ func (c *Compiler) checkCyclicImports(
 
 func (c *Compiler) compileModule(
 	node parser.Node,
-	moduleName, modulePath string,
+	modulePath string,
 	src []byte,
+	isFile bool,
 ) (*CompiledFunction, error) {
 	if err := c.checkCyclicImports(node, modulePath); err != nil {
 		return nil, err
@@ -969,7 +972,7 @@ func (c *Compiler) compileModule(
 		return compiledModule, nil
 	}
 
-	modFile := c.file.Set().AddFile(moduleName, -1, len(src))
+	modFile := c.file.Set().AddFile(modulePath, -1, len(src))
 	p := parser.NewParser(modFile, src, nil)
 	file, err := p.ParseFile()
 	if err != nil {
@@ -986,7 +989,7 @@ func (c *Compiler) compileModule(
 	symbolTable = symbolTable.Fork(false)
 
 	// compile module
-	moduleCompiler := c.fork(modFile, modulePath, symbolTable)
+	moduleCompiler := c.fork(modFile, modulePath, symbolTable, isFile)
 	if err := moduleCompiler.Compile(file); err != nil {
 		return nil, err
 	}
@@ -1084,11 +1087,16 @@ func (c *Compiler) fork(
 	file *parser.SourceFile,
 	modulePath string,
 	symbolTable *SymbolTable,
+	isFile bool,
 ) *Compiler {
 	child := NewCompiler(file, symbolTable, nil, c.modules, c.trace)
 	child.modulePath = modulePath // module file path
 	child.parent = c              // parent to set to current compiler
 	child.allowFileImport = c.allowFileImport
+	child.importDir = c.importDir
+	if isFile && c.importDir != "" {
+		child.importDir = filepath.Dir(modulePath)
+	}
 	return child
 }
 

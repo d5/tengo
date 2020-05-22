@@ -25,6 +25,7 @@ var (
 	compileOutput string
 	showHelp      bool
 	showVersion   bool
+	resolvePath   bool // TODO Remove this flag at version 3
 	version       = "dev"
 )
 
@@ -32,6 +33,8 @@ func init() {
 	flag.BoolVar(&showHelp, "help", false, "Show help")
 	flag.StringVar(&compileOutput, "o", "", "Compile output file")
 	flag.BoolVar(&showVersion, "version", false, "Show version")
+	flag.BoolVar(&resolvePath, "resolve", false,
+		"Resolve relative import paths")
 	flag.Parse()
 }
 
@@ -55,8 +58,18 @@ func main() {
 	inputData, err := ioutil.ReadFile(inputFile)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr,
-			"Error reading input file: %s", err.Error())
+			"Error reading input file: %s\n", err.Error())
 		os.Exit(1)
+	}
+
+	inputFile, err = filepath.Abs(inputFile)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Error file path: %s\n", err)
+		os.Exit(1)
+	}
+
+	if len(inputData) > 1 && string(inputData[:2]) == "#!" {
+		copy(inputData, "//")
 	}
 
 	if compileOutput != "" {
@@ -67,9 +80,6 @@ func main() {
 			os.Exit(1)
 		}
 	} else if filepath.Ext(inputFile) == sourceFileExt {
-		if len(inputData) > 1 && string(inputData[:2]) == "#!" {
-			copy(inputData, "//")
-		}
 		err := CompileAndRun(modules, inputData, inputFile)
 		if err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
@@ -90,7 +100,7 @@ func CompileOnly(
 	data []byte,
 	inputFile, outputFile string,
 ) (err error) {
-	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
+	bytecode, err := compileSrc(modules, data, inputFile)
 	if err != nil {
 		return
 	}
@@ -125,7 +135,7 @@ func CompileAndRun(
 	data []byte,
 	inputFile string,
 ) (err error) {
-	bytecode, err := compileSrc(modules, data, filepath.Base(inputFile))
+	bytecode, err := compileSrc(modules, data, inputFile)
 	if err != nil {
 		return
 	}
@@ -215,10 +225,10 @@ func RunREPL(modules *tengo.ModuleMap, in io.Reader, out io.Writer) {
 func compileSrc(
 	modules *tengo.ModuleMap,
 	src []byte,
-	filename string,
+	inputFile string,
 ) (*tengo.Bytecode, error) {
 	fileSet := parser.NewFileSet()
-	srcFile := fileSet.AddFile(filename, -1, len(src))
+	srcFile := fileSet.AddFile(filepath.Base(inputFile), -1, len(src))
 
 	p := parser.NewParser(srcFile, src, nil)
 	file, err := p.ParseFile()
@@ -228,6 +238,9 @@ func compileSrc(
 
 	c := tengo.NewCompiler(srcFile, nil, nil, modules, nil)
 	c.EnableFileImport(true)
+	if resolvePath {
+		c.SetImportDir(filepath.Dir(inputFile))
+	}
 
 	if err := c.Compile(file); err != nil {
 		return nil, err
