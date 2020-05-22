@@ -538,17 +538,19 @@ func (c *Compiler) Compile(node parser.Node) error {
 				moduleName += ".tengo"
 			}
 
-			moduleName = filepath.Join(c.importDir, moduleName)
+			if c.importDir != "" {
+				moduleName = filepath.Join(c.importDir, moduleName)
+			}
 			modulePath, err := filepath.Abs(moduleName)
 			if err != nil {
-				return c.errorf(node, "module file path error: %s in \"%s\"",
-					err.Error(), c.importDir)
+				return c.errorf(node, "module file path error: %s",
+					err.Error())
 			}
 
 			moduleSrc, err := ioutil.ReadFile(modulePath)
 			if err != nil {
-				return c.errorf(node, "module file read error: %s in \"%s\"",
-					err.Error(), modulePath)
+				return c.errorf(node, "module file read error: %s",
+					err.Error())
 			}
 
 			compiled, err := c.compileModule(node,
@@ -1093,10 +1095,12 @@ func (c *Compiler) fork(
 	child.modulePath = modulePath // module file path
 	child.parent = c              // parent to set to current compiler
 	child.allowFileImport = c.allowFileImport
-	if isFile {
-		child.importDir = filepath.Dir(modulePath)
-	} else {
-		child.importDir = c.initialImportDir()
+	if d := c.initialImportDir(); d != "" {
+		if isFile {
+			child.importDir = filepath.Dir(modulePath)
+		} else {
+			child.importDir = d
+		}
 	}
 	return child
 }
