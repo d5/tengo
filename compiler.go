@@ -521,7 +521,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 			switch v := v.(type) {
 			case []byte: // module written in Tengo
 				compiled, err := c.compileModule(node,
-					node.ModuleName, node.ModuleName, v, false)
+					node.ModuleName, v, false)
 				if err != nil {
 					return err
 				}
@@ -538,10 +538,8 @@ func (c *Compiler) Compile(node parser.Node) error {
 				moduleName += ".tengo"
 			}
 
-			if c.importDir != "" {
-				moduleName = filepath.Join(c.importDir, moduleName)
-			}
-			modulePath, err := filepath.Abs(moduleName)
+			modulePath, err := filepath.Abs(
+				filepath.Join(c.importDir, moduleName))
 			if err != nil {
 				return c.errorf(node, "module file path error: %s",
 					err.Error())
@@ -553,8 +551,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 					err.Error())
 			}
 
-			compiled, err := c.compileModule(node,
-				modulePath, modulePath, moduleSrc, true)
+			compiled, err := c.compileModule(node, modulePath, moduleSrc, true)
 			if err != nil {
 				return err
 			}
@@ -960,7 +957,6 @@ func (c *Compiler) checkCyclicImports(
 
 func (c *Compiler) compileModule(
 	node parser.Node,
-	moduleName string,
 	modulePath string,
 	src []byte,
 	isFile bool,
@@ -974,7 +970,7 @@ func (c *Compiler) compileModule(
 		return compiledModule, nil
 	}
 
-	modFile := c.file.Set().AddFile(moduleName, -1, len(src))
+	modFile := c.file.Set().AddFile(modulePath, -1, len(src))
 	p := parser.NewParser(modFile, src, nil)
 	file, err := p.ParseFile()
 	if err != nil {
@@ -1095,21 +1091,11 @@ func (c *Compiler) fork(
 	child.modulePath = modulePath // module file path
 	child.parent = c              // parent to set to current compiler
 	child.allowFileImport = c.allowFileImport
-	if d := c.initialImportDir(); d != "" {
-		if isFile {
-			child.importDir = filepath.Dir(modulePath)
-		} else {
-			child.importDir = d
-		}
+	child.importDir = c.importDir
+	if isFile && c.importDir != "" {
+		child.importDir = filepath.Dir(modulePath)
 	}
 	return child
-}
-
-func (c *Compiler) initialImportDir() string {
-	if c.parent == nil {
-		return c.importDir
-	}
-	return c.parent.initialImportDir()
 }
 
 func (c *Compiler) error(node parser.Node, err error) error {

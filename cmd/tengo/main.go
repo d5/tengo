@@ -25,9 +25,8 @@ var (
 	compileOutput string
 	showHelp      bool
 	showVersion   bool
-	// TODO Remove this flag at version 3
-	resolvePath bool
-	version     = "dev"
+	resolvePath   bool // TODO Remove this flag at version 3
+	version       = "dev"
 )
 
 func init() {
