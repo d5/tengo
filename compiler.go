@@ -847,8 +847,8 @@ func (c *Compiler) compileForInStmt(stmt *parser.ForInStmt) error {
 	//     ... body ...
 	//   }
 	//
-	// ":it" is a local variable but will be conflict with other user variables
-	// because character ":" is not allowed.
+	// ":it" is a local variable but it will not conflict with other user variables
+	// because character ":" is not allowed in the variable names.
 
 	// init
 	//   :it = iterator(iterable)
