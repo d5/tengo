@@ -1531,7 +1531,23 @@ func TestFunction(t *testing.T) {
 		add2 := newAdder(2);
 		out = add2(5);
 		`, nil, 7)
+	expectRun(t, `
+		m := {a: 1}
+		for k,v in m {
+			func(){
+				out = k
+			}()
+		}
+		`, nil, "a")
 
+	expectRun(t, `
+		m := {a: 1}
+		for k,v in m {
+			func(){
+				out = v
+			}()
+		}
+		`, nil, 1)
 	// function as a argument
 	expectRun(t, `
 	add := func(a, b) { return a + b };
