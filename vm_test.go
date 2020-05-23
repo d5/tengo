@@ -3238,6 +3238,15 @@ func TestString(t *testing.T) {
 	expectRun(t, `out = "Hello" != "Hello"`, nil, false)
 	expectRun(t, `out = "Hello" != "World"`, nil, true)
 
+	expectRun(t, `out = "Hello" > "World"`, nil, false)
+	expectRun(t, `out = "World" < "Hello"`, nil, false)
+	expectRun(t, `out = "Hello" < "World"`, nil, true)
+	expectRun(t, `out = "World" > "Hello"`, nil, true)
+	expectRun(t, `out = "Hello" >= "World"`, nil, false)
+	expectRun(t, `out = "Hello" <= "World"`, nil, true)
+	expectRun(t, `out = "Hello" >= "Hello"`, nil, true)
+	expectRun(t, `out = "World" <= "World"`, nil, true)
+
 	// index operator
 	str := "abcdef"
 	strStr := `"abcdef"`

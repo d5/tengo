@@ -86,6 +86,13 @@
 - `(string) + (string) = (string)`: concatenation
 - `(string) + (other types) = (string)`: concatenation (after string-converted)
 
+### Comparison Operators
+
+- `(string) < (string) = (bool)`: less than
+- `(string) > (string) = (bool)`: greater than
+- `(string) <= (string) = (bool)`: less than or equal to
+- `(string) >= (string) = (bool)`: greater than or equal to
+
 ## Char
 
 ### Equality
@@ -184,4 +191,3 @@ Tests whether two _(immutable)_ maps contain the same key-objects.
 - `(immutable-map) != (immutable-map) = (bool)`: inequality
 - `(immutable-map) == (map) = (bool)`: equality
 - `(immutable-map) != (map) = (bool)`: inequality
-
