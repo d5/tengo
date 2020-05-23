@@ -2654,6 +2654,25 @@ export func(a) {
 	expectRun(t, `out = import("mod0")`,
 		Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { break } } }`),
 		tengo.UndefinedValue)
+
+	// duplicate compiled functions
+	// NOTE: module "mod" has a function with some local variable, and it's
+	//  imported twice by the main script. That causes the same CompiledFunction
+	//  put in constants twice and the Bytecode optimization (removing duplicate
+	//  constants) should still work correctly.
+	expectRun(t, `
+m1 := import("mod")
+m2 := import("mod")
+out = m1.x
+	`,
+		Opts().Module("mod", `
+f1 := func(a, b) {
+	c := a + b + 1
+	return a + b + 1
+}
+export { x: 1 }
+`),
+		1)
 }
 
 func TestModuleBlockScopes(t *testing.T) {
