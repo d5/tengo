@@ -14,6 +14,11 @@ jobs:
       with:
         go-version: 1.14
       id: go
+    - name: setup env
+      run: |
+        echo "::set-env name=GOPATH::$(go env GOPATH)"
+        echo "::add-path::$(go env GOPATH)/bin"
+      shell: bash
     - name: check out code
       uses: actions/checkout@v2
     - name: install golint
