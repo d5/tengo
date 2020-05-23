@@ -1,0 +1,34 @@
+name: test
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: set up Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.14
+      id: go
+    - name: set up Go module cache
+      uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: setup env
+      run: |
+        echo "::set-env name=GOPATH::$(go env GOPATH)"
+        echo "::add-path::$(go env GOPATH)/bin"
+      shell: bash
+    - name: check out code
+      uses: actions/checkout@v2
+    - name: install golint
+      run: go get -u golang.org/x/lint/golint
+    - name: run tests
+      run: make test

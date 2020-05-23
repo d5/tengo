@@ -849,8 +849,8 @@ func (c *Compiler) compileForInStmt(stmt *parser.ForInStmt) error {
 	//     ... body ...
 	//   }
 	//
-	// ":it" is a local variable but will be conflict with other user variables
-	// because character ":" is not allowed.
+	// ":it" is a local variable but it will not conflict with other user variables
+	// because character ":" is not allowed in the variable names.
 
 	// init
 	//   :it = iterator(iterable)
@@ -895,6 +895,7 @@ func (c *Compiler) compileForInStmt(stmt *parser.ForInStmt) error {
 		if keySymbol.Scope == ScopeGlobal {
 			c.emit(stmt, parser.OpSetGlobal, keySymbol.Index)
 		} else {
+			keySymbol.LocalAssigned = true
 			c.emit(stmt, parser.OpDefineLocal, keySymbol.Index)
 		}
 	}
@@ -911,6 +912,7 @@ func (c *Compiler) compileForInStmt(stmt *parser.ForInStmt) error {
 		if valueSymbol.Scope == ScopeGlobal {
 			c.emit(stmt, parser.OpSetGlobal, valueSymbol.Index)
 		} else {
+			valueSymbol.LocalAssigned = true
 			c.emit(stmt, parser.OpDefineLocal, valueSymbol.Index)
 		}
 	}
