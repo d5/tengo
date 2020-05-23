@@ -1345,46 +1345,34 @@ func (o *String) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	case token.Less:
 		switch rhs := rhs.(type) {
 		case *String:
-			switch op {
-			case token.Less:
-				if o.Value < rhs.Value {
-					return TrueValue, nil
-				}
-				return FalseValue, nil
+			if o.Value < rhs.Value {
+				return TrueValue, nil
 			}
+			return FalseValue, nil
 		}
 	case token.LessEq:
 		switch rhs := rhs.(type) {
 		case *String:
-			switch op {
-			case token.Less:
-				if o.Value <= rhs.Value {
-					return TrueValue, nil
-				}
-				return FalseValue, nil
+			if o.Value <= rhs.Value {
+				return TrueValue, nil
 			}
+			return FalseValue, nil
 		}
 	case token.Greater:
 		switch rhs := rhs.(type) {
 		case *String:
-			switch op {
-			case token.Greater:
-				if o.Value > rhs.Value {
-					return TrueValue, nil
-				}
-				return FalseValue, nil
+			if o.Value > rhs.Value {
+				return TrueValue, nil
 			}
+			return FalseValue, nil
 		}
 	case token.GreaterEq:
 		switch rhs := rhs.(type) {
 		case *String:
-			switch op {
-			case token.GreaterEq:
-				if o.Value >= rhs.Value {
-					return TrueValue, nil
-				}
-				return FalseValue, nil
+			if o.Value >= rhs.Value {
+				return TrueValue, nil
 			}
+			return FalseValue, nil
 		}
 	}
 	return nil, ErrInvalidOperator
