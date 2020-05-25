@@ -291,12 +291,12 @@ _In Tengo, all values can be either
 | `&^`   | bitclear (AND NOT) | int |
 | `<<`   | shift left | int |
 | `>>`   | shift right | int |
-| `<`   | less than | int, float, char, time |
-| `<=`   | less than or equal to | int, float, char, time |
-| `>`   | greater than | int, float, char, time |
-| `>=`   | greater than or equal to | int, float, char, time |
+| `<`   | less than | int, float, char, time, string |
+| `<=`   | less than or equal to | int, float, char, time, string |
+| `>`   | greater than | int, float, char, time, string |
+| `>=`   | greater than or equal to | int, float, char, time, string |
 
-_See [Operators](https://github.com/d5/tengo/blob/d5-patch-1/docs/operators.md)
+_See [Operators](https://github.com/d5/tengo/blob/master/docs/operators.md)
 for more details._
 
 ### Ternary Operators
