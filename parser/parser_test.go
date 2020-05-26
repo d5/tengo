@@ -76,6 +76,20 @@ func TestParseArray(t *testing.T) {
 					floatLit(12.34, p(1, 12)))))
 	})
 
+	expectParse(t, `[1, ...["foo"], 3]`, func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				arrayLit(p(1, 1), p(1, 18),
+					intLit(1, p(1, 2)),
+					spreadExpr(p(1, 5),
+						arrayLit(p(1, 8), p(1, 14),
+							stringLit("foo", p(1, 9)),
+						),
+						SpreadInArr,
+					),
+					intLit(3, p(1, 17)))))
+	})
+
 	expectParse(t, "a = [1, 2, 3]", func(p pfn) []Stmt {
 		return stmts(
 			assignStmt(
@@ -125,6 +139,12 @@ func TestParseArray(t *testing.T) {
 
 ]`)
 	expectParseError(t, `[1, 2, 3, ,]`)
+	expectParseError(t, `[..., 2]`)
+	expectParseError(t, `[, ..., 2]`)
+	expectParseError(t, `[1, ...]`)
+	expectParseError(t, `[1, ..., ]`)
+	expectParseError(t, `[1, ..., "a"]`)
+	expectParseError(t, `[a...]`)
 }
 
 func TestParseAssignment(t *testing.T) {
@@ -296,6 +316,20 @@ func TestParseCall(t *testing.T) {
 					intLit(3, p(1, 11)))))
 	})
 
+	expectParse(t, "add(1, 2, ...v)", func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				callExpr(
+					ident("add", p(1, 1)),
+					p(1, 4), p(1, 15),
+					intLit(1, p(1, 5)),
+					intLit(2, p(1, 8)),
+					spreadExpr(p(1, 11),
+						ident("v", p(1, 14)),
+						SpreadInCall,
+					))))
+	})
+
 	expectParse(t, "a = add(1, 2, 3)", func(p pfn) []Stmt {
 		return stmts(
 			assignStmt(
@@ -420,6 +454,14 @@ func TestParseCall(t *testing.T) {
 						stringLit("c", p(1, 8))),
 					p(1, 9), p(1, 10))))
 	})
+
+	expectParseError(t, `add(...a, 1)`)
+	expectParseError(t, `add(...a, ...b)`)
+	expectParseError(t, `add(1, ...a, ...b)`)
+	expectParseError(t, `add(...)`)
+	expectParseError(t, `add(1, ...)`)
+	expectParseError(t, `add(1, ..., )`)
+	expectParseError(t, `add(a...)`)
 }
 
 func TestParseChar(t *testing.T) {
@@ -1176,6 +1218,19 @@ func TestParseMap(t *testing.T) {
 						"key1", p(1, 3), p(1, 9), intLit(1, p(1, 11))))))
 	})
 
+	expectParse(t, "{ \"key1\": 1, ...a }", func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				mapLit(p(1, 1), p(1, 19),
+					mapElementLit(
+						"key1", p(1, 3), p(1, 9), intLit(1, p(1, 11))),
+					mapElementLit(
+						"_", NoPos, NoPos,
+						spreadExpr(p(1, 14),
+							ident("a", p(1, 17)), SpreadInMap)),
+				)))
+	})
+
 	expectParse(t, "a = { key1: 1, key2: \"2\", key3: true }",
 		func(p pfn) []Stmt {
 			return stmts(assignStmt(
@@ -1241,6 +1296,12 @@ func TestParseMap(t *testing.T) {
 key1: 1,
 key2: 2,
 }`)
+
+	expectParseError(t, `{ ... }`)
+	expectParseError(t, `{ a... }`)
+	expectParseError(t, `{ ..., }`)
+	expectParseError(t, `{ a..., key: "val"}`)
+	expectParseError(t, `{ 1..., key: "val"}`)
 }
 
 func TestParsePrecedence(t *testing.T) {
@@ -1695,6 +1756,12 @@ func importExpr(moduleName string, pos Pos) *ImportExpr {
 	}
 }
 
+func spreadExpr(pos Pos, expr Expr, in SpreadIn) *SpreadExpr {
+	return &SpreadExpr{
+		TokenPos: pos, Expr: expr, In: in,
+	}
+}
+
 func exprs(list ...Expr) []Expr {
 	return list
 }
@@ -2012,6 +2079,13 @@ func equalExpr(t *testing.T, expected, actual Expr) {
 			actual.(*CondExpr).QuestionPos)
 		require.Equal(t, expected.ColonPos,
 			actual.(*CondExpr).ColonPos)
+	case *SpreadExpr:
+		equalExpr(t, expected.Expr,
+			actual.(*SpreadExpr).Expr)
+		require.Equal(t, expected.TokenPos,
+			actual.(*SpreadExpr).TokenPos)
+		require.Equal(t, expected.In,
+			actual.(*SpreadExpr).In)
 	default:
 		panic(fmt.Errorf("unknown type: %T", expected))
 	}

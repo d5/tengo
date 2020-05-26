@@ -422,6 +422,9 @@ func (e *MapElementLit) End() Pos {
 }
 
 func (e *MapElementLit) String() string {
+	if _, ok := e.Value.(*SpreadExpr); ok {
+		return e.Value.String()
+	}
 	return e.Key + ": " + e.Value.String()
 }
 
@@ -594,4 +597,53 @@ func (e *UndefinedLit) End() Pos {
 
 func (e *UndefinedLit) String() string {
 	return "undefined"
+}
+
+// SpreadIn is used in SpreadExpr to denote where expression is used in.
+type SpreadIn byte
+
+// Spread expression can be used in call expressions and map, array definitions.
+const (
+	SpreadInCall SpreadIn = iota + 1
+	SpreadInMap
+	SpreadInArr
+)
+
+func (s SpreadIn) String() string {
+	switch s {
+	case SpreadInCall:
+		return "SpreadInCall"
+	case SpreadInMap:
+		return "SpreadInMap"
+	case SpreadInArr:
+		return "SpreadInArr"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+// SpreadExpr node stands for the "..." spread expression.
+type SpreadExpr struct {
+	TokenPos Pos // position of "..."
+	Expr     Expr
+	In       SpreadIn
+}
+
+func (e *SpreadExpr) exprNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (e *SpreadExpr) Pos() Pos {
+	return e.TokenPos
+}
+
+// End returns the position of first character immediately after the node.
+func (e *SpreadExpr) End() Pos {
+	return e.TokenPos + 3 + e.Expr.End()
+}
+
+func (e *SpreadExpr) String() string {
+	if e.Expr == nil {
+		return "..."
+	}
+	return "..." + e.Expr.String()
 }

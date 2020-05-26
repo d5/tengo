@@ -270,9 +270,21 @@ func (p *Parser) parseCall(x Expr) *CallExpr {
 	p.exprLevel++
 
 	var list []Expr
-	for p.token != token.RParen && p.token != token.EOF {
-		list = append(list, p.parseExpr())
-
+	var ellipsis Pos
+	for p.token != token.RParen && p.token != token.EOF && !ellipsis.IsValid() {
+		if p.token == token.Ellipsis {
+			ellipsis = p.pos
+			p.next()
+			expr := p.parseExpr()
+			spread := &SpreadExpr{
+				TokenPos: ellipsis,
+				Expr:     expr,
+				In:       SpreadInCall,
+			}
+			list = append(list, spread)
+		} else {
+			list = append(list, p.parseExpr())
+		}
 		if !p.expectComma(token.RParen, "call argument") {
 			break
 		}
@@ -521,8 +533,19 @@ func (p *Parser) parseArrayLit() Expr {
 
 	var elements []Expr
 	for p.token != token.RBrack && p.token != token.EOF {
-		elements = append(elements, p.parseExpr())
-
+		if p.token == token.Ellipsis {
+			ellipsis := p.pos
+			p.next()
+			expr := p.parseExpr()
+			spread := &SpreadExpr{
+				TokenPos: ellipsis,
+				Expr:     expr,
+				In:       SpreadInArr,
+			}
+			elements = append(elements, spread)
+		} else {
+			elements = append(elements, p.parseExpr())
+		}
 		if !p.expectComma(token.RBrack, "array element") {
 			break
 		}
@@ -1020,20 +1043,37 @@ func (p *Parser) parseMapElementLit() *MapElementLit {
 	if p.trace {
 		defer untracep(tracep(p, "MapElementLit"))
 	}
-
+	var (
+		colonPos  Pos
+		valueExpr Expr
+	)
 	pos := p.pos
 	name := "_"
 	if p.token == token.Ident {
 		name = p.tokenLit
+		p.next()
 	} else if p.token == token.String {
 		v, _ := strconv.Unquote(p.tokenLit)
 		name = v
+		p.next()
+	} else if p.token == token.Ellipsis {
+		ellipsis := p.pos
+		p.next()
+		expr := p.parseExpr()
+		valueExpr = &SpreadExpr{
+			TokenPos: ellipsis,
+			Expr:     expr,
+			In:       SpreadInMap,
+		}
+		pos = NoPos
+		colonPos = NoPos
 	} else {
 		p.errorExpected(pos, "map key")
 	}
-	p.next()
-	colonPos := p.expect(token.Colon)
-	valueExpr := p.parseExpr()
+	if valueExpr == nil {
+		colonPos = p.expect(token.Colon)
+		valueExpr = p.parseExpr()
+	}
 	return &MapElementLit{
 		Key:      name,
 		KeyPos:   pos,

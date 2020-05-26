@@ -1611,3 +1611,23 @@ func (o *UserFunction) Call(args ...Object) (Object, error) {
 func (o *UserFunction) CanCall() bool {
 	return true
 }
+
+// Spreader is an interface to let user defined (custom) types to use spread
+// expression in map, array definitions or function calls.
+type Spreader interface {
+	Spread(parser.SpreadIn) (Object, error)
+}
+
+// spreadType is used internally by VM.
+type spreadType struct {
+	ObjectImpl
+}
+
+// TypeName returns the name of the type.
+func (*spreadType) TypeName() string {
+	return "spread"
+}
+
+func (*spreadType) String() string {
+	return "<spread>"
+}

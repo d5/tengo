@@ -184,6 +184,10 @@ func Equal(
 		Equal(t, expected.Size, actual.(*parser.SourceFile).Size, msg...)
 		True(t, equalIntSlice(expected.Lines,
 			actual.(*parser.SourceFile).Lines), msg...)
+	case parser.SpreadIn:
+		if expected != actual.(parser.SpreadIn) {
+			failExpectedActual(t, expected, actual, msg...)
+		}
 	case error:
 		if expected != actual.(error) {
 			failExpectedActual(t, expected, actual, msg...)

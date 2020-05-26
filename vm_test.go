@@ -3472,6 +3472,186 @@ func() {
 }()`, nil, 25)
 }
 
+func TestSpread(t *testing.T) {
+	// spread in function calls and arrays
+	expectRun(t, `
+	f := func(...a) {
+		return [...a, 3]
+	}
+	out = f(...[1, 2])
+	`, nil, ARR{1, 2, 3})
+
+	expectRun(t, `
+	f := func(a, ...b) {
+		return [a, ...b, 3]
+	}
+	out = f(...[1, 2])
+	`, nil, ARR{1, 2, 3})
+
+	expectRun(t, `
+	f := func(a, b, ...c) {
+		return [a, b, ...c, 3]
+	}
+	out = f(...[1, 2])
+	`, nil, ARR{1, 2, 3})
+
+	expectRun(t, `
+	f := func(a, ...b) {
+		return [a, ...b, 3]
+	}
+	out = f(1, ...[2])
+	`, nil, ARR{1, 2, 3})
+
+	expectRun(t, `
+	f := func(a, ...b) {
+		return [a, b, 3]
+	}
+	out = f(1, ...[2])
+	`, nil, ARR{1, ARR{2}, 3})
+
+	expectRun(t, `
+	f := func(a, b) {
+		return [a, b, 3]
+	}
+	out = f(...[1, 2])
+	`, nil, ARR{1, 2, 3})
+
+	expectRun(t, `
+	f1 := func(...a){
+		return [3, ...a]
+	}
+	f2 := func(a, ...b) {
+		return f1(...[a, ...b])
+	}
+	out = f2(...[1, 2])
+	`, nil, ARR{3, 1, 2})
+
+	expectRun(t, `
+	f1 := func(a, ...b){
+		return [3, a, ...b]
+	}
+	f2 := func(a, ...b) {
+		return f1(...[a, ...b])
+	}
+	out = f2(...[1, 2])
+	`, nil, ARR{3, 1, 2})
+
+	expectRun(t, `
+	f := func(a, ...b) {
+		return func(...a) {
+			return [3, ...a, 4]
+		}(a, ...b)
+	}
+	out = f(...[1, 2])
+	`, nil, ARR{3, 1, 2, 4})
+
+	expectRun(t, `
+	f := func(a, b, ...c) {
+		return [3, a, ...c, b]
+	}
+	out = f(...[1, 2])
+	`, nil, ARR{3, 1, 2})
+
+	expectRun(t, `
+	f := func(a, ...b) {
+		return [a, ...b, ...b, 4]
+	}
+	out = f(1, ...[2, 3])
+	`, nil, ARR{1, 2, 3, 2, 3, 4})
+
+	expectRun(t, `
+	f := func(a, ...b) {
+		c := immutable([...b, 4])
+		return [a, ...b, ...c]
+	}
+	out = f(1, ...[2, 3])
+	`, nil, ARR{1, 2, 3, 2, 3, 4})
+
+	expectRun(t, `
+	f := func(a, ...b) {
+		c := [...b, 4]
+		return func(){
+			return [a, ...b, ...c]
+		}()
+	}
+	out = f(1, ...immutable([2, 3]))
+	`, nil, ARR{1, 2, 3, 2, 3, 4})
+
+	expectRun(t, `out = [...func(...a){ return [...a, "c"];}(...["a", "b"])]`, nil,
+		ARR{"a", "b", "c"})
+	expectRun(t, `out = [...(true?["a", "b", "c"]:[])]`, nil,
+		ARR{"a", "b", "c"})
+	expectRun(t, `out = [...["a", "b", "c"]]`, nil, ARR{"a", "b", "c"})
+	expectRun(t, `out = [...["a", "b"], "c"]`, nil, ARR{"a", "b", "c"})
+	expectRun(t, `out = [...[], "a", "b", "c"]`, nil, ARR{"a", "b", "c"})
+	expectRun(t, `out = immutable([...immutable(["a", "b", "c"])])`, nil,
+		IARR{"a", "b", "c"})
+	expectRun(t, `out = immutable([...["a", "b"], "c"])`, nil,
+		IARR{"a", "b", "c"})
+	expectRun(t, `out = immutable([...[], "a", "b", "c"])`, nil,
+		IARR{"a", "b", "c"})
+
+	// spread in maps
+
+	expectRun(t, `out = {...{}}`, nil, MAP{})
+	expectRun(t, `out = {...{}, key: "val"}`, nil, MAP{"key": "val"})
+	expectRun(t, `out = {...{k1: "v1"}, k2: "v2"}`, nil,
+		MAP{"k1": "v1", "k2": "v2"})
+	expectRun(t, `out = {k2: "v2", ...{k1: "v1"}}`, nil,
+		MAP{"k1": "v1", "k2": "v2"})
+	expectRun(t, `out = {k2: "v2", ...{k1: "v1"}, ...{}}`, nil,
+		MAP{"k1": "v1", "k2": "v2"})
+	expectRun(t, `out = {k2: "v2", ...{k1: "v1"}, ...{k3: 3}}`, nil,
+		MAP{"k1": "v1", "k2": "v2", "k3": 3})
+	expectRun(t, `a := {k1: "v1"}; out = {k2: "v2", ...a, ...{k3: 3}}`, nil,
+		MAP{"k1": "v1", "k2": "v2", "k3": 3})
+	expectRun(t, `a := {k1: "v1"}; out = {k2: "v2", ...a, ...a}`, nil,
+		MAP{"k1": "v1", "k2": "v2"})
+	expectRun(t, `a := immutable({k1: "v1"}); out = {k2: "v2", ...a}`,
+		nil, MAP{"k1": "v1", "k2": "v2"})
+	expectRun(t, `out = {...false?undefined:{k1: "v1"}}`, nil,
+		MAP{"k1": "v1"})
+	expectRun(t, `out = {...func(){ return {k1: "v1"};}(), ...{"k2": "v2"}}`,
+		nil, MAP{"k1": "v1", "k2": "v2"})
+
+	// spread custom types
+	custom := &SpreadMock{Map: map[parser.SpreadIn]tengo.Object{
+		parser.SpreadInMap: toObject(MAP{"k1": "v1", "k2": "v2"})}}
+	expectRun(t, `out = {k3: "v3", ...dict}`,
+		Opts().Symbol("dict", custom).Skip2ndPass(),
+		MAP{"k1": "v1", "k2": "v2", "k3": "v3"})
+
+	custom.Map = map[parser.SpreadIn]tengo.Object{
+		parser.SpreadInArr: toObject(ARR{"a", "b"})}
+	expectRun(t, `out = [...arr, "c"]`,
+		Opts().Symbol("arr", custom).Skip2ndPass(),
+		ARR{"a", "b", "c"})
+
+	custom.Map = map[parser.SpreadIn]tengo.Object{
+		parser.SpreadInCall: toObject(ARR{"a", "b"})}
+	expectRun(t, `
+	f := func(...a) {
+		return append(a, "c")
+	}
+	out = f(...input)`,
+		Opts().Symbol("input", custom).Skip2ndPass(),
+		ARR{"a", "b", "c"})
+
+	// spread errors
+	expectError(t, `[...1]`, nil, "Runtime Error: not an array: int")
+	expectError(t, `[..."a"]`, nil, "Runtime Error: not an array: string")
+	expectError(t, `[...{}]`, nil, "Runtime Error: not an array: map")
+	expectError(t, `[...undefined]`, nil,
+		"Runtime Error: not an array: undefined")
+	expectError(t, `{...1}`, nil, "Runtime Error: not a map: int")
+	expectError(t, `{..."a"}`, nil, "Runtime Error: not a map: string")
+	expectError(t, `{...[]}`, nil, "Runtime Error: not a map: array")
+	expectError(t, `{...undefined}`, nil,
+		"Runtime Error: not a map: undefined")
+	expectError(t, `func(a) {}(...[1, 2])`, nil,
+		"Runtime Error: wrong number of arguments: want=1, got=2")
+}
+
 func expectRun(
 	t *testing.T,
 	input string,
@@ -3826,4 +4006,28 @@ func objectZeroCopy(o tengo.Object) tengo.Object {
 	default:
 		panic(fmt.Errorf("unknown object type: %s", o.TypeName()))
 	}
+}
+
+type SpreadMock struct {
+	tengo.ObjectImpl
+	Map map[parser.SpreadIn]tengo.Object
+}
+
+func (m *SpreadMock) Spread(in parser.SpreadIn) (tengo.Object, error) {
+	o, ok := m.Map[in]
+	if ok {
+		if e, ok := o.(*tengo.Error); ok {
+			return nil, errors.New(e.Value.String())
+		}
+		return o, nil
+	}
+	return tengo.UndefinedValue, nil
+}
+
+func (m *SpreadMock) TypeName() string {
+	return "SpreadMock"
+}
+
+func (m *SpreadMock) String() string {
+	return "<SpreadMock>"
 }

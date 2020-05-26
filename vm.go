@@ -95,6 +95,8 @@ func (v *VM) Run() (err error) {
 }
 
 func (v *VM) run() {
+	var spreadPtr Object = &spreadType{}
+
 	for atomic.LoadInt64(&v.aborting) == 0 {
 		v.ip++
 
@@ -277,6 +279,44 @@ func (v *VM) run() {
 
 			var elements []Object
 			for i := v.sp - numElements; i < v.sp; i++ {
+				if v.stack[i] == spreadPtr {
+					i++
+					switch arr := v.stack[i].(type) {
+					case *Array:
+						for _, elt := range arr.Value {
+							elements = append(elements, elt)
+						}
+					case *ImmutableArray:
+						for _, elt := range arr.Value {
+							elements = append(elements, elt)
+						}
+					case Spreader:
+						o, err := arr.Spread(parser.SpreadInArr)
+						if err != nil {
+							v.err = err
+							return
+						}
+						switch arr := o.(type) {
+						case *Array:
+							for _, elt := range arr.Value {
+								elements = append(elements, elt)
+							}
+						case *ImmutableArray:
+							for _, elt := range arr.Value {
+								elements = append(elements, elt)
+							}
+						default:
+							v.err = fmt.Errorf("array spread got type '%T'",
+								arr.TypeName())
+							return
+						}
+					default:
+						v.err = fmt.Errorf("array spread got type '%T'",
+							arr.TypeName())
+						return
+					}
+					continue
+				}
 				elements = append(elements, v.stack[i])
 			}
 			v.sp -= numElements
@@ -296,6 +336,44 @@ func (v *VM) run() {
 			kv := make(map[string]Object)
 			for i := v.sp - numElements; i < v.sp; i += 2 {
 				key := v.stack[i]
+				if key == spreadPtr {
+					// merge maps
+					switch m := v.stack[i+1].(type) {
+					case *Map:
+						for k, v := range m.Value {
+							kv[k] = v
+						}
+					case *ImmutableMap:
+						for k, v := range m.Value {
+							kv[k] = v
+						}
+					case Spreader:
+						o, err := m.Spread(parser.SpreadInMap)
+						if err != nil {
+							v.err = err
+							return
+						}
+						switch m := o.(type) {
+						case *Map:
+							for k, v := range m.Value {
+								kv[k] = v
+							}
+						case *ImmutableMap:
+							for k, v := range m.Value {
+								kv[k] = v
+							}
+						default:
+							v.err = fmt.Errorf("map spread got type '%T'",
+								m.TypeName())
+							return
+						}
+					default:
+						v.err = fmt.Errorf("map spread got type '%T'",
+							m.TypeName())
+						return
+					}
+					continue
+				}
 				value := v.stack[i+1]
 				kv[key.(*String).Value] = value
 			}
@@ -538,6 +616,51 @@ func (v *VM) run() {
 		case parser.OpCall:
 			numArgs := int(v.curInsts[v.ip+1])
 			v.ip++
+
+			if numArgs > 0 && v.stack[v.sp-1] == spreadPtr {
+				v.sp -= 2
+				switch arr := v.stack[v.sp].(type) {
+				case *Array:
+					for _, item := range arr.Value {
+						v.stack[v.sp] = item
+						v.sp++
+					}
+					numArgs += len(arr.Value) - 1
+				case *ImmutableArray:
+					for _, item := range arr.Value {
+						v.stack[v.sp] = item
+						v.sp++
+					}
+					numArgs += len(arr.Value) - 1
+				case Spreader:
+					o, err := arr.Spread(parser.SpreadInCall)
+					if err != nil {
+						v.err = err
+						return
+					}
+					switch arr := o.(type) {
+					case *Array:
+						for _, item := range arr.Value {
+							v.stack[v.sp] = item
+							v.sp++
+						}
+						numArgs += len(arr.Value) - 1
+					case *ImmutableArray:
+						for _, item := range arr.Value {
+							v.stack[v.sp] = item
+							v.sp++
+						}
+						numArgs += len(arr.Value) - 1
+					default:
+						v.err = fmt.Errorf("not an array: %s", arr.TypeName())
+						return
+					}
+				default:
+					v.err = fmt.Errorf("not an array: %s", arr.TypeName())
+					return
+				}
+			}
+
 			value := v.stack[v.sp-1-numArgs]
 			if !value.CanCall() {
 				v.err = fmt.Errorf("not callable: %s", value.TypeName())
@@ -839,6 +962,37 @@ func (v *VM) run() {
 			val := iterator.(Iterator).Value()
 			v.stack[v.sp] = val
 			v.sp++
+		case parser.OpSpread:
+			v.ip++
+			in := parser.SpreadIn(v.curInsts[v.ip])
+			switch in {
+			case parser.SpreadInCall:
+				v.stack[v.sp] = spreadPtr
+				v.sp++
+			case parser.SpreadInMap:
+				switch m := v.stack[v.sp-1].(type) {
+				case *Map, *ImmutableMap, Spreader:
+					v.stack[v.sp-1] = spreadPtr
+					v.stack[v.sp] = m
+					v.sp++
+				default:
+					v.err = fmt.Errorf("not a map: %s", m.TypeName())
+					return
+				}
+			case parser.SpreadInArr:
+				switch arr := v.stack[v.sp-1].(type) {
+				case *Array, *ImmutableArray, Spreader:
+					v.stack[v.sp-1] = spreadPtr
+					v.stack[v.sp] = arr
+					v.sp++
+				default:
+					v.err = fmt.Errorf("not an array: %s", arr.TypeName())
+					return
+				}
+			default:
+				v.err = fmt.Errorf("unknown spread: %s", in)
+				return
+			}
 		case parser.OpSuspend:
 			return
 		default:

@@ -339,14 +339,26 @@ func (c *Compiler) Compile(node parser.Node) error {
 			c.emit(node, parser.OpGetFree, symbol.Index)
 		}
 	case *parser.ArrayLit:
+		spread := 0
 		for _, elem := range node.Elements {
-			if err := c.Compile(elem); err != nil {
+			if expr, ok := elem.(*parser.SpreadExpr); ok {
+				if err := c.Compile(expr); err != nil {
+					return err
+				}
+				spread++
+			} else if err := c.Compile(elem); err != nil {
 				return err
 			}
 		}
-		c.emit(node, parser.OpArray, len(node.Elements))
+		c.emit(node, parser.OpArray, len(node.Elements)+spread)
 	case *parser.MapLit:
 		for _, elt := range node.Elements {
+			if expr, ok := elt.Value.(*parser.SpreadExpr); ok {
+				if err := c.Compile(expr); err != nil {
+					return err
+				}
+				continue
+			}
 			// key
 			if len(elt.Key) > MaxStringLen {
 				return c.error(node, ErrStringLimit)
@@ -496,6 +508,19 @@ func (c *Compiler) Compile(node parser.Node) error {
 				return err
 			}
 			c.emit(node, parser.OpReturn, 1)
+		}
+	case *parser.SpreadExpr:
+		switch node.In {
+		case parser.SpreadInCall, parser.SpreadInMap, parser.SpreadInArr:
+			if node.Expr == nil {
+				return c.errorf(node, "spread expression is nil")
+			}
+			if err := c.Compile(node.Expr); err != nil {
+				return err
+			}
+			c.emit(node, parser.OpSpread, int(node.In))
+		default:
+			return c.errorf(node, "spread (...) not allowed")
 		}
 	case *parser.CallExpr:
 		if err := c.Compile(node.Func); err != nil {
