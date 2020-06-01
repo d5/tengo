@@ -296,6 +296,19 @@ func TestParseCall(t *testing.T) {
 					intLit(3, p(1, 11)))))
 	})
 
+	expectParse(t, "add(1, 2, ...v)", func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				callExpr(
+					ident("add", p(1, 1)),
+					p(1, 4), p(1, 15),
+					intLit(1, p(1, 5)),
+					intLit(2, p(1, 8)),
+					spreadExpr(p(1, 11),
+						ident("v", p(1, 14)),
+					))))
+	})
+
 	expectParse(t, "a = add(1, 2, 3)", func(p pfn) []Stmt {
 		return stmts(
 			assignStmt(
@@ -420,6 +433,14 @@ func TestParseCall(t *testing.T) {
 						stringLit("c", p(1, 8))),
 					p(1, 9), p(1, 10))))
 	})
+
+	expectParseError(t, `add(...a, 1)`)
+	expectParseError(t, `add(...a, ...b)`)
+	expectParseError(t, `add(1, ...a, ...b)`)
+	expectParseError(t, `add(...)`)
+	expectParseError(t, `add(1, ...)`)
+	expectParseError(t, `add(1, ..., )`)
+	expectParseError(t, `add(a...)`)
 }
 
 func TestParseChar(t *testing.T) {
@@ -1695,6 +1716,10 @@ func importExpr(moduleName string, pos Pos) *ImportExpr {
 	}
 }
 
+func spreadExpr(pos Pos, expr Expr) *SpreadExpr {
+	return &SpreadExpr{TokenPos: pos, Expr: expr}
+}
+
 func exprs(list ...Expr) []Expr {
 	return list
 }
@@ -2012,6 +2037,11 @@ func equalExpr(t *testing.T, expected, actual Expr) {
 			actual.(*CondExpr).QuestionPos)
 		require.Equal(t, expected.ColonPos,
 			actual.(*CondExpr).ColonPos)
+	case *SpreadExpr:
+		equalExpr(t, expected.Expr,
+			actual.(*SpreadExpr).Expr)
+		require.Equal(t, expected.TokenPos,
+			actual.(*SpreadExpr).TokenPos)
 	default:
 		panic(fmt.Errorf("unknown type: %T", expected))
 	}

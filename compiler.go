@@ -497,6 +497,14 @@ func (c *Compiler) Compile(node parser.Node) error {
 			}
 			c.emit(node, parser.OpReturn, 1)
 		}
+	case *parser.SpreadExpr:
+		if node.Expr == nil {
+			return c.errorf(node, "spread expression is nil")
+		}
+		if err := c.Compile(node.Expr); err != nil {
+			return err
+		}
+		c.emit(node, parser.OpSpread)
 	case *parser.CallExpr:
 		if err := c.Compile(node.Func); err != nil {
 			return err

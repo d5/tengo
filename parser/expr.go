@@ -595,3 +595,28 @@ func (e *UndefinedLit) End() Pos {
 func (e *UndefinedLit) String() string {
 	return "undefined"
 }
+
+// SpreadExpr node stands for the "..." spread expression.
+type SpreadExpr struct {
+	TokenPos Pos // position of "..."
+	Expr     Expr
+}
+
+func (e *SpreadExpr) exprNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (e *SpreadExpr) Pos() Pos {
+	return e.TokenPos
+}
+
+// End returns the position of first character immediately after the node.
+func (e *SpreadExpr) End() Pos {
+	return e.TokenPos + 3 + e.Expr.End()
+}
+
+func (e *SpreadExpr) String() string {
+	if e.Expr == nil {
+		return "..."
+	}
+	return e.Expr.String() + "..."
+}

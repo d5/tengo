@@ -95,6 +95,8 @@ func (v *VM) Run() (err error) {
 }
 
 func (v *VM) run() {
+	var spreadPtr Object = &spreadType{}
+
 	for atomic.LoadInt64(&v.aborting) == 0 {
 		v.ip++
 
@@ -538,6 +540,51 @@ func (v *VM) run() {
 		case parser.OpCall:
 			numArgs := int(v.curInsts[v.ip+1])
 			v.ip++
+
+			if numArgs > 0 && v.stack[v.sp-1] == spreadPtr {
+				v.sp -= 2
+				switch arr := v.stack[v.sp].(type) {
+				case *Array:
+					for _, item := range arr.Value {
+						v.stack[v.sp] = item
+						v.sp++
+					}
+					numArgs += len(arr.Value) - 1
+				case *ImmutableArray:
+					for _, item := range arr.Value {
+						v.stack[v.sp] = item
+						v.sp++
+					}
+					numArgs += len(arr.Value) - 1
+				case Spreader:
+					o, err := arr.Spread()
+					if err != nil {
+						v.err = err
+						return
+					}
+					switch arr := o.(type) {
+					case *Array:
+						for _, item := range arr.Value {
+							v.stack[v.sp] = item
+							v.sp++
+						}
+						numArgs += len(arr.Value) - 1
+					case *ImmutableArray:
+						for _, item := range arr.Value {
+							v.stack[v.sp] = item
+							v.sp++
+						}
+						numArgs += len(arr.Value) - 1
+					default:
+						v.err = fmt.Errorf("not an array: %s", arr.TypeName())
+						return
+					}
+				default:
+					v.err = fmt.Errorf("not an array: %s", arr.TypeName())
+					return
+				}
+			}
+
 			value := v.stack[v.sp-1-numArgs]
 			if !value.CanCall() {
 				v.err = fmt.Errorf("not callable: %s", value.TypeName())
@@ -838,6 +885,9 @@ func (v *VM) run() {
 			v.sp--
 			val := iterator.(Iterator).Value()
 			v.stack[v.sp] = val
+			v.sp++
+		case parser.OpSpread:
+			v.stack[v.sp] = spreadPtr
 			v.sp++
 		case parser.OpSuspend:
 			return
