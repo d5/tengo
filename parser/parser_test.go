@@ -296,7 +296,7 @@ func TestParseCall(t *testing.T) {
 					intLit(3, p(1, 11)))))
 	})
 
-	expectParse(t, "add(1, 2, ...v)", func(p pfn) []Stmt {
+	expectParse(t, "add(1, 2, v...)", func(p pfn) []Stmt {
 		return stmts(
 			exprStmt(
 				callExpr(
@@ -304,8 +304,8 @@ func TestParseCall(t *testing.T) {
 					p(1, 4), p(1, 15),
 					intLit(1, p(1, 5)),
 					intLit(2, p(1, 8)),
-					spreadExpr(p(1, 11),
-						ident("v", p(1, 14)),
+					spreadExpr(p(1, 12),
+						ident("v", p(1, 11)),
 					))))
 	})
 
@@ -435,12 +435,13 @@ func TestParseCall(t *testing.T) {
 	})
 
 	expectParseError(t, `add(...a, 1)`)
-	expectParseError(t, `add(...a, ...b)`)
-	expectParseError(t, `add(1, ...a, ...b)`)
+	expectParseError(t, `add(a..., 1)`)
+	expectParseError(t, `add(a..., b...)`)
+	expectParseError(t, `add(1, a..., b...)`)
 	expectParseError(t, `add(...)`)
 	expectParseError(t, `add(1, ...)`)
 	expectParseError(t, `add(1, ..., )`)
-	expectParseError(t, `add(a...)`)
+	expectParseError(t, `add(...a)`)
 }
 
 func TestParseChar(t *testing.T) {

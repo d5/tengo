@@ -483,7 +483,7 @@ func TestCompiler_Compile(t *testing.T) {
 				intObject(3),
 				intObject(0))))
 
-	expectCompile(t, `f1 := func(a) { return a }; f1(...[1, 2]);`,
+	expectCompile(t, `f1 := func(a) { return a }; f1([1, 2]...);`,
 		bytecode(
 			concatInsts(
 				tengo.MakeInstruction(parser.OpConstant, 0),

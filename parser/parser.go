@@ -272,17 +272,17 @@ func (p *Parser) parseCall(x Expr) *CallExpr {
 	var list []Expr
 	var ellipsis Pos
 	for p.token != token.RParen && p.token != token.EOF && !ellipsis.IsValid() {
+		expr := p.parseExpr()
 		if p.token == token.Ellipsis {
 			ellipsis = p.pos
 			p.next()
-			expr := p.parseExpr()
 			spread := &SpreadExpr{
 				TokenPos: ellipsis,
 				Expr:     expr,
 			}
 			list = append(list, spread)
 		} else {
-			list = append(list, p.parseExpr())
+			list = append(list, expr)
 		}
 		if !p.expectComma(token.RParen, "call argument") {
 			break

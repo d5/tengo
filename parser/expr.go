@@ -611,7 +611,7 @@ func (e *SpreadExpr) Pos() Pos {
 
 // End returns the position of first character immediately after the node.
 func (e *SpreadExpr) End() Pos {
-	return e.TokenPos + 3 + e.Expr.End()
+	return e.TokenPos + 3
 }
 
 func (e *SpreadExpr) String() string {
