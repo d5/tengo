@@ -1611,3 +1611,9 @@ func (o *UserFunction) Call(args ...Object) (Object, error) {
 func (o *UserFunction) CanCall() bool {
 	return true
 }
+
+// Spreader is an interface to let user defined (custom) types to use spread
+// expression in function calls.
+type Spreader interface {
+	Spread() (Object, error)
+}

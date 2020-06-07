@@ -290,10 +290,21 @@ func TestParseCall(t *testing.T) {
 			exprStmt(
 				callExpr(
 					ident("add", p(1, 1)),
-					p(1, 4), p(1, 12),
+					p(1, 4), p(1, 12), NoPos,
 					intLit(1, p(1, 5)),
 					intLit(2, p(1, 8)),
 					intLit(3, p(1, 11)))))
+	})
+
+	expectParse(t, "add(1, 2, v...)", func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				callExpr(
+					ident("add", p(1, 1)),
+					p(1, 4), p(1, 15), p(1, 12),
+					intLit(1, p(1, 5)),
+					intLit(2, p(1, 8)),
+					ident("v", p(1, 11)))))
 	})
 
 	expectParse(t, "a = add(1, 2, 3)", func(p pfn) []Stmt {
@@ -304,7 +315,7 @@ func TestParseCall(t *testing.T) {
 				exprs(
 					callExpr(
 						ident("add", p(1, 5)),
-						p(1, 8), p(1, 16),
+						p(1, 8), p(1, 16), NoPos,
 						intLit(1, p(1, 9)),
 						intLit(2, p(1, 12)),
 						intLit(3, p(1, 15)))),
@@ -321,7 +332,7 @@ func TestParseCall(t *testing.T) {
 				exprs(
 					callExpr(
 						ident("add", p(1, 8)),
-						p(1, 11), p(1, 19),
+						p(1, 11), p(1, 19), NoPos,
 						intLit(1, p(1, 12)),
 						intLit(2, p(1, 15)),
 						intLit(3, p(1, 18)))),
@@ -334,7 +345,7 @@ func TestParseCall(t *testing.T) {
 			exprStmt(
 				callExpr(
 					ident("add", p(1, 1)),
-					p(1, 4), p(1, 26),
+					p(1, 4), p(1, 26), NoPos,
 					binaryExpr(
 						ident("a", p(1, 5)),
 						intLit(1, p(1, 9)),
@@ -381,7 +392,7 @@ func TestParseCall(t *testing.T) {
 									ident("b", p(1, 18)),
 									token.Add,
 									p(1, 16))))),
-					p(1, 21), p(1, 26),
+					p(1, 21), p(1, 26), NoPos,
 					intLit(1, p(1, 22)),
 					intLit(2, p(1, 25)))))
 	})
@@ -393,7 +404,7 @@ func TestParseCall(t *testing.T) {
 					selectorExpr(
 						ident("a", p(1, 1)),
 						stringLit("b", p(1, 3))),
-					p(1, 4), p(1, 5))))
+					p(1, 4), p(1, 5), NoPos)))
 	})
 
 	expectParse(t, `a.b.c()`, func(p pfn) []Stmt {
@@ -405,7 +416,7 @@ func TestParseCall(t *testing.T) {
 							ident("a", p(1, 1)),
 							stringLit("b", p(1, 3))),
 						stringLit("c", p(1, 5))),
-					p(1, 6), p(1, 7))))
+					p(1, 6), p(1, 7), NoPos)))
 	})
 
 	expectParse(t, `a["b"].c()`, func(p pfn) []Stmt {
@@ -418,8 +429,17 @@ func TestParseCall(t *testing.T) {
 							stringLit("b", p(1, 3)),
 							p(1, 2), p(1, 6)),
 						stringLit("c", p(1, 8))),
-					p(1, 9), p(1, 10))))
+					p(1, 9), p(1, 10), NoPos)))
 	})
+
+	expectParseError(t, `add(...a, 1)`)
+	expectParseError(t, `add(a..., 1)`)
+	expectParseError(t, `add(a..., b...)`)
+	expectParseError(t, `add(1, a..., b...)`)
+	expectParseError(t, `add(...)`)
+	expectParseError(t, `add(1, ...)`)
+	expectParseError(t, `add(1, ..., )`)
+	expectParseError(t, `add(...a)`)
 }
 
 func TestParseChar(t *testing.T) {
@@ -1001,7 +1021,7 @@ func TestParseImport(t *testing.T) {
 					selectorExpr(
 						importExpr("mod1", p(1, 1)),
 						stringLit("func1", p(1, 16))),
-					p(1, 21), p(1, 22))))
+					p(1, 21), p(1, 22), NoPos)))
 	})
 
 	expectParse(t, `for x, y in import("mod1") {}`, func(p pfn) []Stmt {
@@ -1753,10 +1773,11 @@ func parenExpr(x Expr, lparen, rparen Pos) *ParenExpr {
 
 func callExpr(
 	f Expr,
-	lparen, rparen Pos,
+	lparen, rparen, ellipsis Pos,
 	args ...Expr,
 ) *CallExpr {
-	return &CallExpr{Func: f, LParen: lparen, RParen: rparen, Args: args}
+	return &CallExpr{Func: f, LParen: lparen, RParen: rparen,
+		Ellipsis: ellipsis, Args: args}
 }
 
 func indexExpr(
