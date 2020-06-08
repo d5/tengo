@@ -194,64 +194,28 @@ Only the last parameter can be variadic. The following code is also illegal:
 illegal := func(a..., b) { /*... */ }
 ```
 
-### Function Calls
-
-Function calls are strict for non-variadic function calls in terms of number of
-arguments provided. Provide exact number of arguments to non-variadic
-functions. But, callable objects, user functions created in Go and provided to
-Tengo scripts are variadic in nature so user must return appropriate error
-messages to caller about number and types of arguments if they are not as
-expected.
-
-In function calls, ellipsis `...` can be used to denote an literal/variable
-argument will be spread/unpacked/expanded (these words can be used
-interchangeably throughout the documentation). `Array` and `ImmutableArray`
-objects can be in front of the ellipsis if and only if it is last argument in
-function calls, similar to Go. Unlike Go, arrays can be spread onto non-variadic
-functions as well. See examples below;
+When calling a function, the number of passing arguments must match that of
+function definition.
 
 ```golang
 f := func(a, b) {}
-
 f(1, 2, 3) // Runtime Error: wrong number of arguments: want=2, got=3
 ```
 
-```golang
-f := func(a, ...b) {
-    // a == 1
-    // b == [2, 3]
-}
-f(1, [2, 3]...)
-```
+Like Go, you can use ellipsis `...` to pass array-type value as its last parameter:
 
 ```golang
-f := func(a, b) {
-    // a == 1
-    // b == 2
-}
-array := immutable([1, 2])
-f(array...)
-```
+f1 := func(a, b, c) { return a + b + c }
+f1([1, 2, 3]...)    // => 6
+f1(1, [2, 3]...)    // => 6
+f1(1, 2, [3]...)    // => 6
+f1([1, 2]...)       // Runtime Error: wrong number of arguments: want=3, got=2
 
-```golang
-f := func(a, b) {}
-
-array := [1, 2, 3]
-f(array...) // Runtime Error: wrong number of arguments: want=2, got=3
-```
-
-```golang
-f := func(a, b, ...c) {
-    // a == 1
-    // b == 2
-    // c == [3, 4]
-}
-f(1, [2, 3, 4]...)
-```
-
-```golang
-array := append([1], [2, 3]...)
-// array == [1, 2, 3]
+f2 := func(a, ...b) {}
+f2(1)               // valid; a = 1, b = []
+f2(1, 2)            // valid; a = 1, b = [2]
+f2(1, 2, 3)         // valid; a = 1, b = [2, 3]
+f2([1, 2, 3]...)    // valid; a = 1, b = [2, 3]
 ```
 
 ## Variables and Scopes
@@ -442,8 +406,7 @@ d := "hello world"[2:10]     // == "llo worl"
 c := [1, 2, 3, 4, 5][-1:10]  // == [1, 2, 3, 4, 5]
 ```
 
-**Note: Keywords `break, continue, else, for, func, error, immutable, if,
-return, export, true, false, in, undefined, import` cannot be used as selectors.**
+**Note: Keywords cannot be used as selectors.**
 
 ```golang
 a := {in: true} // Parse Error: expected map key, found 'in'
