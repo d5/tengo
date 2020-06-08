@@ -52,6 +52,12 @@ chmod +x myapp.tengo
 
 **Note: Your source file must have `.tengo` extension.**
 
+## Resolving Relative Import Paths
+
+If there are tengo source module files which are imported with relative import
+paths, CLI has `-resolve` flag. Flag enables to import a module relative to
+importing file. This behavior will be default at version 3.
+
 ## Tengo REPL
 
 You can run Tengo [REPL](https://en.wikipedia.org/wiki/Read–eval–print_loop)

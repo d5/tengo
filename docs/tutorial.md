@@ -194,6 +194,30 @@ Only the last parameter can be variadic. The following code is also illegal:
 illegal := func(a..., b) { /*... */ }
 ```
 
+When calling a function, the number of passing arguments must match that of
+function definition.
+
+```golang
+f := func(a, b) {}
+f(1, 2, 3) // Runtime Error: wrong number of arguments: want=2, got=3
+```
+
+Like Go, you can use ellipsis `...` to pass array-type value as its last parameter:
+
+```golang
+f1 := func(a, b, c) { return a + b + c }
+f1([1, 2, 3]...)    // => 6
+f1(1, [2, 3]...)    // => 6
+f1(1, 2, [3]...)    // => 6
+f1([1, 2]...)       // Runtime Error: wrong number of arguments: want=3, got=2
+
+f2 := func(a, ...b) {}
+f2(1)               // valid; a = 1, b = []
+f2(1, 2)            // valid; a = 1, b = [2]
+f2(1, 2, 3)         // valid; a = 1, b = [2, 3]
+f2([1, 2, 3]...)    // valid; a = 1, b = [2, 3]
+```
+
 ## Variables and Scopes
 
 A value can be assigned to a variable using assignment operator `:=` and `=`.
@@ -380,6 +404,20 @@ b := [1, 2, 3, 4, 5][3:]     // == [4, 5]
 c := [1, 2, 3, 4, 5][:3]     // == [1, 2, 3]
 d := "hello world"[2:10]     // == "llo worl"
 c := [1, 2, 3, 4, 5][-1:10]  // == [1, 2, 3, 4, 5]
+```
+
+**Note: Keywords cannot be used as selectors.**
+
+```golang
+a := {in: true} // Parse Error: expected map key, found 'in'
+a.func = ""     // Parse Error: expected selector, found 'func'
+```
+
+Use double quotes and indexer to use keywords with maps.
+
+```golang
+a := {"in": true}
+a["func"] = ""
 ```
 
 ## Statements
