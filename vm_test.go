@@ -3523,16 +3523,6 @@ func TestSpread(t *testing.T) {
 	out = f(1, immutable([2, 3])...)
 	`, nil, ARR{1, 2, 3, 2, 3, 4})
 
-	// spread custom types
-	custom := &SpreadMock{Object: toObject(ARR{"a", "b"})}
-	expectRun(t, `
-	f := func(...a) {
-		return append(a, "c")
-	}
-	out = f(input...)`,
-		Opts().Symbol("input", custom).Skip2ndPass(),
-		ARR{"a", "b", "c"})
-
 	expectError(t, `func(a) {}([1, 2]...)`, nil,
 		"Runtime Error: wrong number of arguments: want=1, got=2")
 	expectError(t, `func(a, b, c) {}([1, 2]...)`, nil,
@@ -3893,25 +3883,4 @@ func objectZeroCopy(o tengo.Object) tengo.Object {
 	default:
 		panic(fmt.Errorf("unknown object type: %s", o.TypeName()))
 	}
-}
-
-type SpreadMock struct {
-	tengo.ObjectImpl
-	Object tengo.Object
-	Error  error
-}
-
-func (m *SpreadMock) Spread() (tengo.Object, error) {
-	if m.Error == nil {
-		return m.Object, nil
-	}
-	return nil, m.Error
-}
-
-func (m *SpreadMock) TypeName() string {
-	return "SpreadMock"
-}
-
-func (m *SpreadMock) String() string {
-	return "<SpreadMock>"
 }

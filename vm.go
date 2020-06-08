@@ -561,29 +561,6 @@ func (v *VM) run() {
 						v.sp++
 					}
 					numArgs += len(arr.Value) - 1
-				case Spreader:
-					o, err := arr.Spread()
-					if err != nil {
-						v.err = err
-						return
-					}
-					switch arr := o.(type) {
-					case *Array:
-						for _, item := range arr.Value {
-							v.stack[v.sp] = item
-							v.sp++
-						}
-						numArgs += len(arr.Value) - 1
-					case *ImmutableArray:
-						for _, item := range arr.Value {
-							v.stack[v.sp] = item
-							v.sp++
-						}
-						numArgs += len(arr.Value) - 1
-					default:
-						v.err = fmt.Errorf("not an array: %s", arr.TypeName())
-						return
-					}
 				default:
 					v.err = fmt.Errorf("not an array: %s", arr.TypeName())
 					return
