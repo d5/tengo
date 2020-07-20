@@ -1030,6 +1030,12 @@ out = f1() ?: f2()
 	expectRun(t, `out = {}; out.y = out.x ?: 2`, nil, MAP{"y": 2})
 	expectRun(t, `out = {x:0}; out.y = out.x ?: 2`, nil, MAP{"x": 0, "y": 2})
 	expectRun(t, `out = {x:5}; out.y = out.x ?: 2`, nil, MAP{"x": 5, "y": 5})
+
+	expectRun(t, `m := {}; out = m.x ?: m.y ?: 3`, nil, 3)
+	expectRun(t, `m := {x:0,y:0}; out = m.x ?: m.y ?: 3`, nil, 3)
+	expectRun(t, `m := {x:0,y:2}; out = m.x ?: m.y ?: 3`, nil, 2)
+	expectRun(t, `m := {x:1}; out = m.x ?: m.y ?: 3`, nil, 1)
+
 	expectError(t, `m := {}; m.x ?:= "2"`, nil, "panic: runtime error: index out of range [-1]")
 }
 
@@ -1039,6 +1045,11 @@ func TestNullCoalesceExpr(t *testing.T) {
 	expectRun(t, `out = undefined; out ??= "b"`, nil, "b")
 	expectRun(t, `out = 1; out ??= "b"`, nil, 1)
 	expectRun(t, `out = {}; out.y = out.x ?? 2`, nil, MAP{"y": 2})
+
+	expectRun(t, `m := {}; out = m.x ?? m.y ?? 3`, nil, 3)
+	expectRun(t, `m := {x:1}; out = m.x ?? m.y ?? 3`, nil, 1)
+	expectRun(t, `m := {y:2}; out = m.x ?? m.y ?? 3`, nil, 2)
+
 	expectError(t, `m := {}; m.x ??= "2"`, nil, "panic: runtime error: index out of range [-1]")
 }
 
