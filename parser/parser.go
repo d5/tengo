@@ -159,16 +159,17 @@ func (p *Parser) parseExpr() Expr {
 		defer untracep(tracep(p, "Expression"))
 	}
 
-	expr := p.parseBinaryExpr(token.LowestPrec + 1)
+	expr := p.parseBinaryOrCoalesceExpr(token.LowestPrec + 1)
 
-	// ternary conditional expression
-	if p.token == token.Question {
+	switch p.token {
+	case token.Question:
+		// ternary conditional expression
 		return p.parseCondExpr(expr)
 	}
 	return expr
 }
 
-func (p *Parser) parseBinaryExpr(prec1 int) Expr {
+func (p *Parser) parseBinaryOrCoalesceExpr(prec1 int) Expr {
 	if p.trace {
 		defer untracep(tracep(p, "BinaryExpression"))
 	}
@@ -183,13 +184,30 @@ func (p *Parser) parseBinaryExpr(prec1 int) Expr {
 
 		pos := p.expect(op)
 
-		y := p.parseBinaryExpr(prec + 1)
+		y := p.parseBinaryOrCoalesceExpr(prec + 1)
 
-		x = &BinaryExpr{
-			LHS:      x,
-			RHS:      y,
-			Token:    op,
-			TokenPos: pos,
+		switch op {
+		case token.FalseCoalesce:
+			x = &FalseCoalesceExpr{BinaryExpr{
+				LHS:      x,
+				RHS:      y,
+				Token:    op,
+				TokenPos: pos,
+			}}
+		case token.NullCoalesce:
+			x = &NullCoalesceExpr{BinaryExpr{
+				LHS:      x,
+				RHS:      y,
+				Token:    op,
+				TokenPos: pos,
+			}}
+		default:
+			x = &BinaryExpr{
+				LHS:      x,
+				RHS:      y,
+				Token:    op,
+				TokenPos: pos,
+			}
 		}
 	}
 }
@@ -215,7 +233,7 @@ func (p *Parser) parseUnaryExpr() Expr {
 	}
 
 	switch p.token {
-	case token.Add, token.Sub, token.Not, token.Xor:
+	case token.Add, token.Sub, token.Not, token.Xor, token.FalseCoalesce, token.NullCoalesce:
 		pos, op := p.pos, p.token
 		p.next()
 		x := p.parseUnaryExpr()
@@ -672,7 +690,7 @@ func (p *Parser) parseStmt() (stmt Stmt) {
 		token.Float, token.Char, token.String, token.True, token.False,
 		token.Undefined, token.Import, token.LParen, token.LBrace,
 		token.LBrack, token.Add, token.Sub, token.Mul, token.And, token.Xor,
-		token.Not:
+		token.Not, token.FalseCoalesce, token.NullCoalesce:
 		s := p.parseSimpleStmt(false)
 		p.expectSemi()
 		return s
@@ -989,7 +1007,8 @@ func (p *Parser) parseSimpleStmt(forIn bool) Stmt {
 	case token.Define,
 		token.AddAssign, token.SubAssign, token.MulAssign, token.QuoAssign,
 		token.RemAssign, token.AndAssign, token.OrAssign, token.XorAssign,
-		token.ShlAssign, token.ShrAssign, token.AndNotAssign:
+		token.ShlAssign, token.ShrAssign, token.AndNotAssign,
+		token.FalseCoalesceAssign, token.NullCoalesceAssign:
 		pos, tok := p.pos, p.token
 		p.next()
 		y := p.parseExpr()

@@ -495,13 +495,62 @@ c`, func(p pfn) []Stmt {
 	expectParseString(t, `a := b ? c : d`, "a := (b ? c : d)")
 	expectParseString(t, `x := a ? b ? c : d : e`,
 		"x := (a ? (b ? c : d) : e)")
-
 	// ? : should be at the end of each line if it's multi-line
 	expectParseError(t, `a 
 ? b 
 : c`)
 	expectParseError(t, `a ? (b : e)`)
 	expectParseError(t, `(a ? b) : e`)
+}
+
+func TestParseFalseCoalesceExpr(t *testing.T) {
+	expectParse(t, "a := 5 ?: 10", func(p pfn) []Stmt {
+		return stmts(
+			assignStmt(
+				exprs(ident("a", p(1, 1))),
+				exprs(
+					&FalseCoalesceExpr{*binaryExpr(
+						intLit(5, p(1, 6)),
+						intLit(10, p(1, 11)),
+						token.FalseCoalesce,
+						p(1, 8))}),
+				token.Define,
+				p(1, 3)))
+	})
+
+	expectParse(t, "a ?:= 5", func(p pfn) []Stmt {
+		return stmts(
+			assignStmt(
+				exprs(ident("a", p(1, 1))),
+				exprs(intLit(5, p(1, 7))),
+				token.FalseCoalesceAssign,
+				p(1, 3)))
+	})
+}
+
+func TestParseNullCoalesceExpr(t *testing.T) {
+	expectParse(t, "a := 5 ?? 10", func(p pfn) []Stmt {
+		return stmts(
+			assignStmt(
+				exprs(ident("a", p(1, 1))),
+				exprs(
+					&NullCoalesceExpr{*binaryExpr(
+						intLit(5, p(1, 6)),
+						intLit(10, p(1, 11)),
+						token.NullCoalesce,
+						p(1, 8))}),
+				token.Define,
+				p(1, 3)))
+	})
+
+	expectParse(t, "a ??= 5", func(p pfn) []Stmt {
+		return stmts(
+			assignStmt(
+				exprs(ident("a", p(1, 1))),
+				exprs(intLit(5, p(1, 7))),
+				token.NullCoalesceAssign,
+				p(1, 3)))
+	})
 }
 
 func TestParseError(t *testing.T) {
@@ -1517,14 +1566,14 @@ func (o *parseTracer) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-//type slowPrinter struct {
-//}
+// type slowPrinter struct {
+// }
 //
-//func (o *slowPrinter) Write(p []byte) (n int, err error) {
+// func (o *slowPrinter) Write(p []byte) (n int, err error) {
 //	fmt.Print(string(p))
 //	time.Sleep(25 * time.Millisecond)
 //	return len(p), nil
-//}
+// }
 
 func expectParse(t *testing.T, input string, fn expectedFn) {
 	testFileSet := NewFileSet()
@@ -2033,6 +2082,24 @@ func equalExpr(t *testing.T, expected, actual Expr) {
 			actual.(*CondExpr).QuestionPos)
 		require.Equal(t, expected.ColonPos,
 			actual.(*CondExpr).ColonPos)
+	case *FalseCoalesceExpr:
+		equalExpr(t, expected.LHS,
+			actual.(*FalseCoalesceExpr).LHS)
+		equalExpr(t, expected.RHS,
+			actual.(*FalseCoalesceExpr).RHS)
+		require.Equal(t, expected.Token,
+			actual.(*FalseCoalesceExpr).Token)
+		require.Equal(t, expected.TokenPos,
+			actual.(*FalseCoalesceExpr).TokenPos)
+	case *NullCoalesceExpr:
+		equalExpr(t, expected.LHS,
+			actual.(*NullCoalesceExpr).LHS)
+		equalExpr(t, expected.RHS,
+			actual.(*NullCoalesceExpr).RHS)
+		require.Equal(t, expected.Token,
+			actual.(*NullCoalesceExpr).Token)
+		require.Equal(t, expected.TokenPos,
+			actual.(*NullCoalesceExpr).TokenPos)
 	default:
 		panic(fmt.Errorf("unknown type: %T", expected))
 	}

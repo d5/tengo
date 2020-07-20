@@ -108,6 +108,18 @@ func (v *VM) run() {
 		case parser.OpNull:
 			v.stack[v.sp] = UndefinedValue
 			v.sp++
+		case parser.OpFalseCoalesce:
+			v.ip++
+			if v.stack[v.sp-1].IsFalsy() {
+				v.sp--
+				v.ip = int(v.curInsts[v.ip]) - 1
+			}
+		case parser.OpNullCoalesce:
+			v.ip++
+			if v.stack[v.sp-1] == UndefinedValue {
+				v.sp--
+				v.ip = int(v.curInsts[v.ip]) - 1
+			}
 		case parser.OpBinaryOp:
 			v.ip++
 			right := v.stack[v.sp-1]
@@ -672,16 +684,16 @@ func (v *VM) run() {
 			} else {
 				retVal = UndefinedValue
 			}
-			//v.sp--
+			// v.sp--
 			v.framesIndex--
 			v.curFrame = &v.frames[v.framesIndex-1]
 			v.curInsts = v.curFrame.fn.Instructions
 			v.ip = v.curFrame.ip
-			//v.sp = lastFrame.basePointer - 1
+			// v.sp = lastFrame.basePointer - 1
 			v.sp = v.frames[v.framesIndex].basePointer
 			// skip stack overflow check because (newSP) <= (oldSP)
 			v.stack[v.sp-1] = retVal
-			//v.sp++
+			// v.sp++
 		case parser.OpDefineLocal:
 			v.ip++
 			localIndex := int(v.curInsts[v.ip])

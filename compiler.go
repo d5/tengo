@@ -198,6 +198,20 @@ func (c *Compiler) Compile(node parser.Node) error {
 			return c.errorf(node, "invalid binary operator: %s",
 				node.Token.String())
 		}
+	case *parser.FalseCoalesceExpr:
+		if err := c.Compile(node.LHS); err != nil {
+			return err
+		}
+		if err := c.compileCoalesce(node, node.RHS, parser.OpFalseCoalesce); err != nil {
+			return err
+		}
+	case *parser.NullCoalesceExpr:
+		if err := c.Compile(node.LHS); err != nil {
+			return err
+		}
+		if err := c.compileCoalesce(node, node.RHS, parser.OpNullCoalesce); err != nil {
+			return err
+		}
 	case *parser.IntLit:
 		c.emit(node, parser.OpConstant,
 			c.addConstant(&Int{Value: node.Value}))
@@ -640,6 +654,31 @@ func (c *Compiler) SetImportDir(dir string) {
 	c.importDir = dir
 }
 
+func (c *Compiler) compileCoalesce(
+	node parser.Node,
+	rhs parser.Expr,
+	op parser.Opcode,
+) error {
+	jumpPos1 := c.emit(node, op, 0)
+	// second jump placeholder
+	jumpPos2 := c.emit(node, parser.OpJump, 0)
+
+	// update first jump offset
+	curPos := len(c.currentInstructions())
+
+	// FCOAL CUR_POS
+	c.changeOperand(jumpPos1, curPos)
+	if err := c.Compile(rhs); err != nil {
+		return err
+	}
+
+	// update second jump offset
+	curPos = len(c.currentInstructions())
+	// JUMP NEW_CUR_POS
+	c.changeOperand(jumpPos2, curPos)
+	return nil
+}
+
 func (c *Compiler) compileAssign(
 	node parser.Node,
 	lhs, rhs []parser.Expr,
@@ -678,42 +717,53 @@ func (c *Compiler) compileAssign(
 		}
 	}
 
-	// compile RHSs
-	for _, expr := range rhs {
-		if err := c.Compile(expr); err != nil {
+	switch op {
+	case token.FalseCoalesceAssign:
+		if err := c.compileCoalesce(node, rhs[0], parser.OpFalseCoalesce); err != nil {
 			return err
 		}
-	}
-
-	switch op {
-	case token.AddAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.Add))
-	case token.SubAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.Sub))
-	case token.MulAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.Mul))
-	case token.QuoAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.Quo))
-	case token.RemAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.Rem))
-	case token.AndAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.And))
-	case token.OrAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.Or))
-	case token.AndNotAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.AndNot))
-	case token.XorAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.Xor))
-	case token.ShlAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.Shl))
-	case token.ShrAssign:
-		c.emit(node, parser.OpBinaryOp, int(token.Shr))
-	}
-
-	// compile selector expressions (right to left)
-	for i := numSel - 1; i >= 0; i-- {
-		if err := c.Compile(selectors[i]); err != nil {
+	case token.NullCoalesceAssign:
+		if err := c.compileCoalesce(node, rhs[0], parser.OpNullCoalesce); err != nil {
 			return err
+		}
+	default:
+		// compile RHSs
+		for _, expr := range rhs {
+			if err := c.Compile(expr); err != nil {
+				return err
+			}
+		}
+
+		switch op {
+		case token.AddAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.Add))
+		case token.SubAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.Sub))
+		case token.MulAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.Mul))
+		case token.QuoAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.Quo))
+		case token.RemAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.Rem))
+		case token.AndAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.And))
+		case token.OrAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.Or))
+		case token.AndNotAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.AndNot))
+		case token.XorAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.Xor))
+		case token.ShlAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.Shl))
+		case token.ShrAssign:
+			c.emit(node, parser.OpBinaryOp, int(token.Shr))
+		}
+
+		// compile selector expressions (right to left)
+		for i := numSel - 1; i >= 0; i-- {
+			if err := c.Compile(selectors[i]); err != nil {
+				return err
+			}
 		}
 	}
 

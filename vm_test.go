@@ -386,8 +386,8 @@ out = func() {
 `, nil, 136)
 
 	// assigning different type value
-	expectRun(t, `a := 1; a = "foo"; out = a`, nil, "foo")              // global
-	expectRun(t, `func() { a := 1; a = "foo"; out = a }()`, nil, "foo") // local
+	expectRun(t, `a := 1; a = "foo"; out = a`, nil, "foo")                                                               // global
+	expectRun(t, `func() { a := 1; a = "foo"; out = a }()`, nil, "foo")                                                  // local
 	expectRun(t, `
 out = func() { 
 	a := 5
@@ -543,6 +543,8 @@ func TestUndefined(t *testing.T) {
 	expectRun(t, `out = 1 == undefined`, nil, false)
 	expectRun(t, `out = undefined == float([])`, nil, true)
 	expectRun(t, `out = float([]) == undefined`, nil, true)
+	expectRun(t, `out = undefined ?? 2`, nil, 2)
+	expectRun(t, `out = undefined ?: 2`, nil, 2)
 }
 
 func TestBuiltinFunction(t *testing.T) {
@@ -1000,6 +1002,44 @@ out = [f(0), f(1), f(2)]
 out = 1 > 2 ?
 	1 + 2 + 3 :
 	10 - 5`, nil, 5)
+}
+
+func TestFalseCoalesceExpr(t *testing.T) {
+	expectRun(t, `out = "a" ?: "b"`, nil, "a")
+	expectRun(t, `out = "" ?: "b"`, nil, "b")
+	expectRun(t, `out = "a" ?: "b"+"c"`, nil, "a")
+	expectRun(t, `out = "" ?: "b"+"c"`, nil, "bc")
+	expectRun(t, `out = ""+"" ?: "b"+"c"`, nil, "bc")
+	expectRun(t, `f := func() {return 6}; out = 0 ?: f()`, nil, 6)
+	expectRun(t, `f := func() {return 6}; out = 5 ?: f()`, nil, 5)
+
+	expectRun(t, `
+f1 := func() { return 0 }
+f2 := func() { return 2 }
+out = f1() ?: f2()
+`, nil, 2)
+
+	expectRun(t, `
+f1 := func() { return 1 }
+f2 := func() { return 2 }
+out = f1() ?: f2()
+`, nil, 1)
+
+	expectRun(t, `out = "a"; out ?:= "b"`, nil, "a")
+	expectRun(t, `out ?:= "b"`, nil, "b")
+	expectRun(t, `out = {}; out.y = out.x ?: 2`, nil, MAP{"y": 2})
+	expectRun(t, `out = {x:0}; out.y = out.x ?: 2`, nil, MAP{"x": 0, "y": 2})
+	expectRun(t, `out = {x:5}; out.y = out.x ?: 2`, nil, MAP{"x": 5, "y": 5})
+	expectError(t, `m := {}; m.x ?:= "2"`, nil, "panic: runtime error: index out of range [-1]")
+}
+
+func TestNullCoalesceExpr(t *testing.T) {
+	expectRun(t, `x := undefined; out = x ?? "b"`, nil, "b")
+	expectRun(t, `x := 1; out = x ?? "b"`, nil, 1)
+	expectRun(t, `out = undefined; out ??= "b"`, nil, "b")
+	expectRun(t, `out = 1; out ??= "b"`, nil, 1)
+	expectRun(t, `out = {}; out.y = out.x ?? 2`, nil, MAP{"y": 2})
+	expectError(t, `m := {}; m.x ??= "2"`, nil, "panic: runtime error: index out of range [-1]")
 }
 
 func TestEquality(t *testing.T) {
@@ -3161,7 +3201,7 @@ func TestSourceModules(t *testing.T) {
 	testEnumModule(t, `out = enum.find({a:1}, enum.value)`, 1)
 	testEnumModule(t, `out = enum.find({a:false,b:0,c:undefined,d:1}, enum.value)`,
 		1)
-	//testEnumModule(t, `out = enum.find({a:1,b:2,c:3}, enum.value)`, 1)
+	// testEnumModule(t, `out = enum.find({a:1,b:2,c:3}, enum.value)`, 1)
 	testEnumModule(t, `out = enum.find(0, enum.value)`,
 		tengo.UndefinedValue) // non-enumerable: undefined
 	testEnumModule(t, `out = enum.find("123", enum.value)`,
@@ -3183,7 +3223,7 @@ func TestSourceModules(t *testing.T) {
 		"a")
 	testEnumModule(t, `out = enum.find_key({a:false,b:0,c:undefined,d:1}, enum.value)`,
 		"d")
-	//testEnumModule(t, `out = enum.find_key({a:1,b:2,c:3}, enum.value)`, "a")
+	// testEnumModule(t, `out = enum.find_key({a:1,b:2,c:3}, enum.value)`, "a")
 	testEnumModule(t, `out = enum.find_key(0, enum.value)`,
 		tengo.UndefinedValue) // non-enumerable: undefined
 	testEnumModule(t, `out = enum.find_key("123", enum.value)`,

@@ -325,7 +325,10 @@ for more details._
 
 ### Ternary Operators
 
-Tengo has a ternary conditional operator `(condition expression) ? (true expression) : (false expression)`.
+Tengo has a three ternary oprators: conditional, false coalesce and null coalesce.
+
+
+**Conditional:** `(condition expression) ? (true expression) : (false expression)`.
 
 ```golang
 a := true ? 1 : -1    // a == 1
@@ -334,6 +337,37 @@ min := func(a, b) {
   return a < b ? a : b
 }
 b := min(5, 10)      // b == 5
+```
+
+**False Coalesce:** `(value expression) ?: (false expression)`.
+
+```golang
+a := 1 ?: -1    // a == 1
+
+valOrDefault := func(value, defaul) {
+  return value ?: defaul
+}
+
+b := valOrDefault(5, -10)    // b == 5
+c := valOrDefault(0, -11)    // c == -11
+d := valOrDefault(undefined, -12)    // d == -12
+
+get := func() { return undefined }
+default := func() { return -13 }
+e := get() ?: default()    // e == -13
+```
+
+**Null Coalesce:** `(value expression) ?? (null expression)`.
+
+```golang
+a := undefined ?? -1    // a == -1
+
+valOrDefault := func(value, defaul) {
+  return value ?? defaul
+}
+b := valOrDefault(5, -10)     // b == 5
+c := valOrDefault(0, -11)     // c == 0
+d := valOrDefault(undefined, -12)     // d == -12
 ```
 
 ### Assignment and Increment Operators
@@ -351,6 +385,8 @@ b := min(5, 10)      // b == 5
 | `^=` | `(lhs) = (lhs) ^ (rhs)` |
 | `<<=` | `(lhs) = (lhs) << (rhs)` |
 | `>>=` | `(lhs) = (lhs) >> (rhs)` |
+| `?:=` | `(lhs) = (lhs) ?: (rhs)` |
+| `??=` | `(lhs) = (lhs) ?? (rhs)` |
 | `++` | `(lhs) = (lhs) + 1` |
 | `--` | `(lhs) = (lhs) - 1` |
 
@@ -365,7 +401,7 @@ comparison operators, `&&` (logical AND), and finally `||` (logical OR):
 | :---: | :---: |
 | 5 | `*`  `/`  `%`  `<<`  `>>`  `&`  `&^` |
 | 4 | `+`  `-`  `\|`  `^` |
-| 3 | `==`  `!=`  `<`  `<=`  `>`  `>=` |
+| 3 | `==`  `!=`  `<`  `<=`  `>`  `>=` `?:` `??` |
 | 2 | `&&` |
 | 1 | `\|\|` |
 

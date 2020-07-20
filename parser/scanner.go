@@ -140,6 +140,21 @@ func (s *Scanner) Scan() (
 			tok = token.Comma
 		case '?':
 			tok = token.Question
+
+			switch s.ch {
+			case ':':
+				s.next()
+				tok = s.switch3(token.FalseCoalesce, token.FalseCoalesceAssign, ':', token.Inc)
+				if tok == token.Inc {
+					insertSemi = true
+				}
+			case '?':
+				s.next()
+				tok = s.switch3(token.NullCoalesce, token.NullCoalesceAssign, ':', token.Inc)
+				if tok == token.Inc {
+					insertSemi = true
+				}
+			}
 		case ';':
 			tok = token.Semicolon
 			literal = ";"
@@ -284,7 +299,7 @@ func (s *Scanner) scanComment() string {
 	var numCR int
 
 	if s.ch == '/' {
-		//-style comment
+		// -style comment
 		// (the final '\n' is not considered part of the comment)
 		s.next()
 		for s.ch != '\n' && s.ch >= 0 {
@@ -342,7 +357,7 @@ func (s *Scanner) findLineEnd() bool {
 	// read ahead until a newline, EOF, or non-comment tok is found
 	for s.ch == '/' || s.ch == '*' {
 		if s.ch == '/' {
-			//-style comment always contains a newline
+			// -style comment always contains a newline
 			return true
 		}
 		/*-style comment: look for newline */

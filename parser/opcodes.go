@@ -46,6 +46,8 @@ const (
 	OpIteratorKey                 // Iterator key
 	OpIteratorValue               // Iterator value
 	OpBinaryOp                    // Binary operation
+	OpFalseCoalesce               // False Coalesce operation
+	OpNullCoalesce                // Null Coalesce operation
 	OpSuspend                     // Suspend VM
 )
 
@@ -92,6 +94,8 @@ var OpcodeNames = [...]string{
 	OpIteratorKey:   "ITKEY",
 	OpIteratorValue: "ITVAL",
 	OpBinaryOp:      "BINARYOP",
+	OpFalseCoalesce: "FCOAL",
+	OpNullCoalesce:  "NCOAL",
 	OpSuspend:       "SUSPEND",
 }
 
@@ -138,6 +142,8 @@ var OpcodeOperands = [...][]int{
 	OpIteratorKey:   {},
 	OpIteratorValue: {},
 	OpBinaryOp:      {1},
+	OpFalseCoalesce: {1},
+	OpNullCoalesce:  {1},
 	OpSuspend:       {},
 }
 
