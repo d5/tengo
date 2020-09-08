@@ -386,8 +386,8 @@ out = func() {
 `, nil, 136)
 
 	// assigning different type value
-	expectRun(t, `a := 1; a = "foo"; out = a`, nil, "foo")                                                               // global
-	expectRun(t, `func() { a := 1; a = "foo"; out = a }()`, nil, "foo")                                                  // local
+	expectRun(t, `a := 1; a = "foo"; out = a`, nil, "foo")              // global
+	expectRun(t, `func() { a := 1; a = "foo"; out = a }()`, nil, "foo") // local
 	expectRun(t, `
 out = func() { 
 	a := 5
@@ -544,7 +544,7 @@ func TestUndefined(t *testing.T) {
 	expectRun(t, `out = undefined == float([])`, nil, true)
 	expectRun(t, `out = float([]) == undefined`, nil, true)
 	expectRun(t, `out = undefined ?? 2`, nil, 2)
-	expectRun(t, `out = undefined ?: 2`, nil, 2)
+	expectRun(t, `out = undefined || 2`, nil, 2)
 }
 
 func TestBuiltinFunction(t *testing.T) {
@@ -1004,39 +1004,39 @@ out = 1 > 2 ?
 	10 - 5`, nil, 5)
 }
 
-func TestFalseCoalesceExpr(t *testing.T) {
-	expectRun(t, `out = "a" ?: "b"`, nil, "a")
-	expectRun(t, `out = "" ?: "b"`, nil, "b")
-	expectRun(t, `out = "a" ?: "b"+"c"`, nil, "a")
-	expectRun(t, `out = "" ?: "b"+"c"`, nil, "bc")
-	expectRun(t, `out = ""+"" ?: "b"+"c"`, nil, "bc")
-	expectRun(t, `f := func() {return 6}; out = 0 ?: f()`, nil, 6)
-	expectRun(t, `f := func() {return 6}; out = 5 ?: f()`, nil, 5)
+func TestLOrExpr(t *testing.T) {
+	expectRun(t, `out = "a" || "b"`, nil, "a")
+	expectRun(t, `out = "" || "b"`, nil, "b")
+	expectRun(t, `out = "a" || "b"+"c"`, nil, "a")
+	expectRun(t, `out = "" || "b"+"c"`, nil, "bc")
+	expectRun(t, `out = ""+"" || "b"+"c"`, nil, "bc")
+	expectRun(t, `f := func() {return 6}; out = 0 || f()`, nil, 6)
+	expectRun(t, `f := func() {return 6}; out = 5 || f()`, nil, 5)
 
 	expectRun(t, `
 f1 := func() { return 0 }
 f2 := func() { return 2 }
-out = f1() ?: f2()
+out = f1() || f2()
 `, nil, 2)
 
 	expectRun(t, `
 f1 := func() { return 1 }
 f2 := func() { return 2 }
-out = f1() ?: f2()
+out = f1() || f2()
 `, nil, 1)
 
-	expectRun(t, `out = "a"; out ?:= "b"`, nil, "a")
-	expectRun(t, `out ?:= "b"`, nil, "b")
-	expectRun(t, `out = {}; out.y = out.x ?: 2`, nil, MAP{"y": 2})
-	expectRun(t, `out = {x:0}; out.y = out.x ?: 2`, nil, MAP{"x": 0, "y": 2})
-	expectRun(t, `out = {x:5}; out.y = out.x ?: 2`, nil, MAP{"x": 5, "y": 5})
+	expectRun(t, `out = "a"; out ||= "b"`, nil, "a")
+	expectRun(t, `out ||= "b"`, nil, "b")
+	expectRun(t, `out = {}; out.y = out.x || 2`, nil, MAP{"y": 2})
+	expectRun(t, `out = {x:0}; out.y = out.x || 2`, nil, MAP{"x": 0, "y": 2})
+	expectRun(t, `out = {x:5}; out.y = out.x || 2`, nil, MAP{"x": 5, "y": 5})
 
-	expectRun(t, `m := {}; out = m.x ?: m.y ?: 3`, nil, 3)
-	expectRun(t, `m := {x:0,y:0}; out = m.x ?: m.y ?: 3`, nil, 3)
-	expectRun(t, `m := {x:0,y:2}; out = m.x ?: m.y ?: 3`, nil, 2)
-	expectRun(t, `m := {x:1}; out = m.x ?: m.y ?: 3`, nil, 1)
+	expectRun(t, `m := {}; out = m.x || m.y || 3`, nil, 3)
+	expectRun(t, `m := {x:0,y:0}; out = m.x || m.y || 3`, nil, 3)
+	expectRun(t, `m := {x:0,y:2}; out = m.x || m.y || 3`, nil, 2)
+	expectRun(t, `m := {x:1}; out = m.x || m.y || 3`, nil, 1)
 
-	expectError(t, `m := {}; m.x ?:= "2"`, nil, "panic: runtime error: index out of range [-1]")
+	expectError(t, `m := {}; m.x ||= "2"`, nil, "panic: runtime error: index out of range [-1]")
 }
 
 func TestNullCoalesceExpr(t *testing.T) {

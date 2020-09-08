@@ -108,7 +108,7 @@ func (v *VM) run() {
 		case parser.OpNull:
 			v.stack[v.sp] = UndefinedValue
 			v.sp++
-		case parser.OpFalseCoalesce:
+		case parser.OpLOr:
 			v.ip++
 			if v.stack[v.sp-1].IsFalsy() {
 				v.sp--

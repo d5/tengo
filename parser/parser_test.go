@@ -503,27 +503,27 @@ c`, func(p pfn) []Stmt {
 	expectParseError(t, `(a ? b) : e`)
 }
 
-func TestParseFalseCoalesceExpr(t *testing.T) {
-	expectParse(t, "a := 5 ?: 10", func(p pfn) []Stmt {
+func TestParseLOrExpr(t *testing.T) {
+	expectParse(t, "a := 5 || 10", func(p pfn) []Stmt {
 		return stmts(
 			assignStmt(
 				exprs(ident("a", p(1, 1))),
 				exprs(
-					&FalseCoalesceExpr{*binaryExpr(
+					binaryExpr(
 						intLit(5, p(1, 6)),
 						intLit(10, p(1, 11)),
-						token.FalseCoalesce,
-						p(1, 8))}),
+						token.LOr,
+						p(1, 8))),
 				token.Define,
 				p(1, 3)))
 	})
 
-	expectParse(t, "a ?:= 5", func(p pfn) []Stmt {
+	expectParse(t, "a ||= 5", func(p pfn) []Stmt {
 		return stmts(
 			assignStmt(
 				exprs(ident("a", p(1, 1))),
 				exprs(intLit(5, p(1, 7))),
-				token.FalseCoalesceAssign,
+				token.LOrAssign,
 				p(1, 3)))
 	})
 }
@@ -2082,15 +2082,6 @@ func equalExpr(t *testing.T, expected, actual Expr) {
 			actual.(*CondExpr).QuestionPos)
 		require.Equal(t, expected.ColonPos,
 			actual.(*CondExpr).ColonPos)
-	case *FalseCoalesceExpr:
-		equalExpr(t, expected.LHS,
-			actual.(*FalseCoalesceExpr).LHS)
-		equalExpr(t, expected.RHS,
-			actual.(*FalseCoalesceExpr).RHS)
-		require.Equal(t, expected.Token,
-			actual.(*FalseCoalesceExpr).Token)
-		require.Equal(t, expected.TokenPos,
-			actual.(*FalseCoalesceExpr).TokenPos)
 	case *NullCoalesceExpr:
 		equalExpr(t, expected.LHS,
 			actual.(*NullCoalesceExpr).LHS)

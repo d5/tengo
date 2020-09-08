@@ -187,13 +187,6 @@ func (p *Parser) parseBinaryOrCoalesceExpr(prec1 int) Expr {
 		y := p.parseBinaryOrCoalesceExpr(prec + 1)
 
 		switch op {
-		case token.FalseCoalesce:
-			x = &FalseCoalesceExpr{BinaryExpr{
-				LHS:      x,
-				RHS:      y,
-				Token:    op,
-				TokenPos: pos,
-			}}
 		case token.NullCoalesce:
 			x = &NullCoalesceExpr{BinaryExpr{
 				LHS:      x,
@@ -233,7 +226,7 @@ func (p *Parser) parseUnaryExpr() Expr {
 	}
 
 	switch p.token {
-	case token.Add, token.Sub, token.Not, token.Xor, token.FalseCoalesce, token.NullCoalesce:
+	case token.Add, token.Sub, token.Not, token.Xor, token.NullCoalesce:
 		pos, op := p.pos, p.token
 		p.next()
 		x := p.parseUnaryExpr()
@@ -690,7 +683,7 @@ func (p *Parser) parseStmt() (stmt Stmt) {
 		token.Float, token.Char, token.String, token.True, token.False,
 		token.Undefined, token.Import, token.LParen, token.LBrace,
 		token.LBrack, token.Add, token.Sub, token.Mul, token.And, token.Xor,
-		token.Not, token.FalseCoalesce, token.NullCoalesce:
+		token.Not, token.NullCoalesce:
 		s := p.parseSimpleStmt(false)
 		p.expectSemi()
 		return s
@@ -1008,7 +1001,7 @@ func (p *Parser) parseSimpleStmt(forIn bool) Stmt {
 		token.AddAssign, token.SubAssign, token.MulAssign, token.QuoAssign,
 		token.RemAssign, token.AndAssign, token.OrAssign, token.XorAssign,
 		token.ShlAssign, token.ShrAssign, token.AndNotAssign,
-		token.FalseCoalesceAssign, token.NullCoalesceAssign:
+		token.LOrAssign, token.NullCoalesceAssign:
 		pos, tok := p.pos, p.token
 		p.next()
 		y := p.parseExpr()

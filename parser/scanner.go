@@ -142,12 +142,6 @@ func (s *Scanner) Scan() (
 			tok = token.Question
 
 			switch s.ch {
-			case ':':
-				s.next()
-				tok = s.switch3(token.FalseCoalesce, token.FalseCoalesceAssign, ':', token.Inc)
-				if tok == token.Inc {
-					insertSemi = true
-				}
 			case '?':
 				s.next()
 				tok = s.switch3(token.NullCoalesce, token.NullCoalesceAssign, ':', token.Inc)
@@ -229,7 +223,19 @@ func (s *Scanner) Scan() (
 				tok = s.switch3(token.And, token.AndAssign, '&', token.LAnd)
 			}
 		case '|':
-			tok = s.switch3(token.Or, token.OrAssign, '|', token.LOr)
+			tok = token.Or
+
+			switch s.ch {
+			case '|':
+				s.next()
+				tok = s.switch3(token.LOr, token.LOrAssign, '|', token.Or)
+				if tok == token.Inc {
+					insertSemi = true
+				}
+			case '=':
+				s.next()
+				tok = token.OrAssign
+			}
 		default:
 			// next reports unexpected BOMs - don't repeat
 			if ch != bom {

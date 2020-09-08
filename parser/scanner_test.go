@@ -84,8 +84,11 @@ func TestScanner_Scan(t *testing.T) {
 		{token.ShlAssign, "<<="},
 		{token.ShrAssign, ">>="},
 		{token.AndNotAssign, "&^="},
+		{token.LOrAssign, "||="},
+		{token.NullCoalesceAssign, "??="},
 		{token.LAnd, "&&"},
 		{token.LOr, "||"},
+		{token.NullCoalesce, "??"},
 		{token.Inc, "++"},
 		{token.Dec, "--"},
 		{token.Equal, "=="},
@@ -116,10 +119,6 @@ func TestScanner_Scan(t *testing.T) {
 		{token.If, "if"},
 		{token.Return, "return"},
 		{token.Export, "export"},
-		{token.FalseCoalesce, "?:"},
-		{token.FalseCoalesceAssign, "?:="},
-		{token.NullCoalesce, "??"},
-		{token.NullCoalesceAssign, "??="},
 	}
 	testCases = testCases
 

@@ -86,11 +86,6 @@ func (e *BinaryExpr) String() string {
 		" " + e.RHS.String() + ")"
 }
 
-// FalseCoalesceExpr represents a ternary false coalesce expression.
-type FalseCoalesceExpr struct {
-	BinaryExpr
-}
-
 // NullCoalesceExpr represents a ternary null coalesce expression.
 type NullCoalesceExpr struct {
 	BinaryExpr

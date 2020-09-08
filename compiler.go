@@ -198,13 +198,6 @@ func (c *Compiler) Compile(node parser.Node) error {
 			return c.errorf(node, "invalid binary operator: %s",
 				node.Token.String())
 		}
-	case *parser.FalseCoalesceExpr:
-		if err := c.Compile(node.LHS); err != nil {
-			return err
-		}
-		if err := c.compileCoalesce(node, node.RHS, parser.OpFalseCoalesce); err != nil {
-			return err
-		}
 	case *parser.NullCoalesceExpr:
 		if err := c.Compile(node.LHS); err != nil {
 			return err
@@ -718,8 +711,8 @@ func (c *Compiler) compileAssign(
 	}
 
 	switch op {
-	case token.FalseCoalesceAssign:
-		if err := c.compileCoalesce(node, rhs[0], parser.OpFalseCoalesce); err != nil {
+	case token.LOrAssign:
+		if err := c.compileCoalesce(node, rhs[0], parser.OpLOr); err != nil {
 			return err
 		}
 	case token.NullCoalesceAssign:

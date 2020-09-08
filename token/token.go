@@ -20,57 +20,56 @@ const (
 	String
 	_literalEnd
 	_operatorBeg
-	Add                 // +
-	Sub                 // -
-	Mul                 // *
-	Quo                 // /
-	Rem                 // %
-	And                 // &
-	Or                  // |
-	Xor                 // ^
-	Shl                 // <<
-	Shr                 // >>
-	AndNot              // &^
-	AddAssign           // +=
-	SubAssign           // -=
-	MulAssign           // *=
-	QuoAssign           // /=
-	RemAssign           // %=
-	AndAssign           // &=
-	OrAssign            // |=
-	XorAssign           // ^=
-	ShlAssign           // <<=
-	ShrAssign           // >>=
-	AndNotAssign        // &^=
-	LAnd                // &&
-	LOr                 // ||
-	Inc                 // ++
-	Dec                 // --
-	Equal               // ==
-	Less                // <
-	Greater             // >
-	Assign              // =
-	Not                 // !
-	NotEqual            // !=
-	LessEq              // <=
-	GreaterEq           // >=
-	Define              // :=
-	Ellipsis            // ...
-	LParen              // (
-	LBrack              // [
-	LBrace              // {
-	Comma               // ,
-	Period              // .
-	RParen              // )
-	RBrack              // ]
-	RBrace              // }
-	Semicolon           // ;
-	Colon               // :
-	Question            // ?
-	FalseCoalesce       // ?:
-	FalseCoalesceAssign // ?:=
-	NullCoalesce        // ??
-	NullCoalesceAssign  // ??=
+	Add                // +
+	Sub                // -
+	Mul                // *
+	Quo                // /
+	Rem                // %
+	And                // &
+	Or                 // |
+	Xor                // ^
+	Shl                // <<
+	Shr                // >>
+	AndNot             // &^
+	AddAssign          // +=
+	SubAssign          // -=
+	MulAssign          // *=
+	QuoAssign          // /=
+	RemAssign          // %=
+	AndAssign          // &=
+	OrAssign           // |=
+	XorAssign          // ^=
+	ShlAssign          // <<=
+	ShrAssign          // >>=
+	AndNotAssign       // &^=
+	LAnd               // &&
+	LOr                // ||
+	Inc                // ++
+	Dec                // --
+	Equal              // ==
+	Less               // <
+	Greater            // >
+	Assign             // =
+	Not                // !
+	NotEqual           // !=
+	LessEq             // <=
+	GreaterEq          // >=
+	Define             // :=
+	Ellipsis           // ...
+	LParen             // (
+	LBrack             // [
+	LBrace             // {
+	Comma              // ,
+	Period             // .
+	RParen             // )
+	RBrack             // ]
+	RBrace             // }
+	Semicolon          // ;
+	Colon              // :
+	Question           // ?
+	LOrAssign          // ||=
+	NullCoalesce       // ??
+	NullCoalesceAssign // ??=
 	_operatorEnd
 	_keywordBeg
 	Break
@@ -92,80 +91,79 @@ const (
 )
 
 var tokens = [...]string{
-	Illegal:             "ILLEGAL",
-	EOF:                 "EOF",
-	Comment:             "COMMENT",
-	Ident:               "IDENT",
-	Int:                 "INT",
-	Float:               "FLOAT",
-	Char:                "CHAR",
-	String:              "STRING",
-	Add:                 "+",
-	Sub:                 "-",
-	Mul:                 "*",
-	Quo:                 "/",
-	Rem:                 "%",
-	And:                 "&",
-	Or:                  "|",
-	Xor:                 "^",
-	Shl:                 "<<",
-	Shr:                 ">>",
-	AndNot:              "&^",
-	AddAssign:           "+=",
-	SubAssign:           "-=",
-	MulAssign:           "*=",
-	QuoAssign:           "/=",
-	RemAssign:           "%=",
-	AndAssign:           "&=",
-	OrAssign:            "|=",
-	XorAssign:           "^=",
-	ShlAssign:           "<<=",
-	ShrAssign:           ">>=",
-	AndNotAssign:        "&^=",
-	LAnd:                "&&",
-	LOr:                 "||",
-	Inc:                 "++",
-	Dec:                 "--",
-	Equal:               "==",
-	Less:                "<",
-	Greater:             ">",
-	Assign:              "=",
-	Not:                 "!",
-	NotEqual:            "!=",
-	LessEq:              "<=",
-	GreaterEq:           ">=",
-	Define:              ":=",
-	Ellipsis:            "...",
-	LParen:              "(",
-	LBrack:              "[",
-	LBrace:              "{",
-	Comma:               ",",
-	Period:              ".",
-	RParen:              ")",
-	RBrack:              "]",
-	RBrace:              "}",
-	Semicolon:           ";",
-	Colon:               ":",
-	Question:            "?",
-	FalseCoalesce:       "?:",
-	FalseCoalesceAssign: "?:=",
-	NullCoalesce:        "??",
-	NullCoalesceAssign:  "??=",
-	Break:               "break",
-	Continue:            "continue",
-	Else:                "else",
-	For:                 "for",
-	Func:                "func",
-	Error:               "error",
-	Immutable:           "immutable",
-	If:                  "if",
-	Return:              "return",
-	Export:              "export",
-	True:                "true",
-	False:               "false",
-	In:                  "in",
-	Undefined:           "undefined",
-	Import:              "import",
+	Illegal:            "ILLEGAL",
+	EOF:                "EOF",
+	Comment:            "COMMENT",
+	Ident:              "IDENT",
+	Int:                "INT",
+	Float:              "FLOAT",
+	Char:               "CHAR",
+	String:             "STRING",
+	Add:                "+",
+	Sub:                "-",
+	Mul:                "*",
+	Quo:                "/",
+	Rem:                "%",
+	And:                "&",
+	Or:                 "|",
+	Xor:                "^",
+	Shl:                "<<",
+	Shr:                ">>",
+	AndNot:             "&^",
+	AddAssign:          "+=",
+	SubAssign:          "-=",
+	MulAssign:          "*=",
+	QuoAssign:          "/=",
+	RemAssign:          "%=",
+	AndAssign:          "&=",
+	OrAssign:           "|=",
+	XorAssign:          "^=",
+	ShlAssign:          "<<=",
+	ShrAssign:          ">>=",
+	AndNotAssign:       "&^=",
+	LOrAssign:          "?:=",
+	LAnd:               "&&",
+	LOr:                "||",
+	Inc:                "++",
+	Dec:                "--",
+	Equal:              "==",
+	Less:               "<",
+	Greater:            ">",
+	Assign:             "=",
+	Not:                "!",
+	NotEqual:           "!=",
+	LessEq:             "<=",
+	GreaterEq:          ">=",
+	Define:             ":=",
+	Ellipsis:           "...",
+	LParen:             "(",
+	LBrack:             "[",
+	LBrace:             "{",
+	Comma:              ",",
+	Period:             ".",
+	RParen:             ")",
+	RBrack:             "]",
+	RBrace:             "}",
+	Semicolon:          ";",
+	Colon:              ":",
+	Question:           "?",
+	NullCoalesce:       "??",
+	NullCoalesceAssign: "??=",
+	Break:              "break",
+	Continue:           "continue",
+	Else:               "else",
+	For:                "for",
+	Func:               "func",
+	Error:              "error",
+	Immutable:          "immutable",
+	If:                 "if",
+	Return:             "return",
+	Export:             "export",
+	True:               "true",
+	False:              "false",
+	In:                 "in",
+	Undefined:          "undefined",
+	Import:             "import",
 }
 
 func (tok Token) String() string {
@@ -192,7 +190,7 @@ func (tok Token) Precedence() int {
 		return 1
 	case LAnd:
 		return 2
-	case Equal, NotEqual, Less, LessEq, Greater, GreaterEq, FalseCoalesce, NullCoalesce:
+	case Equal, NotEqual, Less, LessEq, Greater, GreaterEq, NullCoalesce:
 		return 3
 	case Add, Sub, Or, Xor:
 		return 4

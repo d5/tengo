@@ -339,13 +339,13 @@ min := func(a, b) {
 b := min(5, 10)      // b == 5
 ```
 
-**False Coalesce:** `(value expression) ?: (false expression)`.
+**False Coalesce (LOr):** `(value expression) || (false expression)`.
 
 ```golang
-a := 1 ?: -1    // a == 1
+a := 1 || -1    // a == 1
 
 valOrDefault := func(value, defaul) {
-  return value ?: defaul
+  return value || defaul
 }
 
 b := valOrDefault(5, -10)    // b == 5
@@ -354,19 +354,19 @@ d := valOrDefault(undefined, -12)    // d == -12
 
 get := func() { return undefined }
 default := func() { return -13 }
-e := get() ?: default()    // e == -13
+e := get() || default()    // e == -13
 
 m1 := {}
-f := m1.x ?: m1.y ?: 3     // f == 3
+f := m1.x || m1.y || 3     // f == 3
 
 m2 := {x:1}
-g := m2.x ?: m2.y ?: 3     // g == 1
+g := m2.x || m2.y || 3     // g == 1
 
 m3 := {x:1}
-h := m3.x ?: m3.y ?: 3     // h == 1
+h := m3.x || m3.y || 3     // h == 1
 
 m4 := {x:0,y:2}
-i := m4.x ?: m4.y ?: 3     // i == 2
+i := m4.x || m4.y || 3     // i == 2
 ```
 
 **Null Coalesce:** `(value expression) ?? (null expression)`.
@@ -406,7 +406,7 @@ g := m3.x ?? m3.y ?? 3     // g == 2
 | `^=` | `(lhs) = (lhs) ^ (rhs)` |
 | `<<=` | `(lhs) = (lhs) << (rhs)` |
 | `>>=` | `(lhs) = (lhs) >> (rhs)` |
-| `?:=` | `(lhs) = (lhs) ?: (rhs)` |
+| `||=` | `(lhs) = (lhs) || (rhs)` |
 | `??=` | `(lhs) = (lhs) ?? (rhs)` |
 | `++` | `(lhs) = (lhs) + 1` |
 | `--` | `(lhs) = (lhs) - 1` |
@@ -422,9 +422,9 @@ comparison operators, `&&` (logical AND), and finally `||` (logical OR):
 | :---: | :---: |
 | 5 | `*`  `/`  `%`  `<<`  `>>`  `&`  `&^` |
 | 4 | `+`  `-`  `\|`  `^` |
-| 3 | `==`  `!=`  `<`  `<=`  `>`  `>=` `?:` `??` |
+| 3 | `==`  `!=`  `<`  `<=`  `>`  `>=` |
 | 2 | `&&` |
-| 1 | `\|\|` |
+| 1 | `\|\|` `??` |
 
 Like Go, `++` and `--` operators form statements, not expressions, they fall
 outside the operator hierarchy.
