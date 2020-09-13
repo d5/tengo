@@ -1005,6 +1005,13 @@ r["x"] = {
 `, "Parse Error: illegal character U+0040 '@'\n\tat test:3:5 (and 10 more errors)")
 
 	expectCompileError(t, `import("")`, "empty module name")
+
+	// https://github.com/d5/tengo/issues/314
+	expectCompileError(t, `
+(func() {
+	fn := fn()
+})()	
+`, "unresolved reference 'fn")
 }
 
 func TestCompilerErrorReport(t *testing.T) {
