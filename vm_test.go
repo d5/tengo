@@ -1792,6 +1792,16 @@ func() {
 		nil, true)
 	expectRun(t, `out = func(v) { for ;;v++ { if v == 3 { break } } }(1)`,
 		nil, tengo.UndefinedValue)
+
+	// 'f' in RHS at line 4 must reference global variable 'f'
+	// See https://github.com/d5/tengo/issues/314
+	expectRun(t, `
+f := func() { return 2 }
+out = (func() {
+	f := f()
+	return f
+})()
+	`, nil, 2)
 }
 
 func TestIf(t *testing.T) {
@@ -3753,7 +3763,7 @@ func traceCompileRun(
 	{
 		res = make(map[string]tengo.Object)
 		for name := range symbols {
-			sym, depth, ok := symTable.Resolve(name)
+			sym, depth, ok := symTable.Resolve(name, false)
 			if !ok || depth != 0 {
 				err = fmt.Errorf("symbol not found: %s", name)
 				return

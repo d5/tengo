@@ -126,7 +126,7 @@ func resolveExpect(
 	expectedSymbol *tengo.Symbol,
 	expectedDepth int,
 ) {
-	actualSymbol, actualDepth, ok := symbolTable.Resolve(name)
+	actualSymbol, actualDepth, ok := symbolTable.Resolve(name, true)
 	require.True(t, ok)
 	require.Equal(t, expectedSymbol, actualSymbol)
 	require.Equal(t, expectedDepth, actualDepth)
