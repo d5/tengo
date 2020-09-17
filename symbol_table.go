@@ -44,6 +44,17 @@ func (t *SymbolTable) Define(name string) *Symbol {
 
 	if t.Parent(true) == nil {
 		symbol.Scope = ScopeGlobal
+
+		// if symbol is defined in a block of global scope, symbol index must
+		// be tracked at the root-level table instead.
+		if p := t.parent; p != nil {
+			for p.parent != nil {
+				p = p.parent
+			}
+			t.numDefinition--
+			p.numDefinition++
+		}
+
 	} else {
 		symbol.Scope = ScopeLocal
 	}

@@ -1180,7 +1180,7 @@ if a := 1; a {
 			tengo.MakeInstruction(parser.OpConstant, 2),
 			tengo.MakeInstruction(parser.OpSetGlobal, 0),
 			tengo.MakeInstruction(parser.OpGetGlobal, 0),
-			tengo.MakeInstruction(parser.OpSetGlobal, 1),
+			tengo.MakeInstruction(parser.OpSetGlobal, 2),
 			tengo.MakeInstruction(parser.OpSuspend)),
 		objectsArray(
 			intObject(1),
