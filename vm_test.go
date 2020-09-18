@@ -1804,7 +1804,93 @@ out = (func() {
 	`, nil, 2)
 }
 
+func TestBlocksInGlobalScope(t *testing.T) {
+	expectRun(t, `
+f := undefined
+if true {
+	a := 1
+	f = func() {
+		a = 2
+	}
+}
+b := 3
+f()
+out = b`,
+		nil, 3)
+
+	expectRun(t, `
+func() {
+	f := undefined
+	if true {
+		a := 10
+		f = func() {
+			a = 20
+		}
+	}
+	b := 5
+	f()
+	out = b
+}()
+	`,
+		nil, 5)
+
+	expectRun(t, `
+f := undefined
+if true {
+	a := 1
+	b := 2
+	f = func() {
+		a = 3
+		b = 4
+	}
+}
+c := 5
+d := 6
+f()
+out = c + d`,
+		nil, 11)
+
+	expectRun(t, `
+fn := undefined
+if true {
+	a := 1
+	b := 2
+	if true {
+		c := 3
+		d := 4
+		fn = func() {
+			a = 5
+			b = 6
+			c = 7
+			d = 8
+		}
+	}
+}
+e := 9
+f := 10
+fn()
+out = e + f`,
+		nil, 19)
+
+	expectRun(t, `
+out = 0
+func() {
+	for x in [1, 2, 3] {
+		out += x
+	}
+}()`,
+		nil, 6)
+
+	expectRun(t, `
+out = 0
+for x in [1, 2, 3] {
+	out += x
+}`,
+		nil, 6)
+}
+
 func TestIf(t *testing.T) {
+
 	expectRun(t, `if (true) { out = 10 }`, nil, 10)
 	expectRun(t, `if (false) { out = 10 }`, nil, tengo.UndefinedValue)
 	expectRun(t, `if (false) { out = 10 } else { out = 20 }`, nil, 20)
