@@ -733,6 +733,32 @@ func TestParseFunction(t *testing.T) {
 	})
 }
 
+func TestParseMethod(t *testing.T) {
+	expectParse(t, "a = func(b)(c, d) { return d }", func(p pfn) []Stmt {
+		return stmts(
+			assignStmt(
+				exprs(
+					ident("a", p(1, 1))),
+				exprs(
+					funcLit(
+						funcTypeMethod(
+							identList(p(1, 9), p(1, 11), false,
+								ident("b", p(1, 10))),
+							identList(p(1, 12), p(1, 17), false,
+								ident("c", p(1, 13)),
+								ident("d", p(1, 16))),
+							p(1, 5)),
+						blockStmt(p(1, 19), p(1, 30),
+							returnStmt(p(1, 21), ident("d", p(1, 28)))))),
+				token.Assign,
+				p(1, 3)))
+	})
+
+	expectParseError(t, "a = func(f, g)(c, d) { return d }")
+	expectParseError(t, "a = func(...g)(c, d) { return d }")
+	expectParseError(t, "a = func(...g, a)(c, d) { return d }")
+}
+
 func TestParseVariadicFunction(t *testing.T) {
 	expectParse(t, "a = func(...args) { return args }", func(p pfn) []Stmt {
 		return stmts(
@@ -1667,6 +1693,10 @@ func incDecStmt(
 
 func funcType(params *IdentList, pos Pos) *FuncType {
 	return &FuncType{Params: params, FuncPos: pos}
+}
+
+func funcTypeMethod(receiver, params *IdentList, pos Pos) *FuncType {
+	return &FuncType{Receiver: receiver, Params: params, FuncPos: pos}
 }
 
 func blockStmt(lbrace, rbrace Pos, list ...Stmt) *BlockStmt {

@@ -388,7 +388,7 @@ func TestCompiler_Compile(t *testing.T) {
 				tengo.MakeInstruction(parser.OpConstant, 0),
 				tengo.MakeInstruction(parser.OpConstant, 0),
 				tengo.MakeInstruction(parser.OpBinaryOp, 11),
-				tengo.MakeInstruction(parser.OpIndex),
+				tengo.MakeInstruction(parser.OpIndex, 0),
 				tengo.MakeInstruction(parser.OpPop),
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray(
@@ -405,7 +405,7 @@ func TestCompiler_Compile(t *testing.T) {
 				tengo.MakeInstruction(parser.OpConstant, 1),
 				tengo.MakeInstruction(parser.OpConstant, 2),
 				tengo.MakeInstruction(parser.OpBinaryOp, 12),
-				tengo.MakeInstruction(parser.OpIndex),
+				tengo.MakeInstruction(parser.OpIndex, 0),
 				tengo.MakeInstruction(parser.OpPop),
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray(
@@ -501,6 +501,21 @@ func TestCompiler_Compile(t *testing.T) {
 					tengo.MakeInstruction(parser.OpReturn, 1)),
 				intObject(1),
 				intObject(2))))
+
+	expectCompile(t, `f1 := func(r)() { return r }; f1();`,
+		bytecode(
+			concatInsts(
+				tengo.MakeInstruction(parser.OpConstant, 0),
+				tengo.MakeInstruction(parser.OpSetGlobal, 0),
+				tengo.MakeInstruction(parser.OpGetGlobal, 0),
+				tengo.MakeInstruction(parser.OpCall, 0, 0),
+				tengo.MakeInstruction(parser.OpPop),
+				tengo.MakeInstruction(parser.OpSuspend)),
+			objectsArray(
+				compiledFunction(1, 1,
+					tengo.MakeInstruction(parser.OpGetLocal, 0),
+					tengo.MakeInstruction(parser.OpReturn, 1)),
+				)))
 
 	expectCompile(t, `func() { return 5 + 10 }`,
 		bytecode(

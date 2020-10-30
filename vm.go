@@ -2,10 +2,9 @@ package tengo
 
 import (
 	"fmt"
-	"sync/atomic"
-
 	"github.com/d5/tengo/v2/parser"
 	"github.com/d5/tengo/v2/token"
+	"sync/atomic"
 )
 
 // frame represents a function call frame.
@@ -14,6 +13,7 @@ type frame struct {
 	freeVars    []*ObjectPtr
 	ip          int
 	basePointer int
+	context		Object
 }
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
@@ -345,6 +345,9 @@ func (v *VM) run() {
 				v.stack[v.sp-1] = immutableMap
 			}
 		case parser.OpIndex:
+			method := int(v.curInsts[v.ip+1])
+			v.ip++
+
 			index := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 			v.sp -= 2
@@ -365,6 +368,11 @@ func (v *VM) run() {
 			}
 			if val == nil {
 				val = UndefinedValue
+			}
+			if method == 1 {
+				v.curFrame.context = left
+			} else {
+				v.curFrame.context = UndefinedValue
 			}
 			v.stack[v.sp] = val
 			v.sp++
@@ -615,6 +623,15 @@ func (v *VM) run() {
 				if v.framesIndex >= MaxFrames {
 					v.err = ErrStackOverflow
 					return
+				}
+
+				if callee.UsesReceiver {
+					if v.curFrame.context == nil {
+						v.stack[v.sp] = UndefinedValue
+					} else {
+						v.stack[v.sp] = v.curFrame.context
+					}
+					v.curFrame.context = nil
 				}
 
 				// update call frame

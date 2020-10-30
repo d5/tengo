@@ -2771,6 +2771,52 @@ export { x: 1 }
 		1)
 }
 
+func TestMethod(t *testing.T) {
+	expectRun(t, `
+	s := func(r)(n, m, o) {
+		f := "F"
+		g := "G"
+		h := n + m * o
+		return r.h
+	};
+	m := { f1: s, h: 22 }
+	out = m.f1(4, 5, 6)`,
+	nil, 22)
+
+	expectRun(t, `
+	m := { 
+		f1: func(r)(n) { 
+			if n > 0 { 
+				return r.res 
+			} else { 
+				return r.f1(n-1) 
+			}
+		}, 
+		res: 22
+	}
+	out = m.f1(12)`,
+	nil, 22)
+
+	expectRun(t, `
+	m := { f1: func(r)() { return r.c }}
+	n := copy(m)
+	n.c = 3
+	out = n.f1()`,
+	nil, 3)
+
+	expectRun(t, `
+	f1 := func(r)() { return r }
+	out = f1()`,
+	nil, tengo.UndefinedValue)
+
+	expectRun(t, `
+	m := { f1: func(r)() { return r.c }}
+	n := copy(m)
+	n.c = 3
+	out = n.f1()`,
+		nil, 3)
+}
+
 func TestModuleBlockScopes(t *testing.T) {
 	m := Opts().Module("rand",
 		&tengo.BuiltinModule{

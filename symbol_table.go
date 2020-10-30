@@ -174,6 +174,14 @@ func (t *SymbolTable) updateMaxDefs(numDefs int) {
 	}
 }
 
+func (t *SymbolTable) defineReceiver(name string) {
+	t.store[name] = &Symbol{
+		Name:  name,
+		Index: 0,
+		Scope: ScopeFree,
+	}
+}
+
 func (t *SymbolTable) defineFree(original *Symbol) *Symbol {
 	// TODO: should we check duplicates?
 	t.freeSymbols = append(t.freeSymbols, original)

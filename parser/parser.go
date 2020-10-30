@@ -578,10 +578,20 @@ func (p *Parser) parseFuncType() *FuncType {
 	}
 
 	pos := p.expect(token.Func)
+	var receiver *IdentList
 	params := p.parseIdentList()
+	if p.token == token.LParen {
+		if !params.VarArgs && len(params.List) <= 1 {
+			receiver = params
+			params = p.parseIdentList()
+		} else {
+			p.errorExpected(params.Pos(), "1 receiver")
+		}
+	}
 	return &FuncType{
 		FuncPos: pos,
 		Params:  params,
+		Receiver:receiver,
 	}
 }
 
