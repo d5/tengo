@@ -221,9 +221,9 @@ f2([1, 2, 3]...)    // valid; a = 1, b = [2, 3]
 
 ## Method Values
 
-Sometimes, when creating structures in Tengo, it becomes desireable to be able
+Sometimes, when creating structures in Tengo, it becomes desirable to be able
 to call back to the parent map or array. This is handled by a method, a 
-specialized form of a function. When a method is defined, it creates a receiver in
+specialized subset of a function. When a method is defined, it creates a receiver in
 the local scope that takes on the identity of the parent slice or array during a
 call.
 
