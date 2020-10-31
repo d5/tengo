@@ -1286,7 +1286,7 @@ type ObjectPtr struct {
 }
 
 func (o *ObjectPtr) String() string {
-	return fmt.Sprintf("free-var -> %v", (*o.Value).TypeName())
+	return "free-var"
 }
 
 // TypeName returns the name of the type.
@@ -1308,25 +1308,6 @@ func (o *ObjectPtr) IsFalsy() bool {
 // another object.
 func (o *ObjectPtr) Equals(x Object) bool {
 	return o == x
-}
-
-type receiverWrapper struct {
-	ObjectImpl
-	Interior Object
-	Receiver Object
-}
-
-func (o *receiverWrapper) String() string {
-	return "wrapper of " + o.Interior.TypeName() + " and " + o.Receiver.TypeName()
-}
-
-// TypeName returns the name of the type.
-func (o *receiverWrapper) TypeName() string {
-	return "<wrapper>"
-}
-
-func (o *receiverWrapper) CanCall() bool {
-	return o.Interior.CanCall()
 }
 
 // String represents a string value.
