@@ -290,13 +290,18 @@ Returns `true` if the object's type is undefined. Or it returns `false`.
 
 ## is_function
 
-Returns `true` if the object's type is function or closure. Or it returns
+Returns `true` if the object's type is function, method, or closure. Or it returns
 `false`. Note that `is_function` returns `false` for builtin functions and
 user-provided callable objects.
 
+## is_method
+
+Returns `true` if the object's type is method. Or it returns
+`false`.
+
 ## is_callable
 
-Returns `true` if the object is callable (e.g. function, closure, builtin
+Returns `true` if the object is callable (e.g. function, closure, method, builtin
 function, or user-provided callable objects). Or it returns `false`.
 
 ## is_array
