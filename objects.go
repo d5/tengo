@@ -585,7 +585,7 @@ func (o *CompiledFunction) TypeName() string {
 }
 
 func (o *CompiledFunction) String() string {
-	return fmt.Sprintf("<compiled-function> %v", o.Free)
+	return "<compiled-function>"
 }
 
 // Copy returns a copy of the type.
