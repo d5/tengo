@@ -419,7 +419,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 			s.LocalAssigned = true
 		}
 		if usesReceiver {
-			c.symbolTable.defineFree(&Symbol{ Name: node.Type.Receiver.List[0].Name })
+			c.symbolTable.defineFree(&Symbol{ Name: reci.List[0].Name })
 		} else {
 			c.symbolTable.defineFree(&Symbol{ Name: "" })
 		}

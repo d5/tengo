@@ -110,6 +110,10 @@ var builtinFuncs = []*BuiltinFunction{
 		Value: builtinIsFunction,
 	},
 	{
+		Name:  "is_method",
+		Value: builtinIsMethod,
+	},
+	{
 		Name:  "is_callable",
 		Value: builtinIsCallable,
 	},
@@ -272,6 +276,19 @@ func builtinIsFunction(args ...Object) (Object, error) {
 	switch args[0].(type) {
 	case *CompiledFunction:
 		return TrueValue, nil
+	}
+	return FalseValue, nil
+}
+
+func builtinIsMethod(args ...Object) (Object, error) {
+	if len(args) != 1 {
+		return nil, ErrWrongNumArguments
+	}
+	switch args[0].(type) {
+	case *CompiledFunction:
+		if args[0].(*CompiledFunction).UsesReceiver {
+			return TrueValue, nil
+		}
 	}
 	return FalseValue, nil
 }

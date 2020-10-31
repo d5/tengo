@@ -2,9 +2,10 @@ package tengo
 
 import (
 	"fmt"
+	"sync/atomic"
+
 	"github.com/d5/tengo/v2/parser"
 	"github.com/d5/tengo/v2/token"
-	"sync/atomic"
 )
 
 // frame represents a function call frame.
