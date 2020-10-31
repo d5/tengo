@@ -2814,7 +2814,19 @@ func TestMethod(t *testing.T) {
 	n := copy(m)
 	n.c = 3
 	out = n.f1()`,
-		nil, 3)
+	nil, 3)
+
+	expectRun(t, `
+	m := { f1: func(r)() { return r == undefined}}
+	n := copy(m)
+	f := n.f1
+	out = f()`,
+	nil, true)
+
+	expectRun(t, `
+	m := { f1: func(r)() { return r == undefined}}
+	out = m.f1()`,
+	nil, false)
 }
 
 func TestModuleBlockScopes(t *testing.T) {

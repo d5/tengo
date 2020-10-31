@@ -409,7 +409,8 @@ func (c *Compiler) Compile(node parser.Node) error {
 		c.emit(node, parser.OpSliceIndex)
 	case *parser.FuncLit:
 		c.enterScope()
-		usesReceiver := node.Type.Receiver != nil && len(node.Type.Receiver.List) == 1
+		reci := node.Type.Receiver
+		usesReceiver := reci != nil && len(reci.List) == 1
 
 		for _, p := range node.Type.Params.List {
 			s := c.symbolTable.Define(p.Name)
@@ -418,9 +419,9 @@ func (c *Compiler) Compile(node parser.Node) error {
 			s.LocalAssigned = true
 		}
 		if usesReceiver {
-			s := c.symbolTable.Define(node.Type.Receiver.List[0].Name)
-			// receiver is not assigned directly.
-			s.LocalAssigned = true
+			c.symbolTable.defineFree(&Symbol{ Name: node.Type.Receiver.List[0].Name })
+		} else {
+			c.symbolTable.defineFree(&Symbol{ Name: "" })
 		}
 
 		if err := c.Compile(node.Body); err != nil {
@@ -430,7 +431,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 		// code optimization
 		c.optimizeFunc(node)
 
-		freeSymbols := c.symbolTable.FreeSymbols()
+		freeSymbols := c.symbolTable.FreeSymbols()[1:]
 		numLocals := c.symbolTable.MaxSymbols()
 		instructions, sourceMap := c.leaveScope()
 
@@ -494,6 +495,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 			VarArgs:       node.Type.Params.VarArgs,
 			SourceMap:     sourceMap,
 			UsesReceiver:  usesReceiver,
+			Free:		   []*ObjectPtr{{Value: &UndefinedValue}},
 		}
 		if len(freeSymbols) > 0 {
 			c.emit(node, parser.OpClosure,

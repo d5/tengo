@@ -13,7 +13,6 @@ type frame struct {
 	freeVars    []*ObjectPtr
 	ip          int
 	basePointer int
-	context		Object
 }
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
@@ -370,9 +369,10 @@ func (v *VM) run() {
 				val = UndefinedValue
 			}
 			if method == 1 {
-				v.curFrame.context = left
-			} else {
-				v.curFrame.context = UndefinedValue
+				if cfnc, ok := val.(*CompiledFunction); ok {
+					val = cfnc.Copy()
+					val.(*CompiledFunction).Free[0] = &ObjectPtr{Value: &left}
+				}
 			}
 			v.stack[v.sp] = val
 			v.sp++
@@ -625,15 +625,6 @@ func (v *VM) run() {
 					return
 				}
 
-				if callee.UsesReceiver {
-					if v.curFrame.context == nil {
-						v.stack[v.sp] = UndefinedValue
-					} else {
-						v.stack[v.sp] = v.curFrame.context
-					}
-					v.curFrame.context = nil
-				}
-
 				// update call frame
 				v.curFrame.ip = v.ip // store current ip before call
 				v.curFrame = &(v.frames[v.framesIndex])
@@ -784,7 +775,7 @@ func (v *VM) run() {
 				NumLocals:     fn.NumLocals,
 				NumParameters: fn.NumParameters,
 				VarArgs:       fn.VarArgs,
-				Free:          free,
+				Free:          append(fn.Free, free...),
 			}
 			v.allocs--
 			if v.allocs == 0 {

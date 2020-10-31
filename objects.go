@@ -585,7 +585,7 @@ func (o *CompiledFunction) TypeName() string {
 }
 
 func (o *CompiledFunction) String() string {
-	return "<compiled-function>"
+	return fmt.Sprintf("<compiled-function> %v", o.Free)
 }
 
 // Copy returns a copy of the type.
@@ -1286,7 +1286,7 @@ type ObjectPtr struct {
 }
 
 func (o *ObjectPtr) String() string {
-	return "free-var"
+	return fmt.Sprintf("free-var -> %v", (*o.Value).TypeName())
 }
 
 // TypeName returns the name of the type.
