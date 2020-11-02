@@ -364,6 +364,7 @@ type IndexExpr struct {
 	LBrack Pos
 	Index  Expr
 	RBrack Pos
+	Reci   bool
 }
 
 func (e *IndexExpr) exprNode() {}
@@ -487,6 +488,7 @@ func (e *ParenExpr) String() string {
 type SelectorExpr struct {
 	Expr Expr
 	Sel  Expr
+	Reci bool
 }
 
 func (e *SelectorExpr) exprNode() {}

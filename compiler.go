@@ -56,7 +56,6 @@ type Compiler struct {
 	loopIndex       int
 	trace           io.Writer
 	indent          int
-	inMethodCall	bool
 }
 
 // NewCompiler creates a Compiler.
@@ -363,30 +362,24 @@ func (c *Compiler) Compile(node parser.Node) error {
 		c.emit(node, parser.OpMap, len(node.Elements)*2)
 
 	case *parser.SelectorExpr: // selector on RHS side
-		method := 0
-		if c.inMethodCall {
-			method = 1
-		}
-		c.inMethodCall = false
 		if err := c.Compile(node.Expr); err != nil {
 			return err
 		}
 		if err := c.Compile(node.Sel); err != nil {
 			return err
 		}
+		method := 0
+		if node.Reci { method = 1 }
 		c.emit(node, parser.OpIndex, method)
 	case *parser.IndexExpr:
-		method := 0
-		if c.inMethodCall {
-			method = 1
-		}
-		c.inMethodCall = false
 		if err := c.Compile(node.Expr); err != nil {
 			return err
 		}
 		if err := c.Compile(node.Index); err != nil {
 			return err
 		}
+		method := 0
+		if node.Reci { method = 1 }
 		c.emit(node, parser.OpIndex, method)
 	case *parser.SliceExpr:
 		if err := c.Compile(node.Expr); err != nil {
@@ -518,18 +511,9 @@ func (c *Compiler) Compile(node parser.Node) error {
 			c.emit(node, parser.OpReturn, 1)
 		}
 	case *parser.CallExpr:
-		method := false
-		switch node.Func.(type) {
-		case *parser.SelectorExpr:
-			method = true
-		case *parser.IndexExpr:
-			method = true
-		}
-		c.inMethodCall = method
 		if err := c.Compile(node.Func); err != nil {
 			return err
 		}
-		c.inMethodCall = false
 		for _, arg := range node.Args {
 			if err := c.Compile(arg); err != nil {
 				return err
