@@ -759,13 +759,15 @@ func (v *VM) run() {
 				v.err = fmt.Errorf("not function: %s", fn.TypeName())
 				return
 			}
-			free := make([]*ObjectPtr, numFree)
+			fnFreeDefault := len(fn.Free)
+			free := make([]*ObjectPtr, numFree + fnFreeDefault)
+			copy(free[:fnFreeDefault], fn.Free)
 			for i := 0; i < numFree; i++ {
 				switch freeVar := (v.stack[v.sp-numFree+i]).(type) {
 				case *ObjectPtr:
-					free[i] = freeVar
+					free[i + fnFreeDefault] = freeVar
 				default:
-					free[i] = &ObjectPtr{
+					free[i + fnFreeDefault] = &ObjectPtr{
 						Value: &v.stack[v.sp-numFree+i],
 					}
 				}
@@ -776,7 +778,7 @@ func (v *VM) run() {
 				NumLocals:     fn.NumLocals,
 				NumParameters: fn.NumParameters,
 				VarArgs:       fn.VarArgs,
-				Free:          append(fn.Free, free...),
+				Free:          free,
 			}
 			v.allocs--
 			if v.allocs == 0 {
