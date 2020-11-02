@@ -335,8 +335,6 @@ func (p *Parser) parseIndexOrSlice(x Expr) Expr {
 	p.exprLevel--
 	rbrack := p.expect(token.RBrack)
 
-	receiver := p.token == token.LParen
-
 	if numColons > 0 {
 		// slice expression
 		return &SliceExpr{
@@ -347,6 +345,7 @@ func (p *Parser) parseIndexOrSlice(x Expr) Expr {
 			High:   index[1],
 		}
 	}
+	receiver := p.token == token.LParen
 	return &IndexExpr{
 		Expr:   x,
 		LBrack: lbrack,

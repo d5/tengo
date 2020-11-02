@@ -401,9 +401,10 @@ func TestParseCall(t *testing.T) {
 		return stmts(
 			exprStmt(
 				callExpr(
-					selectorExpr(
+					selectorMethodExpr(
 						ident("a", p(1, 1)),
-						stringLit("b", p(1, 3))),
+						stringLit("b", p(1, 3)),
+						true),
 					p(1, 4), p(1, 5), NoPos)))
 	})
 
@@ -411,11 +412,12 @@ func TestParseCall(t *testing.T) {
 		return stmts(
 			exprStmt(
 				callExpr(
-					selectorExpr(
+					selectorMethodExpr(
 						selectorExpr(
 							ident("a", p(1, 1)),
 							stringLit("b", p(1, 3))),
-						stringLit("c", p(1, 5))),
+						stringLit("c", p(1, 5)),
+						true),
 					p(1, 6), p(1, 7), NoPos)))
 	})
 
@@ -423,13 +425,26 @@ func TestParseCall(t *testing.T) {
 		return stmts(
 			exprStmt(
 				callExpr(
-					selectorExpr(
+					selectorMethodExpr(
 						indexExpr(
 							ident("a", p(1, 1)),
 							stringLit("b", p(1, 3)),
 							p(1, 2), p(1, 6)),
-						stringLit("c", p(1, 8))),
+						stringLit("c", p(1, 8)),
+						true),
 					p(1, 9), p(1, 10), NoPos)))
+	})
+
+	expectParse(t, `a["b"]()`, func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				callExpr(
+					indexMethodExpr(
+						ident("a", p(1, 1)),
+						stringLit("b", p(1, 3)),
+						p(1, 2), p(1, 6),
+						true),
+					p(1, 7), p(1, 8), NoPos)))
 	})
 
 	expectParseError(t, `add(...a, 1)`)
@@ -1815,7 +1830,17 @@ func indexExpr(
 	lbrack, rbrack Pos,
 ) *IndexExpr {
 	return &IndexExpr{
-		Expr: x, Index: index, LBrack: lbrack, RBrack: rbrack,
+		Expr: x, Index: index, LBrack: lbrack, RBrack: rbrack, Reci: false,
+	}
+}
+
+func indexMethodExpr(
+	x, index Expr,
+	lbrack, rbrack Pos,
+	reci bool,
+) *IndexExpr {
+	return &IndexExpr{
+		Expr: x, Index: index, LBrack: lbrack, RBrack: rbrack, Reci: reci,
 	}
 }
 
@@ -1839,7 +1864,11 @@ func errorExpr(
 }
 
 func selectorExpr(x, sel Expr) *SelectorExpr {
-	return &SelectorExpr{Expr: x, Sel: sel}
+	return &SelectorExpr{Expr: x, Sel: sel, Reci: false}
+}
+
+func selectorMethodExpr(x, sel Expr, reci bool) *SelectorExpr {
+	return &SelectorExpr{Expr: x, Sel: sel, Reci: reci}
 }
 
 func equalStmt(t *testing.T, expected, actual Stmt) {
@@ -2020,6 +2049,8 @@ func equalExpr(t *testing.T, expected, actual Expr) {
 			actual.(*IndexExpr).LBrack)
 		require.Equal(t, expected.RBrack,
 			actual.(*IndexExpr).RBrack)
+		require.Equal(t, expected.Reci,
+			actual.(*IndexExpr).Reci)
 	case *SliceExpr:
 		equalExpr(t, expected.Expr,
 			actual.(*SliceExpr).Expr)
@@ -2036,6 +2067,8 @@ func equalExpr(t *testing.T, expected, actual Expr) {
 			actual.(*SelectorExpr).Expr)
 		equalExpr(t, expected.Sel,
 			actual.(*SelectorExpr).Sel)
+		require.Equal(t, expected.Reci,
+			actual.(*SelectorExpr).Reci)
 	case *ImportExpr:
 		require.Equal(t, expected.ModuleName,
 			actual.(*ImportExpr).ModuleName)
