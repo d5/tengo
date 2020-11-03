@@ -1059,9 +1059,10 @@ func TestParseImport(t *testing.T) {
 		return stmts(
 			exprStmt(
 				callExpr(
-					selectorExpr(
+					selectorMethodExpr(
 						importExpr("mod1", p(1, 1)),
-						stringLit("func1", p(1, 16))),
+						stringLit("func1", p(1, 16)),
+						true),
 					p(1, 21), p(1, 22), NoPos)))
 	})
 
