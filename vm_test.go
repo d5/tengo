@@ -2827,6 +2827,34 @@ func TestMethod(t *testing.T) {
 	m := { f1: func(r)() { return r == undefined}}
 	out = m.f1()`,
 	nil, false)
+
+	expectRun(t, `
+	arr := [ func(r)() { return r[1] }, 17 ]
+	out = arr[0]()`,
+	nil, 17)
+
+	expectRun(t, `
+	arr := [ func(r)() { return r == undefined} ]
+	out = arr[0]()`,
+	nil, false)
+
+	expectRun(t, `
+	arr := [ func(r)() { return r == undefined}]
+	f := arr[0]
+	out = f()`,
+	nil, true)
+
+	//jump between functions in an array
+	expectRun(t, `
+	arr := [ 0, 1, 3, "s", func(r)() { return r[1] }, 14, func(r)() { return r[4]() }, 17 ]
+	out = arr[6]()`,
+	nil, 1)
+
+	expectRun(t, `
+	arr := [[ "b", func(r)(){ return r[0] }, 14], func(r)(){ return r[0][1]() }, 17 ]
+	out = arr[1]()`,
+	nil, "b")
+
 }
 
 func TestModuleBlockScopes(t *testing.T) {
