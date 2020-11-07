@@ -238,6 +238,10 @@ my_counter := {
 my_counter.counter += 4
 
 my_counter.getCount()    //returns 25
+
+my_arr := [ 0, 5, 17, func(r)() { return r[1] } ]
+
+my_arr[3]() //returns 5
 ```
 
 Notably, and unlike Go, a method receiver is not dependent on being instanced inside 
@@ -283,6 +287,15 @@ m1.getC()   //21
 m1.c = 2   
 m1.getC()   //2
 m2.getC()   //7
+
+a1 := [ func (r)() { return r[1] + " " + r[2] }, "some", "other data" ]
+a2 := copy(a1)
+
+a2[2] = "more things"
+
+a2[0]() //returns "some more things"
+a1[0]() //returns "some other data"
+
 ```
 
 ## Variables and Scopes
