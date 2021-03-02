@@ -50,8 +50,7 @@ var (
 	// required method.
 	ErrNotImplemented = errors.New("not implemented")
 
-	// ErrNotImplemented is an error where an Object has not implemented a
-	// required method.
+	// ErrInvalidRangeStep is an error where the step parameter is less than or equal to 0 when using builtin range function.
 	ErrInvalidRangeStep = errors.New("range step must be greater than 0")
 )
 
