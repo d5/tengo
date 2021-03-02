@@ -23,8 +23,8 @@ jobs:
           ${{ runner.os }}-go-
     - name: setup env
       run: |
-        echo "::set-env name=GOPATH::$(go env GOPATH)"
-        echo "::add-path::$(go env GOPATH)/bin"
+        echo "name=GOPATH::$(go env GOPATH)" >> $GITHUB_ENV
+        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
       shell: bash
     - name: check out code
       uses: actions/checkout@v2
