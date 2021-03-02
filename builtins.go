@@ -353,10 +353,9 @@ func builtinRange(args ...Object) (Object, error) {
 				Expected: "int",
 				Found:    arg.TypeName(),
 			}
-		} else {
-			if i == 2 && v.Value <= 0 {
-				return nil, ErrInvalidRangeStep
-			}
+		}
+		if i == 2 && v.Value <= 0 {
+			return nil, ErrInvalidRangeStep
 		}
 		switch i {
 		case 0:
@@ -372,10 +371,10 @@ func builtinRange(args ...Object) (Object, error) {
 		step = &Int{Value: int64(1)}
 	}
 
-	return Range(start.Value, stop.Value, step.Value), nil
+	return buildRange(start.Value, stop.Value, step.Value), nil
 }
 
-func Range(start, stop, step int64) *Array {
+func buildRange(start, stop, step int64) *Array {
 	array := &Array{}
 	if start <= stop {
 		for i := start; i < stop; i += step {
