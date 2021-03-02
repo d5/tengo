@@ -498,7 +498,7 @@ func Test_builtinRange(t *testing.T) {
 					err, tt.wantedErr)
 			}
 			if tt.result != nil && !reflect.DeepEqual(tt.result, got) {
-				t.Errorf("builtinSplice() arrays are not equal expected"+
+				t.Errorf("builtinRange() arrays are not equal expected"+
 					" %s, got %s", tt.result, got.(*tengo.Array))
 			}
 		})
