@@ -49,6 +49,10 @@ var (
 	// ErrNotImplemented is an error where an Object has not implemented a
 	// required method.
 	ErrNotImplemented = errors.New("not implemented")
+
+	// ErrNotImplemented is an error where an Object has not implemented a
+	// required method.
+	ErrInvalidRangeStep = errors.New("range step must be greater than 0")
 )
 
 // ErrInvalidArgumentType represents an invalid argument value type error.
