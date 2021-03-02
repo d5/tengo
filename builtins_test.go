@@ -351,3 +351,156 @@ func Test_builtinSplice(t *testing.T) {
 		})
 	}
 }
+
+func Test_builtinRange(t *testing.T) {
+	var builtinRange func(args ...tengo.Object) (tengo.Object, error)
+	for _, f := range tengo.GetAllBuiltinFunctions() {
+		if f.Name == "range" {
+			builtinRange = f.Value
+			break
+		}
+	}
+	if builtinRange == nil {
+		t.Fatal("builtin range not found")
+	}
+	tests := []struct {
+		name      string
+		args      []tengo.Object
+		result    *tengo.Array
+		wantErr   bool
+		wantedErr error
+	}{
+		{name: "no args", args: []tengo.Object{}, wantErr: true,
+			wantedErr: tengo.ErrWrongNumArguments,
+		},
+		{name: "single args", args: []tengo.Object{&tengo.Map{}},
+			wantErr:   true,
+			wantedErr: tengo.ErrWrongNumArguments,
+		},
+		{name: "4 args", args: []tengo.Object{&tengo.Map{}, &tengo.String{}, &tengo.String{}, &tengo.String{}},
+			wantErr:   true,
+			wantedErr: tengo.ErrWrongNumArguments,
+		},
+		{name: "invalid start",
+			args:    []tengo.Object{&tengo.String{}, &tengo.String{}},
+			wantErr: true,
+			wantedErr: tengo.ErrInvalidArgumentType{
+				Name: "start", Expected: "int", Found: "string"},
+		},
+		{name: "invalid stop",
+			args:    []tengo.Object{&tengo.Int{}, &tengo.String{}},
+			wantErr: true,
+			wantedErr: tengo.ErrInvalidArgumentType{
+				Name: "stop", Expected: "int", Found: "string"},
+		},
+		{name: "invalid step",
+			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{}, &tengo.String{}},
+			wantErr: true,
+			wantedErr: tengo.ErrInvalidArgumentType{
+				Name: "step", Expected: "int", Found: "string"},
+		},
+		{name: "zero step",
+			args:      []tengo.Object{&tengo.Int{}, &tengo.Int{}, &tengo.Int{}}, //must greate than 0
+			wantErr:   true,
+			wantedErr: tengo.ErrInvalidRangeStep,
+		},
+		{name: "negative step",
+			args:      []tengo.Object{&tengo.Int{}, &tengo.Int{}, intObject(-2)}, //must greate than 0
+			wantErr:   true,
+			wantedErr: tengo.ErrInvalidRangeStep,
+		},
+		{name: "same bound",
+			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{}},
+			wantErr: false,
+			result: &tengo.Array{
+				Value: nil,
+			},
+		},
+		{name: "positive range",
+			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{Value: 5}},
+			wantErr: false,
+			result: &tengo.Array{
+				Value: []tengo.Object{
+					intObject(0),
+					intObject(1),
+					intObject(2),
+					intObject(3),
+					intObject(4),
+				},
+			},
+		},
+		{name: "negative range",
+			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{Value: -5}},
+			wantErr: false,
+			result: &tengo.Array{
+				Value: []tengo.Object{
+					intObject(0),
+					intObject(-1),
+					intObject(-2),
+					intObject(-3),
+					intObject(-4),
+				},
+			},
+		},
+
+		{name: "positive with step",
+			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{Value: 5}, &tengo.Int{Value: 2}},
+			wantErr: false,
+			result: &tengo.Array{
+				Value: []tengo.Object{
+					intObject(0),
+					intObject(2),
+					intObject(4),
+				},
+			},
+		},
+
+		{name: "negative with step",
+			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{Value: -10}, &tengo.Int{Value: 2}},
+			wantErr: false,
+			result: &tengo.Array{
+				Value: []tengo.Object{
+					intObject(0),
+					intObject(-2),
+					intObject(-4),
+					intObject(-6),
+					intObject(-8),
+				},
+			},
+		},
+
+		{name: "large range",
+			args:    []tengo.Object{intObject(-10), intObject(10), &tengo.Int{Value: 3}},
+			wantErr: false,
+			result: &tengo.Array{
+				Value: []tengo.Object{
+					intObject(-10),
+					intObject(-7),
+					intObject(-4),
+					intObject(-1),
+					intObject(2),
+					intObject(5),
+					intObject(8),
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := builtinRange(tt.args...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("builtinRange() error = %v, wantErr %v",
+					err, tt.wantErr)
+				return
+			}
+			if tt.wantErr && tt.wantedErr.Error() != err.Error() {
+				t.Errorf("builtinRange() error = %v, wantedErr %v",
+					err, tt.wantedErr)
+			}
+			if tt.result != nil && !reflect.DeepEqual(tt.result, got) {
+				t.Errorf("builtinRange() arrays are not equal expected"+
+					" %s, got %s", tt.result, got.(*tengo.Array))
+			}
+		})
+	}
+}
