@@ -373,7 +373,7 @@ func Test_builtinRange(t *testing.T) {
 		{name: "no args", args: []tengo.Object{}, wantErr: true,
 			wantedErr: tengo.ErrWrongNumArguments,
 		},
-		{name: "1 args", args: []tengo.Object{&tengo.Map{}},
+		{name: "single args", args: []tengo.Object{&tengo.Map{}},
 			wantErr:   true,
 			wantedErr: tengo.ErrWrongNumArguments,
 		},
@@ -413,9 +413,7 @@ func Test_builtinRange(t *testing.T) {
 			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{}},
 			wantErr: false,
 			result: &tengo.Array{
-				Value: []tengo.Object{
-					intObject(0),
-				},
+				Value: nil,
 			},
 		},
 		{name: "positive range",

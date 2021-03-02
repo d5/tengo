@@ -334,6 +334,7 @@ func builtinRange(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 	var start, stop, step *Int
+
 	for i, arg := range args {
 		v, ok := args[i].(*Int)
 		if !ok {
@@ -375,12 +376,6 @@ func builtinRange(args ...Object) (Object, error) {
 }
 
 func Range(start, stop, step int64) *Array {
-	if start == stop {
-		return &Array{Value: []Object{
-			&Int{Value: start},
-		}}
-	}
-
 	array := &Array{}
 	if start <= stop {
 		for i := start; i < stop; i += step {
