@@ -1,6 +1,7 @@
 package tengo
 
 import (
+	"sync/atomic"
 	"time"
 )
 
@@ -9,20 +10,20 @@ func init() {
 	addBuiltinFunction("makechan", builtinMakechan)
 }
 
-type result struct {
-	retVal Object
-	err    error
+type ret struct {
+	val Object
+	err error
 }
 
-type job struct {
-	result
-	vm       *VM
-	waitChan chan result
-	done     bool
+type goroutineVM struct {
+	*VM
+	ret      // return value of (*VM).RunCompiled()
+	waitChan chan ret
+	done     int64
 }
 
 // Start a goroutine which run fn(arg1, arg2, ...) in a new VM cloned from the current running VM.
-// Return a job object that has wait, result, abort methods.
+// Return a goroutineVM object that has wait, result, abort methods.
 func builtinGo(args ...Object) (Object, error) {
 	vm := args[0].(*VMObj).Value
 	args = args[1:] // the first arg is VMObj inserted by VM
@@ -39,27 +40,27 @@ func builtinGo(args ...Object) (Object, error) {
 	}
 
 	newVM := vm.ShallowClone()
-	jb := &job{
-		vm:       newVM,
-		waitChan: make(chan result),
+	gvm := &goroutineVM{
+		VM:       newVM,
+		waitChan: make(chan ret),
 	}
 
 	go func() {
-		retVal, err := jb.vm.RunCompiled(fn, args[1:]...)
-		jb.waitChan <- result{retVal, err}
+		val, err := gvm.RunCompiled(fn, args[1:]...)
+		gvm.waitChan <- ret{val, err}
 	}()
 
 	obj := map[string]Object{
-		"result": &BuiltinFunction{Value: jb.getResult},
-		"wait":   &BuiltinFunction{Value: jb.waitTimeout},
-		"abort":  &BuiltinFunction{Value: jb.abort},
+		"result": &BuiltinFunction{Value: gvm.getRet},
+		"wait":   &BuiltinFunction{Value: gvm.waitTimeout},
+		"abort":  &BuiltinFunction{Value: gvm.abort},
 	}
 	return &Map{Value: obj}, nil
 }
 
-// Return true if job is done
-func (jb *job) wait(seconds int64) bool {
-	if jb.done {
+// Return true if the goroutineVM is done
+func (gvm *goroutineVM) wait(seconds int64) bool {
+	if atomic.LoadInt64(&gvm.done) == 1 {
 		return true
 	}
 
@@ -68,8 +69,8 @@ func (jb *job) wait(seconds int64) bool {
 	}
 
 	select {
-	case jb.result = <-jb.waitChan:
-		jb.done = true
+	case gvm.ret = <-gvm.waitChan:
+		atomic.StoreInt64(&gvm.done, 1)
 	case <-time.After(time.Duration(seconds) * time.Second):
 		return false
 	}
@@ -77,11 +78,11 @@ func (jb *job) wait(seconds int64) bool {
 	return true
 }
 
-// Wait the job to complete.
+// Wait for the goroutineVM to complete.
 // Wait can have optional timeout in seconds if the first arg is int.
 // Wait forever if the optional timeout not specified, or timeout <= 0
-// Return true if the job exited(successfully or not) within the timeout peroid.
-func (jb *job) waitTimeout(args ...Object) (Object, error) {
+// Return true if the goroutineVM exited(successfully or not) within the timeout peroid.
+func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
 	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) > 1 {
 		return nil, ErrWrongNumArguments
@@ -99,36 +100,37 @@ func (jb *job) waitTimeout(args ...Object) (Object, error) {
 		timeOut = t
 	}
 
-	if jb.wait(int64(timeOut)) {
+	if gvm.wait(int64(timeOut)) {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func (jb *job) abort(args ...Object) (Object, error) {
+// Terminate the execution of the goroutineVM.
+func (gvm *goroutineVM) abort(args ...Object) (Object, error) {
 	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
 
-	jb.vm.Abort()
+	gvm.Abort()
 	return nil, nil
 }
 
-// Wait job to complete, return Error value when jb.err is present,
-// otherwise return the result value of fn(arg1, arg2, ...)
-func (jb *job) getResult(args ...Object) (Object, error) {
+// Wait the goroutineVM to complete, return Error object if any runtime error occurred
+// during the execution, otherwise return the result value of fn(arg1, arg2, ...)
+func (gvm *goroutineVM) getRet(args ...Object) (Object, error) {
 	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
 
-	jb.wait(-1)
-	if jb.err != nil {
-		return &Error{Value: &String{Value: jb.err.Error()}}, nil
+	gvm.wait(-1)
+	if gvm.ret.err != nil {
+		return &Error{Value: &String{Value: gvm.ret.err.Error()}}, nil
 	}
 
-	return jb.retVal, nil
+	return gvm.ret.val, nil
 }
 
 type objchan chan Object
