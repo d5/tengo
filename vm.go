@@ -1,6 +1,7 @@
 package tengo
 
 import (
+	"context"
 	"fmt"
 	"sync/atomic"
 
@@ -16,8 +17,14 @@ type frame struct {
 	basePointer int
 }
 
+type cancelCtx struct {
+	context.Context
+	cancel context.CancelFunc
+}
+
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
+	ctx         cancelCtx // used to signal blocked channel sending and receiving to exit
 	constants   []Object
 	stack       [StackSize]Object
 	sp          int
@@ -52,6 +59,8 @@ func NewVM(
 		ip:          -1,
 		maxAllocs:   maxAllocs,
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	v.ctx = cancelCtx{ctx, cancel}
 	v.frames[0].fn = bytecode.MainFunction
 	v.frames[0].ip = -1
 	v.curFrame = &v.frames[0]
@@ -62,10 +71,11 @@ func NewVM(
 // Abort aborts the execution.
 func (v *VM) Abort() {
 	atomic.StoreInt64(&v.aborting, 1)
+	v.ctx.cancel()
 }
 
 // Run starts the execution.
-func (v *VM) Run() (err error) {
+func (v *VM) Run() error {
 	// reset VM states
 	v.sp = 0
 	v.curFrame = &(v.frames[0])
@@ -75,7 +85,10 @@ func (v *VM) Run() (err error) {
 	v.allocs = v.maxAllocs + 1
 
 	v.run()
-	atomic.StoreInt64(&v.aborting, 0)
+	return v.postRun()
+}
+
+func (v *VM) postRun() (err error) {
 	err = v.err
 	if err != nil {
 		filePos := v.fileSet.Position(
@@ -89,9 +102,108 @@ func (v *VM) Run() (err error) {
 				v.curFrame.fn.SourcePos(v.curFrame.ip - 1))
 			err = fmt.Errorf("%w\n\tat %s", err, filePos)
 		}
-		return err
 	}
-	return nil
+
+	if atomic.LoadInt64(&v.aborting) == 1 {
+		if err != nil {
+			err = fmt.Errorf("VM aborted\n\t%w", err)
+		} else {
+			err = fmt.Errorf("VM aborted")
+		}
+	}
+	atomic.StoreInt64(&v.aborting, 0)
+	return err
+}
+
+func concatInsts(instructions ...[]byte) []byte {
+	var concat []byte
+	for _, i := range instructions {
+		concat = append(concat, i...)
+	}
+	return concat
+}
+
+var emptyEntry = &CompiledFunction{
+	Instructions: MakeInstruction(parser.OpSuspend),
+}
+
+// ShallowClone creates a shallow copy of the current VM, with separate stack and frame.
+// The copy shares the underlying globals, constants with the original.
+// ShallowClone is typically followed by RunCompiled to run user supplied compiled function.
+func (v *VM) ShallowClone() *VM {
+	shallowClone := &VM{
+		constants:   v.constants,
+		sp:          0,
+		globals:     v.globals,
+		fileSet:     v.fileSet,
+		framesIndex: 1,
+		ip:          -1,
+		maxAllocs:   v.maxAllocs,
+	}
+
+	//ctx, cancel := context.WithCancel(v.ctx.Context) // cloned VM derives the context of its parent
+	ctx, cancel := context.WithCancel(context.Background()) // cloned VM has independent context
+	shallowClone.ctx = cancelCtx{ctx, cancel}
+	// set to empty entry
+	shallowClone.frames[0].fn = emptyEntry
+	shallowClone.frames[0].ip = -1
+	shallowClone.curFrame = &v.frames[0]
+	shallowClone.curInsts = v.curFrame.fn.Instructions
+
+	return shallowClone
+}
+
+// constract wrapper function func(fn, ...args){ return fn(args...) }
+var funcWrapper = &CompiledFunction{
+	Instructions: concatInsts(
+		MakeInstruction(parser.OpGetLocal, 0),
+		MakeInstruction(parser.OpGetLocal, 1),
+		MakeInstruction(parser.OpCall, 1, 1),
+		MakeInstruction(parser.OpReturn, 1),
+	),
+	NumLocals:     2,
+	NumParameters: 2,
+	VarArgs:       true,
+}
+
+// RunCompiled run the VM with user supplied function fn.
+func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (Object, error) {
+	entry := &CompiledFunction{
+		Instructions: concatInsts(
+			MakeInstruction(parser.OpCall, 1+len(args), 0),
+			MakeInstruction(parser.OpSuspend),
+		),
+	}
+
+	v.stack[0] = funcWrapper
+	v.stack[1] = fn
+	for i, arg := range args {
+		v.stack[i+2] = arg
+	}
+	v.sp = 2 + len(args)
+
+	v.frames[0].fn = entry
+	v.frames[0].ip = -1
+	v.curFrame = &v.frames[0]
+	v.curInsts = v.curFrame.fn.Instructions
+	v.framesIndex = 1
+	v.ip = -1
+	v.allocs = v.maxAllocs + 1
+
+	v.run()
+	if err := v.postRun(); err != nil {
+		return UndefinedValue, err
+	}
+	return v.stack[v.sp-1], nil
+}
+
+type VMObj struct {
+	ObjectImpl
+	Value *VM
+}
+
+func (v *VM) selfObject() Object {
+	return &VMObj{Value: v}
 }
 
 func (v *VM) run() {
@@ -629,6 +741,10 @@ func (v *VM) run() {
 				v.sp = v.sp - numArgs + callee.NumLocals
 			} else {
 				var args []Object
+				if _, ok := value.(*BuiltinFunction); ok {
+					// pass VM as the first para to builtin functions
+					args = append(args, v.selfObject())
+				}
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 				ret, e := value.Call(args...)
 				v.sp -= numArgs + 1
