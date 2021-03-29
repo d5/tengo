@@ -126,6 +126,110 @@ v := ["a", "b", "c"]
 items := splice(v, 1, 1, "d", "e") // items == ["b"], v == ["a", "d", "e", "c"]
 ```
 
+## govm
+
+Starts a goroutine which run fn(arg1, arg2, ...) in a new VM cloned from
+the current running VM, and returns a goroutineVM object that has
+wait, result, abort methods.
+
+```golang
+var := 0
+
+f1 := func(a,b) { var = 10; return a+b }
+f2 := func(a,b,c) { var = 11; return a+b+c }
+
+gvm1 := govm(f1,1,2)
+gvm2 := govm(f2,1,2,5)
+
+fmt.println(gvm1.result()) // 3
+fmt.println(gvm2.result()) // 8
+fmt.println(var) // 10 or 11
+```
+
+Below is a simple client server example:
+
+```golang
+reqChan := makechan(8)
+repChan := makechan(8)
+
+client := func(interval) {
+	reqChan.send("hello")
+	i := 0
+	for {
+		fmt.println(repChan.recv())
+		times.sleep(interval*times.second)
+		reqChan.send(i)
+		i++
+	}
+}
+
+server := func() {
+	for {
+		req := reqChan.recv()
+		if req == "hello" {
+			fmt.println(req)
+			repChan.send("world")
+		} else {
+			repChan.send(req+100)
+		}
+	}
+}
+
+gvmClient := govm(client, 2)
+gvmServer := govm(server)
+
+if ok := gvmClient.wait(5); !ok {
+	gvmClient.abort()
+}
+gvmServer.abort()
+
+fmt.println("client: ", gvmClient.result())
+fmt.println("server: ", gvmServer.result())
+
+//output:
+//hello
+//world
+//100
+//101
+//client: error: "VM aborted"
+//server: error: "VM aborted\n\tRuntime Error: context canceled at -\n\tat -"
+```
+
+* wait() waits for the goroutineVM to complete in timeout seconds and
+returns true if the goroutineVM exited(successfully or not) within the
+timeout peroid. It waits forever if the optional timeout not specified,
+or timeout < 0.
+* abort() terminates the VM.
+* result() waits the goroutineVM to complete, returns Error object if
+any runtime error occurred during the execution, otherwise returns the
+result value of fn(arg1, arg2, ...)
+
+## makechan
+
+Makes a channel to send/receive object and returns a chan object that has
+send, recv, close methods.
+
+```golang
+unbufferedChan := makechan()
+bufferedChan := makechan(128)
+
+// Send will block if the channel is full.
+bufferedChan.send("hello") // send string
+bufferedChan.send(55) // send int
+bufferedChan.send([66, makechan(1)]) // channel in channel
+
+// Receive will block if the channel is empty.
+obj := bufferedChan.recv()
+
+// Send to a closed channel causes panic.
+// Receive from a closed channel returns undefined value.
+unbufferedChan.close()
+bufferedChan.close()
+```
+
+On the time the VM that the chan is running in is aborted, the sending
+or receiving call returns immediately.
+
 ## type_name
 
 Returns the type_name of an object.
