@@ -197,13 +197,13 @@ func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (Object, error) {
 	return v.stack[v.sp-1], nil
 }
 
-type VMObj struct {
+type vmObj struct {
 	ObjectImpl
 	Value *VM
 }
 
 func (v *VM) selfObject() Object {
-	return &VMObj{Value: v}
+	return &vmObj{Value: v}
 }
 
 func (v *VM) run() {

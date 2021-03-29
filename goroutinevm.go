@@ -25,8 +25,8 @@ type goroutineVM struct {
 // Start a goroutine which run fn(arg1, arg2, ...) in a new VM cloned from the current running VM.
 // Return a goroutineVM object that has wait, result, abort methods.
 func builtinGovm(args ...Object) (Object, error) {
-	vm := args[0].(*VMObj).Value
-	args = args[1:] // the first arg is VMObj inserted by VM
+	vm := args[0].(*vmObj).Value
+	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) == 0 {
 		return nil, ErrWrongNumArguments
 	}
@@ -82,7 +82,7 @@ func (gvm *goroutineVM) wait(seconds int64) bool {
 // Return true if the goroutineVM exited(successfully or not) within the timeout peroid.
 // Wait forever if the optional timeout not specified, or timeout < 0.
 func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is VMObj inserted by VM
+	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) > 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -107,7 +107,7 @@ func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
 
 // Terminate the execution of the goroutineVM.
 func (gvm *goroutineVM) abort(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is VMObj inserted by VM
+	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
@@ -119,7 +119,7 @@ func (gvm *goroutineVM) abort(args ...Object) (Object, error) {
 // Wait the goroutineVM to complete, return Error object if any runtime error occurred
 // during the execution, otherwise return the result value of fn(arg1, arg2, ...)
 func (gvm *goroutineVM) getRet(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is VMObj inserted by VM
+	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
@@ -137,7 +137,7 @@ type objchan chan Object
 // Make a channel to send/receive object
 // Return a chan object that has send, recv, close methods.
 func builtinMakechan(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is VMObj inserted by VM
+	args = args[1:] // the first arg is vmObj inserted by VM
 	var size int
 	switch len(args) {
 	case 0:
@@ -167,8 +167,8 @@ func builtinMakechan(args ...Object) (Object, error) {
 // Send an obj to the channel, will block until channel is not full or (*VM).Abort() has been called.
 // Send to a closed channel causes panic.
 func (oc objchan) send(args ...Object) (Object, error) {
-	vm := args[0].(*VMObj).Value
-	args = args[1:] // the first arg is VMObj inserted by VM
+	vm := args[0].(*vmObj).Value
+	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -184,8 +184,8 @@ func (oc objchan) send(args ...Object) (Object, error) {
 // Receive an obj from the channel, will block until channel is not empty or (*VM).Abort() has been called.
 // Receive from a closed channel returns undefined value.
 func (oc objchan) recv(args ...Object) (Object, error) {
-	vm := args[0].(*VMObj).Value
-	args = args[1:] // the first arg is VMObj inserted by VM
+	vm := args[0].(*vmObj).Value
+	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
@@ -203,7 +203,7 @@ func (oc objchan) recv(args ...Object) (Object, error) {
 
 // Close the channel.
 func (oc objchan) close(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is VMObj inserted by VM
+	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
