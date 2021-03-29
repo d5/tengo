@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	addBuiltinFunction("go", builtinGo)
+	addBuiltinFunction("govm", builtinGovm)
 	addBuiltinFunction("makechan", builtinMakechan)
 }
 
@@ -24,7 +24,7 @@ type goroutineVM struct {
 
 // Start a goroutine which run fn(arg1, arg2, ...) in a new VM cloned from the current running VM.
 // Return a goroutineVM object that has wait, result, abort methods.
-func builtinGo(args ...Object) (Object, error) {
+func builtinGovm(args ...Object) (Object, error) {
 	vm := args[0].(*VMObj).Value
 	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) == 0 {
@@ -64,7 +64,7 @@ func (gvm *goroutineVM) wait(seconds int64) bool {
 		return true
 	}
 
-	if seconds <= 0 {
+	if seconds < 0 {
 		seconds = 3153600000 // 100 years
 	}
 
@@ -78,10 +78,9 @@ func (gvm *goroutineVM) wait(seconds int64) bool {
 	return true
 }
 
-// Wait for the goroutineVM to complete.
-// Wait can have optional timeout in seconds if the first arg is int.
-// Wait forever if the optional timeout not specified, or timeout <= 0
+// Wait for the goroutineVM to complete in timeout seconds.
 // Return true if the goroutineVM exited(successfully or not) within the timeout peroid.
+// Wait forever if the optional timeout not specified, or timeout < 0.
 func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
 	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) > 1 {
