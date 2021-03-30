@@ -320,8 +320,9 @@ func (o *Bool) GobEncode() (b []byte, err error) {
 // BuiltinFunction represents a builtin function.
 type BuiltinFunction struct {
 	ObjectImpl
-	Name  string
-	Value CallableFunc
+	Name      string
+	Value     CallableFunc
+	needvmObj bool
 }
 
 // TypeName returns the name of the type.

@@ -741,9 +741,11 @@ func (v *VM) run() {
 				v.sp = v.sp - numArgs + callee.NumLocals
 			} else {
 				var args []Object
-				if _, ok := value.(*BuiltinFunction); ok {
-					// pass VM as the first para to builtin functions
-					args = append(args, v.selfObject())
+				if bltnfn, ok := value.(*BuiltinFunction); ok {
+					if bltnfn.needvmObj {
+						// pass VM as the first para to builtin functions
+						args = append(args, v.selfObject())
+					}
 				}
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 				ret, e := value.Call(args...)

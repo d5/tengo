@@ -2,42 +2,43 @@ package tengo
 
 var builtinFuncs []*BuiltinFunction
 
-func addBuiltinFunction(name string, fn CallableFunc) {
-	builtinFuncs = append(builtinFuncs, &BuiltinFunction{Name: name, Value: fn})
+// if needvmObj is true, VM will pass [vmObj, args...] to fn when calling it.
+func addBuiltinFunction(name string, fn CallableFunc, needvmObj bool) {
+	builtinFuncs = append(builtinFuncs, &BuiltinFunction{Name: name, Value: fn, needvmObj: needvmObj})
 }
 
 func init() {
-	addBuiltinFunction("len", builtinLen)
-	addBuiltinFunction("copy", builtinCopy)
-	addBuiltinFunction("append", builtinAppend)
-	addBuiltinFunction("delete", builtinDelete)
-	addBuiltinFunction("splice", builtinSplice)
-	addBuiltinFunction("string", builtinString)
-	addBuiltinFunction("int", builtinInt)
-	addBuiltinFunction("bool", builtinBool)
-	addBuiltinFunction("float", builtinFloat)
-	addBuiltinFunction("char", builtinChar)
-	addBuiltinFunction("bytes", builtinBytes)
-	addBuiltinFunction("time", builtinTime)
-	addBuiltinFunction("is_int", builtinIsInt)
-	addBuiltinFunction("is_float", builtinIsFloat)
-	addBuiltinFunction("is_string", builtinIsString)
-	addBuiltinFunction("is_bool", builtinIsBool)
-	addBuiltinFunction("is_char", builtinIsChar)
-	addBuiltinFunction("is_bytes", builtinIsBytes)
-	addBuiltinFunction("is_array", builtinIsArray)
-	addBuiltinFunction("is_immutable_array", builtinIsImmutableArray)
-	addBuiltinFunction("is_map", builtinIsMap)
-	addBuiltinFunction("is_immutable_map", builtinIsImmutableMap)
-	addBuiltinFunction("is_iterable", builtinIsIterable)
-	addBuiltinFunction("is_time", builtinIsTime)
-	addBuiltinFunction("is_error", builtinIsError)
-	addBuiltinFunction("is_undefined", builtinIsUndefined)
-	addBuiltinFunction("is_function", builtinIsFunction)
-	addBuiltinFunction("is_callable", builtinIsCallable)
-	addBuiltinFunction("type_name", builtinTypeName)
-	addBuiltinFunction("format", builtinFormat)
-	addBuiltinFunction("range", builtinRange)
+	addBuiltinFunction("len", builtinLen, false)
+	addBuiltinFunction("copy", builtinCopy, false)
+	addBuiltinFunction("append", builtinAppend, false)
+	addBuiltinFunction("delete", builtinDelete, false)
+	addBuiltinFunction("splice", builtinSplice, false)
+	addBuiltinFunction("string", builtinString, false)
+	addBuiltinFunction("int", builtinInt, false)
+	addBuiltinFunction("bool", builtinBool, false)
+	addBuiltinFunction("float", builtinFloat, false)
+	addBuiltinFunction("char", builtinChar, false)
+	addBuiltinFunction("bytes", builtinBytes, false)
+	addBuiltinFunction("time", builtinTime, false)
+	addBuiltinFunction("is_int", builtinIsInt, false)
+	addBuiltinFunction("is_float", builtinIsFloat, false)
+	addBuiltinFunction("is_string", builtinIsString, false)
+	addBuiltinFunction("is_bool", builtinIsBool, false)
+	addBuiltinFunction("is_char", builtinIsChar, false)
+	addBuiltinFunction("is_bytes", builtinIsBytes, false)
+	addBuiltinFunction("is_array", builtinIsArray, false)
+	addBuiltinFunction("is_immutable_array", builtinIsImmutableArray, false)
+	addBuiltinFunction("is_map", builtinIsMap, false)
+	addBuiltinFunction("is_immutable_map", builtinIsImmutableMap, false)
+	addBuiltinFunction("is_iterable", builtinIsIterable, false)
+	addBuiltinFunction("is_time", builtinIsTime, false)
+	addBuiltinFunction("is_error", builtinIsError, false)
+	addBuiltinFunction("is_undefined", builtinIsUndefined, false)
+	addBuiltinFunction("is_function", builtinIsFunction, false)
+	addBuiltinFunction("is_callable", builtinIsCallable, false)
+	addBuiltinFunction("type_name", builtinTypeName, false)
+	addBuiltinFunction("format", builtinFormat, false)
+	addBuiltinFunction("range", builtinRange, false)
 }
 
 // GetAllBuiltinFunctions returns all builtin function objects.
@@ -46,7 +47,6 @@ func GetAllBuiltinFunctions() []*BuiltinFunction {
 }
 
 func builtinTypeName(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -54,7 +54,6 @@ func builtinTypeName(args ...Object) (Object, error) {
 }
 
 func builtinIsString(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -65,7 +64,6 @@ func builtinIsString(args ...Object) (Object, error) {
 }
 
 func builtinIsInt(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -76,7 +74,6 @@ func builtinIsInt(args ...Object) (Object, error) {
 }
 
 func builtinIsFloat(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -87,7 +84,6 @@ func builtinIsFloat(args ...Object) (Object, error) {
 }
 
 func builtinIsBool(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -98,7 +94,6 @@ func builtinIsBool(args ...Object) (Object, error) {
 }
 
 func builtinIsChar(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -109,7 +104,6 @@ func builtinIsChar(args ...Object) (Object, error) {
 }
 
 func builtinIsBytes(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -120,7 +114,6 @@ func builtinIsBytes(args ...Object) (Object, error) {
 }
 
 func builtinIsArray(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -131,7 +124,6 @@ func builtinIsArray(args ...Object) (Object, error) {
 }
 
 func builtinIsImmutableArray(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -142,7 +134,6 @@ func builtinIsImmutableArray(args ...Object) (Object, error) {
 }
 
 func builtinIsMap(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -153,7 +144,6 @@ func builtinIsMap(args ...Object) (Object, error) {
 }
 
 func builtinIsImmutableMap(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -164,7 +154,6 @@ func builtinIsImmutableMap(args ...Object) (Object, error) {
 }
 
 func builtinIsTime(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -175,7 +164,6 @@ func builtinIsTime(args ...Object) (Object, error) {
 }
 
 func builtinIsError(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -186,7 +174,6 @@ func builtinIsError(args ...Object) (Object, error) {
 }
 
 func builtinIsUndefined(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -197,7 +184,6 @@ func builtinIsUndefined(args ...Object) (Object, error) {
 }
 
 func builtinIsFunction(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -209,7 +195,6 @@ func builtinIsFunction(args ...Object) (Object, error) {
 }
 
 func builtinIsCallable(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -220,7 +205,6 @@ func builtinIsCallable(args ...Object) (Object, error) {
 }
 
 func builtinIsIterable(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -232,7 +216,6 @@ func builtinIsIterable(args ...Object) (Object, error) {
 
 // len(obj object) => int
 func builtinLen(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -260,7 +243,6 @@ func builtinLen(args ...Object) (Object, error) {
 
 //range(start, stop[, step])
 func builtinRange(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	numArgs := len(args)
 	if numArgs < 2 || numArgs > 3 {
 		return nil, ErrWrongNumArguments
@@ -325,7 +307,6 @@ func buildRange(start, stop, step int64) *Array {
 }
 
 func builtinFormat(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	numArgs := len(args)
 	if numArgs == 0 {
 		return nil, ErrWrongNumArguments
@@ -350,7 +331,6 @@ func builtinFormat(args ...Object) (Object, error) {
 }
 
 func builtinCopy(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -358,7 +338,6 @@ func builtinCopy(args ...Object) (Object, error) {
 }
 
 func builtinString(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -380,7 +359,6 @@ func builtinString(args ...Object) (Object, error) {
 }
 
 func builtinInt(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -399,7 +377,6 @@ func builtinInt(args ...Object) (Object, error) {
 }
 
 func builtinFloat(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -418,7 +395,6 @@ func builtinFloat(args ...Object) (Object, error) {
 }
 
 func builtinBool(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -436,7 +412,6 @@ func builtinBool(args ...Object) (Object, error) {
 }
 
 func builtinChar(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -455,7 +430,6 @@ func builtinChar(args ...Object) (Object, error) {
 }
 
 func builtinBytes(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -482,7 +456,6 @@ func builtinBytes(args ...Object) (Object, error) {
 }
 
 func builtinTime(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	argsLen := len(args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
@@ -502,7 +475,6 @@ func builtinTime(args ...Object) (Object, error) {
 
 // append(arr, items...)
 func builtinAppend(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) < 2 {
 		return nil, ErrWrongNumArguments
 	}
@@ -524,7 +496,6 @@ func builtinAppend(args ...Object) (Object, error) {
 // usage: delete(map, "key")
 // key must be a string
 func builtinDelete(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	argsLen := len(args)
 	if argsLen != 2 {
 		return nil, ErrWrongNumArguments
@@ -553,7 +524,6 @@ func builtinDelete(args ...Object) (Object, error) {
 // usage:
 // deleted_items := splice(array[,start[,delete_count[,item1[,item2[,...]]]])
 func builtinSplice(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	argsLen := len(args)
 	if argsLen == 0 {
 		return nil, ErrWrongNumArguments

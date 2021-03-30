@@ -6,8 +6,8 @@ import (
 )
 
 func init() {
-	addBuiltinFunction("govm", builtinGovm)
-	addBuiltinFunction("makechan", builtinMakechan)
+	addBuiltinFunction("govm", builtinGovm, true)
+	addBuiltinFunction("makechan", builtinMakechan, false)
 }
 
 type ret struct {
@@ -82,7 +82,6 @@ func (gvm *goroutineVM) wait(seconds int64) bool {
 // Return true if the goroutineVM exited(successfully or not) within the timeout peroid.
 // Wait forever if the optional timeout not specified, or timeout < 0.
 func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) > 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -107,7 +106,6 @@ func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
 
 // Terminate the execution of the goroutineVM.
 func (gvm *goroutineVM) abort(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
@@ -119,7 +117,6 @@ func (gvm *goroutineVM) abort(args ...Object) (Object, error) {
 // Wait the goroutineVM to complete, return Error object if any runtime error occurred
 // during the execution, otherwise return the result value of fn(arg1, arg2, ...)
 func (gvm *goroutineVM) getRet(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
@@ -137,7 +134,6 @@ type objchan chan Object
 // Make a channel to send/receive object
 // Return a chan object that has send, recv, close methods.
 func builtinMakechan(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	var size int
 	switch len(args) {
 	case 0:
@@ -157,8 +153,8 @@ func builtinMakechan(args ...Object) (Object, error) {
 
 	oc := make(objchan, size)
 	obj := map[string]Object{
-		"send":  &BuiltinFunction{Value: oc.send},
-		"recv":  &BuiltinFunction{Value: oc.recv},
+		"send":  &BuiltinFunction{Value: oc.send, needvmObj: true},
+		"recv":  &BuiltinFunction{Value: oc.recv, needvmObj: true},
 		"close": &BuiltinFunction{Value: oc.close},
 	}
 	return &Map{Value: obj}, nil
@@ -203,7 +199,6 @@ func (oc objchan) recv(args ...Object) (Object, error) {
 
 // Close the channel.
 func (oc objchan) close(args ...Object) (Object, error) {
-	args = args[1:] // the first arg is vmObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
