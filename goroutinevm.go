@@ -7,6 +7,7 @@ import (
 
 func init() {
 	addBuiltinFunction("govm", builtinGovm, true)
+	addBuiltinFunction("abort", builtinAbort, true)
 	addBuiltinFunction("makechan", builtinMakechan, false)
 }
 
@@ -22,8 +23,15 @@ type goroutineVM struct {
 	done     int64
 }
 
-// Start a goroutine which run fn(arg1, arg2, ...) in a new VM cloned from the current running VM.
-// Return a goroutineVM object that has wait, result, abort methods.
+// Starts a goroutine which runs fn(arg1, arg2, ...) in a new VM cloned from the current running VM.
+// Returns a goroutineVM object that has wait, result, abort methods.
+//
+// The goroutineVM will not exit unless:
+//  1. All its descendant VMs exit
+//  2. It calls abort()
+//  3. Its goroutineVM object abort() is called on behalf of its parent VM
+// The latter 2 cases will trigger aborting procedure of all the descendant VMs, which will
+// further result in #1 above.
 func builtinGovm(args ...Object) (Object, error) {
 	vm := args[0].(*vmObj).Value
 	args = args[1:] // the first arg is vmObj inserted by VM
@@ -42,12 +50,14 @@ func builtinGovm(args ...Object) (Object, error) {
 	newVM := vm.ShallowClone()
 	gvm := &goroutineVM{
 		VM:       newVM,
-		waitChan: make(chan ret),
+		waitChan: make(chan ret, 1),
 	}
 
+	vm.addChildVM(gvm.VM)
 	go func() {
 		val, err := gvm.RunCompiled(fn, args[1:]...)
 		gvm.waitChan <- ret{val, err}
+		vm.delChildVM(gvm.VM)
 	}()
 
 	obj := map[string]Object{
@@ -58,7 +68,19 @@ func builtinGovm(args ...Object) (Object, error) {
 	return &Map{Value: obj}, nil
 }
 
-// Return true if the goroutineVM is done
+// Terminates the current VM and all its descendant VMs.
+// Calling abort() will always result the current VM returns ErrVMAborted.
+func builtinAbort(args ...Object) (Object, error) {
+	vm := args[0].(*vmObj).Value
+	args = args[1:] // the first arg is vmObj inserted by VM
+	if len(args) != 0 {
+		return nil, ErrWrongNumArguments
+	}
+	vm.Abort() // aborts self and all descendant VMs
+	return nil, nil
+}
+
+// Returns true if the goroutineVM is done
 func (gvm *goroutineVM) wait(seconds int64) bool {
 	if atomic.LoadInt64(&gvm.done) == 1 {
 		return true
@@ -78,9 +100,9 @@ func (gvm *goroutineVM) wait(seconds int64) bool {
 	return true
 }
 
-// Wait for the goroutineVM to complete in timeout seconds.
-// Return true if the goroutineVM exited(successfully or not) within the timeout peroid.
-// Wait forever if the optional timeout not specified, or timeout < 0.
+// Waits for the goroutineVM to complete in timeout seconds.
+// Returns true if the goroutineVM exited(successfully or not) within the timeout peroid.
+// Waits forever if the optional timeout not specified, or timeout < 0.
 func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
 	if len(args) > 1 {
 		return nil, ErrWrongNumArguments
@@ -104,7 +126,7 @@ func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-// Terminate the execution of the goroutineVM.
+// Terminates the execution of the current VM and all its descendant VMs.
 func (gvm *goroutineVM) abort(args ...Object) (Object, error) {
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
@@ -114,7 +136,7 @@ func (gvm *goroutineVM) abort(args ...Object) (Object, error) {
 	return nil, nil
 }
 
-// Wait the goroutineVM to complete, return Error object if any runtime error occurred
+// Waits the goroutineVM to complete, return Error object if any runtime error occurred
 // during the execution, otherwise return the result value of fn(arg1, arg2, ...)
 func (gvm *goroutineVM) getRet(args ...Object) (Object, error) {
 	if len(args) != 0 {
@@ -131,8 +153,8 @@ func (gvm *goroutineVM) getRet(args ...Object) (Object, error) {
 
 type objchan chan Object
 
-// Make a channel to send/receive object
-// Return a chan object that has send, recv, close methods.
+// Makes a channel to send/receive object
+// Returns a chan object that has send, recv, close methods.
 func builtinMakechan(args ...Object) (Object, error) {
 	var size int
 	switch len(args) {
@@ -160,8 +182,8 @@ func builtinMakechan(args ...Object) (Object, error) {
 	return &Map{Value: obj}, nil
 }
 
-// Send an obj to the channel, will block until channel is not full or (*VM).Abort() has been called.
-// Send to a closed channel causes panic.
+// Sends an obj to the channel, will block if channel is full and the VM has not been aborted.
+// Sends to a closed channel causes panic.
 func (oc objchan) send(args ...Object) (Object, error) {
 	vm := args[0].(*vmObj).Value
 	args = args[1:] // the first arg is vmObj inserted by VM
@@ -169,16 +191,15 @@ func (oc objchan) send(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 	select {
-	case <-vm.ctx.Done():
-		return nil, vm.ctx.Err()
-		//return &String{Value: vm.ctx.Err().Error()}, nil
+	case <-vm.abortChan:
+		return nil, ErrVMAborted
 	case oc <- args[0]:
 	}
 	return nil, nil
 }
 
-// Receive an obj from the channel, will block until channel is not empty or (*VM).Abort() has been called.
-// Receive from a closed channel returns undefined value.
+// Receives an obj from the channel, will block if channel is empty and the VM has not been aborted.
+// Receives from a closed channel returns undefined value.
 func (oc objchan) recv(args ...Object) (Object, error) {
 	vm := args[0].(*vmObj).Value
 	args = args[1:] // the first arg is vmObj inserted by VM
@@ -186,9 +207,8 @@ func (oc objchan) recv(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 	select {
-	case <-vm.ctx.Done():
-		return nil, vm.ctx.Err()
-		//return &String{Value: vm.ctx.Err().Error()}, nil
+	case <-vm.abortChan:
+		return nil, ErrVMAborted
 	case obj, ok := <-oc:
 		if ok {
 			return obj, nil
@@ -197,7 +217,7 @@ func (oc objchan) recv(args ...Object) (Object, error) {
 	return nil, nil
 }
 
-// Close the channel.
+// Closes the channel.
 func (oc objchan) close(args ...Object) (Object, error) {
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments

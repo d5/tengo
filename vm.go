@@ -1,8 +1,8 @@
 package tengo
 
 import (
-	"context"
 	"fmt"
+	"sync"
 	"sync/atomic"
 
 	"github.com/d5/tengo/v2/parser"
@@ -17,14 +17,14 @@ type frame struct {
 	basePointer int
 }
 
-type cancelCtx struct {
-	context.Context
-	cancel context.CancelFunc
+type vmLifecycleCtl struct {
+	sync.WaitGroup
+	sync.Mutex
+	vmMap map[*VM]struct{}
 }
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
-	ctx         cancelCtx // used to signal blocked channel sending and receiving to exit
 	constants   []Object
 	stack       [StackSize]Object
 	sp          int
@@ -39,6 +39,8 @@ type VM struct {
 	maxAllocs   int64
 	allocs      int64
 	err         error
+	abortChan   chan struct{}
+	childCtl    vmLifecycleCtl
 }
 
 // NewVM creates a VM.
@@ -58,9 +60,9 @@ func NewVM(
 		framesIndex: 1,
 		ip:          -1,
 		maxAllocs:   maxAllocs,
+		abortChan:   make(chan struct{}),
+		childCtl:    vmLifecycleCtl{vmMap: make(map[*VM]struct{})},
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	v.ctx = cancelCtx{ctx, cancel}
 	v.frames[0].fn = bytecode.MainFunction
 	v.frames[0].ip = -1
 	v.curFrame = &v.frames[0]
@@ -68,29 +70,26 @@ func NewVM(
 	return v
 }
 
-// Abort aborts the execution.
+// Abort aborts the execution of current VM and all its descendant VMs.
 func (v *VM) Abort() {
 	atomic.StoreInt64(&v.aborting, 1)
-	v.ctx.cancel()
+	close(v.abortChan) // broadcast to all receivers
+	v.childCtl.Lock()
+	for cvm := range v.childCtl.vmMap {
+		cvm.Abort()
+	}
+	v.childCtl.Unlock()
 }
 
 // Run starts the execution.
-func (v *VM) Run() error {
-	// reset VM states
-	v.sp = 0
-	v.curFrame = &(v.frames[0])
-	v.curInsts = v.curFrame.fn.Instructions
-	v.framesIndex = 1
-	v.ip = -1
-	v.allocs = v.maxAllocs + 1
-
-	v.run()
-	return v.postRun()
+func (v *VM) Run() (err error) {
+	_, err = v.RunCompiled(nil)
+	return
 }
 
 func (v *VM) postRun() (err error) {
 	err = v.err
-	if err != nil {
+	if err != nil && err != ErrVMAborted {
 		filePos := v.fileSet.Position(
 			v.curFrame.fn.SourcePos(v.ip - 1))
 		err = fmt.Errorf("Runtime Error: %w\n\tat %s",
@@ -102,17 +101,13 @@ func (v *VM) postRun() (err error) {
 				v.curFrame.fn.SourcePos(v.curFrame.ip - 1))
 			err = fmt.Errorf("%w\n\tat %s", err, filePos)
 		}
+		return
 	}
 
 	if atomic.LoadInt64(&v.aborting) == 1 {
-		if err != nil {
-			err = fmt.Errorf("VM aborted\n\t%w", err)
-		} else {
-			err = fmt.Errorf("VM aborted")
-		}
+		err = ErrVMAborted
 	}
-	atomic.StoreInt64(&v.aborting, 0)
-	return err
+	return
 }
 
 func concatInsts(instructions ...[]byte) []byte {
@@ -139,11 +134,10 @@ func (v *VM) ShallowClone() *VM {
 		framesIndex: 1,
 		ip:          -1,
 		maxAllocs:   v.maxAllocs,
+		abortChan:   make(chan struct{}),
+		childCtl:    vmLifecycleCtl{vmMap: make(map[*VM]struct{})},
 	}
 
-	//ctx, cancel := context.WithCancel(v.ctx.Context) // cloned VM derives the context of its parent
-	ctx, cancel := context.WithCancel(context.Background()) // cloned VM has independent context
-	shallowClone.ctx = cancelCtx{ctx, cancel}
 	// set to empty entry
 	shallowClone.frames[0].fn = emptyEntry
 	shallowClone.frames[0].ip = -1
@@ -166,35 +160,59 @@ var funcWrapper = &CompiledFunction{
 	VarArgs:       true,
 }
 
+func (v *VM) addChildVM(cvm *VM) {
+	v.childCtl.Add(1)
+	v.childCtl.Lock()
+	v.childCtl.vmMap[cvm] = struct{}{}
+	v.childCtl.Unlock()
+}
+
+func (v *VM) delChildVM(cvm *VM) {
+	v.childCtl.Lock()
+	delete(v.childCtl.vmMap, cvm)
+	v.childCtl.Unlock()
+	v.childCtl.Done()
+}
+
 // RunCompiled run the VM with user supplied function fn.
 func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (Object, error) {
-	entry := &CompiledFunction{
-		Instructions: concatInsts(
-			MakeInstruction(parser.OpCall, 1+len(args), 0),
-			MakeInstruction(parser.OpSuspend),
-		),
+	if fn == nil { // normal Run
+		// reset VM states
+		v.sp = 0
+	} else { // run user supplied function
+		entry := &CompiledFunction{
+			Instructions: concatInsts(
+				MakeInstruction(parser.OpCall, 1+len(args), 0),
+				MakeInstruction(parser.OpSuspend),
+			),
+		}
+		v.stack[0] = funcWrapper
+		v.stack[1] = fn
+		for i, arg := range args {
+			v.stack[i+2] = arg
+		}
+		v.sp = 2 + len(args)
+		v.frames[0].fn = entry
+		v.frames[0].ip = -1
 	}
 
-	v.stack[0] = funcWrapper
-	v.stack[1] = fn
-	for i, arg := range args {
-		v.stack[i+2] = arg
-	}
-	v.sp = 2 + len(args)
-
-	v.frames[0].fn = entry
-	v.frames[0].ip = -1
 	v.curFrame = &v.frames[0]
 	v.curInsts = v.curFrame.fn.Instructions
 	v.framesIndex = 1
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
 
+	atomic.StoreInt64(&v.aborting, 0)
 	v.run()
+	v.childCtl.Wait() // waits for all child VMs to exit
+
 	if err := v.postRun(); err != nil {
 		return UndefinedValue, err
 	}
-	return v.stack[v.sp-1], nil
+	if fn != nil {
+		return v.stack[v.sp-1], nil
+	}
+	return nil, nil
 }
 
 type vmObj struct {

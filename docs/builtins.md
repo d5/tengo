@@ -128,9 +128,16 @@ items := splice(v, 1, 1, "d", "e") // items == ["b"], v == ["a", "d", "e", "c"]
 
 ## govm
 
-Starts a goroutine which run fn(arg1, arg2, ...) in a new VM cloned from
+Starts a goroutine which runs fn(arg1, arg2, ...) in a new VM cloned from
 the current running VM, and returns a goroutineVM object that has
 wait, result, abort methods.
+
+The goroutineVM will not exit unless:
+1. All its descendant VMs exit
+2. It calls abort()
+3. Its goroutineVM object abort() is called on behalf of its parent VM
+The latter 2 cases will trigger aborting procedure of all the descendant VMs,
+which will further result in #1 above.
 
 ```golang
 var := 0
@@ -199,10 +206,14 @@ fmt.println("server: ", gvmServer.result())
 returns true if the goroutineVM exited(successfully or not) within the
 timeout peroid. It waits forever if the optional timeout not specified,
 or timeout < 0.
-* abort() terminates the VM.
+* abort() terminates the current VM and all its descendant VMs.
 * result() waits the goroutineVM to complete, returns Error object if
 any runtime error occurred during the execution, otherwise returns the
 result value of fn(arg1, arg2, ...)
+
+## abort
+Terminates the current VM and all its descendant VMs. Calling abort() will
+always result the current VM returns ErrVMAborted.
 
 ## makechan
 
