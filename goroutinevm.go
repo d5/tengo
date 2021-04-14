@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	addBuiltinFunction("govm", builtinGovm, true)
+	addBuiltinFunction("go", builtinGovm, true)
 	addBuiltinFunction("abort", builtinAbort, true)
 	addBuiltinFunction("makechan", builtinMakechan, false)
 }
@@ -23,15 +23,22 @@ type goroutineVM struct {
 	done     int64
 }
 
-// Starts a goroutine which runs fn(arg1, arg2, ...) in a new VM cloned from the current running VM.
+// Starts a independent concurrent goroutine which runs fn(arg1, arg2, ...)
+//
+// If fn is CompiledFunction, the current running VM will be cloned to create 
+// a new VM in which the CompiledFunction will be running.
+//
+// The fn can also be any object that has Call() method, such as BuiltinFunction,
+// in which case no cloned VM will be created.
+//
 // Returns a goroutineVM object that has wait, result, abort methods.
 //
 // The goroutineVM will not exit unless:
-//  1. All its descendant VMs exit
+//  1. All its descendant goroutineVMs exit
 //  2. It calls abort()
 //  3. Its goroutineVM object abort() is called on behalf of its parent VM
-// The latter 2 cases will trigger aborting procedure of all the descendant VMs, which will
-// further result in #1 above.
+// The latter 2 cases will trigger aborting procedure of all the descendant goroutineVMs,
+// which will further result in #1 above.
 func builtinGovm(args ...Object) (Object, error) {
 	vm := args[0].(*vmObj).Value
 	args = args[1:] // the first arg is vmObj inserted by VM
@@ -88,7 +95,7 @@ func builtinGovm(args ...Object) (Object, error) {
 	return &Map{Value: obj}, nil
 }
 
-// Terminates the current VM and all its descendant VMs.
+// Triggers the termination process of the current VM and all its descendant VMs.
 func builtinAbort(args ...Object) (Object, error) {
 	vm := args[0].(*vmObj).Value
 	args = args[1:] // the first arg is vmObj inserted by VM
@@ -119,7 +126,7 @@ func (gvm *goroutineVM) wait(seconds int64) bool {
 	return true
 }
 
-// Waits for the goroutineVM to complete in timeout seconds.
+// Waits for the goroutineVM to complete up to timeout seconds.
 // Returns true if the goroutineVM exited(successfully or not) within the timeout peroid.
 // Waits forever if the optional timeout not specified, or timeout < 0.
 func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
@@ -145,7 +152,7 @@ func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-// Terminates the execution of the goroutineVM and all its descendant VMs.
+// Triggers the termination process of the goroutineVM and all its descendant VMs.
 func (gvm *goroutineVM) abort(args ...Object) (Object, error) {
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments

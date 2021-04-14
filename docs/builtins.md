@@ -126,18 +126,22 @@ v := ["a", "b", "c"]
 items := splice(v, 1, 1, "d", "e") // items == ["b"], v == ["a", "d", "e", "c"]
 ```
 
-## govm
+## go
 
-Starts a goroutine which runs fn(arg1, arg2, ...) in a new VM cloned from
-the current running VM, and returns a goroutineVM object that has
-wait, result, abort methods.
+Starts a independent concurrent goroutine which runs fn(arg1, arg2, ...)
+
+If fn is CompiledFunction, the current running VM will be cloned to create
+a new VM in which the CompiledFunction will be running.
+The fn can also be any object that has Call() method, such as BuiltinFunction,
+in which case no cloned VM will be created.
+Returns a goroutineVM object that has wait, result, abort methods.
 
 The goroutineVM will not exit unless:
-1. All its descendant VMs exit
+1. All its descendant goroutineVMs exit
 2. It calls abort()
 3. Its goroutineVM object abort() is called on behalf of its parent VM
-The latter 2 cases will trigger aborting procedure of all the descendant VMs,
-which will further result in #1 above.
+The latter 2 cases will trigger aborting procedure of all the descendant
+goroutineVMs, which will further result in #1 above.
 
 ```golang
 var := 0
@@ -145,8 +149,8 @@ var := 0
 f1 := func(a,b) { var = 10; return a+b }
 f2 := func(a,b,c) { var = 11; return a+b+c }
 
-gvm1 := govm(f1,1,2)
-gvm2 := govm(f2,1,2,5)
+gvm1 := go(f1,1,2)
+gvm2 := go(f2,1,2,5)
 
 fmt.println(gvm1.result()) // 3
 fmt.println(gvm2.result()) // 8
@@ -182,8 +186,8 @@ server := func() {
 	}
 }
 
-gvmClient := govm(client, 2)
-gvmServer := govm(server)
+gvmClient := go(client, 2)
+gvmServer := go(server)
 
 if ok := gvmClient.wait(5); !ok {
 	gvmClient.abort()
@@ -197,17 +201,18 @@ gvmServer.abort()
 //101
 ```
 
-* wait() waits for the goroutineVM to complete in timeout seconds and
+* wait() waits for the goroutineVM to complete up to timeout seconds and
 returns true if the goroutineVM exited(successfully or not) within the
 timeout peroid. It waits forever if the optional timeout not specified,
 or timeout < 0.
-* abort() terminates the goroutineVM and all its descendant VMs.
+* abort() triggers the termination process of the goroutineVM and all
+its descendant VMs.
 * result() waits the goroutineVM to complete, returns Error object if
 any runtime error occurred during the execution, otherwise returns the
 result value of fn(arg1, arg2, ...)
 
 ## abort
-Terminates the current VM and all its descendant VMs.
+Triggers the termination process of the current VM and all its descendant VMs.
 
 ## makechan
 
