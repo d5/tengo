@@ -1,7 +1,9 @@
 package tengo
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -17,10 +19,11 @@ type frame struct {
 	basePointer int
 }
 
-type vmLifecycleCtl struct {
+type vmChildCtl struct {
 	sync.WaitGroup
 	sync.Mutex
-	vmMap map[*VM]struct{}
+	vmMap  map[*VM]struct{}
+	errors []error
 }
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
@@ -40,7 +43,7 @@ type VM struct {
 	allocs      int64
 	err         error
 	abortChan   chan struct{}
-	childCtl    vmLifecycleCtl
+	childCtl    vmChildCtl
 }
 
 // NewVM creates a VM.
@@ -61,7 +64,7 @@ func NewVM(
 		ip:          -1,
 		maxAllocs:   maxAllocs,
 		abortChan:   make(chan struct{}),
-		childCtl:    vmLifecycleCtl{vmMap: make(map[*VM]struct{})},
+		childCtl:    vmChildCtl{vmMap: make(map[*VM]struct{})},
 	}
 	v.frames[0].fn = bytecode.MainFunction
 	v.frames[0].ip = -1
@@ -87,9 +90,33 @@ func (v *VM) Run() (err error) {
 	return
 }
 
+type vmError struct {
+	self     error
+	children []error
+}
+
+func (vme vmError) Error() string {
+	var b strings.Builder
+	if vme.self != nil {
+		fmt.Fprintf(&b, "%v\n", vme.self)
+	}
+	for _, err := range vme.children {
+		for _, s := range strings.Split(err.Error(), "\n") {
+			if len(s) != 0 && s != "\tat -" {
+				fmt.Fprintf(&b, "%s\n", s)
+			}
+		}
+	}
+	return b.String()
+}
+
 func (v *VM) postRun() (err error) {
 	err = v.err
-	if err != nil && err != ErrVMAborted {
+	// ErrVMAborted is user behavior thus it is not an actual runtime error
+	if errors.Is(err, ErrVMAborted) {
+		err = nil
+	}
+	if err != nil {
 		filePos := v.fileSet.Position(
 			v.curFrame.fn.SourcePos(v.ip - 1))
 		err = fmt.Errorf("Runtime Error: %w\n\tat %s",
@@ -101,11 +128,9 @@ func (v *VM) postRun() (err error) {
 				v.curFrame.fn.SourcePos(v.curFrame.ip - 1))
 			err = fmt.Errorf("%w\n\tat %s", err, filePos)
 		}
-		return
 	}
-
-	if atomic.LoadInt64(&v.aborting) == 1 {
-		err = ErrVMAborted
+	if err != nil || len(v.childCtl.errors) != 0 {
+		err = vmError{err, v.childCtl.errors}
 	}
 	return
 }
@@ -135,7 +160,7 @@ func (v *VM) ShallowClone() *VM {
 		ip:          -1,
 		maxAllocs:   v.maxAllocs,
 		abortChan:   make(chan struct{}),
-		childCtl:    vmLifecycleCtl{vmMap: make(map[*VM]struct{})},
+		childCtl:    vmChildCtl{vmMap: make(map[*VM]struct{})},
 	}
 
 	// set to empty entry
@@ -160,17 +185,27 @@ var funcWrapper = &CompiledFunction{
 	VarArgs:       true,
 }
 
-func (v *VM) addChildVM(cvm *VM) {
-	v.childCtl.Add(1)
+func (v *VM) addError(err error) {
 	v.childCtl.Lock()
-	v.childCtl.vmMap[cvm] = struct{}{}
+	v.childCtl.errors = append(v.childCtl.errors, err)
 	v.childCtl.Unlock()
 }
 
-func (v *VM) delChildVM(cvm *VM) {
-	v.childCtl.Lock()
-	delete(v.childCtl.vmMap, cvm)
-	v.childCtl.Unlock()
+func (v *VM) addChild(cvm *VM) {
+	v.childCtl.Add(1)
+	if cvm != nil {
+		v.childCtl.Lock()
+		v.childCtl.vmMap[cvm] = struct{}{}
+		v.childCtl.Unlock()
+	}
+}
+
+func (v *VM) delChild(cvm *VM) {
+	if cvm != nil {
+		v.childCtl.Lock()
+		delete(v.childCtl.vmMap, cvm)
+		v.childCtl.Unlock()
+	}
 	v.childCtl.Done()
 }
 
@@ -209,10 +244,10 @@ func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (Object, error) {
 	if err := v.postRun(); err != nil {
 		return UndefinedValue, err
 	}
-	if fn != nil {
+	if fn != nil && atomic.LoadInt64(&v.aborting) == 0 {
 		return v.stack[v.sp-1], nil
 	}
-	return nil, nil
+	return UndefinedValue, nil
 }
 
 type vmObj struct {

@@ -190,30 +190,24 @@ if ok := gvmClient.wait(5); !ok {
 }
 gvmServer.abort()
 
-fmt.println("client: ", gvmClient.result())
-fmt.println("server: ", gvmServer.result())
-
 //output:
 //hello
 //world
 //100
 //101
-//client: error: "VM aborted"
-//server: error: "VM aborted\n\tRuntime Error: context canceled at -\n\tat -"
 ```
 
 * wait() waits for the goroutineVM to complete in timeout seconds and
 returns true if the goroutineVM exited(successfully or not) within the
 timeout peroid. It waits forever if the optional timeout not specified,
 or timeout < 0.
-* abort() terminates the current VM and all its descendant VMs.
+* abort() terminates the goroutineVM and all its descendant VMs.
 * result() waits the goroutineVM to complete, returns Error object if
 any runtime error occurred during the execution, otherwise returns the
 result value of fn(arg1, arg2, ...)
 
 ## abort
-Terminates the current VM and all its descendant VMs. Calling abort() will
-always result the current VM returns ErrVMAborted.
+Terminates the current VM and all its descendant VMs.
 
 ## makechan
 

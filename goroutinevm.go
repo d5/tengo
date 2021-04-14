@@ -17,8 +17,8 @@ type ret struct {
 }
 
 type goroutineVM struct {
-	*VM
-	ret      // return value of (*VM).RunCompiled()
+	*VM      // if not nil, run CompiledFunction in VM
+	ret      // return value
 	waitChan chan ret
 	done     int64
 }
@@ -38,26 +38,46 @@ func builtinGovm(args ...Object) (Object, error) {
 	if len(args) == 0 {
 		return nil, ErrWrongNumArguments
 	}
-	fn, ok := args[0].(*CompiledFunction)
-	if !ok {
+
+	fn := args[0]
+	if !fn.CanCall() {
 		return nil, ErrInvalidArgumentType{
 			Name:     "first",
-			Expected: "func",
-			Found:    args[0].TypeName(),
+			Expected: "callable function",
+			Found:    fn.TypeName(),
 		}
 	}
 
-	newVM := vm.ShallowClone()
 	gvm := &goroutineVM{
-		VM:       newVM,
 		waitChan: make(chan ret, 1),
 	}
+	cfn, compiled := fn.(*CompiledFunction)
+	if compiled {
+		gvm.VM = vm.ShallowClone()
+	}
 
-	vm.addChildVM(gvm.VM)
+	vm.addChild(gvm.VM)
 	go func() {
-		val, err := gvm.RunCompiled(fn, args[1:]...)
+		var val Object
+		var err error
+		if cfn != nil {
+			val, err = gvm.RunCompiled(cfn, args[1:]...)
+		} else {
+			var nargs []Object
+			if bltnfn, ok := fn.(*BuiltinFunction); ok {
+				if bltnfn.needvmObj {
+					// pass VM as the first para to builtin functions
+					nargs = append(nargs, vm.selfObject())
+				}
+			}
+			nargs = append(nargs, args[1:]...)
+			val, err = fn.Call(nargs...)
+		}
+		if err != nil {
+			vm.addError(err)
+		}
 		gvm.waitChan <- ret{val, err}
-		vm.delChildVM(gvm.VM)
+		vm.delChild(gvm.VM)
 	}()
 
 	obj := map[string]Object{
@@ -69,7 +89,6 @@ func builtinGovm(args ...Object) (Object, error) {
 }
 
 // Terminates the current VM and all its descendant VMs.
-// Calling abort() will always result the current VM returns ErrVMAborted.
 func builtinAbort(args ...Object) (Object, error) {
 	vm := args[0].(*vmObj).Value
 	args = args[1:] // the first arg is vmObj inserted by VM
@@ -126,13 +145,14 @@ func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
 	return FalseValue, nil
 }
 
-// Terminates the execution of the current VM and all its descendant VMs.
+// Terminates the execution of the goroutineVM and all its descendant VMs.
 func (gvm *goroutineVM) abort(args ...Object) (Object, error) {
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
-
-	gvm.Abort()
+	if gvm.VM != nil {
+		gvm.Abort()
+	}
 	return nil, nil
 }
 
