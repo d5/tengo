@@ -127,7 +127,7 @@ func (gvm *goroutineVM) wait(seconds int64) bool {
 }
 
 // Waits for the goroutineVM to complete up to timeout seconds.
-// Returns true if the goroutineVM exited(successfully or not) within the timeout peroid.
+// Returns true if the goroutineVM exited(successfully or not) within the timeout.
 // Waits forever if the optional timeout not specified, or timeout < 0.
 func (gvm *goroutineVM) waitTimeout(args ...Object) (Object, error) {
 	if len(args) > 1 {
