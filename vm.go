@@ -75,6 +75,9 @@ func NewVM(
 
 // Abort aborts the execution of current VM and all its descendant VMs.
 func (v *VM) Abort() {
+	if atomic.LoadInt64(&v.aborting) != 0 {
+		return
+	}
 	atomic.StoreInt64(&v.aborting, 1)
 	close(v.abortChan) // broadcast to all receivers
 	v.childCtl.Lock()
@@ -88,26 +91,6 @@ func (v *VM) Abort() {
 func (v *VM) Run() (err error) {
 	_, err = v.RunCompiled(nil)
 	return
-}
-
-type vmError struct {
-	self     error
-	children []error
-}
-
-func (vme vmError) Error() string {
-	var b strings.Builder
-	if vme.self != nil {
-		fmt.Fprintf(&b, "%v\n", vme.self)
-	}
-	for _, err := range vme.children {
-		for _, s := range strings.Split(err.Error(), "\n") {
-			if len(s) != 0 && s != "\tat -" {
-				fmt.Fprintf(&b, "%s\n", s)
-			}
-		}
-	}
-	return b.String()
 }
 
 func (v *VM) postRun() (err error) {
@@ -129,8 +112,19 @@ func (v *VM) postRun() (err error) {
 			err = fmt.Errorf("%w\n\tat %s", err, filePos)
 		}
 	}
-	if err != nil || len(v.childCtl.errors) != 0 {
-		err = vmError{err, v.childCtl.errors}
+
+	var sb strings.Builder
+	for _, cerr := range v.childCtl.errors {
+		fmt.Fprintf(&sb, "%v\n", cerr)
+	}
+	cerrs := sb.String()
+
+	if err != nil && len(cerrs) != 0 {
+		err = fmt.Errorf("%w\n%s", err, cerrs)
+		return
+	}
+	if len(cerrs) != 0 {
+		err = fmt.Errorf("%s", cerrs)
 	}
 	return
 }
