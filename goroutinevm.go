@@ -1,6 +1,8 @@
 package tengo
 
 import (
+	"fmt"
+	"runtime/debug"
 	"sync/atomic"
 	"time"
 )
@@ -25,7 +27,7 @@ type goroutineVM struct {
 
 // Starts a independent concurrent goroutine which runs fn(arg1, arg2, ...)
 //
-// If fn is CompiledFunction, the current running VM will be cloned to create 
+// If fn is CompiledFunction, the current running VM will be cloned to create
 // a new VM in which the CompiledFunction will be running.
 //
 // The fn can also be any object that has Call() method, such as BuiltinFunction,
@@ -58,15 +60,33 @@ func builtinGovm(args ...Object) (Object, error) {
 	gvm := &goroutineVM{
 		waitChan: make(chan ret, 1),
 	}
+
+	var callers []frame
 	cfn, compiled := fn.(*CompiledFunction)
 	if compiled {
 		gvm.VM = vm.ShallowClone()
+	} else {
+		callers = vm.callers()
 	}
 
 	vm.addChild(gvm.VM)
 	go func() {
 		var val Object
 		var err error
+		defer func() {
+			if perr := recover(); perr != nil {
+				if callers == nil {
+					panic("callers not saved")
+				}
+				err = fmt.Errorf("\nRuntime Panic: %v%s\n%s", perr, vm.callStack(callers), debug.Stack())
+			}
+			if err != nil {
+				vm.addError(err)
+			}
+			gvm.waitChan <- ret{val, err}
+			vm.delChild(gvm.VM)
+		}()
+
 		if cfn != nil {
 			val, err = gvm.RunCompiled(cfn, args[1:]...)
 		} else {
@@ -80,11 +100,6 @@ func builtinGovm(args ...Object) (Object, error) {
 			nargs = append(nargs, args[1:]...)
 			val, err = fn.Call(nargs...)
 		}
-		if err != nil {
-			vm.addError(err)
-		}
-		gvm.waitChan <- ret{val, err}
-		vm.delChild(gvm.VM)
 	}()
 
 	obj := map[string]Object{

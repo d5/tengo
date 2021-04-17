@@ -3,6 +3,7 @@ package tengo
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -93,42 +94,6 @@ func (v *VM) Run() (err error) {
 	return
 }
 
-func (v *VM) postRun() (err error) {
-	err = v.err
-	// ErrVMAborted is user behavior thus it is not an actual runtime error
-	if errors.Is(err, ErrVMAborted) {
-		err = nil
-	}
-	if err != nil {
-		filePos := v.fileSet.Position(
-			v.curFrame.fn.SourcePos(v.ip - 1))
-		err = fmt.Errorf("Runtime Error: %w\n\tat %s",
-			err, filePos)
-		for v.framesIndex > 1 {
-			v.framesIndex--
-			v.curFrame = &v.frames[v.framesIndex-1]
-			filePos = v.fileSet.Position(
-				v.curFrame.fn.SourcePos(v.curFrame.ip - 1))
-			err = fmt.Errorf("%w\n\tat %s", err, filePos)
-		}
-	}
-
-	var sb strings.Builder
-	for _, cerr := range v.childCtl.errors {
-		fmt.Fprintf(&sb, "%v\n", cerr)
-	}
-	cerrs := sb.String()
-
-	if err != nil && len(cerrs) != 0 {
-		err = fmt.Errorf("%w\n%s", err, cerrs)
-		return
-	}
-	if len(cerrs) != 0 {
-		err = fmt.Errorf("%s", cerrs)
-	}
-	return
-}
-
 func concatInsts(instructions ...[]byte) []byte {
 	var concat []byte
 	for _, i := range instructions {
@@ -179,32 +144,8 @@ var funcWrapper = &CompiledFunction{
 	VarArgs:       true,
 }
 
-func (v *VM) addError(err error) {
-	v.childCtl.Lock()
-	v.childCtl.errors = append(v.childCtl.errors, err)
-	v.childCtl.Unlock()
-}
-
-func (v *VM) addChild(cvm *VM) {
-	v.childCtl.Add(1)
-	if cvm != nil {
-		v.childCtl.Lock()
-		v.childCtl.vmMap[cvm] = struct{}{}
-		v.childCtl.Unlock()
-	}
-}
-
-func (v *VM) delChild(cvm *VM) {
-	if cvm != nil {
-		v.childCtl.Lock()
-		delete(v.childCtl.vmMap, cvm)
-		v.childCtl.Unlock()
-	}
-	v.childCtl.Done()
-}
-
 // RunCompiled run the VM with user supplied function fn.
-func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (Object, error) {
+func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (val Object, err error) {
 	if fn == nil { // normal Run
 		// reset VM states
 		v.sp = 0
@@ -232,16 +173,113 @@ func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (Object, error) {
 	v.allocs = v.maxAllocs + 1
 
 	atomic.StoreInt64(&v.aborting, 0)
-	v.run()
-	v.childCtl.Wait() // waits for all child VMs to exit
 
-	if err := v.postRun(); err != nil {
-		return UndefinedValue, err
+	defer func() {
+		if perr := recover(); perr != nil {
+			v.err = ErrPanic{perr, debug.Stack()}
+			v.Abort() // run time panic should trigger abort chain
+		}
+		v.childCtl.Wait() // waits for all child VMs to exit
+		if err = v.postRun(); err != nil {
+			return
+		}
+		if fn != nil && atomic.LoadInt64(&v.aborting) == 0 {
+			val = v.stack[v.sp-1]
+		}
+	}()
+
+	val = UndefinedValue
+	v.run()
+	return
+}
+
+// ErrPanic is an error where panic happended in the VM.
+type ErrPanic struct {
+	perr  interface{}
+	stack []byte
+}
+
+func (e ErrPanic) Error() string {
+	return fmt.Sprintf("panic: %v\n%s", e.perr, e.stack)
+}
+
+func (v *VM) addError(err error) {
+	v.childCtl.Lock()
+	v.childCtl.errors = append(v.childCtl.errors, err)
+	v.childCtl.Unlock()
+}
+
+func (v *VM) addChild(cvm *VM) {
+	v.childCtl.Add(1)
+	if cvm != nil {
+		v.childCtl.Lock()
+		v.childCtl.vmMap[cvm] = struct{}{}
+		v.childCtl.Unlock()
 	}
-	if fn != nil && atomic.LoadInt64(&v.aborting) == 0 {
-		return v.stack[v.sp-1], nil
+}
+
+func (v *VM) delChild(cvm *VM) {
+	if cvm != nil {
+		v.childCtl.Lock()
+		delete(v.childCtl.vmMap, cvm)
+		v.childCtl.Unlock()
 	}
-	return UndefinedValue, nil
+	v.childCtl.Done()
+}
+
+func (v *VM) callers() (frames []frame) {
+	curFrame := *v.curFrame
+	curFrame.ip = v.ip - 1
+	frames = append(frames, curFrame)
+	for i := v.framesIndex - 1; i >= 1; i-- {
+		curFrame = v.frames[i-1]
+		frames = append(frames, curFrame)
+	}
+	return frames
+}
+
+func (v *VM) callStack(frames []frame) string {
+	if frames == nil {
+		frames = v.callers()
+	}
+
+	var sb strings.Builder
+	for _, f := range frames {
+		filePos := v.fileSet.Position(f.fn.SourcePos(f.ip))
+		fmt.Fprintf(&sb, "\n\tat %s", filePos)
+	}
+	return sb.String()
+}
+
+func (v *VM) postRun() (err error) {
+	err = v.err
+	// ErrVMAborted is user behavior thus it is not an actual runtime error
+	if errors.Is(err, ErrVMAborted) {
+		err = nil
+	}
+	if err != nil {
+		var e ErrPanic
+		if errors.As(err, &e) {
+			err = fmt.Errorf("\nRuntime Panic: %v%s\n%s", e.perr, v.callStack(nil), e.stack)
+		} else {
+			err = fmt.Errorf("\nRuntime Error: %w%s", err, v.callStack(nil))
+		}
+	}
+
+	var sb strings.Builder
+	for _, cerr := range v.childCtl.errors {
+		fmt.Fprintf(&sb, "%v\n", cerr)
+	}
+	cerrs := sb.String()
+
+	if err != nil && len(cerrs) != 0 {
+		err = fmt.Errorf("%w\n%s", err, cerrs)
+		return
+	}
+	if len(cerrs) != 0 {
+		err = fmt.Errorf("%s", cerrs)
+	}
+	return
 }
 
 type vmObj struct {
