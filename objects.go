@@ -322,7 +322,7 @@ type BuiltinFunction struct {
 	ObjectImpl
 	Name      string
 	Value     CallableFunc
-	needvmObj bool
+	NeedVMObj bool
 }
 
 // TypeName returns the name of the type.
@@ -336,7 +336,7 @@ func (o *BuiltinFunction) String() string {
 
 // Copy returns a copy of the type.
 func (o *BuiltinFunction) Copy() Object {
-	return &BuiltinFunction{Value: o.Value}
+	return &BuiltinFunction{Value: o.Value, NeedVMObj: o.NeedVMObj}
 }
 
 // Equals returns true if the value of the type is equal to the value of

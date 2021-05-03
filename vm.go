@@ -3,6 +3,8 @@ package tengo
 import (
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -45,6 +47,8 @@ type VM struct {
 	err         error
 	abortChan   chan struct{}
 	childCtl    vmChildCtl
+	In          io.Reader
+	Out         io.Writer
 }
 
 // NewVM creates a VM.
@@ -66,6 +70,8 @@ func NewVM(
 		maxAllocs:   maxAllocs,
 		abortChan:   make(chan struct{}),
 		childCtl:    vmChildCtl{vmMap: make(map[*VM]struct{})},
+		In:          os.Stdin,
+		Out:         os.Stdout,
 	}
 	v.frames[0].fn = bytecode.MainFunction
 	v.frames[0].ip = -1
@@ -120,6 +126,8 @@ func (v *VM) ShallowClone() *VM {
 		maxAllocs:   v.maxAllocs,
 		abortChan:   make(chan struct{}),
 		childCtl:    vmChildCtl{vmMap: make(map[*VM]struct{})},
+		In:          v.In,
+		Out:         v.Out,
 	}
 
 	// set to empty entry
@@ -282,13 +290,14 @@ func (v *VM) postRun() (err error) {
 	return
 }
 
-type vmObj struct {
+// VMObj exports VM
+type VMObj struct {
 	ObjectImpl
 	Value *VM
 }
 
 func (v *VM) selfObject() Object {
-	return &vmObj{Value: v}
+	return &VMObj{Value: v}
 }
 
 func (v *VM) run() {
@@ -827,7 +836,7 @@ func (v *VM) run() {
 			} else {
 				var args []Object
 				if bltnfn, ok := value.(*BuiltinFunction); ok {
-					if bltnfn.needvmObj {
+					if bltnfn.NeedVMObj {
 						// pass VM as the first para to builtin functions
 						args = append(args, v.selfObject())
 					}

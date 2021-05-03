@@ -2,9 +2,9 @@ package tengo
 
 var builtinFuncs []*BuiltinFunction
 
-// if needvmObj is true, VM will pass [vmObj, args...] to fn when calling it.
-func addBuiltinFunction(name string, fn CallableFunc, needvmObj bool) {
-	builtinFuncs = append(builtinFuncs, &BuiltinFunction{Name: name, Value: fn, needvmObj: needvmObj})
+// if needVMObj is true, VM will pass [VMObj, args...] to fn when calling it.
+func addBuiltinFunction(name string, fn CallableFunc, needVMObj bool) {
+	builtinFuncs = append(builtinFuncs, &BuiltinFunction{Name: name, Value: fn, NeedVMObj: needVMObj})
 }
 
 func init() {

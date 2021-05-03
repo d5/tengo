@@ -42,8 +42,8 @@ type goroutineVM struct {
 // The latter 2 cases will trigger aborting procedure of all the descendant goroutineVMs,
 // which will further result in #1 above.
 func builtinGovm(args ...Object) (Object, error) {
-	vm := args[0].(*vmObj).Value
-	args = args[1:] // the first arg is vmObj inserted by VM
+	vm := args[0].(*VMObj).Value
+	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) == 0 {
 		return nil, ErrWrongNumArguments
 	}
@@ -92,7 +92,7 @@ func builtinGovm(args ...Object) (Object, error) {
 		} else {
 			var nargs []Object
 			if bltnfn, ok := fn.(*BuiltinFunction); ok {
-				if bltnfn.needvmObj {
+				if bltnfn.NeedVMObj {
 					// pass VM as the first para to builtin functions
 					nargs = append(nargs, vm.selfObject())
 				}
@@ -112,8 +112,8 @@ func builtinGovm(args ...Object) (Object, error) {
 
 // Triggers the termination process of the current VM and all its descendant VMs.
 func builtinAbort(args ...Object) (Object, error) {
-	vm := args[0].(*vmObj).Value
-	args = args[1:] // the first arg is vmObj inserted by VM
+	vm := args[0].(*VMObj).Value
+	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
@@ -217,8 +217,8 @@ func builtinMakechan(args ...Object) (Object, error) {
 
 	oc := make(objchan, size)
 	obj := map[string]Object{
-		"send":  &BuiltinFunction{Value: oc.send, needvmObj: true},
-		"recv":  &BuiltinFunction{Value: oc.recv, needvmObj: true},
+		"send":  &BuiltinFunction{Value: oc.send, NeedVMObj: true},
+		"recv":  &BuiltinFunction{Value: oc.recv, NeedVMObj: true},
 		"close": &BuiltinFunction{Value: oc.close},
 	}
 	return &Map{Value: obj}, nil
@@ -227,8 +227,8 @@ func builtinMakechan(args ...Object) (Object, error) {
 // Sends an obj to the channel, will block if channel is full and the VM has not been aborted.
 // Sends to a closed channel causes panic.
 func (oc objchan) send(args ...Object) (Object, error) {
-	vm := args[0].(*vmObj).Value
-	args = args[1:] // the first arg is vmObj inserted by VM
+	vm := args[0].(*VMObj).Value
+	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
@@ -243,8 +243,8 @@ func (oc objchan) send(args ...Object) (Object, error) {
 // Receives an obj from the channel, will block if channel is empty and the VM has not been aborted.
 // Receives from a closed channel returns undefined value.
 func (oc objchan) recv(args ...Object) (Object, error) {
-	vm := args[0].(*vmObj).Value
-	args = args[1:] // the first arg is vmObj inserted by VM
+	vm := args[0].(*VMObj).Value
+	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) != 0 {
 		return nil, ErrWrongNumArguments
 	}
