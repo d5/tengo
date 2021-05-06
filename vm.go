@@ -49,6 +49,7 @@ type VM struct {
 	childCtl    vmChildCtl
 	In          io.Reader
 	Out         io.Writer
+	Args        []string
 }
 
 // NewVM creates a VM.
@@ -72,6 +73,7 @@ func NewVM(
 		childCtl:    vmChildCtl{vmMap: make(map[*VM]struct{})},
 		In:          os.Stdin,
 		Out:         os.Stdout,
+		Args:        os.Args,
 	}
 	v.frames[0].fn = bytecode.MainFunction
 	v.frames[0].ip = -1
@@ -128,6 +130,7 @@ func (v *VM) ShallowClone() *VM {
 		childCtl:    vmChildCtl{vmMap: make(map[*VM]struct{})},
 		In:          v.In,
 		Out:         v.Out,
+		Args:        v.Args,
 	}
 
 	// set to empty entry
