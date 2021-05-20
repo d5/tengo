@@ -45,7 +45,7 @@ type VM struct {
 	maxAllocs   int64
 	allocs      int64
 	err         error
-	abortChan   chan struct{}
+	AbortChan   chan struct{}
 	childCtl    vmChildCtl
 	In          io.Reader
 	Out         io.Writer
@@ -69,7 +69,7 @@ func NewVM(
 		framesIndex: 1,
 		ip:          -1,
 		maxAllocs:   maxAllocs,
-		abortChan:   make(chan struct{}),
+		AbortChan:   make(chan struct{}),
 		childCtl:    vmChildCtl{vmMap: make(map[*VM]struct{})},
 		In:          os.Stdin,
 		Out:         os.Stdout,
@@ -88,7 +88,7 @@ func (v *VM) Abort() {
 		return
 	}
 	atomic.StoreInt64(&v.aborting, 1)
-	close(v.abortChan) // broadcast to all receivers
+	close(v.AbortChan) // broadcast to all receivers
 	v.childCtl.Lock()
 	for cvm := range v.childCtl.vmMap {
 		cvm.Abort()
@@ -126,7 +126,7 @@ func (v *VM) ShallowClone() *VM {
 		framesIndex: 1,
 		ip:          -1,
 		maxAllocs:   v.maxAllocs,
-		abortChan:   make(chan struct{}),
+		AbortChan:   make(chan struct{}),
 		childCtl:    vmChildCtl{vmMap: make(map[*VM]struct{})},
 		In:          v.In,
 		Out:         v.Out,
@@ -264,9 +264,8 @@ func (v *VM) callStack(frames []frame) string {
 
 func (v *VM) postRun() (err error) {
 	err = v.err
-	// ErrVMAborted is user behavior thus it is not an actual runtime error
-	if errors.Is(err, ErrVMAborted) {
-		err = nil
+	if err == nil && atomic.LoadInt64(&v.aborting) == 1 {
+		err = ErrVMAborted // indicate VM was aborted
 	}
 	if err != nil {
 		var e ErrPanic

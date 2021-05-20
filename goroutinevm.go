@@ -233,7 +233,7 @@ func (oc objchan) send(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 	select {
-	case <-vm.abortChan:
+	case <-vm.AbortChan:
 		return nil, ErrVMAborted
 	case oc <- args[0]:
 	}
@@ -249,7 +249,7 @@ func (oc objchan) recv(args ...Object) (Object, error) {
 		return nil, ErrWrongNumArguments
 	}
 	select {
-	case <-vm.abortChan:
+	case <-vm.AbortChan:
 		return nil, ErrVMAborted
 	case obj, ok := <-oc:
 		if ok {
