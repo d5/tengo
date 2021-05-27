@@ -99,6 +99,9 @@ func (v *VM) Abort() {
 // Run starts the execution.
 func (v *VM) Run() (err error) {
 	_, err = v.RunCompiled(nil)
+	if err == nil && atomic.LoadInt64(&v.aborting) == 1 {
+		err = ErrVMAborted // root VM was aborted
+	}
 	return
 }
 
@@ -264,8 +267,9 @@ func (v *VM) callStack(frames []frame) string {
 
 func (v *VM) postRun() (err error) {
 	err = v.err
-	if err == nil && atomic.LoadInt64(&v.aborting) == 1 {
-		err = ErrVMAborted // indicate VM was aborted
+	// ErrVMAborted is user behavior thus it is not an actual runtime error
+	if errors.Is(err, ErrVMAborted) {
+		err = nil
 	}
 	if err != nil {
 		var e ErrPanic
