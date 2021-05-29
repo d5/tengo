@@ -209,7 +209,10 @@ func timesSleep(args ...tengo.Object) (ret tengo.Object, err error) {
 	done := make(chan struct{})
 	go func() {
 		time.Sleep(time.Duration(i1))
-		done <- struct{}{}
+		select {
+		case <-vm.AbortChan:
+		case done <- struct{}{}:
+		}
 	}()
 
 	select {
