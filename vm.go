@@ -32,11 +32,11 @@ type vmChildCtl struct {
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
 	constants   []Object
-	stack       [StackSize]Object
+	stack       []Object
 	sp          int
 	globals     []Object
 	fileSet     *parser.SourceFileSet
-	frames      [MaxFrames]frame
+	frames      []*frame
 	framesIndex int
 	curFrame    *frame
 	curInsts    []byte
@@ -52,6 +52,11 @@ type VM struct {
 	Args        []string
 }
 
+const (
+	initialStackSize = 64
+	initialFrames    = 16
+)
+
 // NewVM creates a VM.
 func NewVM(
 	bytecode *Bytecode,
@@ -66,6 +71,7 @@ func NewVM(
 		sp:          0,
 		globals:     globals,
 		fileSet:     bytecode.FileSet,
+		frames:      make([]*frame, 0, initialFrames),
 		framesIndex: 1,
 		ip:          -1,
 		maxAllocs:   maxAllocs,
@@ -75,10 +81,11 @@ func NewVM(
 		Out:         os.Stdout,
 		Args:        os.Args,
 	}
-	v.frames[0].fn = bytecode.MainFunction
-	v.frames[0].ip = -1
-	v.curFrame = &v.frames[0]
-	v.curInsts = v.curFrame.fn.Instructions
+	frame := &frame{
+		fn: bytecode.MainFunction,
+		ip: -1,
+	}
+	v.frames = append(v.frames, frame)
 	return v
 }
 
@@ -108,11 +115,12 @@ var emptyEntry = &CompiledFunction{
 // The copy shares the underlying globals, constants with the original.
 // ShallowClone is typically followed by RunCompiled to run user supplied compiled function.
 func (v *VM) ShallowClone() *VM {
-	shallowClone := &VM{
+	vClone := &VM{
 		constants:   v.constants,
 		sp:          0,
 		globals:     v.globals,
 		fileSet:     v.fileSet,
+		frames:      make([]*frame, 0, initialFrames),
 		framesIndex: 1,
 		ip:          -1,
 		maxAllocs:   v.maxAllocs,
@@ -122,14 +130,12 @@ func (v *VM) ShallowClone() *VM {
 		Out:         v.Out,
 		Args:        v.Args,
 	}
-
-	// set to empty entry
-	shallowClone.frames[0].fn = emptyEntry
-	shallowClone.frames[0].ip = -1
-	shallowClone.curFrame = &v.frames[0]
-	shallowClone.curInsts = v.curFrame.fn.Instructions
-
-	return shallowClone
+	frame := &frame{
+		fn: emptyEntry,
+		ip: -1,
+	}
+	vClone.frames = append(vClone.frames, frame)
+	return vClone
 }
 
 // constract wrapper function func(fn, ...args){ return fn(args...) }
@@ -145,8 +151,14 @@ var funcWrapper = &CompiledFunction{
 	VarArgs:       true,
 }
 
+func (v *VM) releaseSpace() {
+	v.stack = nil
+	v.frames = append(make([]*frame, 0, initialFrames), v.frames[0])
+}
+
 // RunCompiled run the VM with user supplied function fn.
 func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (val Object, err error) {
+	v.stack = make([]Object, initialStackSize)
 	if fn == nil { // normal Run
 		// reset VM states
 		v.sp = 0
@@ -164,10 +176,9 @@ func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (val Object, err 
 		}
 		v.sp = 2 + len(args)
 		v.frames[0].fn = entry
-		v.frames[0].ip = -1
 	}
 
-	v.curFrame = &v.frames[0]
+	v.curFrame = v.frames[0]
 	v.curInsts = v.curFrame.fn.Instructions
 	v.framesIndex = 1
 	v.ip = -1
@@ -179,12 +190,11 @@ func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (val Object, err 
 			v.Abort() // run time panic should trigger abort chain
 		}
 		v.childCtl.Wait() // waits for all child VMs to exit
-		if err = v.postRun(); err != nil {
-			return
-		}
+		err = v.postRun()
 		if fn != nil && atomic.LoadInt64(&v.aborting) == 0 {
 			val = v.stack[v.sp-1]
 		}
+		v.releaseSpace()
 	}()
 
 	val = UndefinedValue
@@ -249,7 +259,7 @@ func (v *VM) callers() (frames []frame) {
 	curFrame.ip = v.ip - 1
 	frames = append(frames, curFrame)
 	for i := v.framesIndex - 1; i >= 1; i-- {
-		curFrame = v.frames[i-1]
+		curFrame = *v.frames[i-1]
 		frames = append(frames, curFrame)
 	}
 	return frames
@@ -765,12 +775,14 @@ func (v *VM) run() {
 				v.sp--
 				switch arr := v.stack[v.sp].(type) {
 				case *Array:
+					v.checkGrowStack(len(arr.Value))
 					for _, item := range arr.Value {
 						v.stack[v.sp] = item
 						v.sp++
 					}
 					numArgs += len(arr.Value) - 1
 				case *ImmutableArray:
+					v.checkGrowStack(len(arr.Value))
 					for _, item := range arr.Value {
 						v.stack[v.sp] = item
 						v.sp++
@@ -834,7 +846,10 @@ func (v *VM) run() {
 
 				// update call frame
 				v.curFrame.ip = v.ip // store current ip before call
-				v.curFrame = &(v.frames[v.framesIndex])
+				if v.framesIndex >= len(v.frames) {
+					v.frames = append(v.frames, &frame{})
+				}
+				v.curFrame = v.frames[v.framesIndex]
 				v.curFrame.fn = callee
 				v.curFrame.freeVars = callee.Free
 				v.curFrame.basePointer = v.sp - numArgs
@@ -895,7 +910,7 @@ func (v *VM) run() {
 			}
 			//v.sp--
 			v.framesIndex--
-			v.curFrame = &v.frames[v.framesIndex-1]
+			v.curFrame = v.frames[v.framesIndex-1]
 			v.curInsts = v.curFrame.fn.Instructions
 			v.ip = v.curFrame.ip
 			//v.sp = lastFrame.basePointer - 1
@@ -1091,7 +1106,27 @@ func (v *VM) run() {
 			v.err = fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])
 			return
 		}
+		v.checkGrowStack(0)
 	}
+}
+
+func (v *VM) checkGrowStack(added int) {
+	should := v.sp + added
+	if should < len(v.stack) {
+		return
+	}
+	if should >= StackSize {
+		v.err = ErrStackOverflow
+		return
+	}
+	roundup := initialStackSize
+	newSize := len(v.stack) * 2
+	if should > newSize {
+		newSize = (should + roundup) / roundup * roundup
+	}
+	new := make([]Object, newSize)
+	copy(new, v.stack)
+	v.stack = new
 }
 
 // IsStackEmpty tests if the stack is empty or not.
