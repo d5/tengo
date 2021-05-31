@@ -82,22 +82,9 @@ func NewVM(
 	return v
 }
 
-// Abort aborts the execution of current VM and all its descendant VMs.
-func (v *VM) Abort() {
-	if atomic.LoadInt64(&v.aborting) != 0 {
-		return
-	}
-	atomic.StoreInt64(&v.aborting, 1)
-	close(v.AbortChan) // broadcast to all receivers
-	v.childCtl.Lock()
-	for cvm := range v.childCtl.vmMap {
-		cvm.Abort()
-	}
-	v.childCtl.Unlock()
-}
-
 // Run starts the execution.
 func (v *VM) Run() (err error) {
+	atomic.StoreInt64(&v.aborting, 0)
 	_, err = v.RunCompiled(nil)
 	if err == nil && atomic.LoadInt64(&v.aborting) == 1 {
 		err = ErrVMAborted // root VM was aborted
@@ -186,8 +173,6 @@ func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (val Object, err 
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
 
-	atomic.StoreInt64(&v.aborting, 0)
-
 	defer func() {
 		if perr := recover(); perr != nil {
 			v.err = ErrPanic{perr, debug.Stack()}
@@ -223,13 +208,31 @@ func (v *VM) addError(err error) {
 	v.childCtl.Unlock()
 }
 
-func (v *VM) addChild(cvm *VM) {
+// Abort aborts the execution of current VM and all its descendant VMs.
+func (v *VM) Abort() {
+	if atomic.LoadInt64(&v.aborting) != 0 {
+		return
+	}
+	v.childCtl.Lock()
+	atomic.StoreInt64(&v.aborting, 1)
+	close(v.AbortChan) // broadcast to all receivers
+	for cvm := range v.childCtl.vmMap {
+		cvm.Abort()
+	}
+	v.childCtl.Unlock()
+}
+
+func (v *VM) addChild(cvm *VM) error {
+	v.childCtl.Lock()
+	defer v.childCtl.Unlock()
+	if atomic.LoadInt64(&v.aborting) != 0 {
+		return ErrVMAborted
+	}
 	v.childCtl.Add(1)
 	if cvm != nil {
-		v.childCtl.Lock()
 		v.childCtl.vmMap[cvm] = struct{}{}
-		v.childCtl.Unlock()
 	}
+	return nil
 }
 
 func (v *VM) delChild(cvm *VM) {

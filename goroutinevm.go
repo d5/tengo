@@ -69,7 +69,9 @@ func builtinGovm(args ...Object) (Object, error) {
 		callers = vm.callers()
 	}
 
-	vm.addChild(gvm.VM)
+	if err := vm.addChild(gvm.VM); err != nil {
+		return nil, err
+	}
 	go func() {
 		var val Object
 		var err error
@@ -85,6 +87,7 @@ func builtinGovm(args ...Object) (Object, error) {
 			}
 			gvm.waitChan <- ret{val, err}
 			vm.delChild(gvm.VM)
+			gvm.VM = nil
 		}()
 
 		if cfn != nil {
