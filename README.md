@@ -53,19 +53,19 @@ fmt.println(sum("", [1, 2, 3]))  // "123"
 
 | | fib(35) | fibt(35) |  Language (Type)  |
 | :--- |    ---: |     ---: |  :---: |
-| [**Tengo**](https://github.com/d5/tengo) | `2,931ms` | `4ms` | Tengo (VM) |
-| [go-lua](https://github.com/Shopify/go-lua) | `4,824ms` | `4ms` | Lua (VM) |
-| [GopherLua](https://github.com/yuin/gopher-lua) | `5,365ms` | `4ms` | Lua (VM) |
-| [goja](https://github.com/dop251/goja) | `5,533ms` | `5ms` | JavaScript (VM) |
-| [starlark-go](https://github.com/google/starlark-go) | `11,495ms` | `5ms` | Starlark (Interpreter) |
-| [Yaegi](https://github.com/containous/yaegi) | `15,645ms` | `12ms` | Yaegi (Interpreter) |
-| [gpython](https://github.com/go-python/gpython) | `16,322ms` | `5ms` | Python (Interpreter) |
-| [otto](https://github.com/robertkrimen/otto) | `73,093ms` | `10ms` | JavaScript (Interpreter) |
-| [Anko](https://github.com/mattn/anko) | `79,809ms` | `8ms` | Anko (Interpreter) |
+| [**Tengo**](https://github.com/d5/tengo) | `2,315ms` | `3ms` | Tengo (VM) |
+| [go-lua](https://github.com/Shopify/go-lua) | `4,028ms` | `3ms` | Lua (VM) |
+| [GopherLua](https://github.com/yuin/gopher-lua) | `4,409ms` | `3ms` | Lua (VM) |
+| [goja](https://github.com/dop251/goja) | `5,194ms` | `4ms` | JavaScript (VM) |
+| [starlark-go](https://github.com/google/starlark-go) | `6,954ms` | `3ms` | Starlark (Interpreter) |
+| [gpython](https://github.com/go-python/gpython) | `11,324ms` | `4ms` | Python (Interpreter) |
+| [Yaegi](https://github.com/containous/yaegi) | `11,715ms` | `10ms` | Yaegi (Interpreter) |
+| [otto](https://github.com/robertkrimen/otto) | `48,539ms` | `6ms` | JavaScript (Interpreter) |
+| [Anko](https://github.com/mattn/anko) | `52,821ms` | `6ms` | Anko (Interpreter) |
 | - | - | - | - |
-| Go | `53ms` | `3ms` | Go (Native) |
-| Lua | `1,612ms` | `3ms` | Lua (Native) |
-| Python | `2,632ms` | `23ms` | Python 2 (Native) |
+| Go | `47ms` | `2ms` | Go (Native) |
+| Lua | `756ms` | `2ms` | Lua (Native) |
+| Python | `1,907ms` | `14ms` | Python2 (Native) |
 
 _* [fib(35)](https://github.com/d5/tengobench/blob/master/code/fib.tengo):
 Fibonacci(35)_  
