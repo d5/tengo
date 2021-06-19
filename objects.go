@@ -79,6 +79,11 @@ type Object interface {
 	CanCall() bool
 }
 
+// Measurable interface
+type Measurable interface {
+	Length() *Int
+}
+
 // ObjectImpl represents a default Object Implementation. To defined a new
 // value type, one can embed ObjectImpl in their type declarations to avoid
 // implementing all non-significant methods. TypeName() and String() methods
@@ -261,6 +266,11 @@ func (o *Array) Iterate() Iterator {
 // CanIterate returns whether the Object can be Iterated.
 func (o *Array) CanIterate() bool {
 	return true
+}
+
+// Length implement Measurable interface
+func (o *Array) Length() *Int {
+	return &Int{Value: int64(len(o.Value))}
 }
 
 // Bool represents a boolean value.
@@ -452,6 +462,11 @@ func (o *Bytes) Iterate() Iterator {
 // CanIterate returns whether the Object can be Iterated.
 func (o *Bytes) CanIterate() bool {
 	return true
+}
+
+// Length implement Measurable interface
+func (o *Bytes) Length() *Int {
+	return &Int{Value: int64(len(o.Value))}
 }
 
 // Char represents a character value.
@@ -898,6 +913,11 @@ func (o *ImmutableArray) CanIterate() bool {
 	return true
 }
 
+// Length implement Measurable interface
+func (o *ImmutableArray) Length() *Int {
+	return &Int{Value: int64(len(o.Value))}
+}
+
 // ImmutableMap represents an immutable map object.
 type ImmutableMap struct {
 	ObjectImpl
@@ -985,6 +1005,11 @@ func (o *ImmutableMap) Iterate() Iterator {
 // CanIterate returns whether the Object can be Iterated.
 func (o *ImmutableMap) CanIterate() bool {
 	return true
+}
+
+// Length implement Measurable interface
+func (o *ImmutableMap) Length() *Int {
+	return &Int{Value: int64(len(o.Value))}
 }
 
 // Int represents an integer value.
@@ -1277,6 +1302,11 @@ func (o *Map) CanIterate() bool {
 	return true
 }
 
+// Length implement Measurable interface
+func (o *Map) Length() *Int {
+	return &Int{Value: int64(len(o.Value))}
+}
+
 // ObjectPtr represents a free variable.
 type ObjectPtr struct {
 	ObjectImpl
@@ -1431,6 +1461,11 @@ func (o *String) Iterate() Iterator {
 // CanIterate returns whether the Object can be Iterated.
 func (o *String) CanIterate() bool {
 	return true
+}
+
+// Length implement Measurable interface
+func (o *String) Length() *Int {
+	return &Int{Value: int64(len(o.Value))}
 }
 
 // Time represents a time value.
