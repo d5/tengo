@@ -14,10 +14,10 @@ import (
 
 var (
 	// TrueValue represents a true value.
-	TrueValue Object = &Bool{value: true}
+	TrueValue Object = &Bool{Value: true}
 
 	// FalseValue represents a false value.
-	FalseValue Object = &Bool{value: false}
+	FalseValue Object = &Bool{Value: false}
 
 	// UndefinedValue represents an undefined value.
 	UndefinedValue Object = &Undefined{}
@@ -279,11 +279,11 @@ type Bool struct {
 
 	// this is intentionally non-public to force using objects.TrueValue and
 	// FalseValue always
-	value bool
+	Value bool
 }
 
 func (o *Bool) String() string {
-	if o.value {
+	if o.Value {
 		return "true"
 	}
 
@@ -302,7 +302,7 @@ func (o *Bool) Copy() Object {
 
 // IsFalsy returns true if the value of the type is falsy.
 func (o *Bool) IsFalsy() bool {
-	return !o.value
+	return !o.Value
 }
 
 // Equals returns true if the value of the type is equal to the value of
@@ -313,13 +313,13 @@ func (o *Bool) Equals(x Object) bool {
 
 // GobDecode decodes bool value from input bytes.
 func (o *Bool) GobDecode(b []byte) (err error) {
-	o.value = b[0] == 1
+	o.Value = b[0] == 1
 	return
 }
 
 // GobEncode encodes bool values into bytes.
 func (o *Bool) GobEncode() (b []byte, err error) {
-	if o.value {
+	if o.Value {
 		b = []byte{1}
 	} else {
 		b = []byte{0}
