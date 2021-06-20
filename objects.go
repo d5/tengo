@@ -81,7 +81,7 @@ type Object interface {
 
 // Measurable interface
 type Measurable interface {
-	Length() *Int
+	Length() int
 }
 
 // ObjectImpl represents a default Object Implementation. To defined a new
@@ -270,7 +270,7 @@ func (o *Array) CanIterate() bool {
 
 // Length implement Measurable interface
 func (o *Array) Length() *Int {
-	return &Int{Value: int64(len(o.Value))}
+	return len(o.Value)
 }
 
 // Bool represents a boolean value.
@@ -466,7 +466,7 @@ func (o *Bytes) CanIterate() bool {
 
 // Length implement Measurable interface
 func (o *Bytes) Length() *Int {
-	return &Int{Value: int64(len(o.Value))}
+	return len(o.Value)
 }
 
 // Char represents a character value.
@@ -915,7 +915,7 @@ func (o *ImmutableArray) CanIterate() bool {
 
 // Length implement Measurable interface
 func (o *ImmutableArray) Length() *Int {
-	return &Int{Value: int64(len(o.Value))}
+	return len(o.Value)
 }
 
 // ImmutableMap represents an immutable map object.
@@ -1009,7 +1009,7 @@ func (o *ImmutableMap) CanIterate() bool {
 
 // Length implement Measurable interface
 func (o *ImmutableMap) Length() *Int {
-	return &Int{Value: int64(len(o.Value))}
+	return len(o.Value)
 }
 
 // Int represents an integer value.
@@ -1304,7 +1304,7 @@ func (o *Map) CanIterate() bool {
 
 // Length implement Measurable interface
 func (o *Map) Length() *Int {
-	return &Int{Value: int64(len(o.Value))}
+	return len(o.Value)
 }
 
 // ObjectPtr represents a free variable.
@@ -1465,7 +1465,7 @@ func (o *String) CanIterate() bool {
 
 // Length implement Measurable interface
 func (o *String) Length() *Int {
-	return &Int{Value: int64(len(o.Value))}
+	return len(o.Value)
 }
 
 // Time represents a time value.

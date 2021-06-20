@@ -308,7 +308,7 @@ func builtinLen(args ...Object) (Object, error) {
 
 	arg := args[0]
 	if v, ok := arg.(Measurable); ok {
-		return v.Length(), nil
+		return &Int{Value: int64(v.Length())), nil
 	}
 
 	return nil, ErrInvalidArgumentType{
