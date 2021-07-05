@@ -125,15 +125,13 @@ each([a, b, c, d], func(x) {
 }
 ```
 
-If you need to evaluate a simple expression, you can use `Eval` function instead:
+Or, if you need to evaluate a simple expression, you can use `Eval` function instead:
 
 
 ```golang
 res, err := tengo.Eval(ctx,
 	`input ? "success" : "fail"`,
-	map[string]interface{}{
-        "input": 1,
-    })
+	map[string]interface{}{"input": 1})
 if err != nil {
 	panic(err)
 }
