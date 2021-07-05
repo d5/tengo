@@ -4,7 +4,7 @@
 
 # The Tengo Language
 
-[![GoDoc](https://godoc.org/github.com/d5/tengo?status.svg)](https://godoc.org/github.com/d5/tengo)
+[![GoDoc](https://godoc.org/github.com/d5/tengo/v2?status.svg)](https://godoc.org/github.com/d5/tengo/v2)
 ![test](https://github.com/d5/tengo/workflows/test/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/d5/tengo)](https://goreportcard.com/report/github.com/d5/tengo)
 
@@ -93,21 +93,18 @@ import (
 )
 
 func main() {
-	// Tengo script code
-	src := `
-each := func(seq, fn) {
+	// create a new Script instance
+	script := tengo.NewScript([]byte(
+`each := func(seq, fn) {
     for x in seq { fn(x) }
 }
 
 sum := 0
 mul := 1
 each([a, b, c, d], func(x) {
-	sum += x
-	mul *= x
-})`
-
-	// create a new Script instance
-	script := tengo.NewScript([]byte(src))
+    sum += x
+    mul *= x
+})`))
 
 	// set values
 	_ = script.Add("a", 1)
@@ -126,6 +123,19 @@ each([a, b, c, d], func(x) {
 	mul := compiled.Get("mul")
 	fmt.Println(sum, mul) // "22 288"
 }
+```
+
+Or, if you need to evaluate a simple expression, you can use [Eval](https://pkg.go.dev/github.com/d5/tengo/v2#Eval) function instead:
+
+
+```golang
+res, err := tengo.Eval(ctx,
+	`input ? "success" : "fail"`,
+	map[string]interface{}{"input": 1})
+if err != nil {
+	panic(err)
+}
+fmt.Println(res) // "success"
 ```
 
 ## References
