@@ -4,7 +4,7 @@
 
 # The Tengo Language
 
-[![GoDoc](https://godoc.org/github.com/d5/tengo/v2?status.svg)](https://godoc.org/github.com/d5/tengo)
+[![GoDoc](https://godoc.org/github.com/d5/tengo/v2?status.svg)](https://godoc.org/github.com/d5/tengo/v2)
 ![test](https://github.com/d5/tengo/workflows/test/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/d5/tengo)](https://goreportcard.com/report/github.com/d5/tengo)
 
@@ -125,7 +125,7 @@ each([a, b, c, d], func(x) {
 }
 ```
 
-Or, if you need to evaluate a simple expression, you can use `Eval` function instead:
+Or, if you need to evaluate a simple expression, you can use [Eval](https://pkg.go.dev/github.com/d5/tengo/v2#Eval) function instead:
 
 
 ```golang
