@@ -368,7 +368,9 @@ func (c *Compiler) Compile(node parser.Node) error {
 		if err := c.Compile(node.Sel); err != nil {
 			return err
 		}
-		c.emit(node, parser.OpIndex)
+		method := 0
+		if node.Reci { method = 1 }
+		c.emit(node, parser.OpIndex, method)
 	case *parser.IndexExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
@@ -376,7 +378,9 @@ func (c *Compiler) Compile(node parser.Node) error {
 		if err := c.Compile(node.Index); err != nil {
 			return err
 		}
-		c.emit(node, parser.OpIndex)
+		method := 0
+		if node.Reci { method = 1 }
+		c.emit(node, parser.OpIndex, method)
 	case *parser.SliceExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
@@ -398,12 +402,19 @@ func (c *Compiler) Compile(node parser.Node) error {
 		c.emit(node, parser.OpSliceIndex)
 	case *parser.FuncLit:
 		c.enterScope()
+		reci := node.Type.Receiver
+		usesReceiver := reci != nil && len(reci.List) == 1
 
 		for _, p := range node.Type.Params.List {
 			s := c.symbolTable.Define(p.Name)
 
 			// function arguments is not assigned directly.
 			s.LocalAssigned = true
+		}
+		if usesReceiver {
+			c.symbolTable.defineFree(&Symbol{ Name: reci.List[0].Name })
+		} else {
+			c.symbolTable.defineFree(&Symbol{ Name: "" })
 		}
 
 		if err := c.Compile(node.Body); err != nil {
@@ -413,7 +424,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 		// code optimization
 		c.optimizeFunc(node)
 
-		freeSymbols := c.symbolTable.FreeSymbols()
+		freeSymbols := c.symbolTable.FreeSymbols()[1:]
 		numLocals := c.symbolTable.MaxSymbols()
 		instructions, sourceMap := c.leaveScope()
 
@@ -476,6 +487,8 @@ func (c *Compiler) Compile(node parser.Node) error {
 			NumParameters: len(node.Type.Params.List),
 			VarArgs:       node.Type.Params.VarArgs,
 			SourceMap:     sourceMap,
+			UsesReceiver:  usesReceiver,
+			Free:		   []*ObjectPtr{{Value: &UndefinedValue}},
 		}
 		if len(freeSymbols) > 0 {
 			c.emit(node, parser.OpClosure,

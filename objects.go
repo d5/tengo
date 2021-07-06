@@ -576,6 +576,7 @@ type CompiledFunction struct {
 	VarArgs       bool
 	SourceMap     map[int]parser.Pos
 	Free          []*ObjectPtr
+	UsesReceiver  bool
 }
 
 // TypeName returns the name of the type.
@@ -595,6 +596,7 @@ func (o *CompiledFunction) Copy() Object {
 		NumParameters: o.NumParameters,
 		VarArgs:       o.VarArgs,
 		Free:          append([]*ObjectPtr{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
+		UsesReceiver:  o.UsesReceiver,
 	}
 }
 

@@ -256,13 +256,14 @@ func (e *FuncLit) End() Pos {
 }
 
 func (e *FuncLit) String() string {
-	return "func" + e.Type.Params.String() + " " + e.Body.String()
+	return e.Type.String() + " " + e.Body.String()
 }
 
 // FuncType represents a function type definition.
 type FuncType struct {
 	FuncPos Pos
 	Params  *IdentList
+	Receiver*IdentList
 }
 
 func (e *FuncType) exprNode() {}
@@ -278,6 +279,9 @@ func (e *FuncType) End() Pos {
 }
 
 func (e *FuncType) String() string {
+	if e.Receiver != nil {
+		return "func" + e.Receiver.String() + e.Params.String()
+	}
 	return "func" + e.Params.String()
 }
 
@@ -360,6 +364,7 @@ type IndexExpr struct {
 	LBrack Pos
 	Index  Expr
 	RBrack Pos
+	Reci   bool
 }
 
 func (e *IndexExpr) exprNode() {}
@@ -483,6 +488,7 @@ func (e *ParenExpr) String() string {
 type SelectorExpr struct {
 	Expr Expr
 	Sel  Expr
+	Reci bool
 }
 
 func (e *SelectorExpr) exprNode() {}

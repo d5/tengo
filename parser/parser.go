@@ -345,11 +345,13 @@ func (p *Parser) parseIndexOrSlice(x Expr) Expr {
 			High:   index[1],
 		}
 	}
+	receiver := p.token == token.LParen
 	return &IndexExpr{
 		Expr:   x,
 		LBrack: lbrack,
 		RBrack: rbrack,
 		Index:  index[0],
+		Reci:   receiver,
 	}
 }
 
@@ -359,7 +361,8 @@ func (p *Parser) parseSelector(x Expr) Expr {
 	}
 
 	sel := p.parseIdent()
-	return &SelectorExpr{Expr: x, Sel: &StringLit{
+	receiver := p.token == token.LParen
+	return &SelectorExpr{Expr: x, Reci: receiver, Sel: &StringLit{
 		Value:    sel.Name,
 		ValuePos: sel.NamePos,
 		Literal:  sel.Name,
@@ -578,10 +581,20 @@ func (p *Parser) parseFuncType() *FuncType {
 	}
 
 	pos := p.expect(token.Func)
+	var receiver *IdentList
 	params := p.parseIdentList()
+	if p.token == token.LParen {
+		if !params.VarArgs && len(params.List) <= 1 {
+			receiver = params
+			params = p.parseIdentList()
+		} else {
+			p.errorExpected(params.Pos(), "1 receiver")
+		}
+	}
 	return &FuncType{
 		FuncPos: pos,
 		Params:  params,
+		Receiver:receiver,
 	}
 }
 

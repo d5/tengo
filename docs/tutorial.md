@@ -38,6 +38,7 @@ Here's a list of all available value types in Tengo.
 | immutable map | [immutable](#immutable-values) map | - |
 | undefined | [undefined](#undefined-values) value | - |
 | function | [function](#function-values) value | - |  
+| method | [method](#method-values) value | - |
 | _user-defined_ | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/objects.md) | - |
 
 ### Error Values
@@ -216,6 +217,85 @@ f2(1)               // valid; a = 1, b = []
 f2(1, 2)            // valid; a = 1, b = [2]
 f2(1, 2, 3)         // valid; a = 1, b = [2, 3]
 f2([1, 2, 3]...)    // valid; a = 1, b = [2, 3]
+```
+
+## Method Values
+
+Sometimes, when creating structures in Tengo, it becomes desirable to be able
+to call back to the parent map or array. This is handled by a method, a 
+specialized subset of a function. When a method is defined, it creates a receiver in
+the local scope that takes on the identity of the parent slice or array during a
+call.
+
+```golang
+my_counter := {
+    counter: 21,
+    getCount: func(reci)() {
+        return reci.counter
+    }
+}
+
+my_counter.counter += 4
+
+my_counter.getCount()    //returns 25
+
+my_arr := [ 0, 5, 17, func(r)() { return r[1] } ]
+
+my_arr[3]() //returns 5
+```
+
+Notably, and unlike Go, a method receiver is not dependent on being instanced inside 
+a map or array.
+
+```golang
+concat := func(reci)(str) {
+    reci.buffer += str
+}
+
+my_writer := {
+    buffer: "",
+    append: concat
+}
+
+my_writer.append("hello ")  // my_obj.buffer = "hello "
+my_writer.append("world!")  // my_obj.buffer = "hello world!"
+```
+
+Furthermore, when called from outside a method-call, the receiver on a method call will
+be ```undefined```
+
+```golang
+f := func(r)() {
+    return r
+}
+
+f()             //returns undefined
+```
+
+Finally, a copy() of an array or slice containing a method will reference the new copy.
+
+```golang
+m1 := {
+    c: 21,
+    getC: func(r)() { return r.c }
+}
+
+m2 := copy(m1)
+
+m2.c = 7
+m1.getC()   //21
+m1.c = 2   
+m1.getC()   //2
+m2.getC()   //7
+
+a1 := [ func (r)() { return r[1] + " " + r[2] }, "some", "other data" ]
+a2 := copy(a1)
+
+a2[2] = "more things"
+
+a2[0]() //returns "some more things"
+a1[0]() //returns "some other data"
+
 ```
 
 ## Variables and Scopes
