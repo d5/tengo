@@ -320,8 +320,9 @@ func (o *Bool) GobEncode() (b []byte, err error) {
 // BuiltinFunction represents a builtin function.
 type BuiltinFunction struct {
 	ObjectImpl
-	Name  string
-	Value CallableFunc
+	Name      string
+	Value     CallableFunc
+	NeedVMObj bool
 }
 
 // TypeName returns the name of the type.
@@ -335,7 +336,7 @@ func (o *BuiltinFunction) String() string {
 
 // Copy returns a copy of the type.
 func (o *BuiltinFunction) Copy() Object {
-	return &BuiltinFunction{Value: o.Value}
+	return &BuiltinFunction{Value: o.Value, NeedVMObj: o.NeedVMObj}
 }
 
 // Equals returns true if the value of the type is equal to the value of
@@ -594,6 +595,7 @@ func (o *CompiledFunction) Copy() Object {
 		NumLocals:     o.NumLocals,
 		NumParameters: o.NumParameters,
 		VarArgs:       o.VarArgs,
+		SourceMap:     o.SourceMap,
 		Free:          append([]*ObjectPtr{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
 	}
 }
