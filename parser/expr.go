@@ -86,6 +86,11 @@ func (e *BinaryExpr) String() string {
 		" " + e.RHS.String() + ")"
 }
 
+// NullCoalesceExpr represents a ternary null coalesce expression.
+type NullCoalesceExpr struct {
+	BinaryExpr
+}
+
 // BoolLit represents a boolean literal.
 type BoolLit struct {
 	Value    bool

@@ -325,7 +325,10 @@ for more details._
 
 ### Ternary Operators
 
-Tengo has a ternary conditional operator `(condition expression) ? (true expression) : (false expression)`.
+Tengo has a three ternary oprators: conditional, false coalesce and null coalesce.
+
+
+**Conditional:** `(condition expression) ? (true expression) : (false expression)`.
 
 ```golang
 a := true ? 1 : -1    // a == 1
@@ -334,6 +337,58 @@ min := func(a, b) {
   return a < b ? a : b
 }
 b := min(5, 10)      // b == 5
+```
+
+**False Coalesce (LOr):** `(value expression) || (false expression)`.
+
+```golang
+a := 1 || -1    // a == 1
+
+valOrDefault := func(value, defaul) {
+  return value || defaul
+}
+
+b := valOrDefault(5, -10)    // b == 5
+c := valOrDefault(0, -11)    // c == -11
+d := valOrDefault(undefined, -12)    // d == -12
+
+get := func() { return undefined }
+default := func() { return -13 }
+e := get() || default()    // e == -13
+
+m1 := {}
+f := m1.x || m1.y || 3     // f == 3
+
+m2 := {x:1}
+g := m2.x || m2.y || 3     // g == 1
+
+m3 := {x:1}
+h := m3.x || m3.y || 3     // h == 1
+
+m4 := {x:0,y:2}
+i := m4.x || m4.y || 3     // i == 2
+```
+
+**Null Coalesce:** `(value expression) ?? (null expression)`.
+
+```golang
+a := undefined ?? -1    // a == -1
+
+valOrDefault := func(value, defaul) {
+  return value ?? defaul
+}
+b := valOrDefault(5, -10)     // b == 5
+c := valOrDefault(0, -11)     // c == 0
+d := valOrDefault(undefined, -12)     // d == -12
+
+m1 := {}
+e := m1.x ?? m1.y ?? 3     // e == 3
+
+m2 := {x:1}
+f := m2.x ?? m2.y ?? 3     // f == 1
+
+m3 := {y:2}
+g := m3.x ?? m3.y ?? 3     // g == 2
 ```
 
 ### Assignment and Increment Operators
@@ -351,6 +406,8 @@ b := min(5, 10)      // b == 5
 | `^=` | `(lhs) = (lhs) ^ (rhs)` |
 | `<<=` | `(lhs) = (lhs) << (rhs)` |
 | `>>=` | `(lhs) = (lhs) >> (rhs)` |
+| `||=` | `(lhs) = (lhs) || (rhs)` |
+| `??=` | `(lhs) = (lhs) ?? (rhs)` |
 | `++` | `(lhs) = (lhs) + 1` |
 | `--` | `(lhs) = (lhs) - 1` |
 
@@ -367,7 +424,7 @@ comparison operators, `&&` (logical AND), and finally `||` (logical OR):
 | 4 | `+`  `-`  `\|`  `^` |
 | 3 | `==`  `!=`  `<`  `<=`  `>`  `>=` |
 | 2 | `&&` |
-| 1 | `\|\|` |
+| 1 | `\|\|` `??` |
 
 Like Go, `++` and `--` operators form statements, not expressions, they fall
 outside the operator hierarchy.
