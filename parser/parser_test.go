@@ -1512,7 +1512,7 @@ type parseTracer struct {
 	out []string
 }
 
-func (o *parseTracer) Write(p []byte) (n int, err error) {
+func (o *parseTracer) Write(p []byte) (int, error) {
 	o.out = append(o.out, string(p))
 	return len(p), nil
 }
@@ -2082,7 +2082,7 @@ func parseSource(
 	filename string,
 	src []byte,
 	trace io.Writer,
-) (res *File, err error) {
+) (*File, error) {
 	fileSet := NewFileSet()
 	file := fileSet.AddFile(filename, -1, len(src))
 

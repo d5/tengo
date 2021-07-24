@@ -143,25 +143,25 @@ func (s *Script) Compile() (*Compiled, error) {
 
 // Run compiles and runs the scripts. Use returned compiled object to access
 // global variables.
-func (s *Script) Run() (compiled *Compiled, err error) {
-	compiled, err = s.Compile()
+func (s *Script) Run() (*Compiled, error) {
+	compiled, err := s.Compile()
 	if err != nil {
-		return
+		return compiled, err
 	}
 	err = compiled.Run()
-	return
+	return compiled, err
 }
 
 // RunContext is like Run but includes a context.
 func (s *Script) RunContext(
 	ctx context.Context,
-) (compiled *Compiled, err error) {
-	compiled, err = s.Compile()
+) (*Compiled, error) {
+	compiled, err := s.Compile()
 	if err != nil {
-		return
+		return compiled, err
 	}
 	err = compiled.RunContext(ctx)
-	return
+	return compiled, err
 }
 
 func (s *Script) prepCompile() (
@@ -212,7 +212,7 @@ func (c *Compiled) Run() error {
 }
 
 // RunContext is like Run but includes a context.
-func (c *Compiled) RunContext(ctx context.Context) (err error) {
+func (c *Compiled) RunContext(ctx context.Context) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -226,10 +226,10 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 	case <-ctx.Done():
 		v.Abort()
 		<-ch
-		err = ctx.Err()
-	case err = <-ch:
+		return ctx.Err()
+	case err := <-ch:
+		return err
 	}
-	return
 }
 
 // Clone creates a new copy of Compiled. Cloned copies are safe for concurrent

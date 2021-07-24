@@ -182,954 +182,454 @@ var timesModule = map[string]tengo.Object{
 	}, // to_utc(time) => time
 }
 
-func timesSleep(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	i1, ok := tengo.ToInt64(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "int(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+var timesSleep = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	i1, err := tengo.ToInt64(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
 	time.Sleep(time.Duration(i1))
-	ret = tengo.UndefinedValue
+	return tengo.UndefinedValue, nil
+}, 1)
 
-	return
-}
-
-func timesParseDuration(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesParseDuration = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	s1, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
 	dur, err := time.ParseDuration(s1)
 	if err != nil {
-		ret = wrapError(err)
-		return
+		return wrapError(err), nil
 	}
 
-	ret = &tengo.Int{Value: int64(dur)}
+	return &tengo.Int{Value: int64(dur)}, nil
+}, 1)
 
-	return
-}
-
-func timesSince(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesSince = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
+	return &tengo.Int{Value: int64(time.Since(t1))}, nil
+}, 1)
 
-	ret = &tengo.Int{Value: int64(time.Since(t1))}
-
-	return
-}
-
-func timesUntil(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesUntil = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
+	return &tengo.Int{Value: int64(time.Until(t1))}, nil
+}, 1)
 
-	ret = &tengo.Int{Value: int64(time.Until(t1))}
-
-	return
-}
-
-func timesDurationHours(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesDurationHours = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	i1, err := tengo.ToInt64(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i1, ok := tengo.ToInt64(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "int(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
+	return &tengo.Float{Value: time.Duration(i1).Hours()}, nil
+}, 1)
 
-	ret = &tengo.Float{Value: time.Duration(i1).Hours()}
-
-	return
-}
-
-func timesDurationMinutes(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesDurationMinutes = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	i1, err := tengo.ToInt64(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i1, ok := tengo.ToInt64(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "int(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
+	return &tengo.Float{Value: time.Duration(i1).Minutes()}, nil
+}, 1)
 
-	ret = &tengo.Float{Value: time.Duration(i1).Minutes()}
-
-	return
-}
-
-func timesDurationNanoseconds(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesDurationNanoseconds = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	i1, err := tengo.ToInt64(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i1, ok := tengo.ToInt64(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "int(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
+	return &tengo.Int{Value: time.Duration(i1).Nanoseconds()}, nil
+}, 1)
 
-	ret = &tengo.Int{Value: time.Duration(i1).Nanoseconds()}
-
-	return
-}
-
-func timesDurationSeconds(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesDurationSeconds = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	i1, err := tengo.ToInt64(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i1, ok := tengo.ToInt64(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "int(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
+	return &tengo.Float{Value: time.Duration(i1).Seconds()}, nil
+}, 1)
 
-	ret = &tengo.Float{Value: time.Duration(i1).Seconds()}
-
-	return
-}
-
-func timesDurationString(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesDurationString = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	i1, err := tengo.ToInt64(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i1, ok := tengo.ToInt64(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "int(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
+	return &tengo.String{Value: time.Duration(i1).String()}, nil
+}, 1)
 
-	ret = &tengo.String{Value: time.Duration(i1).String()}
-
-	return
-}
-
-func timesMonthString(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesMonthString = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	i1, err := tengo.ToInt64(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i1, ok := tengo.ToInt64(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "int(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
+	return &tengo.String{Value: time.Month(i1).String()}, nil
+}, 1)
 
-	ret = &tengo.String{Value: time.Month(i1).String()}
-
-	return
-}
-
-func timesDate(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesDate = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 7 {
-		err = tengo.ErrWrongNumArguments
-		return
+
+	i1, err := tengo.ToInt(0, args...)
+	if err != nil {
+		return nil, err
+	}
+	i2, err := tengo.ToInt(1, args...)
+	if err != nil {
+		return nil, err
+	}
+	i3, err := tengo.ToInt(2, args...)
+	if err != nil {
+		return nil, err
+	}
+	i4, err := tengo.ToInt(3, args...)
+	if err != nil {
+		return nil, err
+	}
+	i5, err := tengo.ToInt(4, args...)
+	if err != nil {
+		return nil, err
+	}
+	i6, err := tengo.ToInt(5, args...)
+	if err != nil {
+		return nil, err
+	}
+	i7, err := tengo.ToInt(6, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i1, ok := tengo.ToInt(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "int(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-	i2, ok := tengo.ToInt(args[1])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "int(compatible)",
-			Found:    args[1].TypeName(),
-		}
-		return
-	}
-	i3, ok := tengo.ToInt(args[2])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "third",
-			Expected: "int(compatible)",
-			Found:    args[2].TypeName(),
-		}
-		return
-	}
-	i4, ok := tengo.ToInt(args[3])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "fourth",
-			Expected: "int(compatible)",
-			Found:    args[3].TypeName(),
-		}
-		return
-	}
-	i5, ok := tengo.ToInt(args[4])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "fifth",
-			Expected: "int(compatible)",
-			Found:    args[4].TypeName(),
-		}
-		return
-	}
-	i6, ok := tengo.ToInt(args[5])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "sixth",
-			Expected: "int(compatible)",
-			Found:    args[5].TypeName(),
-		}
-		return
-	}
-	i7, ok := tengo.ToInt(args[6])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "seventh",
-			Expected: "int(compatible)",
-			Found:    args[6].TypeName(),
-		}
-		return
-	}
-
-	ret = &tengo.Time{
+	return &tengo.Time{
 		Value: time.Date(i1,
 			time.Month(i2), i3, i4, i5, i6, i7, time.Now().Location()),
+	}, nil
+}, 7)
+
+var timesNow = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	return &tengo.Time{Value: time.Now()}, nil
+})
+
+var timesParse = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	s1, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	return
-}
-
-func timesNow(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 0 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	ret = &tengo.Time{Value: time.Now()}
-
-	return
-}
-
-func timesParse(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 2 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	s2, ok := tengo.ToString(args[1])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "string(compatible)",
-			Found:    args[1].TypeName(),
-		}
-		return
+	s2, err := tengo.ToString(1, args...)
+	if err != nil {
+		return nil, err
 	}
 
 	parsed, err := time.Parse(s1, s2)
 	if err != nil {
-		ret = wrapError(err)
-		return
+		return wrapError(err), nil
 	}
 
-	ret = &tengo.Time{Value: parsed}
+	return &tengo.Time{Value: parsed}, nil
+}, 2)
 
-	return
-}
-
-func timesUnix(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 2 {
-		err = tengo.ErrWrongNumArguments
-		return
+var timesUnix = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	i1, err := tengo.ToInt64(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i1, ok := tengo.ToInt64(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "int(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	i2, err := tengo.ToInt64(1, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i2, ok := tengo.ToInt64(args[1])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "int(compatible)",
-			Found:    args[1].TypeName(),
-		}
-		return
+	return &tengo.Time{Value: time.Unix(i1, i2)}, nil
+}, 2)
+
+var timesAdd = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	ret = &tengo.Time{Value: time.Unix(i1, i2)}
-
-	return
-}
-
-func timesAdd(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 2 {
-		err = tengo.ErrWrongNumArguments
-		return
+	i2, err := tengo.ToInt64(1, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	return &tengo.Time{Value: t1.Add(time.Duration(i2))}, nil
+}, 2)
+
+var timesSub = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i2, ok := tengo.ToInt64(args[1])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "int(compatible)",
-			Found:    args[1].TypeName(),
-		}
-		return
+	t2, err := tengo.ToTime(1, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	ret = &tengo.Time{Value: t1.Add(time.Duration(i2))}
+	return &tengo.Int{Value: int64(t1.Sub(t2))}, nil
+}, 2)
 
-	return
-}
-
-func timesSub(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 2 {
-		err = tengo.ErrWrongNumArguments
-		return
+var timesAddDate = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	i2, err := tengo.ToInt(1, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t2, ok := tengo.ToTime(args[1])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "time(compatible)",
-			Found:    args[1].TypeName(),
-		}
-		return
+	i3, err := tengo.ToInt(2, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	ret = &tengo.Int{Value: int64(t1.Sub(t2))}
-
-	return
-}
-
-func timesAddDate(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 4 {
-		err = tengo.ErrWrongNumArguments
-		return
+	i4, err := tengo.ToInt(3, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	return &tengo.Time{Value: t1.AddDate(i2, i3, i4)}, nil
+}, 4)
+
+var timesAfter = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	i2, ok := tengo.ToInt(args[1])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "int(compatible)",
-			Found:    args[1].TypeName(),
-		}
-		return
-	}
-
-	i3, ok := tengo.ToInt(args[2])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "third",
-			Expected: "int(compatible)",
-			Found:    args[2].TypeName(),
-		}
-		return
-	}
-
-	i4, ok := tengo.ToInt(args[3])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "fourth",
-			Expected: "int(compatible)",
-			Found:    args[3].TypeName(),
-		}
-		return
-	}
-
-	ret = &tengo.Time{Value: t1.AddDate(i2, i3, i4)}
-
-	return
-}
-
-func timesAfter(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 2 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	t2, ok := tengo.ToTime(args[1])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "time(compatible)",
-			Found:    args[1].TypeName(),
-		}
-		return
+	t2, err := tengo.ToTime(1, args...)
+	if err != nil {
+		return nil, err
 	}
 
 	if t1.After(t2) {
-		ret = tengo.TrueValue
-	} else {
-		ret = tengo.FalseValue
+		return tengo.TrueValue, nil
+	}
+	return tengo.FalseValue, nil
+}, 2)
+
+var timesBefore = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	return
-}
-
-func timesBefore(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 2 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	t2, ok := tengo.ToTime(args[1])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	t2, err := tengo.ToTime(1, args...)
+	if err != nil {
+		return nil, err
 	}
 
 	if t1.Before(t2) {
-		ret = tengo.TrueValue
-	} else {
-		ret = tengo.FalseValue
+		return tengo.TrueValue, nil
+	}
+	return tengo.FalseValue, nil
+}, 2)
+
+var timesTimeYear = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	return
-}
+	return &tengo.Int{Value: int64(t1.Year())}, nil
+}, 1)
 
-func timesTimeYear(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+var timesTimeMonth = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	return &tengo.Int{Value: int64(t1.Month())}, nil
+}, 1)
+
+var timesTimeDay = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	ret = &tengo.Int{Value: int64(t1.Year())}
+	return &tengo.Int{Value: int64(t1.Day())}, nil
+}, 1)
 
-	return
-}
-
-func timesTimeMonth(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+var timesTimeWeekday = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	return &tengo.Int{Value: int64(t1.Weekday())}, nil
+}, 1)
+
+var timesTimeHour = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	ret = &tengo.Int{Value: int64(t1.Month())}
+	return &tengo.Int{Value: int64(t1.Hour())}, nil
+}, 1)
 
-	return
-}
-
-func timesTimeDay(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+var timesTimeMinute = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	return &tengo.Int{Value: int64(t1.Minute())}, nil
+}, 1)
+
+var timesTimeSecond = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	ret = &tengo.Int{Value: int64(t1.Day())}
+	return &tengo.Int{Value: int64(t1.Second())}, nil
+}, 1)
 
-	return
-}
-
-func timesTimeWeekday(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	ret = &tengo.Int{Value: int64(t1.Weekday())}
-
-	return
-}
-
-func timesTimeHour(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	ret = &tengo.Int{Value: int64(t1.Hour())}
-
-	return
-}
-
-func timesTimeMinute(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	ret = &tengo.Int{Value: int64(t1.Minute())}
-
-	return
-}
-
-func timesTimeSecond(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	ret = &tengo.Int{Value: int64(t1.Second())}
-
-	return
-}
-
-func timesTimeNanosecond(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesTimeNanosecond = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	return &tengo.Int{Value: int64(t1.Nanosecond())}, nil
+}, 1)
+
+var timesTimeUnix = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	ret = &tengo.Int{Value: int64(t1.Nanosecond())}
+	return &tengo.Int{Value: t1.Unix()}, nil
+}, 1)
 
-	return
-}
-
-func timesTimeUnix(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	ret = &tengo.Int{Value: t1.Unix()}
-
-	return
-}
-
-func timesTimeUnixNano(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesTimeUnixNano = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	return &tengo.Int{Value: t1.UnixNano()}, nil
+}, 1)
+
+var timesTimeFormat = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	ret = &tengo.Int{Value: t1.UnixNano()}
-
-	return
-}
-
-func timesTimeFormat(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 2 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	s2, ok := tengo.ToString(args[1])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "string(compatible)",
-			Found:    args[1].TypeName(),
-		}
-		return
+	s2, err := tengo.ToString(1, args...)
+	if err != nil {
+		return nil, err
 	}
 
 	s := t1.Format(s2)
 	if len(s) > tengo.MaxStringLen {
-
 		return nil, tengo.ErrStringLimit
 	}
 
-	ret = &tengo.String{Value: s}
+	return &tengo.String{Value: s}, nil
+}, 2)
 
-	return
-}
-
-func timesIsZero(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+var timesIsZero = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
 	if t1.IsZero() {
-		ret = tengo.TrueValue
-	} else {
-		ret = tengo.FalseValue
+		return tengo.TrueValue, nil
+	}
+	return tengo.FalseValue, nil
+}, 1)
+
+var timesToLocal = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	return
-}
+	return &tengo.Time{Value: t1.Local()}, nil
+}, 1)
 
-func timesToLocal(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+var timesToUTC = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
+	return &tengo.Time{Value: t1.UTC()}, nil
+}, 1)
 
-	ret = &tengo.Time{Value: t1.Local()}
-
-	return
-}
-
-func timesToUTC(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	ret = &tengo.Time{Value: t1.UTC()}
-
-	return
-}
-
-func timesTimeLocation(args ...tengo.Object) (
-	ret tengo.Object,
-	err error,
+var timesTimeLocation = tengo.CheckAnyArgs(func(args ...tengo.Object) (
+	tengo.Object,
+	error,
 ) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
+	return &tengo.String{Value: t1.Location().String()}, nil
+}, 1)
+
+var timesTimeString = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	t1, err := tengo.ToTime(0, args...)
+	if err != nil {
+		return nil, err
 	}
 
-	ret = &tengo.String{Value: t1.Location().String()}
-
-	return
-}
-
-func timesTimeString(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		err = tengo.ErrWrongNumArguments
-		return
-	}
-
-	t1, ok := tengo.ToTime(args[0])
-	if !ok {
-		err = tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
-		}
-		return
-	}
-
-	ret = &tengo.String{Value: t1.String()}
-
-	return
-}
+	return &tengo.String{Value: t1.String()}, nil
+}, 1)

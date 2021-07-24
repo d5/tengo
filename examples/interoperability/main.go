@@ -48,9 +48,12 @@ type GoProxy struct {
 	mtx       sync.Mutex
 }
 
+// GoProxyTN is the go proxy type name
+const GoProxyTN = "go-proxy"
+
 // TypeName returns type name.
 func (mod *GoProxy) TypeName() string {
-	return "GoProxy"
+	return GoProxyTN
 }
 
 func (mod *GoProxy) String() string {
@@ -84,72 +87,70 @@ func (mod *GoProxy) next(args ...tengo.Object) (tengo.Object, error) {
 }
 
 func (mod *GoProxy) register(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) == 0 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	mod.mtx.Lock()
-	defer mod.mtx.Unlock()
-
-	switch v := args[0].(type) {
-	case *tengo.Map:
-		mod.callbacks = v.Value
-	case *tengo.ImmutableMap:
-		mod.callbacks = v.Value
-	default:
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "map",
-			Found:    args[0].TypeName(),
+	return tengo.CheckArgs(func(args ...tengo.Object) (tengo.Object, error) {
+		mod.mtx.Lock()
+		defer mod.mtx.Unlock()
+		switch v := args[0].(type) {
+		case *tengo.Map:
+			mod.callbacks = v.Value
+		case *tengo.ImmutableMap:
+			mod.callbacks = v.Value
 		}
-	}
-	return tengo.UndefinedValue, nil
+		return tengo.UndefinedValue, nil
+	}, 1, 1, tengo.TNs{tengo.MapTN, tengo.ImmutableMapTN})(args...)
 }
 
 func (mod *GoProxy) args(args ...tengo.Object) (tengo.Object, error) {
-	mod.mtx.Lock()
-	defer mod.mtx.Unlock()
+	return tengo.CheckStrictArgs(func(args ...tengo.Object) (tengo.Object, error) {
+		mod.mtx.Lock()
+		defer mod.mtx.Unlock()
 
-	if mod.tasks.Len() == 0 {
-		return tengo.UndefinedValue, nil
-	}
-	el := mod.tasks.Front()
-	callArgs, ok := el.Value.(*CallArgs)
-	if !ok || callArgs == nil {
-		return nil, errors.New("invalid call arguments")
-	}
-	mod.tasks.Remove(el)
-	f, ok := mod.callbacks[callArgs.Func]
-	if !ok {
-		return tengo.UndefinedValue, nil
-	}
-	compiledFunc, ok := f.(*tengo.CompiledFunction)
-	if !ok {
-		return tengo.UndefinedValue, nil
-	}
-	params := callArgs.Params
-	if params == nil {
-		params = make([]tengo.Object, 0)
-	}
-	// callable.VarArgs implementation is omitted.
-	return &tengo.ImmutableMap{
-		Value: map[string]tengo.Object{
-			"result": &tengo.UserFunction{
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) > 0 {
-						callArgs.Result <- args[0]
+		if mod.tasks.Len() == 0 {
+			return tengo.UndefinedValue, nil
+		}
+		el := mod.tasks.Front()
+		callArgs, ok := el.Value.(*CallArgs)
+		if !ok || callArgs == nil {
+			return nil, errors.New("invalid call arguments")
+		}
+		mod.tasks.Remove(el)
+		f, ok := mod.callbacks[callArgs.Func]
+		if !ok {
+			return tengo.UndefinedValue, nil
+		}
+		compiledFunc, ok := f.(*tengo.CompiledFunction)
+		if !ok {
+			return tengo.UndefinedValue, nil
+		}
+		params := callArgs.Params
+		if params == nil {
+			params = make([]tengo.Object, 0)
+		}
+		// callable.VarArgs implementation is omitted.
+		return &tengo.ImmutableMap{
+			Value: map[string]tengo.Object{
+				"result": &tengo.UserFunction{
+					Value: func(args ...tengo.Object) (tengo.Object, error) {
+						if len(args) > 0 {
+							callArgs.Result <- args[0]
+							return tengo.UndefinedValue, nil
+						}
+						callArgs.Result <- &tengo.Error{
+							Value: &tengo.String{
+								Value: tengo.ErrInvalidArgumentCount{
+									Min:    1,
+									Max:    -1,
+									Actual: 0,
+								}.Error()},
+						}
 						return tengo.UndefinedValue, nil
-					}
-					callArgs.Result <- &tengo.Error{
-						Value: &tengo.String{
-							Value: tengo.ErrWrongNumArguments.Error()},
-					}
-					return tengo.UndefinedValue, nil
-				}},
-			"num_params": &tengo.Int{Value: int64(compiledFunc.NumParameters)},
-			"callable":   compiledFunc,
-			"params":     &tengo.Array{Value: params},
-		},
-	}, nil
+					}},
+				"num_params": &tengo.Int{Value: int64(compiledFunc.NumParameters)},
+				"callable":   compiledFunc,
+				"params":     &tengo.Array{Value: params},
+			},
+		}, nil
+	})(args...)
 }
 
 // ProxySource is a tengo script to handle bidirectional arguments flow between

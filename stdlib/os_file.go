@@ -57,60 +57,39 @@ func makeOSFile(file *os.File) *tengo.ImmutableMap {
 			// chmod(mode int) => error
 			"chmod": &tengo.UserFunction{
 				Name: "chmod",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 1 {
-						return nil, tengo.ErrWrongNumArguments
-					}
-					i1, ok := tengo.ToInt64(args[0])
-					if !ok {
-						return nil, tengo.ErrInvalidArgumentType{
-							Name:     "first",
-							Expected: "int(compatible)",
-							Found:    args[0].TypeName(),
-						}
+				Value: tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+					i1, err := tengo.ToInt64(0, args...)
+					if err != nil {
+						return nil, err
 					}
 					return wrapError(file.Chmod(os.FileMode(i1))), nil
-				},
+				}, 1),
 			},
 			// seek(offset int, whence int) => int/error
 			"seek": &tengo.UserFunction{
 				Name: "seek",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 2 {
-						return nil, tengo.ErrWrongNumArguments
+				Value: tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+					i1, err := tengo.ToInt64(0, args...)
+					if err != nil {
+						return nil, err
 					}
-					i1, ok := tengo.ToInt64(args[0])
-					if !ok {
-						return nil, tengo.ErrInvalidArgumentType{
-							Name:     "first",
-							Expected: "int(compatible)",
-							Found:    args[0].TypeName(),
-						}
-					}
-					i2, ok := tengo.ToInt(args[1])
-					if !ok {
-						return nil, tengo.ErrInvalidArgumentType{
-							Name:     "second",
-							Expected: "int(compatible)",
-							Found:    args[1].TypeName(),
-						}
+					i2, err := tengo.ToInt(1, args...)
+					if err != nil {
+						return nil, err
 					}
 					res, err := file.Seek(i1, i2)
 					if err != nil {
 						return wrapError(err), nil
 					}
 					return &tengo.Int{Value: res}, nil
-				},
+				}, 2),
 			},
 			// stat() => imap(fileinfo)/error
 			"stat": &tengo.UserFunction{
 				Name: "stat",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 0 {
-						return nil, tengo.ErrWrongNumArguments
-					}
+				Value: tengo.CheckStrictArgs(func(args ...tengo.Object) (tengo.Object, error) {
 					return osStat(&tengo.String{Value: file.Name()})
-				},
+				}),
 			},
 		},
 	}

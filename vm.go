@@ -65,7 +65,7 @@ func (v *VM) Abort() {
 }
 
 // Run starts the execution.
-func (v *VM) Run() (err error) {
+func (v *VM) Run() error {
 	// reset VM states
 	v.sp = 0
 	v.curFrame = &(v.frames[0])
@@ -76,7 +76,7 @@ func (v *VM) Run() (err error) {
 
 	v.run()
 	atomic.StoreInt64(&v.aborting, 0)
-	err = v.err
+	err := v.err
 	if err != nil {
 		filePos := v.fileSet.Position(
 			v.curFrame.fn.SourcePos(v.ip - 1))
@@ -635,17 +635,16 @@ func (v *VM) run() {
 
 				// runtime error
 				if e != nil {
-					if e == ErrWrongNumArguments {
+					if e, ok := e.(ErrInvalidArgumentCount); ok {
 						v.err = fmt.Errorf(
-							"wrong number of arguments in call to '%s'",
-							value.TypeName())
+							"%s: %s",
+							value.TypeName(), e.Error())
 						return
 					}
 					if e, ok := e.(ErrInvalidArgumentType); ok {
 						v.err = fmt.Errorf(
-							"invalid type for argument '%s' in call to '%s': "+
-								"expected %s, found %s",
-							e.Name, value.TypeName(), e.Expected, e.Found)
+							"%s: %s",
+							value.TypeName(), e.Error())
 						return
 					}
 					v.err = e

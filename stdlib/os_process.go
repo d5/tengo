@@ -43,33 +43,23 @@ func makeOSProcess(proc *os.Process) *tengo.ImmutableMap {
 			},
 			"signal": &tengo.UserFunction{
 				Name: "signal",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 1 {
-						return nil, tengo.ErrWrongNumArguments
-					}
-					i1, ok := tengo.ToInt64(args[0])
-					if !ok {
-						return nil, tengo.ErrInvalidArgumentType{
-							Name:     "first",
-							Expected: "int(compatible)",
-							Found:    args[0].TypeName(),
-						}
+				Value: tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+					i1, err := tengo.ToInt64(0, args...)
+					if err != nil {
+						return nil, err
 					}
 					return wrapError(proc.Signal(syscall.Signal(i1))), nil
-				},
+				}, 1),
 			},
 			"wait": &tengo.UserFunction{
 				Name: "wait",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 0 {
-						return nil, tengo.ErrWrongNumArguments
-					}
+				Value: tengo.CheckStrictArgs(func(args ...tengo.Object) (tengo.Object, error) {
 					state, err := proc.Wait()
 					if err != nil {
 						return wrapError(err), nil
 					}
 					return makeOSProcessState(state), nil
-				},
+				}),
 			},
 		},
 	}

@@ -77,6 +77,18 @@ type Object interface {
 
 	// CanCall should return whether the Object can be Called.
 	CanCall() bool
+
+	// HasLen returns whether the object has a length value.
+	HasLen() bool
+
+	// Len returns the length value of the object.
+	Len() int
+}
+
+// TypeString converts a type name into the standard
+// type string be wrapping it in angle brackets.
+func TypeString(typeStr string) string {
+	return fmt.Sprintf("<%s>", typeStr)
 }
 
 // ObjectImpl represents a default Object Implementation. To defined a new
@@ -118,12 +130,12 @@ func (o *ObjectImpl) Equals(x Object) bool {
 }
 
 // IndexGet returns an element at a given index.
-func (o *ObjectImpl) IndexGet(_ Object) (res Object, err error) {
+func (o *ObjectImpl) IndexGet(_ Object) (Object, error) {
 	return nil, ErrNotIndexable
 }
 
 // IndexSet sets an element at a given index.
-func (o *ObjectImpl) IndexSet(_, _ Object) (err error) {
+func (o *ObjectImpl) IndexSet(_, _ Object) error {
 	return ErrNotIndexAssignable
 }
 
@@ -139,7 +151,7 @@ func (o *ObjectImpl) CanIterate() bool {
 
 // Call takes an arbitrary number of arguments and returns a return value
 // and/or an error.
-func (o *ObjectImpl) Call(_ ...Object) (ret Object, err error) {
+func (o *ObjectImpl) Call(_ ...Object) (Object, error) {
 	return nil, nil
 }
 
@@ -148,15 +160,28 @@ func (o *ObjectImpl) CanCall() bool {
 	return false
 }
 
+// HasLen returns whether the object has a length value.
+func (o *ObjectImpl) HasLen() bool {
+	return false
+}
+
+// Len returns the length value of the object.
+func (o *ObjectImpl) Len() int {
+	return 0
+}
+
 // Array represents an array of objects.
 type Array struct {
 	ObjectImpl
 	Value []Object
 }
 
+// ArrayTN is the array type name
+const ArrayTN = "array"
+
 // TypeName returns the name of the type.
 func (o *Array) TypeName() string {
-	return "array"
+	return ArrayTN
 }
 
 func (o *Array) String() string {
@@ -220,31 +245,26 @@ func (o *Array) Equals(x Object) bool {
 }
 
 // IndexGet returns an element at a given index.
-func (o *Array) IndexGet(index Object) (res Object, err error) {
+func (o *Array) IndexGet(index Object) (Object, error) {
 	intIdx, ok := index.(*Int)
 	if !ok {
-		err = ErrInvalidIndexType
-		return
+		return nil, ErrInvalidIndexType
 	}
 	idxVal := int(intIdx.Value)
 	if idxVal < 0 || idxVal >= len(o.Value) {
-		res = UndefinedValue
-		return
+		return UndefinedValue, nil
 	}
-	res = o.Value[idxVal]
-	return
+	return o.Value[idxVal], nil
 }
 
 // IndexSet sets an element at a given index.
-func (o *Array) IndexSet(index, value Object) (err error) {
-	intIdx, ok := ToInt(index)
-	if !ok {
-		err = ErrInvalidIndexType
-		return
+func (o *Array) IndexSet(index, value Object) error {
+	intIdx, err := ToInt(0, index)
+	if err != nil {
+		return err
 	}
 	if intIdx < 0 || intIdx >= len(o.Value) {
-		err = ErrIndexOutOfBounds
-		return
+		return ErrIndexOutOfBounds
 	}
 	o.Value[intIdx] = value
 	return nil
@@ -263,6 +283,16 @@ func (o *Array) CanIterate() bool {
 	return true
 }
 
+// HasLen returns whether the Object has a length value.
+func (o *Array) HasLen() bool {
+	return true
+}
+
+// Len returns the Objects length value.
+func (o *Array) Len() int {
+	return len(o.Value)
+}
+
 // Bool represents a boolean value.
 type Bool struct {
 	ObjectImpl
@@ -272,17 +302,20 @@ type Bool struct {
 	value bool
 }
 
+// BoolTN is the bool type name
+const BoolTN = "bool"
+
+// TypeName returns the name of the type.
+func (o *Bool) TypeName() string {
+	return BoolTN
+}
+
 func (o *Bool) String() string {
 	if o.value {
 		return "true"
 	}
 
 	return "false"
-}
-
-// TypeName returns the name of the type.
-func (o *Bool) TypeName() string {
-	return "bool"
 }
 
 // Copy returns a copy of the type.
@@ -302,19 +335,17 @@ func (o *Bool) Equals(x Object) bool {
 }
 
 // GobDecode decodes bool value from input bytes.
-func (o *Bool) GobDecode(b []byte) (err error) {
+func (o *Bool) GobDecode(b []byte) error {
 	o.value = b[0] == 1
-	return
+	return nil
 }
 
 // GobEncode encodes bool values into bytes.
-func (o *Bool) GobEncode() (b []byte, err error) {
+func (o *Bool) GobEncode() ([]byte, error) {
 	if o.value {
-		b = []byte{1}
-	} else {
-		b = []byte{0}
+		return []byte{1}, nil
 	}
-	return
+	return []byte{0}, nil
 }
 
 // BuiltinFunction represents a builtin function.
@@ -330,7 +361,7 @@ func (o *BuiltinFunction) TypeName() string {
 }
 
 func (o *BuiltinFunction) String() string {
-	return "<builtin-function>"
+	return TypeString(o.TypeName())
 }
 
 // Copy returns a copy of the type.
@@ -380,13 +411,16 @@ type Bytes struct {
 	Value []byte
 }
 
-func (o *Bytes) String() string {
-	return string(o.Value)
-}
+// BytesTN is the bytes type name
+const BytesTN = "bytes"
 
 // TypeName returns the name of the type.
 func (o *Bytes) TypeName() string {
-	return "bytes"
+	return BytesTN
+}
+
+func (o *Bytes) String() string {
+	return string(o.Value)
 }
 
 // BinaryOp returns another object that is the result of a given binary
@@ -426,19 +460,16 @@ func (o *Bytes) Equals(x Object) bool {
 }
 
 // IndexGet returns an element (as Int) at a given index.
-func (o *Bytes) IndexGet(index Object) (res Object, err error) {
+func (o *Bytes) IndexGet(index Object) (Object, error) {
 	intIdx, ok := index.(*Int)
 	if !ok {
-		err = ErrInvalidIndexType
-		return
+		return nil, ErrInvalidIndexType
 	}
 	idxVal := int(intIdx.Value)
 	if idxVal < 0 || idxVal >= len(o.Value) {
-		res = UndefinedValue
-		return
+		return UndefinedValue, nil
 	}
-	res = &Int{Value: int64(o.Value[idxVal])}
-	return
+	return &Int{Value: int64(o.Value[idxVal])}, nil
 }
 
 // Iterate creates a bytes iterator.
@@ -454,19 +485,32 @@ func (o *Bytes) CanIterate() bool {
 	return true
 }
 
+// HasLen returns whether the Object has a length value.
+func (o *Bytes) HasLen() bool {
+	return true
+}
+
+// Len returns the Objects length value.
+func (o *Bytes) Len() int {
+	return len(o.Value)
+}
+
 // Char represents a character value.
 type Char struct {
 	ObjectImpl
 	Value rune
 }
 
-func (o *Char) String() string {
-	return string(o.Value)
-}
+// CharTN is the char type name
+const CharTN = "char"
 
 // TypeName returns the name of the type.
 func (o *Char) TypeName() string {
-	return "char"
+	return CharTN
+}
+
+func (o *Char) String() string {
+	return string(o.Value)
 }
 
 // BinaryOp returns another object that is the result of a given binary
@@ -578,13 +622,16 @@ type CompiledFunction struct {
 	Free          []*ObjectPtr
 }
 
+// CompiledFunctionTN is the compiled function type name
+const CompiledFunctionTN = "compiled-function"
+
 // TypeName returns the name of the type.
 func (o *CompiledFunction) TypeName() string {
-	return "compiled-function"
+	return CompiledFunctionTN
 }
 
 func (o *CompiledFunction) String() string {
-	return "<compiled-function>"
+	return TypeString(CompiledFunctionTN)
 }
 
 // Copy returns a copy of the type.
@@ -626,9 +673,12 @@ type Error struct {
 	Value Object
 }
 
+// ErrorTN is the error type name
+const ErrorTN = "error"
+
 // TypeName returns the name of the type.
 func (o *Error) TypeName() string {
-	return "error"
+	return ErrorTN
 }
 
 func (o *Error) String() string {
@@ -655,13 +705,11 @@ func (o *Error) Equals(x Object) bool {
 }
 
 // IndexGet returns an element at a given index.
-func (o *Error) IndexGet(index Object) (res Object, err error) {
-	if strIdx, _ := ToString(index); strIdx != "value" {
-		err = ErrInvalidIndexOnError
-		return
+func (o *Error) IndexGet(index Object) (Object, error) {
+	if strIdx, _ := ToString(0, index); strIdx != "value" {
+		return nil, ErrInvalidIndexOnError
 	}
-	res = o.Value
-	return
+	return o.Value, nil
 }
 
 // Float represents a floating point number value.
@@ -670,13 +718,16 @@ type Float struct {
 	Value float64
 }
 
-func (o *Float) String() string {
-	return strconv.FormatFloat(o.Value, 'f', -1, 64)
-}
+// FloatTN is the float type name
+const FloatTN = "float"
 
 // TypeName returns the name of the type.
 func (o *Float) TypeName() string {
-	return "float"
+	return FloatTN
+}
+
+func (o *Float) String() string {
+	return strconv.FormatFloat(o.Value, 'f', -1, 64)
 }
 
 // BinaryOp returns another object that is the result of a given binary
@@ -807,9 +858,12 @@ type ImmutableArray struct {
 	Value []Object
 }
 
+// ImmutableArrayTN is the immutable array type name
+const ImmutableArrayTN = "immutable-array"
+
 // TypeName returns the name of the type.
 func (o *ImmutableArray) TypeName() string {
-	return "immutable-array"
+	return ImmutableArrayTN
 }
 
 func (o *ImmutableArray) String() string {
@@ -870,19 +924,16 @@ func (o *ImmutableArray) Equals(x Object) bool {
 }
 
 // IndexGet returns an element at a given index.
-func (o *ImmutableArray) IndexGet(index Object) (res Object, err error) {
+func (o *ImmutableArray) IndexGet(index Object) (Object, error) {
 	intIdx, ok := index.(*Int)
 	if !ok {
-		err = ErrInvalidIndexType
-		return
+		return nil, ErrInvalidIndexType
 	}
 	idxVal := int(intIdx.Value)
 	if idxVal < 0 || idxVal >= len(o.Value) {
-		res = UndefinedValue
-		return
+		return UndefinedValue, nil
 	}
-	res = o.Value[idxVal]
-	return
+	return o.Value[idxVal], nil
 }
 
 // Iterate creates an array iterator.
@@ -898,15 +949,28 @@ func (o *ImmutableArray) CanIterate() bool {
 	return true
 }
 
+// HasLen returns whether the Object has a length value.
+func (o *ImmutableArray) HasLen() bool {
+	return true
+}
+
+// Len returns the Objects length value.
+func (o *ImmutableArray) Len() int {
+	return len(o.Value)
+}
+
 // ImmutableMap represents an immutable map object.
 type ImmutableMap struct {
 	ObjectImpl
 	Value map[string]Object
 }
 
+// ImmutableMapTN is the immutable map type name
+const ImmutableMapTN = "immutable-map"
+
 // TypeName returns the name of the type.
 func (o *ImmutableMap) TypeName() string {
-	return "immutable-map"
+	return ImmutableMapTN
 }
 
 func (o *ImmutableMap) String() string {
@@ -932,17 +996,16 @@ func (o *ImmutableMap) IsFalsy() bool {
 }
 
 // IndexGet returns the value for the given key.
-func (o *ImmutableMap) IndexGet(index Object) (res Object, err error) {
-	strIdx, ok := ToString(index)
-	if !ok {
-		err = ErrInvalidIndexType
-		return
+func (o *ImmutableMap) IndexGet(index Object) (Object, error) {
+	strIdx, err := ToString(0, index)
+	if err != nil {
+		return nil, err
 	}
-	res, ok = o.Value[strIdx]
+	res, ok := o.Value[strIdx]
 	if !ok {
-		res = UndefinedValue
+		return UndefinedValue, nil
 	}
-	return
+	return res, nil
 }
 
 // Equals returns true if the value of the type is equal to the value of
@@ -987,11 +1050,24 @@ func (o *ImmutableMap) CanIterate() bool {
 	return true
 }
 
+// HasLen returns whether the Object has a length value.
+func (o *ImmutableMap) HasLen() bool {
+	return true
+}
+
+// Len returns the Objects length value.
+func (o *ImmutableMap) Len() int {
+	return len(o.Value)
+}
+
 // Int represents an integer value.
 type Int struct {
 	ObjectImpl
 	Value int64
 }
+
+// IntTN is the int type name
+const IntTN = "int"
 
 func (o *Int) String() string {
 	return strconv.FormatInt(o.Value, 10)
@@ -999,7 +1075,7 @@ func (o *Int) String() string {
 
 // TypeName returns the name of the type.
 func (o *Int) TypeName() string {
-	return "int"
+	return IntTN
 }
 
 // BinaryOp returns another object that is the result of a given binary
@@ -1183,9 +1259,12 @@ type Map struct {
 	Value map[string]Object
 }
 
+// MapTN is the map type name
+const MapTN = "map"
+
 // TypeName returns the name of the type.
 func (o *Map) TypeName() string {
-	return "map"
+	return MapTN
 }
 
 func (o *Map) String() string {
@@ -1235,25 +1314,23 @@ func (o *Map) Equals(x Object) bool {
 }
 
 // IndexGet returns the value for the given key.
-func (o *Map) IndexGet(index Object) (res Object, err error) {
-	strIdx, ok := ToString(index)
-	if !ok {
-		err = ErrInvalidIndexType
-		return
+func (o *Map) IndexGet(index Object) (Object, error) {
+	strIdx, err := ToString(0, index)
+	if err != nil {
+		return nil, err
 	}
-	res, ok = o.Value[strIdx]
+	res, ok := o.Value[strIdx]
 	if !ok {
-		res = UndefinedValue
+		return UndefinedValue, nil
 	}
-	return
+	return res, nil
 }
 
 // IndexSet sets the value for the given key.
-func (o *Map) IndexSet(index, value Object) (err error) {
-	strIdx, ok := ToString(index)
-	if !ok {
-		err = ErrInvalidIndexType
-		return
+func (o *Map) IndexSet(index, value Object) error {
+	strIdx, err := ToString(0, index)
+	if err != nil {
+		return err
 	}
 	o.Value[strIdx] = value
 	return nil
@@ -1277,19 +1354,32 @@ func (o *Map) CanIterate() bool {
 	return true
 }
 
+// HasLen returns whether the Object has a length value.
+func (o *Map) HasLen() bool {
+	return true
+}
+
+// Len returns the Objects length value.
+func (o *Map) Len() int {
+	return len(o.Value)
+}
+
 // ObjectPtr represents a free variable.
 type ObjectPtr struct {
 	ObjectImpl
 	Value *Object
 }
 
-func (o *ObjectPtr) String() string {
-	return "free-var"
-}
+// ObjectPtrTN is the object ptr type name
+const ObjectPtrTN = "free-var"
 
 // TypeName returns the name of the type.
 func (o *ObjectPtr) TypeName() string {
-	return "<free-var>"
+	return ObjectPtrTN
+}
+
+func (o *ObjectPtr) String() string {
+	return TypeString(ObjectPtrTN)
 }
 
 // Copy returns a copy of the type.
@@ -1315,9 +1405,12 @@ type String struct {
 	runeStr []rune
 }
 
+// StringTN is the string type name
+const StringTN = "string"
+
 // TypeName returns the name of the type.
 func (o *String) TypeName() string {
-	return "string"
+	return StringTN
 }
 
 func (o *String) String() string {
@@ -1399,22 +1492,19 @@ func (o *String) Equals(x Object) bool {
 }
 
 // IndexGet returns a character at a given index.
-func (o *String) IndexGet(index Object) (res Object, err error) {
+func (o *String) IndexGet(index Object) (Object, error) {
 	intIdx, ok := index.(*Int)
 	if !ok {
-		err = ErrInvalidIndexType
-		return
+		return nil, ErrInvalidIndexType
 	}
 	idxVal := int(intIdx.Value)
 	if o.runeStr == nil {
 		o.runeStr = []rune(o.Value)
 	}
 	if idxVal < 0 || idxVal >= len(o.runeStr) {
-		res = UndefinedValue
-		return
+		return UndefinedValue, nil
 	}
-	res = &Char{Value: o.runeStr[idxVal]}
-	return
+	return &Char{Value: o.runeStr[idxVal]}, nil
 }
 
 // Iterate creates a string iterator.
@@ -1433,19 +1523,32 @@ func (o *String) CanIterate() bool {
 	return true
 }
 
+// HasLen returns whether the Object has a length value.
+func (o *String) HasLen() bool {
+	return true
+}
+
+// Len returns the Objects length value.
+func (o *String) Len() int {
+	return len(o.Value)
+}
+
 // Time represents a time value.
 type Time struct {
 	ObjectImpl
 	Value time.Time
 }
 
-func (o *Time) String() string {
-	return o.Value.String()
-}
+// TimeTN is the time type name
+const TimeTN = "time"
 
 // TypeName returns the name of the type.
 func (o *Time) TypeName() string {
-	return "time"
+	return TimeTN
+}
+
+func (o *Time) String() string {
+	return o.Value.String()
 }
 
 // BinaryOp returns another object that is the result of a given binary
@@ -1519,13 +1622,16 @@ type Undefined struct {
 	ObjectImpl
 }
 
+// UndefinedTN is the undefined type name
+const UndefinedTN = "undefined"
+
 // TypeName returns the name of the type.
 func (o *Undefined) TypeName() string {
-	return "undefined"
+	return UndefinedTN
 }
 
 func (o *Undefined) String() string {
-	return "<undefined>"
+	return TypeString(UndefinedTN)
 }
 
 // Copy returns a copy of the type.
@@ -1582,13 +1688,16 @@ type UserFunction struct {
 	EncodingID string
 }
 
+// UserFunctionTN is the user function type name.
+const UserFunctionTN = "user-function"
+
 // TypeName returns the name of the type.
 func (o *UserFunction) TypeName() string {
-	return "user-function:" + o.Name
+	return UserFunctionTN
 }
 
 func (o *UserFunction) String() string {
-	return "<user-function>"
+	return TypeString(o.TypeName() + ": " + o.Name)
 }
 
 // Copy returns a copy of the type.

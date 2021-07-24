@@ -17,7 +17,7 @@ func TestFuncAIR(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, tengo.UndefinedValue, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncAR(t *testing.T) {
@@ -26,7 +26,7 @@ func TestFuncAR(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, tengo.UndefinedValue, ret)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncARI(t *testing.T) {
@@ -35,7 +35,7 @@ func TestFuncARI(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Int{Value: 10}, ret)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncARE(t *testing.T) {
@@ -50,7 +50,7 @@ func TestFuncARE(t *testing.T) {
 		Value: &tengo.String{Value: "some error"},
 	}, ret)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncARIsE(t *testing.T) {
@@ -70,7 +70,7 @@ func TestFuncARIsE(t *testing.T) {
 		Value: &tengo.String{Value: "some error"},
 	}, ret)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncARS(t *testing.T) {
@@ -79,7 +79,7 @@ func TestFuncARS(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.String{Value: "foo"}, ret)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncARSE(t *testing.T) {
@@ -96,7 +96,7 @@ func TestFuncARSE(t *testing.T) {
 		Value: &tengo.String{Value: "some error"},
 	}, ret)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncARSs(t *testing.T) {
@@ -106,7 +106,7 @@ func TestFuncARSs(t *testing.T) {
 	require.Equal(t, array(&tengo.String{Value: "foo"},
 		&tengo.String{Value: "bar"}), ret)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncASRE(t *testing.T) {
@@ -123,7 +123,7 @@ func TestFuncASRE(t *testing.T) {
 		Value: &tengo.String{Value: "some error"},
 	}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncASRS(t *testing.T) {
@@ -132,7 +132,7 @@ func TestFuncASRS(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.String{Value: "foo"}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncASRSs(t *testing.T) {
@@ -141,7 +141,7 @@ func TestFuncASRSs(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, array(&tengo.String{Value: "foo"}), ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncASI64RE(t *testing.T) {
@@ -157,7 +157,7 @@ func TestFuncASI64RE(t *testing.T) {
 	require.Equal(t,
 		&tengo.Error{Value: &tengo.String{Value: "some error"}}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0}, err)
 }
 
 func TestFuncAIIRE(t *testing.T) {
@@ -173,7 +173,7 @@ func TestFuncAIIRE(t *testing.T) {
 	require.Equal(t,
 		&tengo.Error{Value: &tengo.String{Value: "some error"}}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0}, err)
 }
 
 func TestFuncASIIRE(t *testing.T) {
@@ -191,7 +191,7 @@ func TestFuncASIIRE(t *testing.T) {
 	require.Equal(t,
 		&tengo.Error{Value: &tengo.String{Value: "some error"}}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 3, Max: 3, Actual: 0}, err)
 }
 
 func TestFuncASRSE(t *testing.T) {
@@ -207,7 +207,7 @@ func TestFuncASRSE(t *testing.T) {
 	require.Equal(t,
 		&tengo.Error{Value: &tengo.String{Value: "some error"}}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncASSRE(t *testing.T) {
@@ -225,7 +225,7 @@ func TestFuncASSRE(t *testing.T) {
 	require.Equal(t,
 		&tengo.Error{Value: &tengo.String{Value: "some error"}}, ret)
 	_, err = funcCall(uf, &tengo.String{Value: "foo"})
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1}, err)
 }
 
 func TestFuncASsRS(t *testing.T) {
@@ -237,7 +237,7 @@ func TestFuncASsRS(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.String{Value: "foo bar"}, ret)
 	_, err = funcCall(uf, &tengo.String{Value: "foo"})
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1}, err)
 }
 
 func TestFuncARF(t *testing.T) {
@@ -246,7 +246,7 @@ func TestFuncARF(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Float{Value: 10.0}, ret)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncAFRF(t *testing.T) {
@@ -255,9 +255,9 @@ func TestFuncAFRF(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Float{Value: 10.0}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 	_, err = funcCall(uf, tengo.TrueValue, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 2}, err)
 }
 
 func TestFuncAIRF(t *testing.T) {
@@ -268,9 +268,9 @@ func TestFuncAIRF(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Float{Value: 10.0}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 	_, err = funcCall(uf, tengo.TrueValue, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 2}, err)
 }
 
 func TestFuncAFRI(t *testing.T) {
@@ -281,9 +281,9 @@ func TestFuncAFRI(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Int{Value: 10}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 	_, err = funcCall(uf, tengo.TrueValue, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 2}, err)
 }
 
 func TestFuncAFRB(t *testing.T) {
@@ -294,9 +294,9 @@ func TestFuncAFRB(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, tengo.TrueValue, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 	_, err = funcCall(uf, tengo.TrueValue, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 2}, err)
 }
 
 func TestFuncAFFRF(t *testing.T) {
@@ -308,9 +308,9 @@ func TestFuncAFFRF(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Float{Value: 30.0}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0}, err)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1}, err)
 }
 
 func TestFuncASIRS(t *testing.T) {
@@ -321,9 +321,9 @@ func TestFuncASIRS(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.String{Value: "abab"}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0}, err)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1}, err)
 }
 
 func TestFuncAIFRF(t *testing.T) {
@@ -334,9 +334,9 @@ func TestFuncAIFRF(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Float{Value: 30.0}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0}, err)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1}, err)
 }
 
 func TestFuncAFIRF(t *testing.T) {
@@ -347,9 +347,9 @@ func TestFuncAFIRF(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Float{Value: 30.0}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0}, err)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1}, err)
 }
 
 func TestFuncAFIRB(t *testing.T) {
@@ -360,9 +360,9 @@ func TestFuncAFIRB(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, tengo.TrueValue, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0}, err)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1}, err)
 }
 
 func TestFuncAIRSsE(t *testing.T) {
@@ -381,7 +381,7 @@ func TestFuncAIRSsE(t *testing.T) {
 	require.Equal(t,
 		&tengo.Error{Value: &tengo.String{Value: "some error"}}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncASSRSs(t *testing.T) {
@@ -394,7 +394,7 @@ func TestFuncASSRSs(t *testing.T) {
 	require.Equal(t, array(&tengo.String{Value: "foo"},
 		&tengo.String{Value: "bar"}), ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0}, err)
 }
 
 func TestFuncASSIRSs(t *testing.T) {
@@ -407,7 +407,7 @@ func TestFuncASSIRSs(t *testing.T) {
 	require.Equal(t, array(&tengo.String{Value: "foo"},
 		&tengo.String{Value: "bar"}, &tengo.String{Value: "5"}), ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 3, Max: 3, Actual: 0}, err)
 }
 
 func TestFuncARB(t *testing.T) {
@@ -416,7 +416,7 @@ func TestFuncARB(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, tengo.TrueValue, ret)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncARYE(t *testing.T) {
@@ -434,7 +434,7 @@ func TestFuncARYE(t *testing.T) {
 	require.Equal(t,
 		&tengo.Error{Value: &tengo.String{Value: "some error"}}, ret)
 	_, err = funcCall(uf, tengo.TrueValue)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncASRIE(t *testing.T) {
@@ -450,7 +450,7 @@ func TestFuncASRIE(t *testing.T) {
 	require.Equal(t,
 		&tengo.Error{Value: &tengo.String{Value: "some error"}}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncAYRIE(t *testing.T) {
@@ -466,7 +466,7 @@ func TestFuncAYRIE(t *testing.T) {
 	require.Equal(t,
 		&tengo.Error{Value: &tengo.String{Value: "some error"}}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncASSRI(t *testing.T) {
@@ -476,7 +476,7 @@ func TestFuncASSRI(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Int{Value: 6}, ret)
 	_, err = funcCall(uf, &tengo.String{Value: "foo"})
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1}, err)
 }
 
 func TestFuncASSRS(t *testing.T) {
@@ -486,7 +486,7 @@ func TestFuncASSRS(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.String{Value: "foobar"}, ret)
 	_, err = funcCall(uf, &tengo.String{Value: "foo"})
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1}, err)
 }
 
 func TestFuncASSRB(t *testing.T) {
@@ -496,7 +496,7 @@ func TestFuncASSRB(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, tengo.TrueValue, ret)
 	_, err = funcCall(uf, &tengo.String{Value: "foo"})
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1}, err)
 }
 
 func TestFuncAIRS(t *testing.T) {
@@ -505,7 +505,7 @@ func TestFuncAIRS(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.String{Value: "55"}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncAIRIs(t *testing.T) {
@@ -514,7 +514,7 @@ func TestFuncAIRIs(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, array(&tengo.Int{Value: 55}, &tengo.Int{Value: 55}), ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncAI64R(t *testing.T) {
@@ -523,7 +523,7 @@ func TestFuncAI64R(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, tengo.UndefinedValue, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func TestFuncARI64(t *testing.T) {
@@ -532,7 +532,7 @@ func TestFuncARI64(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Int{Value: 55}, ret)
 	_, err = funcCall(uf, &tengo.Int{Value: 55})
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 0, Max: 0, Actual: 1}, err)
 }
 
 func TestFuncASsSRS(t *testing.T) {
@@ -545,7 +545,7 @@ func TestFuncASsSRS(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.String{Value: "abc-def"}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0}, err)
 }
 
 func TestFuncAI64RI64(t *testing.T) {
@@ -554,7 +554,7 @@ func TestFuncAI64RI64(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &tengo.Int{Value: 110}, ret)
 	_, err = funcCall(uf)
-	require.Equal(t, tengo.ErrWrongNumArguments, err)
+	require.Equal(t, tengo.ErrInvalidArgumentCount{Min: 1, Max: 1, Actual: 0}, err)
 }
 
 func funcCall(

@@ -557,11 +557,11 @@ func TestBuiltinFunction(t *testing.T) {
 	expectRun(t, `out = len(immutable([1, 2, 3]))`, nil, 3)
 	expectRun(t, `out = len(immutable({}))`, nil, 0)
 	expectRun(t, `out = len(immutable({a:1, b:2}))`, nil, 2)
-	expectError(t, `len(1)`, nil, "invalid type for argument")
-	expectError(t, `len("one", "two")`, nil, "wrong number of arguments")
+	expectError(t, `len(1)`, nil, "arg type int does not have a length value")
+	expectError(t, `len("one", "two")`, nil, "invalid argument count, expected 1, actual 2")
 
 	expectRun(t, `out = copy(1)`, nil, 1)
-	expectError(t, `copy(1, 2)`, nil, "wrong number of arguments")
+	expectError(t, `copy(1, 2)`, nil, "builtin-function:copy: invalid argument count, expected 1, actual 2")
 
 	expectRun(t, `out = append([1, 2, 3], 4)`, nil, ARR{1, 2, 3, 4})
 	expectRun(t, `out = append([1, 2, 3], 4, 5, 6)`, nil, ARR{1, 2, 3, 4, 5, 6})
@@ -728,48 +728,15 @@ func TestBuiltinFunction(t *testing.T) {
 	tengo.MaxStringLen = 2147483647
 
 	// delete
-	expectError(t, `delete()`, nil, tengo.ErrWrongNumArguments.Error())
-	expectError(t, `delete(1)`, nil, tengo.ErrWrongNumArguments.Error())
-	expectError(t, `delete(1, 2, 3)`, nil, tengo.ErrWrongNumArguments.Error())
-	expectError(t, `delete({}, "", 3)`, nil, tengo.ErrWrongNumArguments.Error())
-	expectError(t, `delete(1, 1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete(1.0, 1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete("str", 1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete(bytes("str"), 1)`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `delete(error("err"), 1)`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `delete(true, 1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete(char('c'), 1)`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `delete(undefined, 1)`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `delete(time(1257894000), 1)`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `delete(immutable({}), "key")`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `delete(immutable([]), "")`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `delete([], "")`, nil, `invalid type for argument 'first'`)
-	expectError(t, `delete({}, 1)`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, 1.0)`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, undefined)`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `delete({}, [])`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, {})`, nil, `invalid type for argument 'second'`)
-	expectError(t, `delete({}, error("err"))`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `delete({}, bytes("str"))`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `delete({}, char(35))`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `delete({}, time(1257894000))`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `delete({}, immutable({}))`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `delete({}, immutable([]))`, nil,
-		`invalid type for argument 'second'`)
-
+	expectError(t, `delete()`, nil, tengo.ErrInvalidArgumentCount{
+		Min: 2, Max: 2, Actual: 0,
+	}.Error())
+	expectError(t, `delete(1)`, nil, tengo.ErrInvalidArgumentCount{
+		Min: 2, Max: 2, Actual: 1,
+	}.Error())
+	expectError(t, `delete(1, 2, 3)`, nil, "builtin-function:delete: invalid argument count, expected 2, actual 3")
+	expectError(t, `delete(1, 1)`, nil, `builtin-function:delete: invalid type for argument at index 0: expected map, actual int`)
+	expectError(t, `delete({}, 1)`, nil, `builtin-function:delete: invalid type for argument at index 1: expected string, actual int`)
 	expectRun(t, `out = delete({}, "")`, nil, tengo.UndefinedValue)
 	expectRun(t, `out = {key1: 1}; delete(out, "key1")`, nil, MAP{})
 	expectRun(t, `out = {key1: 1, key2: "2"}; delete(out, "key1")`, nil,
@@ -778,74 +745,16 @@ func TestBuiltinFunction(t *testing.T) {
 		ARR{1, "2", MAP{"a": "b"}})
 
 	// splice
-	expectError(t, `splice()`, nil, tengo.ErrWrongNumArguments.Error())
-	expectError(t, `splice(1)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `splice(1.0)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `splice("str")`, nil, `invalid type for argument 'first'`)
-	expectError(t, `splice(bytes("str"))`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `splice(error("err"))`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `splice(true)`, nil, `invalid type for argument 'first'`)
-	expectError(t, `splice(char('c'))`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `splice(undefined)`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `splice(time(1257894000))`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `splice(immutable({}))`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `splice(immutable([]))`, nil,
-		`invalid type for argument 'first'`)
-	expectError(t, `splice({})`, nil, `invalid type for argument 'first'`)
+	expectError(t, `splice()`, nil, tengo.ErrInvalidArgumentCount{
+		Min: 1, Max: -1, Actual: 0,
+	}.Error())
+	expectError(t, `splice(1)`, nil, `builtin-function:splice: invalid type for argument at index 0: expected array, actual int`)
 	expectError(t, `splice([], 1.0)`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], "str")`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], bytes("str"))`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], error("error"))`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], false)`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], char('d'))`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], undefined)`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], time(0))`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], [])`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], {})`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], immutable([]))`, nil,
-		`invalid type for argument 'second'`)
-	expectError(t, `splice([], immutable({}))`, nil,
-		`invalid type for argument 'second'`)
+		`builtin-function:splice: invalid type for argument at index 1: expected int, actual float`)
+
 	expectError(t, `splice([], 0, 1.0)`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, "string")`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, bytes("string"))`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, error("string"))`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, true)`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, char('f'))`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, undefined)`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, time(0))`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, [])`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, {})`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, immutable([]))`, nil,
-		`invalid type for argument 'third'`)
-	expectError(t, `splice([], 0, immutable({}))`, nil,
-		`invalid type for argument 'third'`)
+		`builtin-function:splice: invalid type for argument at index 2: expected int, actual float`)
+
 	expectError(t, `splice([], 1)`, nil, tengo.ErrIndexOutOfBounds.Error())
 	expectError(t, `splice([1, 2, 3], 0, -1)`, nil,
 		tengo.ErrIndexOutOfBounds.Error())
@@ -2098,11 +2007,13 @@ type StringDict struct {
 	Value map[string]string
 }
 
-func (o *StringDict) String() string { return "" }
+const StringDictTN = "string-dict"
 
 func (o *StringDict) TypeName() string {
-	return "string-dict"
+	return StringDictTN
 }
+
+func (o *StringDict) String() string { return "" }
 
 func (o *StringDict) IndexGet(index tengo.Object) (tengo.Object, error) {
 	strIdx, ok := index.(*tengo.String)
@@ -2125,9 +2036,9 @@ func (o *StringDict) IndexSet(index, value tengo.Object) error {
 		return tengo.ErrInvalidIndexType
 	}
 
-	strVal, ok := tengo.ToString(value)
-	if !ok {
-		return tengo.ErrInvalidIndexValueType
+	strVal, err := tengo.ToString(0, value)
+	if err != nil {
+		return err
 	}
 
 	o.Value[strings.ToLower(strIdx.Value)] = strVal
@@ -2140,8 +2051,10 @@ type StringCircle struct {
 	Value []string
 }
 
+const StringCircleTN = "string-circle"
+
 func (o *StringCircle) TypeName() string {
-	return "string-circle"
+	return StringCircleTN
 }
 
 func (o *StringCircle) String() string {
@@ -2173,9 +2086,9 @@ func (o *StringCircle) IndexSet(index, value tengo.Object) error {
 		r = len(o.Value) + r
 	}
 
-	strVal, ok := tengo.ToString(value)
-	if !ok {
-		return tengo.ErrInvalidIndexValueType
+	strVal, err := tengo.ToString(0, value)
+	if err != nil {
+		return err
 	}
 
 	o.Value[r] = strVal
@@ -2237,8 +2150,10 @@ func (o *StringArray) Copy() tengo.Object {
 	}
 }
 
+const StringArrayTN = "string-array"
+
 func (o *StringArray) TypeName() string {
-	return "string-array"
+	return StringArrayTN
 }
 
 func (o *StringArray) IndexGet(index tengo.Object) (tengo.Object, error) {
@@ -2266,9 +2181,9 @@ func (o *StringArray) IndexGet(index tengo.Object) (tengo.Object, error) {
 }
 
 func (o *StringArray) IndexSet(index, value tengo.Object) error {
-	strVal, ok := tengo.ToString(value)
-	if !ok {
-		return tengo.ErrInvalidIndexValueType
+	strVal, err := tengo.ToString(0, value)
+	if err != nil {
+		return err
 	}
 
 	intIdx, ok := index.(*tengo.Int)
@@ -2286,27 +2201,21 @@ func (o *StringArray) IndexSet(index, value tengo.Object) error {
 
 func (o *StringArray) Call(
 	args ...tengo.Object,
-) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
+) (tengo.Object, error) {
+	return tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+		s1, err := tengo.ToString(0, args...)
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	for i, v := range o.Value {
-		if v == s1 {
-			return &tengo.Int{Value: int64(i)}, nil
+		for i, v := range o.Value {
+			if v == s1 {
+				return &tengo.Int{Value: int64(i)}, nil
+			}
 		}
-	}
 
-	return tengo.UndefinedValue, nil
+		return tengo.UndefinedValue, nil
+	}, 1)(args...)
 }
 
 func (o *StringArray) CanCall() bool {
@@ -2428,8 +2337,10 @@ type StringArrayIterator struct {
 	idx    int
 }
 
+const StringArrayIteratorTN = "string-array-iterator"
+
 func (i *StringArrayIterator) TypeName() string {
-	return "string-array-iterator"
+	return StringArrayIteratorTN
 }
 
 func (i *StringArrayIterator) String() string {
@@ -2572,7 +2483,7 @@ func TestBuiltin(t *testing.T) {
 				"abs": &tengo.UserFunction{
 					Name: "abs",
 					Value: func(a ...tengo.Object) (tengo.Object, error) {
-						v, _ := tengo.ToFloat64(a[0])
+						v, _ := tengo.ToFloat64(0, a...)
 						return &tengo.Float{Value: math.Abs(v)}, nil
 					},
 				},
@@ -2778,7 +2689,7 @@ func TestModuleBlockScopes(t *testing.T) {
 				"intn": &tengo.UserFunction{
 					Name: "abs",
 					Value: func(a ...tengo.Object) (tengo.Object, error) {
-						v, _ := tengo.ToInt64(a[0])
+						v, _ := tengo.ToInt64(0, a...)
 						return &tengo.Int{Value: rand.Int63n(v)}, nil
 					},
 				},
@@ -3092,13 +3003,13 @@ func() {
 	expectError(t, `a := {b: {c: 1}}; a.d.c = 2`,
 		nil, "not index-assignable")
 	expectError(t, `a := [1, 2, 3]; a.b = 2`,
-		nil, "invalid index type")
+		nil, "invalid type for argument at index 0: expected int/float/char/bool/string, actual string")
 	expectError(t, `a := "foo"; a.b = 2`,
 		nil, "not index-assignable")
 	expectError(t, `func() { a := {b: {c: 1}}; a.d.c = 2 }()`,
 		nil, "not index-assignable")
 	expectError(t, `func() { a := [1, 2, 3]; a.b = 2 }()`,
-		nil, "invalid index type")
+		nil, "invalid type for argument at index 0: expected int/float/char/bool/string, actual string")
 	expectError(t, `func() { a := "foo"; a.b = 2 }()`,
 		nil, "not index-assignable")
 }
@@ -3777,7 +3688,7 @@ type vmTracer struct {
 	Out []string
 }
 
-func (o *vmTracer) Write(p []byte) (n int, err error) {
+func (o *vmTracer) Write(p []byte) (int, error) {
 	o.Out = append(o.Out, string(p))
 	return len(p), nil
 }

@@ -13,7 +13,7 @@ var fmtModule = map[string]tengo.Object{
 	"sprintf": &tengo.UserFunction{Name: "sprintf", Value: fmtSprintf},
 }
 
-func fmtPrint(args ...tengo.Object) (ret tengo.Object, err error) {
+func fmtPrint(args ...tengo.Object) (tengo.Object, error) {
 	printArgs, err := getPrintArgs(args...)
 	if err != nil {
 		return nil, err
@@ -22,20 +22,10 @@ func fmtPrint(args ...tengo.Object) (ret tengo.Object, err error) {
 	return nil, nil
 }
 
-func fmtPrintf(args ...tengo.Object) (ret tengo.Object, err error) {
+var fmtPrintf = tengo.CheckOptArgs(func(args ...tengo.Object) (tengo.Object, error) {
 	numArgs := len(args)
-	if numArgs == 0 {
-		return nil, tengo.ErrWrongNumArguments
-	}
 
-	format, ok := args[0].(*tengo.String)
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "format",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
+	format := args[0].(*tengo.String)
 	if numArgs == 1 {
 		fmt.Print(format)
 		return nil, nil
@@ -47,9 +37,9 @@ func fmtPrintf(args ...tengo.Object) (ret tengo.Object, err error) {
 	}
 	fmt.Print(s)
 	return nil, nil
-}
+}, 1, -1, tengo.StringTN, tengo.AnyTN)
 
-func fmtPrintln(args ...tengo.Object) (ret tengo.Object, err error) {
+func fmtPrintln(args ...tengo.Object) (tengo.Object, error) {
 	printArgs, err := getPrintArgs(args...)
 	if err != nil {
 		return nil, err
@@ -59,20 +49,11 @@ func fmtPrintln(args ...tengo.Object) (ret tengo.Object, err error) {
 	return nil, nil
 }
 
-func fmtSprintf(args ...tengo.Object) (ret tengo.Object, err error) {
+var fmtSprintf = tengo.CheckOptArgs(func(args ...tengo.Object) (tengo.Object, error) {
 	numArgs := len(args)
-	if numArgs == 0 {
-		return nil, tengo.ErrWrongNumArguments
-	}
 
-	format, ok := args[0].(*tengo.String)
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "format",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
+	format := args[0].(*tengo.String)
+
 	if numArgs == 1 {
 		// okay to return 'format' directly as String is immutable
 		return format, nil
@@ -82,13 +63,13 @@ func fmtSprintf(args ...tengo.Object) (ret tengo.Object, err error) {
 		return nil, err
 	}
 	return &tengo.String{Value: s}, nil
-}
+}, 1, -1, tengo.StringTN, tengo.AnyTN)
 
 func getPrintArgs(args ...tengo.Object) ([]interface{}, error) {
 	var printArgs []interface{}
 	l := 0
-	for _, arg := range args {
-		s, _ := tengo.ToString(arg)
+	for i := range args {
+		s, _ := tengo.ToString(i, args...)
 		slen := len(s)
 		// make sure length does not exceed the limit
 		if l+slen > tengo.MaxStringLen {

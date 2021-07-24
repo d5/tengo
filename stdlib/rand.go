@@ -37,43 +37,25 @@ var randModule = map[string]tengo.Object{
 	},
 	"read": &tengo.UserFunction{
 		Name: "read",
-		Value: func(args ...tengo.Object) (ret tengo.Object, err error) {
-			if len(args) != 1 {
-				return nil, tengo.ErrWrongNumArguments
-			}
-			y1, ok := args[0].(*tengo.Bytes)
-			if !ok {
-				return nil, tengo.ErrInvalidArgumentType{
-					Name:     "first",
-					Expected: "bytes",
-					Found:    args[0].TypeName(),
-				}
-			}
+		Value: tengo.CheckStrictArgs(func(args ...tengo.Object) (tengo.Object, error) {
+			y1, _ := args[0].(*tengo.Bytes)
 			res, err := rand.Read(y1.Value)
 			if err != nil {
-				ret = wrapError(err)
-				return
+				return wrapError(err), nil
 			}
 			return &tengo.Int{Value: int64(res)}, nil
-		},
+		}, tengo.BytesTN),
 	},
 	"rand": &tengo.UserFunction{
 		Name: "rand",
-		Value: func(args ...tengo.Object) (tengo.Object, error) {
-			if len(args) != 1 {
-				return nil, tengo.ErrWrongNumArguments
-			}
-			i1, ok := tengo.ToInt64(args[0])
-			if !ok {
-				return nil, tengo.ErrInvalidArgumentType{
-					Name:     "first",
-					Expected: "int(compatible)",
-					Found:    args[0].TypeName(),
-				}
+		Value: tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+			i1, err := tengo.ToInt64(0, args...)
+			if err != nil {
+				return nil, err
 			}
 			src := rand.NewSource(i1)
 			return randRand(rand.New(src)), nil
-		},
+		}, 1),
 	},
 }
 
@@ -110,28 +92,17 @@ func randRand(r *rand.Rand) *tengo.ImmutableMap {
 			},
 			"read": &tengo.UserFunction{
 				Name: "read",
-				Value: func(args ...tengo.Object) (
-					ret tengo.Object,
-					err error,
+				Value: tengo.CheckStrictArgs(func(args ...tengo.Object) (
+					tengo.Object,
+					error,
 				) {
-					if len(args) != 1 {
-						return nil, tengo.ErrWrongNumArguments
-					}
-					y1, ok := args[0].(*tengo.Bytes)
-					if !ok {
-						return nil, tengo.ErrInvalidArgumentType{
-							Name:     "first",
-							Expected: "bytes",
-							Found:    args[0].TypeName(),
-						}
-					}
+					y1, _ := args[0].(*tengo.Bytes)
 					res, err := r.Read(y1.Value)
 					if err != nil {
-						ret = wrapError(err)
-						return
+						return wrapError(err), nil
 					}
 					return &tengo.Int{Value: int64(res)}, nil
-				},
+				}, tengo.BytesTN),
 			},
 		},
 	}
