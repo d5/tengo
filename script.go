@@ -219,6 +219,11 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 	v := NewVM(c.bytecode, c.globals, c.maxAllocs)
 	ch := make(chan error, 1)
 	go func() {
+		defer func() {
+			if r, ok := recover().(error); ok {
+				ch <- r
+			}
+		}()
 		ch <- v.Run()
 	}()
 
