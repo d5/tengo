@@ -26,6 +26,9 @@ const (
 
 	// MaxFrames is the maximum number of function frames for a VM.
 	MaxFrames = 1024
+
+	// MaxIterators is the maximum iterator stack size for a VM.
+	MaxIterators = 64
 )
 
 // CallableFunc is a function signature for the callable functions.

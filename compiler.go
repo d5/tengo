@@ -846,39 +846,25 @@ func (c *Compiler) compileForInStmt(stmt *parser.ForInStmt) error {
 	}()
 
 	// for-in statement is compiled like following:
-	//
-	//   for :it := iterator(iterable); :it.next();  {
+	//   iterStack.push(iterator(iter))
+	//   for iterStack.next(); {
 	//     k, v := :it.get()  // DEFINE operator
 	//
 	//     ... body ...
 	//   }
-	//
-	// ":it" is a local variable but it will not conflict with other user variables
-	// because character ":" is not allowed in the variable names.
+	//   iterStack.pop()
 
 	// init
-	//   :it = iterator(iterable)
-	itSymbol := c.symbolTable.Define(":it")
 	if err := c.Compile(stmt.Iterable); err != nil {
 		return err
 	}
 	c.emit(stmt, parser.OpIteratorInit)
-	if itSymbol.Scope == ScopeGlobal {
-		c.emit(stmt, parser.OpSetGlobal, itSymbol.Index)
-	} else {
-		c.emit(stmt, parser.OpDefineLocal, itSymbol.Index)
-	}
 
 	// pre-condition position
 	preCondPos := len(c.currentInstructions())
 
 	// condition
 	//  :it.HasMore()
-	if itSymbol.Scope == ScopeGlobal {
-		c.emit(stmt, parser.OpGetGlobal, itSymbol.Index)
-	} else {
-		c.emit(stmt, parser.OpGetLocal, itSymbol.Index)
-	}
 	c.emit(stmt, parser.OpIteratorNext)
 
 	// condition jump position
@@ -890,11 +876,6 @@ func (c *Compiler) compileForInStmt(stmt *parser.ForInStmt) error {
 	// assign key variable
 	if stmt.Key.Name != "_" {
 		keySymbol := c.symbolTable.Define(stmt.Key.Name)
-		if itSymbol.Scope == ScopeGlobal {
-			c.emit(stmt, parser.OpGetGlobal, itSymbol.Index)
-		} else {
-			c.emit(stmt, parser.OpGetLocal, itSymbol.Index)
-		}
 		c.emit(stmt, parser.OpIteratorKey)
 		if keySymbol.Scope == ScopeGlobal {
 			c.emit(stmt, parser.OpSetGlobal, keySymbol.Index)
@@ -907,11 +888,6 @@ func (c *Compiler) compileForInStmt(stmt *parser.ForInStmt) error {
 	// assign value variable
 	if stmt.Value.Name != "_" {
 		valueSymbol := c.symbolTable.Define(stmt.Value.Name)
-		if itSymbol.Scope == ScopeGlobal {
-			c.emit(stmt, parser.OpGetGlobal, itSymbol.Index)
-		} else {
-			c.emit(stmt, parser.OpGetLocal, itSymbol.Index)
-		}
 		c.emit(stmt, parser.OpIteratorValue)
 		if valueSymbol.Scope == ScopeGlobal {
 			c.emit(stmt, parser.OpSetGlobal, valueSymbol.Index)

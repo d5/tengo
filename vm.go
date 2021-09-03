@@ -28,6 +28,8 @@ type VM struct {
 	curFrame    *frame
 	curInsts    []byte
 	ip          int
+	iterators   [MaxIterators]Iterator
+	itp         int
 	aborting    int64
 	maxAllocs   int64
 	allocs      int64
@@ -826,7 +828,7 @@ func (v *VM) run() {
 				return
 			}
 		case parser.OpIteratorInit:
-			var iterator Object
+			var iterator Iterator
 			dst := v.stack[v.sp-1]
 			v.sp--
 			if !dst.CanIterate() {
@@ -839,28 +841,26 @@ func (v *VM) run() {
 				v.err = ErrObjectAllocLimit
 				return
 			}
-			v.stack[v.sp] = iterator
-			v.sp++
+			v.iterators[v.itp] = iterator
+			v.itp++
 		case parser.OpIteratorNext:
-			iterator := v.stack[v.sp-1]
-			v.sp--
-			hasMore := iterator.(Iterator).Next()
+			iterator := v.iterators[v.itp-1]
+			hasMore := iterator.Next()
 			if hasMore {
 				v.stack[v.sp] = TrueValue
 			} else {
 				v.stack[v.sp] = FalseValue
+				v.itp-- // pop iterator.
 			}
 			v.sp++
 		case parser.OpIteratorKey:
-			iterator := v.stack[v.sp-1]
-			v.sp--
-			val := iterator.(Iterator).Key()
+			iterator := v.iterators[v.itp-1]
+			val := iterator.Key()
 			v.stack[v.sp] = val
 			v.sp++
 		case parser.OpIteratorValue:
-			iterator := v.stack[v.sp-1]
-			v.sp--
-			val := iterator.(Iterator).Value()
+			iterator := v.iterators[v.itp-1]
+			val := iterator.Value()
 			v.stack[v.sp] = val
 			v.sp++
 		case parser.OpSuspend:
