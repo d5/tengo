@@ -841,6 +841,10 @@ func (v *VM) run() {
 				v.err = ErrObjectAllocLimit
 				return
 			}
+			if v.itp == MaxIterators {
+				v.err = ErrIterationStackOverflow
+				return
+			}
 			v.iterators[v.itp] = iterator
 			v.itp++
 		case parser.OpIteratorNext:
@@ -850,7 +854,8 @@ func (v *VM) run() {
 				v.stack[v.sp] = TrueValue
 			} else {
 				v.stack[v.sp] = FalseValue
-				v.itp-- // pop iterator.
+				v.iterators[v.itp] = nil // pop iterator.
+				v.itp--
 			}
 			v.sp++
 		case parser.OpIteratorKey:
