@@ -220,8 +220,15 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 	ch := make(chan error, 1)
 	go func() {
 		defer func() {
-			if r, ok := recover().(error); ok {
-				ch <- r
+			if r := recover(); r != nil {
+				switch e := r.(type) {
+				case string:
+					ch <- fmt.Errorf(e)
+				case error:
+					ch <- e
+				default:
+					ch <- fmt.Errorf("unknown panic: %v", e)
+				}
 			}
 		}()
 		ch <- v.Run()
