@@ -45,6 +45,7 @@ const (
 	OpIteratorNext                // Iterator next
 	OpIteratorKey                 // Iterator key
 	OpIteratorValue               // Iterator value
+	OpIteratorPop                 // Pop Iterator
 	OpBinaryOp                    // Binary operation
 	OpSuspend                     // Suspend VM
 )
@@ -91,6 +92,7 @@ var OpcodeNames = [...]string{
 	OpIteratorNext:  "ITNXT",
 	OpIteratorKey:   "ITKEY",
 	OpIteratorValue: "ITVAL",
+	OpIteratorPop:   "ITPOP",
 	OpBinaryOp:      "BINARYOP",
 	OpSuspend:       "SUSPEND",
 }
@@ -137,6 +139,7 @@ var OpcodeOperands = [...][]int{
 	OpIteratorNext:  {},
 	OpIteratorKey:   {},
 	OpIteratorValue: {},
+	OpIteratorPop:   {},
 	OpBinaryOp:      {1},
 	OpSuspend:       {},
 }

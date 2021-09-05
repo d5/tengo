@@ -955,6 +955,7 @@ func() {
 				tengo.MakeInstruction(parser.OpIteratorValue),
 				tengo.MakeInstruction(parser.OpSetGlobal, 2),
 				tengo.MakeInstruction(parser.OpJump, 10),
+				tengo.MakeInstruction(parser.OpIteratorPop),
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray()))
 

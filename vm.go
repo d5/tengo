@@ -854,8 +854,6 @@ func (v *VM) run() {
 				v.stack[v.sp] = TrueValue
 			} else {
 				v.stack[v.sp] = FalseValue
-				v.iterators[v.itp] = nil // pop iterator.
-				v.itp--
 			}
 			v.sp++
 		case parser.OpIteratorKey:
@@ -868,6 +866,9 @@ func (v *VM) run() {
 			val := iterator.Value()
 			v.stack[v.sp] = val
 			v.sp++
+		case parser.OpIteratorPop:
+			v.iterators[v.itp] = nil
+			v.itp--
 		case parser.OpSuspend:
 			return
 		default:

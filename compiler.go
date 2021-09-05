@@ -922,6 +922,7 @@ func (c *Compiler) compileForInStmt(stmt *parser.ForInStmt) error {
 	for _, pos := range loop.Continues {
 		c.changeOperand(pos, postBodyPos)
 	}
+	c.emit(stmt, parser.OpIteratorPop)
 	return nil
 }
 
