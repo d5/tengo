@@ -922,12 +922,14 @@ func TestBytes(t *testing.T) {
 }
 
 func TestCall(t *testing.T) {
-	expectRun(t, `a := { b: func(x) { return x + 2 } }; out = a.b(5)`,
-		nil, 7)
-	expectRun(t, `a := { b: { c: func(x) { return x + 2 } } }; out = a.b.c(5)`,
-		nil, 7)
-	expectRun(t, `a := { b: { c: func(x) { return x + 2 } } }; out = a["b"].c(5)`,
-		nil, 7)
+	expectRun(t, `out = func(;a=2) { return a }()`, nil, 2)
+	expectRun(t, `out = func() { return 7 }()`, nil, 7)
+	expectRun(t, `out = func(x, y) { return x+y }(1,2)`, nil, 3)
+	expectRun(t, `out = func(x, y, ...z) { return x+y+z[0] }(1,2,3)`, nil, 6)
+	expectRun(t, `out = func(x, y, ...z) { return x+y+z[0]+z[1] }(1,2,3,4)`, nil, 10)
+	expectRun(t, `a := { b: func(x) { return x + 2 } }; out = a.b(5)`, nil, 7)
+	expectRun(t, `a := { b: { c: func(x) { return x + 2 } } }; out = a.b.c(5)`, nil, 7)
+	expectRun(t, `a := { b: { c: func(x) { return x + 2 } } }; out = a["b"].c(5)`, nil, 7)
 	expectError(t, `a := 1
 b := func(a, c) {
    c(a)
@@ -938,6 +940,24 @@ c := func(a) {
 }
 b(a, c)
 `, nil, "Runtime Error: not callable: int\n\tat test:7:4\n\tat test:3:4\n\tat test:9:1")
+	expectRun(t, `out = func(;a=2) { return a }(;a=3)`, nil, 3)
+	expectRun(t, `out = func(x;a=2) { return x+a }(1)`, nil, 3)
+	expectRun(t, `out = func(x;a=2,b=3) { return x+a+b }(1)`, nil, 6)
+	expectRun(t, `out = func(x;a=2) { return x+a }(1;a=3)`, nil, 4)
+	expectRun(t, `out = func(x;a=2) { return x+a }(1;a=3,{"a":4}...)`, nil, 5)
+	expectRun(t, `out = func(x;a=2) { return x+a }(1;a=3,{"a":undefined_kwarg}...)`, nil, 3)
+	expectRun(t, `out = func(...z;a="A", b="B", ...c) { return [z,a,b,c] }(5,[6,7,8,9]...;{"a":"na", "b":"nb", "c":"C", "d":"D"}...)`,
+		nil, ARR{ARR{5, 6, 7, 8, 9}, "na", "nb", MAP{"c": "C", "d": "D"}})
+	expectRun(t, `out = func(...z;a=false, b="B", ...c) { return [a,b,c] }(5,[6,7,8,9]...;a=true,{"a":"na", "b":"nb", "c":"C", "d":"D"}...)`,
+		nil, ARR{"na", "nb", MAP{"c": "C", "d": "D"}})
+	expectRun(t, `out = func(...z;a=false, b="B", ...c) { return [a,b,c] }(5,[6,7,8,9]...;a=true,{"b":"nb", "c":"C", "d":"D"}...)`,
+		nil, ARR{true, "nb", MAP{"c": "C", "d": "D"}})
+	expectRun(t, `out = func(x, y, ...z;a="A", b="B", ...c) { return [x,y,z,a,b,c] }(5,[6,7,8,9]...;{"a":"na", "b":"nb", "c":"C", "d":"D"}...)`,
+		nil, ARR{5, 6, ARR{7, 8, 9}, "na", "nb", MAP{"c": "C", "d": "D"}})
+	expectRun(t, `out = func(x, y, ...z;a="A", b="B", ...c) { return [x,y,z,a,b,c] }(5,[6,7,8,9]...;{}...)`,
+		nil, ARR{5, 6, ARR{7, 8, 9}, "A", "B", MAP{}})
+	expectRun(t, `out = func(x, y, ...z;a="A", b="B", ...c) { return [callee.args, callee.kwargs] }(5,[6,7,8,9]...;{"a":"na", "b":"nb", "c":"C", "d":"D"}...)`,
+		nil, ARR{IARR{5, 6, 7, 8, 9}, IMAP{"a": "na", "b": "nb", "c": "C", "d": "D"}})
 }
 
 func TestChar(t *testing.T) {
@@ -1890,7 +1910,6 @@ for x in [1, 2, 3] {
 }
 
 func TestIf(t *testing.T) {
-
 	expectRun(t, `if (true) { out = 10 }`, nil, 10)
 	expectRun(t, `if (false) { out = 10 }`, nil, tengo.UndefinedValue)
 	expectRun(t, `if (false) { out = 10 } else { out = 20 }`, nil, 20)
@@ -2284,19 +2303,20 @@ func (o *StringArray) IndexSet(index, value tengo.Object) error {
 	return tengo.ErrInvalidIndexType
 }
 
-func (o *StringArray) Call(
-	args ...tengo.Object,
-) (ret tengo.Object, err error) {
-	if len(args) != 1 {
+func (o *StringArray) Call(param *tengo.CallContext) (ret tengo.Object, err error) {
+	if len(param.Args) != 1 {
 		return nil, tengo.ErrWrongNumArguments
 	}
+	if len(param.Kwargs) != 0 {
+		return nil, tengo.ErrUnexpectedKwargs
+	}
 
-	s1, ok := tengo.ToString(args[0])
+	s1, ok := tengo.ToString(param.Args[0])
 	if !ok {
 		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
+			Found:    param.Args[0].TypeName(),
 		}
 	}
 
@@ -3257,7 +3277,7 @@ func TestSourceModules(t *testing.T) {
 	testEnumModule(t, `out = enum.find({a:1}, enum.value)`, 1)
 	testEnumModule(t, `out = enum.find({a:false,b:0,c:undefined,d:1}, enum.value)`,
 		1)
-	//testEnumModule(t, `out = enum.find({a:1,b:2,c:3}, enum.value)`, 1)
+	// testEnumModule(t, `out = enum.find({a:1,b:2,c:3}, enum.value)`, 1)
 	testEnumModule(t, `out = enum.find(0, enum.value)`,
 		tengo.UndefinedValue) // non-enumerable: undefined
 	testEnumModule(t, `out = enum.find("123", enum.value)`,
@@ -3279,7 +3299,7 @@ func TestSourceModules(t *testing.T) {
 		"a")
 	testEnumModule(t, `out = enum.find_key({a:false,b:0,c:undefined,d:1}, enum.value)`,
 		"d")
-	//testEnumModule(t, `out = enum.find_key({a:1,b:2,c:3}, enum.value)`, "a")
+	// testEnumModule(t, `out = enum.find_key({a:1,b:2,c:3}, enum.value)`, "a")
 	testEnumModule(t, `out = enum.find_key(0, enum.value)`,
 		tengo.UndefinedValue) // non-enumerable: undefined
 	testEnumModule(t, `out = enum.find_key("123", enum.value)`,
@@ -3462,13 +3482,35 @@ func TestString(t *testing.T) {
 
 func TestTailCall(t *testing.T) {
 	expectRun(t, `
+	mul := func(n , x) {
+		return x == 0 ? 0 : n + callee.fn(n, x-1)
+	}
+	out = mul(7, 5)`, nil, 35)
+
+	expectRun(t, `
+	out = func(n , x) {
+		return x == 0 ? 0 : n + callee.fn(n, x-1)
+	}(7, 5)`, nil, 35)
+
+	expectRun(t, `
 	fac := func(n, a) {
 		if n == 1 {
 			return a
 		}
 		return fac(n-1, n*a)
 	}
+
 	out = fac(5, 1)`, nil, 120)
+
+	expectRun(t, `
+	fac := func(n, a) {
+		if n == 1 {
+			return a
+		}
+		return callee.fn(n-1, n*a)
+	}
+
+	out = fac(3, 1)`, nil, 6)
 
 	expectRun(t, `
 	fac := func(n, a) {
@@ -3537,6 +3579,7 @@ iter := func(n, max) {
 }
 out = iter(0, 9999)
 `, nil, 9999)
+
 	expectRun(t, `
 c := 0
 iter := func(n, max) {
@@ -3623,6 +3666,43 @@ func TestSpread(t *testing.T) {
 		"Runtime Error: wrong number of arguments: want=1, got=2")
 	expectError(t, `func(a, b, c) {}([1, 2]...)`, nil,
 		"Runtime Error: wrong number of arguments: want=3, got=2")
+}
+
+func TestKwargs(t *testing.T) {
+	expectRun(t, `data:={args:[1,2,3],kwargs:{a:4,b:5}};out = func(...args; ...kwargs) { return [args,kwargs] }(data.args...;data.kwargs...)`,
+		nil, ARR{ARR{1, 2, 3}, MAP{"a": 4, "b": 5}})
+	expectRun(t, `data:={key1:{args:[1,2,3],kwargs:{a:4,b:5}}};out = func(...args; ...kwargs) { return [args,kwargs] }(data.key1.args...;data.key1.kwargs...)`,
+		nil, ARR{ARR{1, 2, 3}, MAP{"a": 4, "b": 5}})
+	expectRun(t, `x := 5;out = func(a,b,...;...) { z := 100; return [a,b,z] }(1,[2,3]...;a=4,b=5,{"c":6}...)`,
+		nil, ARR{1, 2, 100})
+	expectRun(t, `x := 5;out = func(a,b,...;...) { z := 100; return [a,b,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
+		nil, ARR{1, 2, 100})
+	expectRun(t, `x := 5;out = func(a,b,...;...) { z := 100; return [a,b,callee.args, callee.kwargs,z] }(1,[2,3]...;a=4,b=5,{"c":6}...)`,
+		nil, ARR{1, 2, IARR{1, 2, 3}, IMAP{"a": 4, "b": 5, "c": 6}, 100})
+	expectRun(t, `x := 5;out = func(a,b,...;...) { z := 100; return [a,b,callee.args, callee.kwargs,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
+		nil, ARR{1, 2, IARR{1, 2, 3}, IMAP{"a": 4, "b": 5, "c": 6}, 100})
+	expectRun(t, `x := 5;out = func(...args;...kwargs) { z := 100; return [callee.args, callee.kwargs,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
+		nil, ARR{IARR{1, 2, 3}, IMAP{"a": 4, "b": 5, "c": 6}, 100})
+	expectRun(t, `x := 5;out = func(...args;...kwargs) { z := 100; return [callee.args, callee.kwargs,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
+		nil, ARR{IARR{1, 2, 3}, IMAP{"a": 4, "b": 5, "c": 6}, 100})
+	expectRun(t, `x := 5;out = func(;...kwargs) { z := 100; return [callee.args, callee.kwargs,z] }(a=4,b=5,{"c":6}...)`,
+		nil, ARR{IARR{}, IMAP{"a": 4, "b": 5, "c": 6}, 100})
+	expectRun(t, `x := 5;out = func(;...kwargs) { z := 100; return [kwargs,z] }(a=4,b=5,{"c":6}...)`,
+		nil, ARR{MAP{"a": 4, "b": 5, "c": 6}, 100})
+	expectRun(t, `kw := {"c":6};x := 5;out = func(;...kwargs) { z := 100; return [kwargs,z] }(a=4,b=5,kw...)`,
+		nil, ARR{MAP{"a": 4, "b": 5, "c": 6}, 100})
+	expectRun(t, `x := 5;f := func(a,b,...;...kwargs) { z := 100; return [a,b,z,kwargs] }; out = f(1,[2,3]...;a=4,b=5,map(c=6)...)`,
+		nil, ARR{1, 2, 100, MAP{"a": 4, "b": 5, "c": 6}})
+	expectRun(t, `x := 5;out = func(a,b,...;...kwargs) { z := 100; return [a,b,z,kwargs] }(1,[2,3]...;a=4,b=5,map(c=6)...)`,
+		nil, ARR{1, 2, 100, MAP{"a": 4, "b": 5, "c": 6}})
+	expectRun(t, `x := 5;out = func(a,b,...;...kwargs) { z := 100; return [a,b,z,kwargs] }(1,[2,3]...;a=4,b=5,map(c=6)...)`,
+		nil, ARR{1, 2, 100, MAP{"a": 4, "b": 5, "c": 6}})
+	expectError(t, `func() {}(a=1)`, nil,
+		"Runtime Error: wrong number of kwargs: want=0, got=1")
+	expectError(t, `func() {}(a=1,{"b":2}...)`, nil,
+		"Runtime Error: wrong number of kwargs: want=0, got=2")
+	expectError(t, `kw := {"b":2, "c":3};out := func(){}(a=1,kw...)`, nil,
+		"Runtime Error: wrong number of kwargs: want=0, got=3")
 }
 
 func expectRun(

@@ -31,6 +31,9 @@ var (
 	// ErrWrongNumArguments represents a wrong number of arguments error.
 	ErrWrongNumArguments = errors.New("wrong number of arguments")
 
+	// ErrUnexpectedKwargs represents a unexpected kwargs.
+	ErrUnexpectedKwargs = errors.New("unexpected kwargs")
+
 	// ErrBytesLimit represents an error where the size of bytes value exceeds
 	// the limit.
 	ErrBytesLimit = errors.New("exceeding bytes size limit")

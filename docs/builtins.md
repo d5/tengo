@@ -323,3 +323,13 @@ immutable map, string, and bytes are iterable types in Tengo.
 ## is_time
 
 Returns `true` if the object's type is time. Or it returns `false`.
+
+## map
+
+Make new `map` object from arguments and keyword arguments.
+
+```golang
+map(a=1,b=2) // == {"a":1,"b":2}
+map({"a":1},{"b":2};c=3) // == {"a":1,"b":2,"c":3}
+map({"a":1},{"b":2};c=3, {"d":4}...) // == {"a":1,"b":2,"c":3,"d":4}
+```

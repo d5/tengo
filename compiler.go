@@ -225,6 +225,10 @@ func (c *Compiler) Compile(node parser.Node) error {
 			c.addConstant(&Char{Value: node.Value}))
 	case *parser.UndefinedLit:
 		c.emit(node, parser.OpNull)
+	case *parser.UndefinedKwargLit:
+		c.emit(node, parser.OpNullKwarg)
+	case *parser.CalleeLit:
+		c.emit(node, parser.OpCallee)
 	case *parser.UnaryExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
@@ -403,11 +407,77 @@ func (c *Compiler) Compile(node parser.Node) error {
 	case *parser.FuncLit:
 		c.enterScope()
 
-		for _, p := range node.Type.Params.List {
-			s := c.symbolTable.Define(p.Name)
+		var (
+			kw []string
+			varKwargs,
+			varArgs VarArgMode
+		)
 
-			// function arguments is not assigned directly.
-			s.LocalAssigned = true
+		if node.Type.Params.Args != nil {
+			args := node.Type.Params.Args.List
+			if node.Type.Params.Args.VarArgs {
+				if args[len(args)-1].Name == "" {
+					args = args[0 : len(args)-1]
+					varArgs = VarArgAnonymous
+				} else {
+					varArgs = VarArgNamed
+				}
+			}
+
+			for _, p := range args {
+				s := c.symbolTable.Define(p.Name)
+				// function arguments is not assigned directly.
+				s.LocalAssigned = true
+			}
+		}
+
+		if kwargs := node.Type.Params.Kwargs; kwargs != nil {
+			names := node.Type.Params.Kwargs.Names
+			if node.Type.Params.Kwargs.VarArgs {
+				if names[len(names)-1].Name == "" {
+					names = names[0 : len(names)-1]
+					varKwargs = VarArgAnonymous
+				} else {
+					varKwargs = VarArgNamed
+				}
+			}
+
+			for _, p := range names {
+				s := c.symbolTable.Define(p.Name)
+
+				// function arguments is not assigned directly.
+				s.LocalAssigned = true
+			}
+
+			var stmts []parser.Stmt
+			for i, v := range kwargs.Values {
+				stmts = append(stmts, &parser.IfStmt{
+					Cond: &parser.BinaryExpr{
+						Token: token.Equal,
+						LHS:   kwargs.Names[i],
+						RHS:   &parser.UndefinedKwargLit{},
+					},
+					Body: &parser.BlockStmt{
+						Stmts: []parser.Stmt{
+							&parser.AssignStmt{
+								Token: token.Assign,
+								LHS:   []parser.Expr{kwargs.Names[i]},
+								RHS:   []parser.Expr{v},
+							},
+						},
+					},
+				})
+			}
+
+			node.Body.Stmts = append(stmts, node.Body.Stmts...)
+
+			if varKwargs == VarArgNamed {
+				names = names[:len(names)-1]
+			}
+			kw = make([]string, len(names))
+			for i, name := range names {
+				kw[i] = name.Name
+			}
 		}
 
 		if err := c.Compile(node.Body); err != nil {
@@ -474,12 +544,19 @@ func (c *Compiler) Compile(node parser.Node) error {
 			}
 		}
 
+		numArgs := len(node.Type.Params.Args.List)
+		if node.Type.Params.Args.VarArgs {
+			numArgs--
+		}
+
 		compiledFunction := &CompiledFunction{
-			Instructions:  instructions,
-			NumLocals:     numLocals,
-			NumParameters: len(node.Type.Params.List),
-			VarArgs:       node.Type.Params.VarArgs,
-			SourceMap:     sourceMap,
+			Instructions: instructions,
+			NumLocals:    numLocals,
+			NumArgs:      numArgs,
+			VarArgs:      varArgs,
+			Kwargs:       kw,
+			VarKwargs:    varKwargs,
+			SourceMap:    sourceMap,
 		}
 		if len(freeSymbols) > 0 {
 			c.emit(node, parser.OpClosure,
@@ -505,16 +582,52 @@ func (c *Compiler) Compile(node parser.Node) error {
 		if err := c.Compile(node.Func); err != nil {
 			return err
 		}
-		for _, arg := range node.Args {
+
+		var (
+			normalValues = node.Kwargs.Values
+			hasVarKwargs = node.Kwargs.Ellipsis.IsValid()
+			varArgs,
+			varKwargs,
+			kw int
+		)
+
+		if node.Args.Ellipsis.IsValid() {
+			varArgs = 1
+		}
+
+		if hasVarKwargs {
+			normalValues = normalValues[:len(normalValues)-1]
+		}
+
+		if len(normalValues) > 0 {
+			kw = len(normalValues)
+			kwargs := &parser.MapLit{Elements: make([]*parser.MapElementLit, kw)}
+
+			for i, arg := range normalValues {
+				kwargs.Elements[i] = &parser.MapElementLit{
+					Key:   node.Kwargs.Names[i].Name,
+					Value: arg,
+				}
+			}
+			if err := c.Compile(kwargs); err != nil {
+				return err
+			}
+		}
+
+		if hasVarKwargs {
+			varKwargs = 1
+			if err := c.Compile(node.Kwargs.Values[len(node.Kwargs.Values)-1]); err != nil {
+				return err
+			}
+		}
+
+		for _, arg := range node.Args.Values {
 			if err := c.Compile(arg); err != nil {
 				return err
 			}
 		}
-		ellipsis := 0
-		if node.Ellipsis.IsValid() {
-			ellipsis = 1
-		}
-		c.emit(node, parser.OpCall, len(node.Args), ellipsis)
+
+		c.emit(node, parser.OpCall, kw, varKwargs, len(node.Args.Values)-varArgs, varArgs)
 	case *parser.ImportExpr:
 		if node.ModuleName == "" {
 			return c.errorf(node, "empty module name")
@@ -534,7 +647,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 					return err
 				}
 				c.emit(node, parser.OpConstant, c.addConstant(compiled))
-				c.emit(node, parser.OpCall, 0, 0)
+				c.emit(node, parser.OpCall, 0, 0, 0, 0)
 			case Object: // builtin module
 				c.emit(node, parser.OpConstant, c.addConstant(v))
 			default:
@@ -560,7 +673,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 				return err
 			}
 			c.emit(node, parser.OpConstant, c.addConstant(compiled))
-			c.emit(node, parser.OpCall, 0, 0)
+			c.emit(node, parser.OpCall, 0, 0, 0, 0)
 		} else {
 			return c.errorf(node, "module '%s' not found", node.ModuleName)
 		}
@@ -1030,7 +1143,6 @@ func (c *Compiler) compileModule(
 	if err := moduleCompiler.Compile(file); err != nil {
 		return nil, err
 	}
-
 	// code optimization
 	moduleCompiler.optimizeFunc(node)
 	compiledFunc := moduleCompiler.Bytecode().MainFunction

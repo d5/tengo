@@ -159,7 +159,7 @@ a += b * 2
 
 arr := [a, b, c]
 arrstr := string(arr)
-map := {a: a, b: b, c: c}
+mymap := {a: a, b: b, c: c}
 
 d := a + b + c
 s := 0
@@ -279,7 +279,7 @@ func (o *Counter) Copy() tengo.Object {
 	return &Counter{value: o.value}
 }
 
-func (o *Counter) Call(_ ...tengo.Object) (tengo.Object, error) {
+func (o *Counter) Call(*tengo.CallContext) (tengo.Object, error) {
 	return &tengo.Int{Value: o.value}, nil
 }
 

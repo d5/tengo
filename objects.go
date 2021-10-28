@@ -21,6 +21,9 @@ var (
 
 	// UndefinedValue represents an undefined value.
 	UndefinedValue Object = &Undefined{}
+
+	// UndefinedKwargValue represents an undefined kwarg value.
+	UndefinedKwargValue Object = &UndefinedKwarg{}
 )
 
 // Object represents an object in the VM.
@@ -73,7 +76,7 @@ type Object interface {
 
 	// Call should take an arbitrary number of arguments and returns a return
 	// value and/or an error, which the VM will consider as a run-time error.
-	Call(args ...Object) (ret Object, err error)
+	Call(ctx *CallContext) (ret Object, err error)
 
 	// CanCall should return whether the Object can be Called.
 	CanCall() bool
@@ -139,7 +142,7 @@ func (o *ObjectImpl) CanIterate() bool {
 
 // Call takes an arbitrary number of arguments and returns a return value
 // and/or an error.
-func (o *ObjectImpl) Call(_ ...Object) (ret Object, err error) {
+func (o *ObjectImpl) Call(*CallContext) (ret Object, err error) {
 	return nil, nil
 }
 
@@ -321,7 +324,7 @@ func (o *Bool) GobEncode() (b []byte, err error) {
 type BuiltinFunction struct {
 	ObjectImpl
 	Name  string
-	Value CallableFunc
+	Value CallableFuncCtx
 }
 
 // TypeName returns the name of the type.
@@ -345,8 +348,8 @@ func (o *BuiltinFunction) Equals(_ Object) bool {
 }
 
 // Call executes a builtin function.
-func (o *BuiltinFunction) Call(args ...Object) (Object, error) {
-	return o.Value(args...)
+func (o *BuiltinFunction) Call(ctx *CallContext) (Object, error) {
+	return o.Value(ctx)
 }
 
 // CanCall returns whether the Object can be Called.
@@ -567,15 +570,25 @@ func (o *Char) Equals(x Object) bool {
 	return o.Value == t.Value
 }
 
+type VarArgMode uint8
+
+const (
+	VarArgNone = iota
+	VarArgNamed
+	VarArgAnonymous
+)
+
 // CompiledFunction represents a compiled function.
 type CompiledFunction struct {
 	ObjectImpl
-	Instructions  []byte
-	NumLocals     int // number of local variables (including function parameters)
-	NumParameters int
-	VarArgs       bool
-	SourceMap     map[int]parser.Pos
-	Free          []*ObjectPtr
+	Instructions []byte
+	NumLocals    int // number of local variables (including function parameters)
+	NumArgs      int
+	VarArgs      VarArgMode
+	Kwargs       []string
+	VarKwargs    VarArgMode
+	SourceMap    map[int]parser.Pos
+	Free         []*ObjectPtr
 }
 
 // TypeName returns the name of the type.
@@ -590,11 +603,13 @@ func (o *CompiledFunction) String() string {
 // Copy returns a copy of the type.
 func (o *CompiledFunction) Copy() Object {
 	return &CompiledFunction{
-		Instructions:  append([]byte{}, o.Instructions...),
-		NumLocals:     o.NumLocals,
-		NumParameters: o.NumParameters,
-		VarArgs:       o.VarArgs,
-		Free:          append([]*ObjectPtr{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
+		Instructions: append([]byte{}, o.Instructions...),
+		NumLocals:    o.NumLocals,
+		NumArgs:      o.NumArgs,
+		VarArgs:      o.VarArgs,
+		Kwargs:       o.Kwargs,
+		VarKwargs:    o.VarKwargs,
+		Free:         append([]*ObjectPtr{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
 	}
 }
 
@@ -1574,6 +1589,66 @@ func (o *Undefined) Value() Object {
 	return o
 }
 
+// UndefinedKwarg represents an undefined value of keyword argument.
+type UndefinedKwarg struct {
+	ObjectImpl
+}
+
+// TypeName returns the name of the type.
+func (o *UndefinedKwarg) TypeName() string {
+	return "undefined_kwarg"
+}
+
+func (o *UndefinedKwarg) String() string {
+	return "<undefined_kwarg>"
+}
+
+// Copy returns a copy of the type.
+func (o *UndefinedKwarg) Copy() Object {
+	return o
+}
+
+// IsFalsy returns true if the value of the type is falsy.
+func (o *UndefinedKwarg) IsFalsy() bool {
+	return true
+}
+
+// Equals returns true if the value of the type is equal to the value of
+// another object.
+func (o *UndefinedKwarg) Equals(x Object) bool {
+	return o == x
+}
+
+// IndexGet returns an element at a given index.
+func (o *UndefinedKwarg) IndexGet(_ Object) (Object, error) {
+	return UndefinedValue, nil
+}
+
+// Iterate creates a map iterator.
+func (o *UndefinedKwarg) Iterate() Iterator {
+	return o
+}
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *UndefinedKwarg) CanIterate() bool {
+	return true
+}
+
+// Next returns true if there are more elements to iterate.
+func (o *UndefinedKwarg) Next() bool {
+	return false
+}
+
+// Key returns the key or index value of the current element.
+func (o *UndefinedKwarg) Key() Object {
+	return o
+}
+
+// Value returns the value of the current element.
+func (o *UndefinedKwarg) Value() Object {
+	return o
+}
+
 // UserFunction represents a user function.
 type UserFunction struct {
 	ObjectImpl
@@ -1602,11 +1677,70 @@ func (o *UserFunction) Equals(_ Object) bool {
 }
 
 // Call invokes a user function.
-func (o *UserFunction) Call(args ...Object) (Object, error) {
-	return o.Value(args...)
+func (o *UserFunction) Call(ctx *CallContext) (Object, error) {
+	if len(ctx.Kwargs) > 0 {
+		return nil, ErrUnexpectedKwargs
+	}
+	return o.Value(ctx.Args...)
 }
 
 // CanCall returns whether the Object can be Called.
 func (o *UserFunction) CanCall() bool {
 	return true
+}
+
+// UserFunctionCtx represents a user function with call context.
+type UserFunctionCtx struct {
+	ObjectImpl
+	Name  string
+	Value CallableFuncCtx
+}
+
+// TypeName returns the name of the type.
+func (o *UserFunctionCtx) TypeName() string {
+	return "user-function-ctx:" + o.Name
+}
+
+func (o *UserFunctionCtx) String() string {
+	return "<user-function-ctx>"
+}
+
+// Copy returns a copy of the type.
+func (o *UserFunctionCtx) Copy() Object {
+	return &UserFunctionCtx{Value: o.Value}
+}
+
+// Equals returns true if the value of the type is equal to the value of
+// another object.
+func (o *UserFunctionCtx) Equals(_ Object) bool {
+	return false
+}
+
+// Call invokes a user function.
+func (o *UserFunctionCtx) Call(ctx *CallContext) (ret Object, err error) {
+	return o.Value(ctx)
+}
+
+// CanCall returns whether the Object can be Called.
+func (o *UserFunctionCtx) CanCall() bool {
+	return true
+}
+
+// VmContextObject represents the VmContext object
+type VmContextObject struct {
+	ObjectImpl
+	Value *VmContext
+}
+
+// Copy returns a copy of the type.
+func (c *VmContextObject) Copy() Object {
+	return &VmContextObject{Value: c.Value}
+}
+
+func (c *VmContextObject) TypeName() string {
+	return "context"
+}
+
+func (c *VmContextObject) String() string {
+	return "<vm-context>"
 }

@@ -1,5 +1,7 @@
 package tengo
 
+import "strconv"
+
 var builtinFuncs = []*BuiltinFunction{
 	{
 		Name:  "len",
@@ -125,6 +127,10 @@ var builtinFuncs = []*BuiltinFunction{
 		Name:  "range",
 		Value: builtinRange,
 	},
+	{
+		Name:  "map",
+		Value: builtinMap,
+	},
 }
 
 // GetAllBuiltinFunctions returns all builtin function objects.
@@ -132,180 +138,180 @@ func GetAllBuiltinFunctions() []*BuiltinFunction {
 	return append([]*BuiltinFunction{}, builtinFuncs...)
 }
 
-func builtinTypeName(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinTypeName(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	return &String{Value: args[0].TypeName()}, nil
+	return &String{Value: ctx.Args[0].TypeName()}, nil
 }
 
-func builtinIsString(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsString(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*String); ok {
+	if _, ok := ctx.Args[0].(*String); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsInt(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsInt(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Int); ok {
+	if _, ok := ctx.Args[0].(*Int); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsFloat(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsFloat(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Float); ok {
+	if _, ok := ctx.Args[0].(*Float); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsBool(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsBool(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Bool); ok {
+	if _, ok := ctx.Args[0].(*Bool); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsChar(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsChar(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Char); ok {
+	if _, ok := ctx.Args[0].(*Char); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsBytes(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsBytes(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Bytes); ok {
+	if _, ok := ctx.Args[0].(*Bytes); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsArray(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsArray(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Array); ok {
+	if _, ok := ctx.Args[0].(*Array); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsImmutableArray(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsImmutableArray(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*ImmutableArray); ok {
+	if _, ok := ctx.Args[0].(*ImmutableArray); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsMap(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsMap(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Map); ok {
+	if _, ok := ctx.Args[0].(*Map); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsImmutableMap(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsImmutableMap(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*ImmutableMap); ok {
+	if _, ok := ctx.Args[0].(*ImmutableMap); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsTime(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsTime(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Time); ok {
+	if _, ok := ctx.Args[0].(*Time); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsError(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsError(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Error); ok {
+	if _, ok := ctx.Args[0].(*Error); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsUndefined(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsUndefined(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if args[0] == UndefinedValue {
+	if ctx.Args[0] == UndefinedValue {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsFunction(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsFunction(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	switch args[0].(type) {
+	switch ctx.Args[0].(type) {
 	case *CompiledFunction:
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsCallable(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsCallable(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if args[0].CanCall() {
+	if ctx.Args[0].CanCall() {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
-func builtinIsIterable(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinIsIterable(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if args[0].CanIterate() {
+	if ctx.Args[0].CanIterate() {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
 }
 
 // len(obj object) => int
-func builtinLen(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinLen(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	switch arg := args[0].(type) {
+	switch arg := ctx.Args[0].(type) {
 	case *Array:
 		return &Int{Value: int64(len(arg.Value))}, nil
 	case *ImmutableArray:
@@ -327,16 +333,16 @@ func builtinLen(args ...Object) (Object, error) {
 	}
 }
 
-//range(start, stop[, step])
-func builtinRange(args ...Object) (Object, error) {
-	numArgs := len(args)
+// range(start, stop[, step])
+func builtinRange(ctx *CallContext) (Object, error) {
+	numArgs := len(ctx.Args)
 	if numArgs < 2 || numArgs > 3 {
 		return nil, ErrWrongNumArguments
 	}
 	var start, stop, step *Int
 
-	for i, arg := range args {
-		v, ok := args[i].(*Int)
+	for i, arg := range ctx.Args {
+		v, ok := ctx.Args[i].(*Int)
 		if !ok {
 			var name string
 			switch i {
@@ -392,46 +398,46 @@ func buildRange(start, stop, step int64) *Array {
 	return array
 }
 
-func builtinFormat(args ...Object) (Object, error) {
-	numArgs := len(args)
+func builtinFormat(ctx *CallContext) (Object, error) {
+	numArgs := len(ctx.Args)
 	if numArgs == 0 {
 		return nil, ErrWrongNumArguments
 	}
-	format, ok := args[0].(*String)
+	format, ok := ctx.Args[0].(*String)
 	if !ok {
 		return nil, ErrInvalidArgumentType{
 			Name:     "format",
 			Expected: "string",
-			Found:    args[0].TypeName(),
+			Found:    ctx.Args[0].TypeName(),
 		}
 	}
 	if numArgs == 1 {
 		// okay to return 'format' directly as String is immutable
 		return format, nil
 	}
-	s, err := Format(format.Value, args[1:]...)
+	s, err := Format(format.Value, ctx.Args[1:]...)
 	if err != nil {
 		return nil, err
 	}
 	return &String{Value: s}, nil
 }
 
-func builtinCopy(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinCopy(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	return args[0].Copy(), nil
+	return ctx.Args[0].Copy(), nil
 }
 
-func builtinString(args ...Object) (Object, error) {
-	argsLen := len(args)
+func builtinString(ctx *CallContext) (Object, error) {
+	argsLen := len(ctx.Args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*String); ok {
-		return args[0], nil
+	if _, ok := ctx.Args[0].(*String); ok {
+		return ctx.Args[0], nil
 	}
-	v, ok := ToString(args[0])
+	v, ok := ToString(ctx.Args[0])
 	if ok {
 		if len(v) > MaxStringLen {
 			return nil, ErrStringLimit
@@ -439,55 +445,55 @@ func builtinString(args ...Object) (Object, error) {
 		return &String{Value: v}, nil
 	}
 	if argsLen == 2 {
-		return args[1], nil
+		return ctx.Args[1], nil
 	}
 	return UndefinedValue, nil
 }
 
-func builtinInt(args ...Object) (Object, error) {
-	argsLen := len(args)
+func builtinInt(ctx *CallContext) (Object, error) {
+	argsLen := len(ctx.Args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Int); ok {
-		return args[0], nil
+	if _, ok := ctx.Args[0].(*Int); ok {
+		return ctx.Args[0], nil
 	}
-	v, ok := ToInt64(args[0])
+	v, ok := ToInt64(ctx.Args[0])
 	if ok {
 		return &Int{Value: v}, nil
 	}
 	if argsLen == 2 {
-		return args[1], nil
+		return ctx.Args[1], nil
 	}
 	return UndefinedValue, nil
 }
 
-func builtinFloat(args ...Object) (Object, error) {
-	argsLen := len(args)
+func builtinFloat(ctx *CallContext) (Object, error) {
+	argsLen := len(ctx.Args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Float); ok {
-		return args[0], nil
+	if _, ok := ctx.Args[0].(*Float); ok {
+		return ctx.Args[0], nil
 	}
-	v, ok := ToFloat64(args[0])
+	v, ok := ToFloat64(ctx.Args[0])
 	if ok {
 		return &Float{Value: v}, nil
 	}
 	if argsLen == 2 {
-		return args[1], nil
+		return ctx.Args[1], nil
 	}
 	return UndefinedValue, nil
 }
 
-func builtinBool(args ...Object) (Object, error) {
-	if len(args) != 1 {
+func builtinBool(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Bool); ok {
-		return args[0], nil
+	if _, ok := ctx.Args[0].(*Bool); ok {
+		return ctx.Args[0], nil
 	}
-	v, ok := ToBool(args[0])
+	v, ok := ToBool(ctx.Args[0])
 	if ok {
 		if v {
 			return TrueValue, nil
@@ -497,38 +503,38 @@ func builtinBool(args ...Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
-func builtinChar(args ...Object) (Object, error) {
-	argsLen := len(args)
+func builtinChar(ctx *CallContext) (Object, error) {
+	argsLen := len(ctx.Args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Char); ok {
-		return args[0], nil
+	if _, ok := ctx.Args[0].(*Char); ok {
+		return ctx.Args[0], nil
 	}
-	v, ok := ToRune(args[0])
+	v, ok := ToRune(ctx.Args[0])
 	if ok {
 		return &Char{Value: v}, nil
 	}
 	if argsLen == 2 {
-		return args[1], nil
+		return ctx.Args[1], nil
 	}
 	return UndefinedValue, nil
 }
 
-func builtinBytes(args ...Object) (Object, error) {
-	argsLen := len(args)
+func builtinBytes(ctx *CallContext) (Object, error) {
+	argsLen := len(ctx.Args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
 	}
 
 	// bytes(N) => create a new bytes with given size N
-	if n, ok := args[0].(*Int); ok {
+	if n, ok := ctx.Args[0].(*Int); ok {
 		if n.Value > int64(MaxBytesLen) {
 			return nil, ErrBytesLimit
 		}
 		return &Bytes{Value: make([]byte, int(n.Value))}, nil
 	}
-	v, ok := ToByteSlice(args[0])
+	v, ok := ToByteSlice(ctx.Args[0])
 	if ok {
 		if len(v) > MaxBytesLen {
 			return nil, ErrBytesLimit
@@ -536,39 +542,39 @@ func builtinBytes(args ...Object) (Object, error) {
 		return &Bytes{Value: v}, nil
 	}
 	if argsLen == 2 {
-		return args[1], nil
+		return ctx.Args[1], nil
 	}
 	return UndefinedValue, nil
 }
 
-func builtinTime(args ...Object) (Object, error) {
-	argsLen := len(args)
+func builtinTime(ctx *CallContext) (Object, error) {
+	argsLen := len(ctx.Args)
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Time); ok {
-		return args[0], nil
+	if _, ok := ctx.Args[0].(*Time); ok {
+		return ctx.Args[0], nil
 	}
-	v, ok := ToTime(args[0])
+	v, ok := ToTime(ctx.Args[0])
 	if ok {
 		return &Time{Value: v}, nil
 	}
 	if argsLen == 2 {
-		return args[1], nil
+		return ctx.Args[1], nil
 	}
 	return UndefinedValue, nil
 }
 
 // append(arr, items...)
-func builtinAppend(args ...Object) (Object, error) {
-	if len(args) < 2 {
+func builtinAppend(ctx *CallContext) (Object, error) {
+	if len(ctx.Args) < 2 {
 		return nil, ErrWrongNumArguments
 	}
-	switch arg := args[0].(type) {
+	switch arg := ctx.Args[0].(type) {
 	case *Array:
-		return &Array{Value: append(arg.Value, args[1:]...)}, nil
+		return &Array{Value: append(arg.Value, ctx.Args[1:]...)}, nil
 	case *ImmutableArray:
-		return &Array{Value: append(arg.Value, args[1:]...)}, nil
+		return &Array{Value: append(arg.Value, ctx.Args[1:]...)}, nil
 	default:
 		return nil, ErrInvalidArgumentType{
 			Name:     "first",
@@ -581,21 +587,21 @@ func builtinAppend(args ...Object) (Object, error) {
 // builtinDelete deletes Map keys
 // usage: delete(map, "key")
 // key must be a string
-func builtinDelete(args ...Object) (Object, error) {
-	argsLen := len(args)
+func builtinDelete(ctx *CallContext) (Object, error) {
+	argsLen := len(ctx.Args)
 	if argsLen != 2 {
 		return nil, ErrWrongNumArguments
 	}
-	switch arg := args[0].(type) {
+	switch arg := ctx.Args[0].(type) {
 	case *Map:
-		if key, ok := args[1].(*String); ok {
+		if key, ok := ctx.Args[1].(*String); ok {
 			delete(arg.Value, key.Value)
 			return UndefinedValue, nil
 		}
 		return nil, ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "string",
-			Found:    args[1].TypeName(),
+			Found:    ctx.Args[1].TypeName(),
 		}
 	default:
 		return nil, ErrInvalidArgumentType{
@@ -609,30 +615,30 @@ func builtinDelete(args ...Object) (Object, error) {
 // builtinSplice deletes and changes given Array, returns deleted items.
 // usage:
 // deleted_items := splice(array[,start[,delete_count[,item1[,item2[,...]]]])
-func builtinSplice(args ...Object) (Object, error) {
-	argsLen := len(args)
+func builtinSplice(ctx *CallContext) (Object, error) {
+	argsLen := len(ctx.Args)
 	if argsLen == 0 {
 		return nil, ErrWrongNumArguments
 	}
 
-	array, ok := args[0].(*Array)
+	array, ok := ctx.Args[0].(*Array)
 	if !ok {
 		return nil, ErrInvalidArgumentType{
 			Name:     "first",
 			Expected: "array",
-			Found:    args[0].TypeName(),
+			Found:    ctx.Args[0].TypeName(),
 		}
 	}
 	arrayLen := len(array.Value)
 
 	var startIdx int
 	if argsLen > 1 {
-		arg1, ok := args[1].(*Int)
+		arg1, ok := ctx.Args[1].(*Int)
 		if !ok {
 			return nil, ErrInvalidArgumentType{
 				Name:     "second",
 				Expected: "int",
-				Found:    args[1].TypeName(),
+				Found:    ctx.Args[1].TypeName(),
 			}
 		}
 		startIdx = int(arg1.Value)
@@ -643,12 +649,12 @@ func builtinSplice(args ...Object) (Object, error) {
 
 	delCount := len(array.Value)
 	if argsLen > 2 {
-		arg2, ok := args[2].(*Int)
+		arg2, ok := ctx.Args[2].(*Int)
 		if !ok {
 			return nil, ErrInvalidArgumentType{
 				Name:     "third",
 				Expected: "int",
-				Found:    args[2].TypeName(),
+				Found:    ctx.Args[2].TypeName(),
 			}
 		}
 		delCount = int(arg2.Value)
@@ -669,7 +675,7 @@ func builtinSplice(args ...Object) (Object, error) {
 	if argsLen > 3 {
 		items = make([]Object, 0, argsLen-3)
 		for i := 3; i < argsLen; i++ {
-			items = append(items, args[i])
+			items = append(items, ctx.Args[i])
 		}
 	}
 	items = append(items, array.Value[endIdx:]...)
@@ -677,4 +683,37 @@ func builtinSplice(args ...Object) (Object, error) {
 
 	// return deleted items
 	return &Array{Value: deleted}, nil
+}
+
+// builtinMap make new map merging args of map and kwargs
+// Usage: map([map...]...[,key=value,keyN=value])
+// Examples:
+// map(a=1,b=2) => {"a":1,"b":2}
+// map({"a":1},{"b":2};c=3) => {"a":1,"b":2,"c":3}
+func builtinMap(ctx *CallContext) (Object, error) {
+	res := ctx.Kwargs
+	if res == nil {
+		res = make(map[string]Object)
+	}
+
+	for i, v := range ctx.Args {
+		switch v {
+		case nil:
+		case UndefinedValue:
+		default:
+			switch t := v.(type) {
+			case *Map:
+				for key, value := range t.Value {
+					res[key] = value
+				}
+			default:
+				return nil, ErrInvalidArgumentType{
+					Name:     "arg #"+strconv.Itoa(i),
+					Expected: "map",
+					Found:    t.TypeName(),
+				}
+			}
+		}
+	}
+	return &Map{Value: res}, nil
 }

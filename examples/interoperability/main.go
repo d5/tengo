@@ -18,7 +18,8 @@ import (
 // a channel to listen result of function.
 type CallArgs struct {
 	Func   string
-	Params []tengo.Object
+	Args   []tengo.Object
+	Kwargs map[string]tengo.Object
 	Result chan<- tengo.Object
 }
 
@@ -29,9 +30,9 @@ func NewGoProxy(ctx context.Context) *GoProxy {
 	mod.callbacks = make(map[string]tengo.Object)
 	mod.callChan = make(chan *CallArgs, 1)
 	mod.moduleMap = map[string]tengo.Object{
-		"next":     &tengo.UserFunction{Value: mod.next},
-		"register": &tengo.UserFunction{Value: mod.register},
-		"args":     &tengo.UserFunction{Value: mod.args},
+		"next":     &tengo.UserFunctionCtx{Value: mod.next},
+		"register": &tengo.UserFunctionCtx{Value: mod.register},
+		"args":     &tengo.UserFunctionCtx{Value: mod.args},
 	}
 	mod.tasks = list.New()
 	return mod
@@ -69,7 +70,7 @@ func (mod *GoProxy) CallChan() chan<- *CallArgs {
 	return mod.callChan
 }
 
-func (mod *GoProxy) next(args ...tengo.Object) (tengo.Object, error) {
+func (mod *GoProxy) next(*tengo.CallContext) (tengo.Object, error) {
 	mod.mtx.Lock()
 	defer mod.mtx.Unlock()
 	select {
@@ -83,7 +84,8 @@ func (mod *GoProxy) next(args ...tengo.Object) (tengo.Object, error) {
 	}
 }
 
-func (mod *GoProxy) register(args ...tengo.Object) (tengo.Object, error) {
+func (mod *GoProxy) register(ctx *tengo.CallContext) (tengo.Object, error) {
+	args := ctx.Args
 	if len(args) == 0 {
 		return nil, tengo.ErrWrongNumArguments
 	}
@@ -105,7 +107,7 @@ func (mod *GoProxy) register(args ...tengo.Object) (tengo.Object, error) {
 	return tengo.UndefinedValue, nil
 }
 
-func (mod *GoProxy) args(args ...tengo.Object) (tengo.Object, error) {
+func (mod *GoProxy) args(*tengo.CallContext) (tengo.Object, error) {
 	mod.mtx.Lock()
 	defer mod.mtx.Unlock()
 
@@ -126,9 +128,13 @@ func (mod *GoProxy) args(args ...tengo.Object) (tengo.Object, error) {
 	if !ok {
 		return tengo.UndefinedValue, nil
 	}
-	params := callArgs.Params
+	params := callArgs.Args
 	if params == nil {
 		params = make([]tengo.Object, 0)
+	}
+	kwargs := callArgs.Kwargs
+	if kwargs == nil {
+		kwargs = map[string]tengo.Object{}
 	}
 	// callable.VarArgs implementation is omitted.
 	return &tengo.ImmutableMap{
@@ -145,9 +151,9 @@ func (mod *GoProxy) args(args ...tengo.Object) (tengo.Object, error) {
 					}
 					return tengo.UndefinedValue, nil
 				}},
-			"num_params": &tengo.Int{Value: int64(compiledFunc.NumParameters)},
-			"callable":   compiledFunc,
-			"params":     &tengo.Array{Value: params},
+			"callable": compiledFunc,
+			"args":     &tengo.Array{Value: params},
+			"kwargs":   &tengo.Map{Value: callArgs.Kwargs},
 		},
 	}, nil
 }
@@ -166,19 +172,7 @@ var ProxySource = `
 		 return
 	 }
 	 result := args.result
-	 num_params := args.num_params
-	 v := undefined
-	 // add more else if conditions for different number of parameters.
-	 if num_params == 0 {
-		 v = callable()
-	 } else if num_params == 1 {
-		 v = callable(args.params[0])
-	 } else if num_params == 2 {
-		 v = callable(args.params[0], args.params[1])
-	 } else if num_params == 3 {
-		 v = callable(args.params[0], args.params[1], args.params[2])
-	 }
-	 result(v)
+	 result(callable(args.args...;args.kwargs...))
  }
  `
 
@@ -191,10 +185,10 @@ func main() {
 	 global := 0
  
 	 callbacks := {
-		 sum: func(a, b) {
-			 return a + b
+		 sum: func(a, b;x=0) {
+			 return a + b + x
 		 },
-		 multiply: func(a, b) {
+		 multiply: func(a, b;...) {
 			 return a * b
 		 },
 		 increment: func() {
@@ -243,8 +237,11 @@ func main() {
 			fmt.Println("Calling tengo sum function")
 			i1, i2 := rand.Int63n(100), rand.Int63n(100)
 			callChan <- &CallArgs{Func: "sum",
-				Params: []tengo.Object{&tengo.Int{Value: i1},
+				Args: []tengo.Object{&tengo.Int{Value: i1},
 					&tengo.Int{Value: i2}},
+				Kwargs: map[string]tengo.Object{
+					"x": &tengo.Int{Value: 50},
+				},
 				Result: result,
 			}
 			v := <-result
@@ -253,7 +250,7 @@ func main() {
 			fmt.Println("Calling tengo multiply function")
 			i1, i2 = rand.Int63n(20), rand.Int63n(20)
 			callChan <- &CallArgs{Func: "multiply",
-				Params: []tengo.Object{&tengo.Int{Value: i1},
+				Args: []tengo.Object{&tengo.Int{Value: i1},
 					&tengo.Int{Value: i2}},
 				Result: result,
 			}

@@ -3,7 +3,7 @@ package parser
 // Opcode represents a single byte operation code.
 type Opcode = byte
 
-// List of opcodes
+// Names of opcodes
 const (
 	OpConstant      Opcode = iota // Load constant
 	OpBComplement                 // bitwise complement
@@ -19,6 +19,8 @@ const (
 	OpOrJump                      // Logical OR jump
 	OpJump                        // Jump
 	OpNull                        // Push null
+	OpNullKwarg                   // Push null_kwarg
+	OpCallee                      // Push callee
 	OpArray                       // Array object
 	OpMap                         // Map object
 	OpError                       // Error object
@@ -65,6 +67,7 @@ var OpcodeNames = [...]string{
 	OpOrJump:        "ORJMP",
 	OpJump:          "JMP",
 	OpNull:          "NULL",
+	OpNullKwarg:     "NULLKW",
 	OpGetGlobal:     "GETG",
 	OpSetGlobal:     "SETG",
 	OpSetSelGlobal:  "SETSG",
@@ -111,6 +114,7 @@ var OpcodeOperands = [...][]int{
 	OpOrJump:        {2},
 	OpJump:          {2},
 	OpNull:          {},
+	OpNullKwarg:     {},
 	OpGetGlobal:     {2},
 	OpSetGlobal:     {2},
 	OpSetSelGlobal:  {2, 1},
@@ -120,7 +124,7 @@ var OpcodeOperands = [...][]int{
 	OpImmutable:     {},
 	OpIndex:         {},
 	OpSliceIndex:    {},
-	OpCall:          {1, 1},
+	OpCall:          {1, 1, 1, 1},
 	OpReturn:        {1},
 	OpGetLocal:      {1},
 	OpSetLocal:      {1},

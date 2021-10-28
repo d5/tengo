@@ -291,7 +291,7 @@ func addPrints(file *parser.File) *parser.File {
 			stmts = append(stmts, &parser.ExprStmt{
 				Expr: &parser.CallExpr{
 					Func: &parser.Ident{Name: "__repl_println__"},
-					Args: []parser.Expr{s.Expr},
+					Args: parser.CallExprArgs{Values: []parser.Expr{s.Expr}},
 				},
 			})
 		case *parser.AssignStmt:
@@ -302,7 +302,7 @@ func addPrints(file *parser.File) *parser.File {
 					Func: &parser.Ident{
 						Name: "__repl_println__",
 					},
-					Args: s.LHS,
+					Args: parser.CallExprArgs{Values: s.LHS},
 				},
 			})
 		default:

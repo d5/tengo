@@ -34,6 +34,9 @@ const (
 // CallableFunc is a function signature for the callable functions.
 type CallableFunc = func(args ...Object) (ret Object, err error)
 
+// CallableFuncCtx is a function signature for the callable functions.
+type CallableFuncCtx = func(ctx *CallContext) (ret Object, err error)
+
 // CountObjects returns the number of objects that a given object o contains.
 // For scalar value types, it will always be 1. For compound value types,
 // this will include its elements and all of their elements recursively.
@@ -304,6 +307,8 @@ func FromInterface(v interface{}) (Object, error) {
 		return v, nil
 	case CallableFunc:
 		return &UserFunction{Value: v}, nil
+	case CallableFuncCtx:
+		return &UserFunctionCtx{Value: v}, nil
 	}
 	return nil, fmt.Errorf("cannot convert to object: %T", v)
 }
