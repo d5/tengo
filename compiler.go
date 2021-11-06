@@ -49,7 +49,7 @@ type Compiler struct {
 	symbolTable     *SymbolTable
 	scopes          []compilationScope
 	scopeIndex      int
-	modules         *ModuleMap
+	modules         ModuleGetter
 	compiledModules map[string]*CompiledFunction
 	allowFileImport bool
 	loops           []*loop
@@ -63,7 +63,7 @@ func NewCompiler(
 	file *parser.SourceFile,
 	symbolTable *SymbolTable,
 	constants []Object,
-	modules *ModuleMap,
+	modules ModuleGetter,
 	trace io.Writer,
 ) *Compiler {
 	mainScope := compilationScope{
