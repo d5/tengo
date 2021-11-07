@@ -345,6 +345,9 @@ func (v *VM) run() {
 				v.stack[v.sp-1] = immutableMap
 			}
 		case parser.OpIndex:
+			method := int(v.curInsts[v.ip+1])
+			v.ip++
+
 			index := v.stack[v.sp-1]
 			left := v.stack[v.sp-2]
 			v.sp -= 2
@@ -365,6 +368,12 @@ func (v *VM) run() {
 			}
 			if val == nil {
 				val = UndefinedValue
+			}
+			if method == 1 {
+				if cfnc, ok := val.(*CompiledFunction); ok {
+					val = cfnc.Copy()
+					val.(*CompiledFunction).Free[0] = &ObjectPtr{Value: &left}
+				}
 			}
 			v.stack[v.sp] = val
 			v.sp++
@@ -750,13 +759,15 @@ func (v *VM) run() {
 				v.err = fmt.Errorf("not function: %s", fn.TypeName())
 				return
 			}
-			free := make([]*ObjectPtr, numFree)
+			fnFreeDefault := len(fn.Free)
+			free := make([]*ObjectPtr, numFree + fnFreeDefault)
+			copy(free[:fnFreeDefault], fn.Free)
 			for i := 0; i < numFree; i++ {
 				switch freeVar := (v.stack[v.sp-numFree+i]).(type) {
 				case *ObjectPtr:
-					free[i] = freeVar
+					free[i + fnFreeDefault] = freeVar
 				default:
-					free[i] = &ObjectPtr{
+					free[i + fnFreeDefault] = &ObjectPtr{
 						Value: &v.stack[v.sp-numFree+i],
 					}
 				}
