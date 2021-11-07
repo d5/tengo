@@ -168,6 +168,32 @@ mods.AddSourceModule("double", []byte(`export func(x) { return x * 2 }`))
 s.SetImports(mods)
 ```
 
+To dynamically load or generate code for imported modules, implement and
+provide a `tengo.ModuleGetter`.
+
+```golang
+type DynamicModules struct {
+  mods tengo.ModuleGetter
+  fallback func (name string) tengo.Importable
+}
+func (dm *DynamicModules) Get(name string) tengo.Importable {
+  if mod := dm.mods.Get(name); mod != nil {
+    return mod
+  }
+  return dm.fallback()
+}
+// ...
+mods := &DynamicModules{
+  mods: stdlib.GetModuleMap("math"),
+  fallback: func(name string) tengo.Importable {
+    src := ... // load or generate src for `name`
+    return &tengo.SourceModule{Src: src}
+  },
+}
+s := tengo.NewScript(`foo := import("foo")`)
+s.SetImports(mods)
+```
+
 ### Script.SetMaxAllocs(n int64)
 
 SetMaxAllocs sets the maximum number of object allocations. Note this is a
