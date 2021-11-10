@@ -1,9 +1,11 @@
 package tengo
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -45,6 +47,7 @@ type Compiler struct {
 	parent          *Compiler
 	modulePath      string
 	importDir       string
+	importExt       []string
 	constants       []Object
 	symbolTable     *SymbolTable
 	scopes          []compilationScope
@@ -96,6 +99,7 @@ func NewCompiler(
 		trace:           trace,
 		modules:         modules,
 		compiledModules: make(map[string]*CompiledFunction),
+		importExt:       []string{SourceFileExtDefault},
 	}
 }
 
@@ -538,12 +542,8 @@ func (c *Compiler) Compile(node parser.Node) error {
 			}
 		} else if c.allowFileImport {
 			moduleName := node.ModuleName
-			if !strings.HasSuffix(moduleName, ".tengo") {
-				moduleName += ".tengo"
-			}
 
-			modulePath, err := filepath.Abs(
-				filepath.Join(c.importDir, moduleName))
+			modulePath, err := c.getPathModule(moduleName)
 			if err != nil {
 				return c.errorf(node, "module file path error: %s",
 					err.Error())
@@ -638,6 +638,12 @@ func (c *Compiler) EnableFileImport(enable bool) {
 // SetImportDir sets the initial import directory path for file imports.
 func (c *Compiler) SetImportDir(dir string) {
 	c.importDir = dir
+}
+
+// SetImportExt sets the custom extension name of the source file for
+// loading local module files.
+func (c *Compiler) SetImportExt(ext string) {
+	c.importExt = append(c.importExt, ext)
 }
 
 func (c *Compiler) compileAssign(
@@ -1098,6 +1104,7 @@ func (c *Compiler) fork(
 	child.parent = c              // parent to set to current compiler
 	child.allowFileImport = c.allowFileImport
 	child.importDir = c.importDir
+	child.importExt = c.importExt
 	if isFile && c.importDir != "" {
 		child.importDir = filepath.Dir(modulePath)
 	}
@@ -1285,6 +1292,28 @@ func (c *Compiler) printTrace(a ...interface{}) {
 	}
 	_, _ = fmt.Fprint(c.trace, dots[0:i])
 	_, _ = fmt.Fprintln(c.trace, a...)
+}
+
+func (c *Compiler) getPathModule(moduleName string) (pathFile string, err error) {
+	for _, ext := range c.importExt {
+		nameFile := moduleName
+
+		if !strings.HasSuffix(nameFile, ext) {
+			nameFile += ext
+		}
+
+		pathFile, err = filepath.Abs(filepath.Join(c.importDir, nameFile))
+		if err != nil {
+			continue
+		}
+
+		// Check if file exists
+		if _, err := os.Stat(pathFile); !errors.Is(err, os.ErrNotExist) {
+			return pathFile, nil
+		}
+	}
+
+	return "", fmt.Errorf("module '%s' not found at: %s", moduleName, pathFile)
 }
 
 func resolveAssignLHS(
