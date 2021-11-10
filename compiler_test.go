@@ -1226,7 +1226,7 @@ func() {
 }
 
 func TestCompiler_custom_extension(t *testing.T) {
-	pathFileSource := "./testdata/ext/test.mshk"
+	pathFileSource := "./testdata/issue286/test.mshk"
 
 	modules := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
 
