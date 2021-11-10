@@ -2,12 +2,15 @@ package tengo_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/d5/tengo/v2"
 	"github.com/d5/tengo/v2/parser"
 	"github.com/d5/tengo/v2/require"
+	"github.com/d5/tengo/v2/stdlib"
 )
 
 func TestCompiler_Compile(t *testing.T) {
@@ -1010,7 +1013,7 @@ r["x"] = {
 	expectCompileError(t, `
 (func() {
 	fn := fn()
-})()	
+})()
 `, "unresolved reference 'fn")
 }
 
@@ -1220,6 +1223,35 @@ func() {
 				tengo.MakeInstruction(parser.OpGetLocal, 0),
 				tengo.MakeInstruction(parser.OpDefineLocal, 1),
 				tengo.MakeInstruction(parser.OpReturn, 0)))))
+}
+
+func TestCompiler_custom_extension(t *testing.T) {
+	pathFileSource := "./testdata/ext/test.mshk"
+
+	modules := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
+
+	src, err := ioutil.ReadFile(pathFileSource)
+	require.NoError(t, err)
+
+	// Escape shegang
+	if len(src) > 1 && string(src[:2]) == "#!" {
+		copy(src, "//")
+	}
+
+	fileSet := parser.NewFileSet()
+	srcFile := fileSet.AddFile(filepath.Base(pathFileSource), -1, len(src))
+
+	p := parser.NewParser(srcFile, src, nil)
+	file, err := p.ParseFile()
+	require.NoError(t, err)
+
+	c := tengo.NewCompiler(srcFile, nil, nil, modules, nil)
+	c.EnableFileImport(true)
+	c.SetImportDir(filepath.Dir(pathFileSource))
+	c.SetImportExt(".mshk")
+
+	err = c.Compile(file)
+	require.NoError(t, err)
 }
 
 func concatInsts(instructions ...[]byte) []byte {
