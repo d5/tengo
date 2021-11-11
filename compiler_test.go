@@ -1248,7 +1248,7 @@ func TestCompiler_custom_extension(t *testing.T) {
 	c := tengo.NewCompiler(srcFile, nil, nil, modules, nil)
 	c.EnableFileImport(true)
 	c.SetImportDir(filepath.Dir(pathFileSource))
-	c.SetImportExt(".mshk")
+	c.SetImportFileExt(".mshk")
 
 	err = c.Compile(file)
 	require.NoError(t, err)

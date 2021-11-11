@@ -640,10 +640,16 @@ func (c *Compiler) SetImportDir(dir string) {
 	c.importDir = dir
 }
 
-// SetImportExt sets the custom extension name of the source file for
+// SetImportFileExt sets the custom extension name of the source file for
 // loading local module files.
-func (c *Compiler) SetImportExt(ext string) {
+func (c *Compiler) SetImportFileExt(ext string) {
 	c.importExt = append(c.importExt, ext)
+}
+
+// GetImportFileExt returns a slice of custom extension name of the source
+// file for loading local module files.
+func (c *Compiler) GetImportFileExt() []string {
+	return c.importExt
 }
 
 func (c *Compiler) compileAssign(
