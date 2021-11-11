@@ -640,10 +640,34 @@ func (c *Compiler) SetImportDir(dir string) {
 	c.importDir = dir
 }
 
-// SetImportFileExt sets the custom extension name of the source file for
-// loading local module files.
-func (c *Compiler) SetImportFileExt(ext string) {
-	c.importExt = append(c.importExt, ext)
+// SetImportFileExt sets the extension name of the source file for loading
+// local module files.
+//
+// Use this method if you want other source file extension than ".tengo".
+// Note that this will replace the current list of extension name.
+//
+//     // this will search for *.tengo, *.foo, *.bar
+//     err := c.SetImportFileExt(".tengo", ".foo", ".bar")
+//
+func (c *Compiler) SetImportFileExt(exts ...string) error {
+	if len(c.importExt) == 0 {
+		// At least one extension name is required.
+		c.importExt = []string{SourceFileExtDefault}
+	}
+
+	if len(exts) == 0 {
+		return nil // do nothing
+	}
+
+	for _, ext := range exts {
+		if ext != filepath.Ext(ext) || ext == "" {
+			return fmt.Errorf("invalid file extension: %s", ext)
+		}
+	}
+
+	c.importExt = exts // Replace the hole current extension list
+
+	return nil
 }
 
 // GetImportFileExt returns a slice of custom extension name of the source
