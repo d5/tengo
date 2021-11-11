@@ -1270,14 +1270,12 @@ func TestCompilerNewCompiler_default_file_extension(t *testing.T) {
 }
 
 func TestCompilerSetImportExt_extension_name_validation(t *testing.T) {
-	c := new(tengo.Compiler) // Instanciate a new compiler object with no initialization
+	c := new(tengo.Compiler) // Instantiate a new compiler object with no initialization
 
 	// Test of empty arg
 	err := c.SetImportFileExt()
 
-	require.NoError(t, err, "empty arg should not return error")
-	require.Equal(t, []string{".tengo"}, c.GetImportFileExt(),
-		"once the method was called but has no extension, the default should be set")
+	require.Error(t, err, "empty arg should return an error")
 
 	// Test of various arg types
 	for _, test := range []struct {
@@ -1286,6 +1284,8 @@ func TestCompilerSetImportExt_extension_name_validation(t *testing.T) {
 		requireErr bool
 		msgFail    string
 	}{
+		{[]string{".tengo"}, []string{".tengo"}, false,
+			"well-formed extension should not return an error"},
 		{[]string{""}, []string{".tengo"}, true,
 			"empty extension name should return an error"},
 		{[]string{"foo"}, []string{".tengo"}, true,
