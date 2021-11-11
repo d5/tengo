@@ -1248,10 +1248,66 @@ func TestCompiler_custom_extension(t *testing.T) {
 	c := tengo.NewCompiler(srcFile, nil, nil, modules, nil)
 	c.EnableFileImport(true)
 	c.SetImportDir(filepath.Dir(pathFileSource))
-	c.SetImportFileExt(".mshk")
+
+	// Search for "*.tengo" and ".mshk"(custom extension)
+	c.SetImportFileExt(".tengo", ".mshk")
 
 	err = c.Compile(file)
 	require.NoError(t, err)
+}
+
+func TestCompilerNewCompiler_default_file_extension(t *testing.T) {
+	modules := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
+	input := "{}"
+	fileSet := parser.NewFileSet()
+	file := fileSet.AddFile("test", -1, len(input))
+
+	c := tengo.NewCompiler(file, nil, nil, modules, nil)
+	c.EnableFileImport(true)
+
+	require.Equal(t, []string{".tengo"}, c.GetImportFileExt(),
+		"newly created compiler object must contain the default extension")
+}
+
+func TestCompilerSetImportExt_extension_name_validation(t *testing.T) {
+	c := new(tengo.Compiler) // Instanciate a new compiler object with no initialization
+
+	// Test of empty arg
+	err := c.SetImportFileExt()
+
+	require.NoError(t, err, "empty arg should not return error")
+	require.Equal(t, []string{".tengo"}, c.GetImportFileExt(),
+		"once the method was called but has no extension, the default should be set")
+
+	// Test of various arg types
+	for _, test := range []struct {
+		extensions []string
+		expect     []string
+		requireErr bool
+		msgFail    string
+	}{
+		{[]string{""}, []string{".tengo"}, true,
+			"empty extension name should return an error"},
+		{[]string{"foo"}, []string{".tengo"}, true,
+			"name without dot prefix should return an error"},
+		{[]string{"foo.bar"}, []string{".tengo"}, true,
+			"malformed extension should return an error"},
+		{[]string{"foo."}, []string{".tengo"}, true,
+			"malformed extension should return an error"},
+		{[]string{".mshk"}, []string{".mshk"}, false,
+			"name with dot prefix should be added"},
+		{[]string{".foo", ".bar"}, []string{".foo", ".bar"}, false,
+			"it should replace instead of appending"},
+	} {
+		err := c.SetImportFileExt(test.extensions...)
+		if test.requireErr {
+			require.Error(t, err, test.msgFail)
+		}
+
+		expect := test.expect
+		actual := c.GetImportFileExt()
+		require.Equal(t, expect, actual, test.msgFail)
+	}
 }
 
 func concatInsts(instructions ...[]byte) []byte {
