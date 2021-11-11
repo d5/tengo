@@ -47,7 +47,7 @@ type Compiler struct {
 	parent          *Compiler
 	modulePath      string
 	importDir       string
-	importExt       []string
+	importFileExt   []string
 	constants       []Object
 	symbolTable     *SymbolTable
 	scopes          []compilationScope
@@ -99,7 +99,7 @@ func NewCompiler(
 		trace:           trace,
 		modules:         modules,
 		compiledModules: make(map[string]*CompiledFunction),
-		importExt:       []string{SourceFileExtDefault},
+		importFileExt:   []string{SourceFileExtDefault},
 	}
 }
 
@@ -650,9 +650,9 @@ func (c *Compiler) SetImportDir(dir string) {
 //     err := c.SetImportFileExt(".tengo", ".foo", ".bar")
 //
 func (c *Compiler) SetImportFileExt(exts ...string) error {
-	if len(c.importExt) == 0 {
+	if len(c.importFileExt) == 0 {
 		// At least one extension name is required.
-		c.importExt = []string{SourceFileExtDefault}
+		c.importFileExt = []string{SourceFileExtDefault}
 	}
 
 	if len(exts) == 0 {
@@ -665,7 +665,7 @@ func (c *Compiler) SetImportFileExt(exts ...string) error {
 		}
 	}
 
-	c.importExt = exts // Replace the hole current extension list
+	c.importFileExt = exts // Replace the hole current extension list
 
 	return nil
 }
@@ -673,7 +673,7 @@ func (c *Compiler) SetImportFileExt(exts ...string) error {
 // GetImportFileExt returns a slice of custom extension name of the source
 // file for loading local module files.
 func (c *Compiler) GetImportFileExt() []string {
-	return c.importExt
+	return c.importFileExt
 }
 
 func (c *Compiler) compileAssign(
@@ -1134,7 +1134,7 @@ func (c *Compiler) fork(
 	child.parent = c              // parent to set to current compiler
 	child.allowFileImport = c.allowFileImport
 	child.importDir = c.importDir
-	child.importExt = c.importExt
+	child.importFileExt = c.importFileExt
 	if isFile && c.importDir != "" {
 		child.importDir = filepath.Dir(modulePath)
 	}
@@ -1325,7 +1325,7 @@ func (c *Compiler) printTrace(a ...interface{}) {
 }
 
 func (c *Compiler) getPathModule(moduleName string) (pathFile string, err error) {
-	for _, ext := range c.importExt {
+	for _, ext := range c.importFileExt {
 		nameFile := moduleName
 
 		if !strings.HasSuffix(nameFile, ext) {
