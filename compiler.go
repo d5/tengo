@@ -644,19 +644,15 @@ func (c *Compiler) SetImportDir(dir string) {
 // local module files.
 //
 // Use this method if you want other source file extension than ".tengo".
-// Note that this will replace the current list of extension name.
 //
 //     // this will search for *.tengo, *.foo, *.bar
 //     err := c.SetImportFileExt(".tengo", ".foo", ".bar")
 //
+// This function requires at least one argument, since it will replace the
+// current list of extension name.
 func (c *Compiler) SetImportFileExt(exts ...string) error {
-	if len(c.importFileExt) == 0 {
-		// At least one extension name is required.
-		c.importFileExt = []string{SourceFileExtDefault}
-	}
-
 	if len(exts) == 0 {
-		return nil // do nothing
+		return fmt.Errorf("missing arg: at least one argument is required")
 	}
 
 	for _, ext := range exts {
