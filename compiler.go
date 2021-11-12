@@ -666,8 +666,9 @@ func (c *Compiler) SetImportFileExt(exts ...string) error {
 	return nil
 }
 
-// GetImportFileExt returns a slice of custom extension name of the source
-// file for loading local module files.
+// GetImportFileExt returns the current list of extension name.
+// Thease are the complementary suffix of the source file to search and load
+// local module files.
 func (c *Compiler) GetImportFileExt() []string {
 	return c.importFileExt
 }
