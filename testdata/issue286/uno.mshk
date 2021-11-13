@@ -1,0 +1,6 @@
+export {
+    fn: func(a) {
+        dos := import("dos/dos")
+        return dos.fn(a, "uno")
+    }
+}
