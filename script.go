@@ -219,6 +219,18 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 	v := NewVM(c.bytecode, c.globals, c.maxAllocs)
 	ch := make(chan error, 1)
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				switch e := r.(type) {
+				case string:
+					ch <- fmt.Errorf(e)
+				case error:
+					ch <- e
+				default:
+					ch <- fmt.Errorf("unknown panic: %v", e)
+				}
+			}
+		}()
 		ch <- v.Run()
 	}()
 
