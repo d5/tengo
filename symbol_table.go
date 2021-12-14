@@ -1,5 +1,7 @@
 package tengo
 
+import "github.com/d5/tengo/v2/parser"
+
 // SymbolScope represents a symbol scope.
 type SymbolScope string
 
@@ -17,6 +19,7 @@ type Symbol struct {
 	Scope         SymbolScope
 	Index         int
 	LocalAssigned bool // if the local symbol is assigned at least once
+	Expr          parser.Expr
 }
 
 // SymbolTable represents a symbol table.
@@ -38,7 +41,7 @@ func NewSymbolTable() *SymbolTable {
 }
 
 // Define adds a new symbol in the current scope.
-func (t *SymbolTable) Define(name string) *Symbol {
+func (t *SymbolTable) Define(name string, expr ...parser.Expr) *Symbol {
 	symbol := &Symbol{Name: name, Index: t.nextIndex()}
 	t.numDefinition++
 
@@ -57,6 +60,9 @@ func (t *SymbolTable) Define(name string) *Symbol {
 
 	} else {
 		symbol.Scope = ScopeLocal
+	}
+	if len(expr) > 0 {
+		symbol.Expr = expr[0]
 	}
 	t.store[name] = symbol
 	t.updateMaxDefs(symbol.Index + 1)

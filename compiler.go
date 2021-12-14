@@ -664,11 +664,23 @@ func (c *Compiler) compileAssign(
 		if depth == 0 && exists {
 			return c.errorf(node, "'%s' redeclared in this block", ident)
 		}
-		symbol = c.symbolTable.Define(ident)
+		symbol = c.symbolTable.Define(ident, rhs[0])
 	} else {
 		if !exists {
 			return c.errorf(node, "unresolved reference '%s'", ident)
+		} else {
+			symbol, ok := c.symbolTable.store[ident]
+			if ok {
+				switch symbol.Expr.(type) {
+				case *parser.IntLit, *parser.FloatLit, *parser.CharLit:
+					break
+				default:
+					return c.errorf(node, "invalid operation: ++/-- (non-numeric type)")
+
+				}
+			}
 		}
+
 	}
 
 	// +=, -=, *=, /=

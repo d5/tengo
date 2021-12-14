@@ -999,10 +999,6 @@ func (p *Parser) parseSimpleStmt(forIn bool) Stmt {
 			TokenPos: pos,
 		}
 	case token.Inc, token.Dec:
-		// increment or decrement statement
-		if !IsNumeric(x[0]) {
-			p.errorExpected(x[0].Pos(), "invalid operation:(non-numeric type)")
-		}
 		s := &IncDecStmt{Expr: x[0], Token: p.token, TokenPos: p.pos}
 		p.next()
 		return s
