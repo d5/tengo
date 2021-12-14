@@ -2,10 +2,11 @@ package parser
 
 import (
 	"fmt"
-	"github.com/d5/tengo/v2/token"
 	"io"
 	"sort"
 	"strconv"
+
+	"github.com/d5/tengo/v2/token"
 )
 
 type bailout struct{}
@@ -1000,22 +1001,11 @@ func (p *Parser) parseSimpleStmt(forIn bool) Stmt {
 		}
 	case token.Inc, token.Dec:
 		// increment or decrement statement
-		if !IsNumeric(x[0]) {
-			p.errorExpected(x[0].Pos(), "invalid operation:(non-numeric type)")
-		}
 		s := &IncDecStmt{Expr: x[0], Token: p.token, TokenPos: p.pos}
 		p.next()
 		return s
 	}
 	return &ExprStmt{Expr: x[0]}
-}
-func IsNumeric(val interface{}) bool {
-	switch val.(type) {
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-	case float32, float64, complex64, complex128:
-		return true
-	}
-	return false
 }
 
 func (p *Parser) parseExprList() (list []Expr) {
