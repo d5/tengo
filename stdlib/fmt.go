@@ -50,12 +50,18 @@ func fmtPrintf(args ...tengo.Object) (ret tengo.Object, err error) {
 }
 
 func fmtPrintln(args ...tengo.Object) (ret tengo.Object, err error) {
+	numArgs := len(args)
+	if numArgs == 0 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
 	printArgs, err := getPrintArgs(args...)
 	if err != nil {
 		return nil, err
 	}
-	printArgs = append(printArgs, "\n")
-	_, _ = fmt.Print(printArgs...)
+
+	fmt.Println(printArgs...)
+
 	return nil, nil
 }
 
