@@ -23,8 +23,8 @@ enum := import("enum")
   iterate and returns undefined if `x` is not enumerable.`
 - `filter(x, fn) => [object]`: iterates over elements of `x`, returning an
   array of all elements `fn` returns truthy for. `fn` is invoked with two
-  arguments: `key` and `value`. `key` is an int index if `x` is array. `key` is
-  a string key if `x` is map. It returns undefined if `x` is not enumerable.
+  arguments: `key` and `value`. `key` is an int index if `x` is array. It returns
+  undefined if `x` is not array.
 - `find(x, fn) => object`: iterates over elements of `x`, returning value of
   the first element `fn` returns truthy for. `fn` is invoked with two
   arguments: `key` and `value`. `key` is an int index if `x` is array. `key` is
