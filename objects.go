@@ -1577,9 +1577,8 @@ func (o *Undefined) Value() Object {
 // UserFunction represents a user function.
 type UserFunction struct {
 	ObjectImpl
-	Name       string
-	Value      CallableFunc
-	EncodingID string
+	Name  string
+	Value CallableFunc
 }
 
 // TypeName returns the name of the type.
