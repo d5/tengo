@@ -557,158 +557,157 @@ func (v *VM) run() {
 			}
 		case parser.OpCall:
 			var (
-				numKw      = int(v.curInsts[v.ip+1])
-				hasVarKw   = int(v.curInsts[v.ip+2])
-				numArgs    = int(v.curInsts[v.ip+3])
-				hasVarArgs = int(v.curInsts[v.ip+4])
-				kwargs     *Map
-				varKwargs  *Map
-				args       []Object
-				hasKw      = 0
+				numArgs           = int(v.curInsts[v.ip+1])
+				hasVarArgs        = int(v.curInsts[v.ip+2])
+				numKws            = int(v.curInsts[v.ip+3])
+				hasVarKw          = int(v.curInsts[v.ip+4])
+				args              []Object
+				kwargs, varKwargs map[string]Object
+				hasKws            int
 			)
 
 			v.ip += 4
-			if numKw > 0 {
-				hasKw = 1
+			if numKws > 0 {
+				hasKws = 1
 			}
 
-			start := v.sp - hasKw - hasVarKw - numArgs - hasVarArgs - 1 // last (-1) is the func
-			pos := start
-			value := v.stack[pos]
-			pos++
+			start := v.sp - numArgs - hasVarArgs - hasKws - hasVarKw
+			value := v.stack[start-1]
 
 			if !value.CanCall() {
 				v.err = fmt.Errorf("not callable: %s", value.TypeName())
 				return
 			}
 
-			if numKw > 0 {
-				kwargs = v.stack[pos].(*Map)
-				pos++
-			}
-
-			if hasVarKw == 1 {
-				if kwargs == nil {
-					switch t := v.stack[pos].(type) {
-					case *Map:
-						kwargs = t
-					case *ImmutableMap:
-						kwargs = &Map{Value: t.Value}
-					}
-				} else {
-					switch t := v.stack[pos].(type) {
-					case *Map:
-						for k, v := range t.Value {
-							kwargs.Value[k] = v
-						}
-					case *ImmutableMap:
-						for k, v := range t.Value {
-							kwargs.Value[k] = v
-						}
-					}
-				}
-				varKwargs = &Map{Value: kwargs.Value}
-				pos++
-			}
-
 			for i := 0; i < numArgs; i++ {
-				args = append(args, v.stack[pos])
-				pos++
+				args = append(args, v.stack[start+i])
 			}
 
 			if hasVarArgs == 1 {
-				switch arr := v.stack[pos].(type) {
+				switch arr := v.stack[start+numArgs].(type) {
 				case *Array:
-					for _, item := range arr.Value {
-						args = append(args, item)
-					}
+					newArgs := make([]Object, numArgs+len(arr.Value))
+					copy(newArgs, args)
+					copy(newArgs[numArgs:], arr.Value)
+					args = newArgs
 				case *ImmutableArray:
-					for _, item := range arr.Value {
-						args = append(args, item)
-					}
+					newArgs := make([]Object, numArgs+len(arr.Value))
+					copy(newArgs, args)
+					copy(newArgs[numArgs:], arr.Value)
+					args = newArgs
 				default:
 					v.err = fmt.Errorf("not an array: %s", arr.TypeName())
 					return
 				}
-				pos++
 			}
 
-			numArgs = len(args)
+			if hasKws == 1 {
+				kwargs = v.stack[start+numArgs+hasVarArgs].(*Map).Value
+			}
 
-			if kwargs == nil {
-				kwargs = &Map{Value: map[string]Object{}}
+			if hasVarKw == 1 {
+				if kwargs == nil {
+					switch t := v.stack[start+numArgs+hasVarArgs+hasKws].(type) {
+					case *Map:
+						kwargs = t.Value
+					case *ImmutableMap:
+						kwargs = t.Value
+					}
+				} else {
+					switch t := v.stack[start+numArgs+hasVarArgs+hasKws].(type) {
+					case *Map:
+						for k, v := range t.Value {
+							kwargs[k] = v
+						}
+					case *ImmutableMap:
+						for k, v := range t.Value {
+							kwargs[k] = v
+						}
+					}
+				}
 			}
 
 			if callee, ok := value.(*CompiledFunction); ok {
-				v.sp = start + 1
 				calleeData := &ImmutableMap{
 					Value: map[string]Object{
 						"fn":     callee,
 						"args":   &ImmutableArray{Value: args},
-						"kwargs": &ImmutableMap{Value: kwargs.Value},
+						"kwargs": &ImmutableMap{Value: kwargs},
 					},
 				}
 
-				if (numArgs > callee.NumArgs && callee.VarArgs == VarArgNone) || (numArgs < callee.NumArgs) {
-					if callee.VarArgs != VarArgNone {
-						v.err = fmt.Errorf(
-							"wrong number of arguments: want>=%d, got=%d",
-							callee.NumArgs, numArgs)
-						return
-					} else {
+				if numArgs := len(args); numArgs > callee.NumArgs && callee.VarArgs == VarArgNone {
+					v.err = fmt.Errorf(
+						"wrong number of arguments: want=%d, got=%d",
+						callee.NumArgs, numArgs)
+					return
+				} else if numArgs < callee.NumArgs {
+					if callee.VarArgs == VarArgNone {
 						v.err = fmt.Errorf(
 							"wrong number of arguments: want=%d, got=%d",
 							callee.NumArgs, numArgs)
-						return
+					} else {
+						v.err = fmt.Errorf(
+							"wrong number of arguments: want>=%d, got=%d",
+							callee.NumArgs, numArgs)
 					}
+					return
 				}
 
-				if callee.VarKwargs == 0 {
-					if len(kwargs.Value) > len(callee.Kwargs) {
-						v.err = fmt.Errorf(
-							"wrong number of kwargs: want=%d, got=%d",
-							len(callee.Kwargs), len(kwargs.Value))
-						return
+				if callee.VarKwargs == VarArgNone {
+					for name := range kwargs {
+						if _, ok := callee.Kwargs[name]; !ok {
+							v.err = fmt.Errorf(
+								"unexpected kwarg %q", name)
+							return
+						}
 					}
 				}
 
 				for i := 0; i < callee.NumArgs; i++ {
-					v.stack[v.sp] = args[i]
-					v.sp++
+					v.stack[start+i] = args[i]
 				}
+
 				args = args[callee.NumArgs:]
 
 				if callee.VarArgs == VarArgNamed {
-					v.stack[v.sp] = &Array{Value: args}
-					v.sp++
+					v.stack[start+callee.NumArgs] = &Array{Value: args}
 				}
 
+				v.sp = start + callee.NumArgs + callee.VarArgs.Pos()
+
 				var kwIntersection bool
-
-				for _, name := range callee.Kwargs {
-					if val, ok := kwargs.Value[name]; ok {
-						v.stack[v.sp] = val
-						v.sp++
-
-						if !kwIntersection {
-							kwIntersection = true
-							if varKwargs == nil {
-								varKwargs = &Map{}
-							}
-							varKwargs.Value = map[string]Object{}
-							for key, value := range kwargs.Value {
-								varKwargs.Value[key] = value
-							}
-						}
-						delete(varKwargs.Value, name)
-					} else {
+				if kwargs == nil {
+					for range callee.KwargsNames {
 						v.stack[v.sp] = UndefinedKwargValue
+						v.sp++
+					}
+				} else {
+					for _, name := range callee.KwargsNames {
+						if val, ok := kwargs[name]; ok {
+							v.stack[v.sp] = val
+
+							if !kwIntersection {
+								kwIntersection = true
+								varKwargs = map[string]Object{}
+								for key, value := range kwargs {
+									varKwargs[key] = value
+								}
+							}
+							delete(varKwargs, name)
+						} else {
+							v.stack[v.sp] = UndefinedKwargValue
+						}
 						v.sp++
 					}
 				}
 
 				if callee.VarKwargs == VarArgNamed {
-					v.stack[v.sp] = varKwargs
+					if varKwargs == nil {
+						v.stack[v.sp] = &Map{Value: kwargs}
+					} else {
+						v.stack[v.sp] = &Map{Value: varKwargs}
+					}
 					v.sp++
 				}
 
@@ -718,13 +717,13 @@ func (v *VM) run() {
 					if nextOp == parser.OpReturn ||
 						(nextOp == parser.OpPop &&
 							parser.OpReturn == v.curInsts[v.ip+2]) {
-						max := numArgs + numKw + hasVarKw
+						max := numArgs + hasVarArgs + numKws + hasKws
 						for p := 0; p < max; p++ {
-							v.stack[v.curFrame.basePointer+p] =
-								v.stack[v.sp-max+p]
+							cur, new := start+p, v.curFrame.basePointer+p
+							v.stack[new] = v.stack[cur]
 						}
-						v.sp -= numArgs + 1 + numKw + hasVarKw // 2 => 1 is cur func
-						v.ip = -1                              // reset IP to beginning of the frame
+						v.sp = start - 1 // 2 => 1 is cur func
+						v.ip = -1        // reset IP to beginning of the frame
 						continue
 					}
 				}
@@ -739,19 +738,22 @@ func (v *VM) run() {
 				v.curFrame.fn = callee
 				v.curFrame.callee = calleeData
 				v.curFrame.freeVars = callee.Free
-				v.curFrame.basePointer = start + 1
+				v.curFrame.basePointer = start
 				v.curInsts = callee.Instructions
 				v.ip = -1
 
 				v.framesIndex++
 				v.sp = v.curFrame.basePointer + callee.NumLocals
 			} else {
-				ret, e := value.Call(&CallContext{
-					VM:     v,
-					Args:   args,
-					Kwargs: kwargs.Value,
-				})
-				v.sp = start
+				ctx := &CallContext{
+					VM:   v,
+					Args: args,
+				}
+				if kwargs != nil {
+					ctx.Kwargs = kwargs
+				}
+				ret, e := value.Call(ctx)
+				v.sp = start - 1
 
 				// runtime error
 				if e != nil {
@@ -893,6 +895,7 @@ func (v *VM) run() {
 				NumLocals:    fn.NumLocals,
 				NumArgs:      fn.NumArgs,
 				VarArgs:      fn.VarArgs,
+				KwargsNames:  fn.KwargsNames,
 				Kwargs:       fn.Kwargs,
 				VarKwargs:    fn.VarKwargs,
 				Free:         free,

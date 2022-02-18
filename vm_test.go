@@ -3698,11 +3698,11 @@ func TestKwargs(t *testing.T) {
 	expectRun(t, `x := 5;out = func(a,b,...;...kwargs) { z := 100; return [a,b,z,kwargs] }(1,[2,3]...;a=4,b=5,map(c=6)...)`,
 		nil, ARR{1, 2, 100, MAP{"a": 4, "b": 5, "c": 6}})
 	expectError(t, `func() {}(a=1)`, nil,
-		"Runtime Error: wrong number of kwargs: want=0, got=1")
+		"Runtime Error: unexpected kwarg \"a\"")
 	expectError(t, `func() {}(a=1,{"b":2}...)`, nil,
-		"Runtime Error: wrong number of kwargs: want=0, got=2")
+		"Runtime Error: unexpected kwarg \"a\"")
 	expectError(t, `kw := {"b":2, "c":3};out := func(){}(a=1,kw...)`, nil,
-		"Runtime Error: wrong number of kwargs: want=0, got=3")
+		"Runtime Error: unexpected kwarg \"a\"")
 }
 
 func expectRun(

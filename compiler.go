@@ -549,12 +549,18 @@ func (c *Compiler) Compile(node parser.Node) error {
 			numArgs--
 		}
 
+		kwMap := make(map[string]int, len(kw))
+		for i, name := range kw {
+			kwMap[name] = i
+		}
+
 		compiledFunction := &CompiledFunction{
 			Instructions: instructions,
 			NumLocals:    numLocals,
 			NumArgs:      numArgs,
 			VarArgs:      varArgs,
-			Kwargs:       kw,
+			KwargsNames:  kw,
+			Kwargs:       kwMap,
 			VarKwargs:    varKwargs,
 			SourceMap:    sourceMap,
 		}
@@ -579,8 +585,19 @@ func (c *Compiler) Compile(node parser.Node) error {
 			c.emit(node, parser.OpReturn, 1)
 		}
 	case *parser.CallExpr:
+		// FUNC
+		// ARGS
+		// VAR ARGS
+		// KWARGS
+		// VAR KWARGS
 		if err := c.Compile(node.Func); err != nil {
 			return err
+		}
+
+		for _, arg := range node.Args.Values {
+			if err := c.Compile(arg); err != nil {
+				return err
+			}
 		}
 
 		var (
@@ -621,13 +638,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 			}
 		}
 
-		for _, arg := range node.Args.Values {
-			if err := c.Compile(arg); err != nil {
-				return err
-			}
-		}
-
-		c.emit(node, parser.OpCall, kw, varKwargs, len(node.Args.Values)-varArgs, varArgs)
+		c.emit(node, parser.OpCall, len(node.Args.Values)-varArgs, varArgs, kw, varKwargs)
 	case *parser.ImportExpr:
 		if node.ModuleName == "" {
 			return c.errorf(node, "empty module name")

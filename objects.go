@@ -572,6 +572,13 @@ func (o *Char) Equals(x Object) bool {
 
 type VarArgMode uint8
 
+func (m VarArgMode) Pos() int {
+	if m == VarArgNamed {
+		return 1
+	}
+	return 0
+}
+
 const (
 	VarArgNone = iota
 	VarArgNamed
@@ -585,7 +592,8 @@ type CompiledFunction struct {
 	NumLocals    int // number of local variables (including function parameters)
 	NumArgs      int
 	VarArgs      VarArgMode
-	Kwargs       []string
+	KwargsNames  []string
+	Kwargs       map[string]int
 	VarKwargs    VarArgMode
 	SourceMap    map[int]parser.Pos
 	Free         []*ObjectPtr
@@ -607,6 +615,7 @@ func (o *CompiledFunction) Copy() Object {
 		NumLocals:    o.NumLocals,
 		NumArgs:      o.NumArgs,
 		VarArgs:      o.VarArgs,
+		KwargsNames:  o.KwargsNames,
 		Kwargs:       o.Kwargs,
 		VarKwargs:    o.VarKwargs,
 		Free:         append([]*ObjectPtr{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
