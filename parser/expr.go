@@ -689,3 +689,45 @@ func (e *CalleeLit) End() Pos {
 func (e *CalleeLit) String() string {
 	return "callee"
 }
+
+// CalledArgsLit represents an literal called arguments.
+type CalledArgsLit struct {
+	TokenPos Pos
+}
+
+func (e *CalledArgsLit) exprNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (e *CalledArgsLit) Pos() Pos {
+	return e.TokenPos
+}
+
+// End returns the position of first character immediately after the node.
+func (e *CalledArgsLit) End() Pos {
+	return e.TokenPos + 11 // len("called_args") == 11
+}
+
+func (e *CalledArgsLit) String() string {
+	return "called_args"
+}
+
+// CalledArgsLit represents an literal called arguments.
+type CalledKwargsLit struct {
+	TokenPos Pos
+}
+
+func (e *CalledKwargsLit) exprNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (e *CalledKwargsLit) Pos() Pos {
+	return e.TokenPos
+}
+
+// End returns the position of first character immediately after the node.
+func (e *CalledKwargsLit) End() Pos {
+	return e.TokenPos + 13 // len("called_kwargs") == 13
+}
+
+func (e *CalledKwargsLit) String() string {
+	return "called_kwargs"
+}

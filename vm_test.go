@@ -3669,6 +3669,9 @@ func TestSpread(t *testing.T) {
 }
 
 func TestKwargs(t *testing.T) {
+	expectRun(t, `out = func(...; ...) { return [called_args, called_kwargs] }(1,2;a=3,b=4)`,
+		nil, ARR{ARR{1, 2}, MAP{"a":3, "b": 4}})
+	return
 	expectRun(t, `data:={args:[1,2,3],kwargs:{a:4,b:5}};out = func(...args; ...kwargs) { return [args,kwargs] }(data.args...;data.kwargs...)`,
 		nil, ARR{ARR{1, 2, 3}, MAP{"a": 4, "b": 5}})
 	expectRun(t, `data:={key1:{args:[1,2,3],kwargs:{a:4,b:5}}};out = func(...args; ...kwargs) { return [args,kwargs] }(data.key1.args...;data.key1.kwargs...)`,

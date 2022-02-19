@@ -12,7 +12,8 @@ import (
 // frame represents a function call frame.
 type frame struct {
 	fn          *CompiledFunction
-	callee      *ImmutableMap
+	args        Array
+	kwargs      Map
 	freeVars    []*ObjectPtr
 	ip          int
 	basePointer int
@@ -126,7 +127,13 @@ func (v *VM) run() {
 			v.stack[v.sp] = UndefinedKwargValue
 			v.sp++
 		case parser.OpCallee:
-			v.stack[v.sp] = v.curFrame.callee
+			v.stack[v.sp] = v.curFrame.fn
+			v.sp++
+		case parser.OpCalledArgs:
+			v.stack[v.sp] = &v.curFrame.args
+			v.sp++
+		case parser.OpCalledKwargs:
+			v.stack[v.sp] = &v.curFrame.kwargs
 			v.sp++
 		case parser.OpBinaryOp:
 			v.ip++
@@ -628,14 +635,6 @@ func (v *VM) run() {
 			}
 
 			if callee, ok := value.(*CompiledFunction); ok {
-				calleeData := &ImmutableMap{
-					Value: map[string]Object{
-						"fn":     callee,
-						"args":   &ImmutableArray{Value: args},
-						"kwargs": &ImmutableMap{Value: kwargs},
-					},
-				}
-
 				if numArgs := len(args); numArgs > callee.NumArgs && callee.VarArgs == VarArgNone {
 					v.err = fmt.Errorf(
 						"wrong number of arguments: want=%d, got=%d",
@@ -668,10 +667,8 @@ func (v *VM) run() {
 					v.stack[start+i] = args[i]
 				}
 
-				args = args[callee.NumArgs:]
-
 				if callee.VarArgs == VarArgNamed {
-					v.stack[start+callee.NumArgs] = &Array{Value: args}
+					v.stack[start+callee.NumArgs] = &Array{Value: args[callee.NumArgs:]}
 				}
 
 				v.sp = start + callee.NumArgs + callee.VarArgs.Pos()
@@ -736,7 +733,8 @@ func (v *VM) run() {
 				v.curFrame.ip = v.ip // store current ip before call
 				v.curFrame = &(v.frames[v.framesIndex])
 				v.curFrame.fn = callee
-				v.curFrame.callee = calleeData
+				v.curFrame.args.Value = args
+				v.curFrame.kwargs.Value = kwargs
 				v.curFrame.freeVars = callee.Free
 				v.curFrame.basePointer = start
 				v.curInsts = callee.Instructions

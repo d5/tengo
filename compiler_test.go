@@ -14,6 +14,30 @@ import (
 )
 
 func TestCompiler_Compile(t *testing.T) {
+	expectCompile(t, `callee`,
+		bytecode(
+			concatInsts(
+				tengo.MakeInstruction(parser.OpCallee),
+				tengo.MakeInstruction(parser.OpPop),
+				tengo.MakeInstruction(parser.OpSuspend)),
+			objectsArray()))
+
+	expectCompile(t, `called_args`,
+		bytecode(
+			concatInsts(
+				tengo.MakeInstruction(parser.OpCalledArgs),
+				tengo.MakeInstruction(parser.OpPop),
+				tengo.MakeInstruction(parser.OpSuspend)),
+			objectsArray()))
+
+	expectCompile(t, `called_kwargs`,
+		bytecode(
+			concatInsts(
+				tengo.MakeInstruction(parser.OpCalledKwargs),
+				tengo.MakeInstruction(parser.OpPop),
+				tengo.MakeInstruction(parser.OpSuspend)),
+			objectsArray()))
+
 	expectCompile(t, `1 + 2`,
 		bytecode(
 			concatInsts(

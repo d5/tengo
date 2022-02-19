@@ -500,6 +500,14 @@ func (p *Parser) parseOperand() Expr {
 		x := &CalleeLit{TokenPos: p.pos}
 		p.next()
 		return x
+	case token.CalledArgs:
+		x := &CalledArgsLit{TokenPos: p.pos}
+		p.next()
+		return x
+	case token.CalledKwargs:
+		x := &CalledKwargsLit{TokenPos: p.pos}
+		p.next()
+		return x
 	case token.LParen:
 		lparen := p.pos
 		p.next()
@@ -810,7 +818,7 @@ func (p *Parser) parseStmt() (stmt Stmt) {
 		token.Float, token.Char, token.String, token.True, token.False,
 		token.Undefined, token.UndefinedKwarg, token.Import, token.LParen,
 		token.LBrace, token.LBrack, token.Add, token.Sub, token.Mul, token.And,
-		token.Xor, token.Not:
+		token.Xor, token.Not, token.Callee, token.CalledArgs, token.CalledKwargs:
 		s := p.parseSimpleStmt(false)
 		p.expectSemi()
 		return s

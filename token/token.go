@@ -86,6 +86,8 @@ const (
 	UndefinedKwarg
 	Import
 	Callee
+	CalledArgs
+	CalledKwargs
 	_keywordEnd
 )
 
@@ -162,6 +164,8 @@ var tokens = [...]string{
 	UndefinedKwarg: "undefined_kwarg",
 	Import:         "import",
 	Callee:         "callee",
+	CalledArgs:     "called_args",
+	CalledKwargs:   "called_kwargs",
 }
 
 func (tok Token) String() string {

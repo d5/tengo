@@ -93,6 +93,8 @@ func (s *Scanner) Scan() (
 			token.Export, token.True, token.False, token.Undefined,
 			token.UndefinedKwarg:
 			insertSemi = true
+		case token.CalledArgs, token.CalledKwargs, token.Callee:
+			insertSemi = true
 		}
 	case '0' <= ch && ch <= '9':
 		insertSemi = true

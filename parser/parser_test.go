@@ -251,6 +251,24 @@ func TestParseAssignment(t *testing.T) {
 	})
 }
 
+func TestParseCallee(t *testing.T) {
+	expectParse(t, "callee", func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				caleeLit(p(1, 1))))
+	})
+	expectParse(t, "called_args", func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				caledArgsLit(p(1, 1))))
+	})
+	expectParse(t, "called_kwargs", func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				caledKwargsLit(p(1, 1))))
+	})
+}
+
 func TestParseBoolean(t *testing.T) {
 	expectParse(t, "true", func(p pfn) []Stmt {
 		return stmts(
@@ -1880,6 +1898,18 @@ func boolLit(value bool, pos Pos) *BoolLit {
 	return &BoolLit{Value: value, ValuePos: pos}
 }
 
+func caleeLit(pos Pos) *CalleeLit {
+	return &CalleeLit{TokenPos: pos}
+}
+
+func caledArgsLit(pos Pos) *CalledArgsLit {
+	return &CalledArgsLit{TokenPos: pos}
+}
+
+func caledKwargsLit(pos Pos) *CalledKwargsLit {
+	return &CalledKwargsLit{TokenPos: pos}
+}
+
 func arrayLit(lbracket, rbracket Pos, list ...Expr) *ArrayLit {
 	return &ArrayLit{LBrack: lbracket, RBrack: rbracket, Elements: list}
 }
@@ -2084,6 +2114,15 @@ func equalExpr(t *testing.T, expected, actual Expr) {
 			actual.(*BoolLit).Value)
 		require.Equal(t, int(expected.ValuePos),
 			int(actual.(*BoolLit).ValuePos))
+	case *CalleeLit:
+		require.Equal(t, expected.TokenPos,
+			actual.(*CalleeLit).TokenPos)
+	case *CalledArgsLit:
+		require.Equal(t, expected.TokenPos,
+			actual.(*CalledArgsLit).TokenPos)
+	case *CalledKwargsLit:
+		require.Equal(t, expected.TokenPos,
+			actual.(*CalledKwargsLit).TokenPos)
 	case *CharLit:
 		require.Equal(t, expected.Value,
 			actual.(*CharLit).Value)

@@ -229,6 +229,10 @@ func (c *Compiler) Compile(node parser.Node) error {
 		c.emit(node, parser.OpNullKwarg)
 	case *parser.CalleeLit:
 		c.emit(node, parser.OpCallee)
+	case *parser.CalledArgsLit:
+		c.emit(node, parser.OpCalledArgs)
+	case *parser.CalledKwargsLit:
+		c.emit(node, parser.OpCalledKwargs)
 	case *parser.UnaryExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err

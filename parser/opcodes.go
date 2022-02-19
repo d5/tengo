@@ -21,6 +21,8 @@ const (
 	OpNull                        // Push null
 	OpNullKwarg                   // Push null_kwarg
 	OpCallee                      // Push callee
+	OpCalledArgs                  // Push called_args
+	OpCalledKwargs                // Push called_kwargs
 	OpArray                       // Array object
 	OpMap                         // Map object
 	OpError                       // Error object
