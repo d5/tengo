@@ -3625,6 +3625,46 @@ func TestSpread(t *testing.T) {
 		"Runtime Error: wrong number of arguments: want=3, got=2")
 }
 
+func TestRunCompiled(t *testing.T) {
+	s := tengo.NewScript([]byte(`fnMap := {"fun1": func(a) { return a * 2 }}`))
+	c, err := s.Run()
+	require.NoError(t, err)
+
+	cFn := c.Get("fnMap").Map()["fun1"].(*tengo.CompiledFunction)
+
+	globals := make([]tengo.Object, tengo.GlobalsSize)
+	vm := tengo.NewVM(c.Bytecode(), globals, -1)
+	require.NotNil(t, vm)
+
+	res, err := vm.RunCompiled(cFn, &tengo.Int{Value: 12})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, res, &tengo.Int{Value: 24})
+}
+
+func TestRunCompiledWithModules(t *testing.T) {
+	mods := tengo.NewModuleMap()
+	mods.AddSourceModule("mod2", []byte(`export func() { return 5 }`))
+	mods.AddSourceModule("mod1", []byte(`mod2 := import("mod2"); export func() { return mod2() * 3 }`))
+
+	s := tengo.NewScript([]byte(`mod1 := import("mod1"); fnMap := {"fun1": func(a) { return a * 2 + mod1() }}`))
+	s.SetImports(mods)
+
+	c, err := s.Run()
+	require.NoError(t, err)
+
+	cFn := c.Get("fnMap").Map()["fun1"].(*tengo.CompiledFunction)
+
+	//globals := make([]tengo.Object, tengo.GlobalsSize)
+	vm := tengo.NewVM(c.Bytecode(), c.Globals(), -1)
+	require.NotNil(t, vm)
+
+	res, err := vm.RunCompiled(cFn, &tengo.Int{Value: 12})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, &tengo.Int{Value: 39}, res)
+}
+
 func expectRun(
 	t *testing.T,
 	input string,
