@@ -23,23 +23,23 @@ func() { /*...*/ }    // function value
 Here's a list of all available value types in Tengo.
 
 |   Tengo Type    | Description | Equivalent Type in Go |
-|:---------------:| :---: | :---: |
-|       int       | signed 64-bit integer value | `int64` |
-|      float      | 64-bit floating point value | `float64` |
-|      bool       | boolean value | `bool` |
-|      char       | unicode character | `rune` |
-|     string      | unicode string | `string` |
-|      bytes      | byte array | `[]byte` |
-|      error      | [error](#error-values) value | - |
-|      time       | time value | `time.Time` |
-|      array      | value array _(mutable)_ | `[]interface{}` |
+|:---:| :---: | :---: |
+| int | signed 64-bit integer value | `int64` |
+| float | 64-bit floating point value | `float64` |
+| bool | boolean value | `bool` |
+| char | unicode character | `rune` |
+| string | unicode string | `string` |
+| bytes | byte array | `[]byte` |
+| error | [error](#error-values) value | - |
+| time | time value | `time.Time` |
+| array | value array _(mutable)_ | `[]interface{}` |
 | immutable array | [immutable](#immutable-values) array | - |
-|       map       | value map with string keys _(mutable)_ | `map[string]interface{}` |
-|  immutable map  | [immutable](#immutable-values) map | - |
-|    undefined    | [undefined](#undefined-values) value | - |
-|     default     | [default](#default-values) value | - |
-|    function     | [function](#function-values) value | - |
-| _user-defined_  | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/objects.md) | - |
+| map | value map with string keys _(mutable)_ | `map[string]interface{}` |
+| immutable map | [immutable](#immutable-values) map | - |
+| undefined | [undefined](#undefined-values) value | - |
+| default | [default](#default-values) value | - |
+| function | [function](#function-values) value | - |
+| _user-defined_ | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/objects.md) | - |
 
 ### Error Values
 
