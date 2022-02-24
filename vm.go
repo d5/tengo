@@ -564,12 +564,12 @@ func (v *VM) run() {
 			}
 		case parser.OpCall:
 			var (
-				numArgs           = int(v.curInsts[v.ip+1])
-				hasVarArgs        = int(v.curInsts[v.ip+2])
-				numKws            = int(v.curInsts[v.ip+3])
-				hasVarKw          = int(v.curInsts[v.ip+4])
-				kwargs, varKwargs map[string]Object
-				hasKws            int
+				numArgs    = int(v.curInsts[v.ip+1])
+				hasVarArgs = int(v.curInsts[v.ip+2])
+				numKws     = int(v.curInsts[v.ip+3])
+				hasVarKw   = int(v.curInsts[v.ip+4])
+				kwargs     map[string]Object
+				hasKws     int
 			)
 
 			v.ip += 4
@@ -611,7 +611,7 @@ func (v *VM) run() {
 			}
 
 			if hasVarKw == 1 {
-				if kwargs == nil {
+				if len(kwargs) == 0 {
 					switch t := v.stack[start+numArgs+hasVarArgs+hasKws].(type) {
 					case *Map:
 						kwargs = t.Value
@@ -677,6 +677,11 @@ func (v *VM) run() {
 					if !callee.VarKwargs.Valid {
 						for name := range kwargs {
 							if _, ok := callee.Kwargs[name]; !ok {
+								if len(callee.KwargsNames) == 0 {
+									v.err = fmt.Errorf(
+										"unexpected kwargs")
+									return
+								}
 								v.err = fmt.Errorf(
 									"unexpected kwarg %q", name)
 								return
@@ -684,7 +689,10 @@ func (v *VM) run() {
 						}
 					}
 
-					var kwIntersection bool
+					var (
+						kwIntersection bool
+						varKwargs      map[string]Object
+					)
 					for i, name := range callee.KwargsNames {
 						if val, ok := kwargs[name]; ok {
 							if val == DefaultValue {
