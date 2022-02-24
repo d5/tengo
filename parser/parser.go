@@ -490,8 +490,8 @@ func (p *Parser) parseOperand() Expr {
 		x := &UndefinedLit{TokenPos: p.pos}
 		p.next()
 		return x
-	case token.UndefinedKwarg:
-		x := &UndefinedKwargLit{TokenPos: p.pos}
+	case token.Default:
+		x := &DefaultLit{TokenPos: p.pos}
 		p.next()
 		return x
 	case token.Import:
@@ -816,7 +816,7 @@ func (p *Parser) parseStmt() (stmt Stmt) {
 	case // simple statements
 		token.Func, token.Error, token.Immutable, token.Ident, token.Int,
 		token.Float, token.Char, token.String, token.True, token.False,
-		token.Undefined, token.UndefinedKwarg, token.Import, token.LParen,
+		token.Undefined, token.Default, token.Import, token.LParen,
 		token.LBrace, token.LBrack, token.Add, token.Sub, token.Mul, token.And,
 		token.Xor, token.Not, token.Callee, token.CalledArgs, token.CalledKwargs:
 		s := p.parseSimpleStmt(false)

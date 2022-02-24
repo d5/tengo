@@ -91,7 +91,7 @@ func (s *Scanner) Scan() (
 		switch tok {
 		case token.Ident, token.Break, token.Continue, token.Return,
 			token.Export, token.True, token.False, token.Undefined,
-			token.UndefinedKwarg:
+			token.Default:
 			insertSemi = true
 		case token.CalledArgs, token.CalledKwargs, token.Callee:
 			insertSemi = true

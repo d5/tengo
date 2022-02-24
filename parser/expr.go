@@ -648,25 +648,25 @@ func (e *UndefinedLit) String() string {
 	return "undefined"
 }
 
-// UndefinedKwargLit represents an undefined kwarg literal.
-type UndefinedKwargLit struct {
+// DefaultLit represents an undefined kwarg literal.
+type DefaultLit struct {
 	TokenPos Pos
 }
 
-func (e *UndefinedKwargLit) exprNode() {}
+func (e *DefaultLit) exprNode() {}
 
 // Pos returns the position of first character belonging to the node.
-func (e *UndefinedKwargLit) Pos() Pos {
+func (e *DefaultLit) Pos() Pos {
 	return e.TokenPos
 }
 
 // End returns the position of first character immediately after the node.
-func (e *UndefinedKwargLit) End() Pos {
-	return e.TokenPos + 15 // len(kwarg_undefined) == 15
+func (e *DefaultLit) End() Pos {
+	return e.TokenPos + 7 // len("default") == 7
 }
 
-func (e *UndefinedKwargLit) String() string {
-	return "undefined_kwarg"
+func (e *DefaultLit) String() string {
+	return "default"
 }
 
 // CalleeLit represents an literal callee function/closure flag.
@@ -704,11 +704,11 @@ func (e *CalledArgsLit) Pos() Pos {
 
 // End returns the position of first character immediately after the node.
 func (e *CalledArgsLit) End() Pos {
-	return e.TokenPos + 11 // len("called_args") == 11
+	return e.TokenPos + 4 // len("argv") == 4
 }
 
 func (e *CalledArgsLit) String() string {
-	return "called_args"
+	return "argv"
 }
 
 // CalledArgsLit represents an literal called arguments.
@@ -725,9 +725,9 @@ func (e *CalledKwargsLit) Pos() Pos {
 
 // End returns the position of first character immediately after the node.
 func (e *CalledKwargsLit) End() Pos {
-	return e.TokenPos + 13 // len("called_kwargs") == 13
+	return e.TokenPos + 6 // len("kwargv") == 6
 }
 
 func (e *CalledKwargsLit) String() string {
-	return "called_kwargs"
+	return "kwargv"
 }

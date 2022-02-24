@@ -22,8 +22,18 @@ sum := func(init, seq) {
     return init
 }
 
+trunc := func(text; limit=3) {
+    return len(text) > limit ? text[:limit]+"..." : text
+}
+
 fmt.println(sum(0, [1, 2, 3]))   // "6"
 fmt.println(sum("", [1, 2, 3]))  // "123"
+fmt.println([
+  trunc("abcd"),
+  trunc("abc"),
+  trunc("ab"),
+  trunc("abcd", limit=2)
+]) // ["abc...", "abc", "ab", "ab..."]
 ```
 
 > Test this Tengo code in the

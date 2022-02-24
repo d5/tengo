@@ -125,10 +125,12 @@ func (n *ValuedIdentList) String() string {
 
 // FuncParams represents a function paramsw.
 type FuncParams struct {
-	LParen Pos
-	Args   *IdentList
-	Kwargs *ValuedIdentList
-	RParen Pos
+	LParen   Pos
+	Args     *IdentList
+	ArgVar   *Ident
+	Kwargs   *ValuedIdentList
+	KwargVar *Ident
+	RParen   Pos
 }
 
 // Pos returns the position of first character belonging to the node.
@@ -139,8 +141,14 @@ func (n *FuncParams) Pos() Pos {
 	if n.Args != nil && len(n.Args.List) > 0 {
 		return n.Args.List[0].Pos()
 	}
+	if n.ArgVar != nil {
+		return n.ArgVar.Pos()
+	}
 	if n.Kwargs != nil && len(n.Kwargs.Names) > 0 {
 		return n.Kwargs.Names[0].Pos()
+	}
+	if n.KwargVar != nil {
+		return n.KwargVar.Pos()
 	}
 	return NoPos
 }
@@ -164,11 +172,25 @@ func (n *FuncParams) String() string {
 	if n.Args != nil && len(n.Args.List) > 0 {
 		v := n.Args.String()
 		buf.WriteString(v[1 : len(v)-1])
+		if n.ArgVar != nil {
+			buf.WriteString(", ")
+		}
+	}
+	if n.ArgVar != nil {
+		buf.WriteString("...")
+		buf.WriteString(n.ArgVar.Name)
 	}
 	if n.Kwargs != nil && len(n.Kwargs.Names) > 0 {
 		buf.WriteString("; ")
 		v := n.Kwargs.String()
 		buf.WriteString(v[1 : len(v)-1])
+		if n.KwargVar != nil {
+			buf.WriteString(", ")
+		}
+	}
+	if n.KwargVar != nil {
+		buf.WriteString("...")
+		buf.WriteString(n.KwargVar.Name)
 	}
 	buf.WriteString(")")
 	return buf.String()

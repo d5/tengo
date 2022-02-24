@@ -124,16 +124,16 @@ func (v *VM) run() {
 			v.stack[v.sp] = UndefinedValue
 			v.sp++
 		case parser.OpNullKwarg:
-			v.stack[v.sp] = UndefinedKwargValue
+			v.stack[v.sp] = DefaultValue
 			v.sp++
 		case parser.OpCallee:
 			v.stack[v.sp] = v.curFrame.fn
 			v.sp++
 		case parser.OpCalledArgs:
-			v.stack[v.sp] = &v.curFrame.args
+			v.stack[v.sp] = &ImmutableArray{Value: v.curFrame.args.Value}
 			v.sp++
 		case parser.OpCalledKwargs:
-			v.stack[v.sp] = &v.curFrame.kwargs
+			v.stack[v.sp] = &ImmutableMap{Value: v.curFrame.kwargs.Value}
 			v.sp++
 		case parser.OpBinaryOp:
 			v.ip++
@@ -568,7 +568,6 @@ func (v *VM) run() {
 				hasVarArgs        = int(v.curInsts[v.ip+2])
 				numKws            = int(v.curInsts[v.ip+3])
 				hasVarKw          = int(v.curInsts[v.ip+4])
-				args              []Object
 				kwargs, varKwargs map[string]Object
 				hasKws            int
 			)
@@ -581,14 +580,13 @@ func (v *VM) run() {
 			start := v.sp - numArgs - hasVarArgs - hasKws - hasVarKw
 			value := v.stack[start-1]
 
-			if !value.CanCall() {
-				v.err = fmt.Errorf("not callable: %s", value.TypeName())
+			if !v.stack[start-1].CanCall() {
+				v.err = fmt.Errorf("not callable: %s", v.stack[start-1].TypeName())
 				return
 			}
 
-			for i := 0; i < numArgs; i++ {
-				args = append(args, v.stack[start+i])
-			}
+			args := make([]Object, numArgs)
+			copy(args, v.stack[start:start+numArgs])
 
 			if hasVarArgs == 1 {
 				switch arr := v.stack[start+numArgs].(type) {
@@ -596,7 +594,7 @@ func (v *VM) run() {
 					newArgs := make([]Object, numArgs+len(arr.Value))
 					copy(newArgs, args)
 					copy(newArgs[numArgs:], arr.Value)
-					args = newArgs
+					args = append(args, arr.Value...)
 				case *ImmutableArray:
 					newArgs := make([]Object, numArgs+len(arr.Value))
 					copy(newArgs, args)
@@ -634,14 +632,14 @@ func (v *VM) run() {
 				}
 			}
 
-			if callee, ok := value.(*CompiledFunction); ok {
-				if numArgs := len(args); numArgs > callee.NumArgs && callee.VarArgs == VarArgNone {
+			if callee, ok := v.stack[start-1].(*CompiledFunction); ok {
+				if numArgs := len(args); numArgs > callee.NumArgs && !callee.VarArgs.Valid {
 					v.err = fmt.Errorf(
 						"wrong number of arguments: want=%d, got=%d",
 						callee.NumArgs, numArgs)
 					return
 				} else if numArgs < callee.NumArgs {
-					if callee.VarArgs == VarArgNone {
+					if !callee.VarArgs.Valid {
 						v.err = fmt.Errorf(
 							"wrong number of arguments: want=%d, got=%d",
 							callee.NumArgs, numArgs)
@@ -651,38 +649,49 @@ func (v *VM) run() {
 							callee.NumArgs, numArgs)
 					}
 					return
-				}
+				} else if numArgs > 0 {
+					copy(v.stack[start:], args[:callee.NumArgs])
 
-				if callee.VarKwargs == VarArgNone {
-					for name := range kwargs {
-						if _, ok := callee.Kwargs[name]; !ok {
-							v.err = fmt.Errorf(
-								"unexpected kwarg %q", name)
-							return
-						}
+					if callee.VarArgs.Name != "" {
+						v.stack[start+callee.NumArgs] = &Array{Value: args[callee.NumArgs:]}
 					}
+				} else if callee.VarArgs.Name != "" {
+					v.stack[start+callee.NumArgs] = &Array{}
 				}
 
-				for i := 0; i < callee.NumArgs; i++ {
-					v.stack[start+i] = args[i]
+				v.sp = start + callee.NumArgs
+				if callee.VarArgs.Name != "" {
+					v.sp++
 				}
 
-				if callee.VarArgs == VarArgNamed {
-					v.stack[start+callee.NumArgs] = &Array{Value: args[callee.NumArgs:]}
-				}
-
-				v.sp = start + callee.NumArgs + callee.VarArgs.Pos()
-
-				var kwIntersection bool
-				if kwargs == nil {
-					for range callee.KwargsNames {
-						v.stack[v.sp] = UndefinedKwargValue
+				if len(kwargs) == 0 {
+					for i := range callee.KwargsNames {
+						v.stack[v.sp] = callee.KwargsDefaults[i]
+						v.sp++
+					}
+					if callee.VarKwargs.Name != "" {
+						v.stack[v.sp] = &Map{Value: kwargs}
 						v.sp++
 					}
 				} else {
-					for _, name := range callee.KwargsNames {
+					if !callee.VarKwargs.Valid {
+						for name := range kwargs {
+							if _, ok := callee.Kwargs[name]; !ok {
+								v.err = fmt.Errorf(
+									"unexpected kwarg %q", name)
+								return
+							}
+						}
+					}
+
+					var kwIntersection bool
+					for i, name := range callee.KwargsNames {
 						if val, ok := kwargs[name]; ok {
-							v.stack[v.sp] = val
+							if val == DefaultValue {
+								v.stack[v.sp] = callee.KwargsDefaults[i]
+							} else {
+								v.stack[v.sp] = val
+							}
 
 							if !kwIntersection {
 								kwIntersection = true
@@ -693,19 +702,19 @@ func (v *VM) run() {
 							}
 							delete(varKwargs, name)
 						} else {
-							v.stack[v.sp] = UndefinedKwargValue
+							v.stack[v.sp] = DefaultValue
 						}
 						v.sp++
 					}
-				}
 
-				if callee.VarKwargs == VarArgNamed {
-					if varKwargs == nil {
-						v.stack[v.sp] = &Map{Value: kwargs}
-					} else {
-						v.stack[v.sp] = &Map{Value: varKwargs}
+					if callee.VarKwargs.Name != "" {
+						if varKwargs == nil {
+							v.stack[v.sp] = &Map{Value: kwargs}
+						} else {
+							v.stack[v.sp] = &Map{Value: varKwargs}
+						}
+						v.sp++
 					}
-					v.sp++
 				}
 
 				// test if it's tail-call
@@ -716,8 +725,7 @@ func (v *VM) run() {
 							parser.OpReturn == v.curInsts[v.ip+2]) {
 						max := numArgs + hasVarArgs + numKws + hasKws
 						for p := 0; p < max; p++ {
-							cur, new := start+p, v.curFrame.basePointer+p
-							v.stack[new] = v.stack[cur]
+							v.stack[v.curFrame.basePointer+p] = v.stack[start+p]
 						}
 						v.sp = start - 1 // 2 => 1 is cur func
 						v.ip = -1        // reset IP to beginning of the frame
@@ -731,7 +739,7 @@ func (v *VM) run() {
 
 				// update call frame
 				v.curFrame.ip = v.ip // store current ip before call
-				v.curFrame = &(v.frames[v.framesIndex])
+				v.curFrame = &v.frames[v.framesIndex]
 				v.curFrame.fn = callee
 				v.curFrame.args.Value = args
 				v.curFrame.kwargs.Value = kwargs
@@ -743,14 +751,11 @@ func (v *VM) run() {
 				v.framesIndex++
 				v.sp = v.curFrame.basePointer + callee.NumLocals
 			} else {
-				ctx := &CallContext{
-					VM:   v,
-					Args: args,
-				}
-				if kwargs != nil {
-					ctx.Kwargs = kwargs
-				}
-				ret, e := value.Call(ctx)
+				ret, e := v.stack[start-1].Call(&CallContext{
+					VM:     v,
+					Args:   args,
+					Kwargs: kwargs,
+				})
 				v.sp = start - 1
 
 				// runtime error

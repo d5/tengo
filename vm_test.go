@@ -945,7 +945,7 @@ b(a, c)
 	expectRun(t, `out = func(x;a=2,b=3) { return x+a+b }(1)`, nil, 6)
 	expectRun(t, `out = func(x;a=2) { return x+a }(1;a=3)`, nil, 4)
 	expectRun(t, `out = func(x;a=2) { return x+a }(1;a=3,{"a":4}...)`, nil, 5)
-	expectRun(t, `out = func(x;a=2) { return x+a }(1;a=3,{"a":undefined_kwarg}...)`, nil, 3)
+	expectRun(t, `out = func(x;a=2) { return x+a }(1;a=3,{"a":default}...)`, nil, 3)
 	expectRun(t, `out = func(...z;a="A", b="B", ...c) { return [z,a,b,c] }(5,[6,7,8,9]...;{"a":"na", "b":"nb", "c":"C", "d":"D"}...)`,
 		nil, ARR{ARR{5, 6, 7, 8, 9}, "na", "nb", MAP{"c": "C", "d": "D"}})
 	expectRun(t, `out = func(...z;a=false, b="B", ...c) { return [a,b,c] }(5,[6,7,8,9]...;a=true,{"a":"na", "b":"nb", "c":"C", "d":"D"}...)`,
@@ -956,8 +956,18 @@ b(a, c)
 		nil, ARR{5, 6, ARR{7, 8, 9}, "na", "nb", MAP{"c": "C", "d": "D"}})
 	expectRun(t, `out = func(x, y, ...z;a="A", b="B", ...c) { return [x,y,z,a,b,c] }(5,[6,7,8,9]...;{}...)`,
 		nil, ARR{5, 6, ARR{7, 8, 9}, "A", "B", MAP{}})
-	expectRun(t, `out = func(x, y, ...z;a="A", b="B", ...c) { return [callee.args, callee.kwargs] }(5,[6,7,8,9]...;{"a":"na", "b":"nb", "c":"C", "d":"D"}...)`,
+	expectRun(t, `out = func(x, y, ...z;a="A", b="B", ...c) { return [argv, kwargv] }(5,[6,7,8,9]...;{"a":"na", "b":"nb", "c":"C", "d":"D"}...)`,
 		nil, ARR{IARR{5, 6, 7, 8, 9}, IMAP{"a": "na", "b": "nb", "c": "C", "d": "D"}})
+	expectRun(t, `truncate := func(text; limit=3) {
+    return len(text) > limit ? text[:limit]+"..." : text
+}
+out = [
+	truncate("abcd"),
+	truncate("abc"),
+	truncate("ab"),
+	truncate("abcd",limit=2)
+]
+`, nil, ARR{"abc...", "abc", "ab", "ab..."})
 }
 
 func TestChar(t *testing.T) {
@@ -3483,13 +3493,13 @@ func TestString(t *testing.T) {
 func TestTailCall(t *testing.T) {
 	expectRun(t, `
 	mul := func(n , x) {
-		return x == 0 ? 0 : n + callee.fn(n, x-1)
+		return x == 0 ? 0 : n + callee(n, x-1)
 	}
 	out = mul(7, 5)`, nil, 35)
 
 	expectRun(t, `
 	out = func(n , x) {
-		return x == 0 ? 0 : n + callee.fn(n, x-1)
+		return x == 0 ? 0 : n + callee(n, x-1)
 	}(7, 5)`, nil, 35)
 
 	expectRun(t, `
@@ -3507,7 +3517,7 @@ func TestTailCall(t *testing.T) {
 		if n == 1 {
 			return a
 		}
-		return callee.fn(n-1, n*a)
+		return callee(n-1, n*a)
 	}
 
 	out = fac(3, 1)`, nil, 6)
@@ -3593,6 +3603,77 @@ iter := func(n, max) {
 iter(0, 9999)
 out = c 
 `, nil, 9999)
+
+	expectRun(t, `
+range_ := func(start, ...args;step=default) {
+	end := undefined
+	loop := []
+	
+	if len(args) == 1 {
+		end = args[0]
+	}
+	
+	if end == undefined {
+		value := 0
+		if step == default {
+			step = 1
+		}
+		func(left) {
+			if left > 0 {
+				loop = append(loop, value)
+				value += step
+				callee(left-1)
+			}
+		}(start)
+	} else {
+		if step == default {
+			step = start < end ? 1 : -1
+		}
+
+		if step > 0 {
+			if start > end {
+				return loop
+			}
+			func(value) {
+				if value <= end {
+					loop = append(loop, value)
+					callee(value+step)
+				}
+			}(start)
+		} else if step < 0 {
+			if start < end {
+				return loop
+			}
+			func(value) {
+				if value >= end {
+					loop = append(loop, value)
+					callee(value+step)
+				}
+			}(start)
+		}
+	}
+
+	return loop
+}
+
+out = [
+	range_(0),
+	range_(3),
+	range_(3, 5),
+	range_(3, 5;step=2),
+	range_(5,0;step=-2),
+	range_(5,-5),
+	range_(5,-5;step=-3)
+]
+`, nil, ARR{
+		ARR{},
+		ARR{0, 1, 2},
+		ARR{3, 4, 5},
+		ARR{3, 5},
+		ARR{5, 3, 1},
+		ARR{5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5},
+		ARR{5, 2, -1, -4},
+	})
 }
 
 // tail call with free vars
@@ -3669,9 +3750,6 @@ func TestSpread(t *testing.T) {
 }
 
 func TestKwargs(t *testing.T) {
-	expectRun(t, `out = func(...; ...) { return [called_args, called_kwargs] }(1,2;a=3,b=4)`,
-		nil, ARR{ARR{1, 2}, MAP{"a":3, "b": 4}})
-	return
 	expectRun(t, `data:={args:[1,2,3],kwargs:{a:4,b:5}};out = func(...args; ...kwargs) { return [args,kwargs] }(data.args...;data.kwargs...)`,
 		nil, ARR{ARR{1, 2, 3}, MAP{"a": 4, "b": 5}})
 	expectRun(t, `data:={key1:{args:[1,2,3],kwargs:{a:4,b:5}}};out = func(...args; ...kwargs) { return [args,kwargs] }(data.key1.args...;data.key1.kwargs...)`,
@@ -3680,15 +3758,15 @@ func TestKwargs(t *testing.T) {
 		nil, ARR{1, 2, 100})
 	expectRun(t, `x := 5;out = func(a,b,...;...) { z := 100; return [a,b,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
 		nil, ARR{1, 2, 100})
-	expectRun(t, `x := 5;out = func(a,b,...;...) { z := 100; return [a,b,callee.args, callee.kwargs,z] }(1,[2,3]...;a=4,b=5,{"c":6}...)`,
+	expectRun(t, `x := 5;out = func(a,b,...;...) { z := 100; return [a,b,argv, kwargv,z] }(1,[2,3]...;a=4,b=5,{"c":6}...)`,
 		nil, ARR{1, 2, IARR{1, 2, 3}, IMAP{"a": 4, "b": 5, "c": 6}, 100})
-	expectRun(t, `x := 5;out = func(a,b,...;...) { z := 100; return [a,b,callee.args, callee.kwargs,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
+	expectRun(t, `x := 5;out = func(a,b,...;...) { z := 100; return [a,b,argv, kwargv,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
 		nil, ARR{1, 2, IARR{1, 2, 3}, IMAP{"a": 4, "b": 5, "c": 6}, 100})
-	expectRun(t, `x := 5;out = func(...args;...kwargs) { z := 100; return [callee.args, callee.kwargs,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
+	expectRun(t, `x := 5;out = func(...args;...kwargs) { z := 100; return [argv, kwargv,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
 		nil, ARR{IARR{1, 2, 3}, IMAP{"a": 4, "b": 5, "c": 6}, 100})
-	expectRun(t, `x := 5;out = func(...args;...kwargs) { z := 100; return [callee.args, callee.kwargs,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
+	expectRun(t, `x := 5;out = func(...args;...kwargs) { z := 100; return [argv, kwargv,z] }(1,[2,3]...,a=4,b=5,{"c":6}...)`,
 		nil, ARR{IARR{1, 2, 3}, IMAP{"a": 4, "b": 5, "c": 6}, 100})
-	expectRun(t, `x := 5;out = func(;...kwargs) { z := 100; return [callee.args, callee.kwargs,z] }(a=4,b=5,{"c":6}...)`,
+	expectRun(t, `x := 5;out = func(;...kwargs) { z := 100; return [argv, kwargv,z] }(a=4,b=5,{"c":6}...)`,
 		nil, ARR{IARR{}, IMAP{"a": 4, "b": 5, "c": 6}, 100})
 	expectRun(t, `x := 5;out = func(;...kwargs) { z := 100; return [kwargs,z] }(a=4,b=5,{"c":6}...)`,
 		nil, ARR{MAP{"a": 4, "b": 5, "c": 6}, 100})

@@ -257,12 +257,12 @@ func TestParseCallee(t *testing.T) {
 			exprStmt(
 				caleeLit(p(1, 1))))
 	})
-	expectParse(t, "called_args", func(p pfn) []Stmt {
+	expectParse(t, "argv", func(p pfn) []Stmt {
 		return stmts(
 			exprStmt(
 				caledArgsLit(p(1, 1))))
 	})
-	expectParse(t, "called_kwargs", func(p pfn) []Stmt {
+	expectParse(t, "kwargv", func(p pfn) []Stmt {
 		return stmts(
 			exprStmt(
 				caledKwargsLit(p(1, 1))))

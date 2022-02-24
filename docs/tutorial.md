@@ -22,23 +22,24 @@ func() { /*...*/ }    // function value
 
 Here's a list of all available value types in Tengo.
 
-| Tengo Type | Description | Equivalent Type in Go |
-| :---: | :---: | :---: |
-| int | signed 64-bit integer value | `int64` |
-| float | 64-bit floating point value | `float64` |
-| bool | boolean value | `bool` |
-| char | unicode character | `rune` |
-| string | unicode string | `string` |
-| bytes | byte array | `[]byte` |
-| error | [error](#error-values) value | - |
-| time | time value | `time.Time` |
-| array | value array _(mutable)_ | `[]interface{}` |
+|   Tengo Type    | Description | Equivalent Type in Go |
+|:---------------:| :---: | :---: |
+|       int       | signed 64-bit integer value | `int64` |
+|      float      | 64-bit floating point value | `float64` |
+|      bool       | boolean value | `bool` |
+|      char       | unicode character | `rune` |
+|     string      | unicode string | `string` |
+|      bytes      | byte array | `[]byte` |
+|      error      | [error](#error-values) value | - |
+|      time       | time value | `time.Time` |
+|      array      | value array _(mutable)_ | `[]interface{}` |
 | immutable array | [immutable](#immutable-values) array | - |
-| map | value map with string keys _(mutable)_ | `map[string]interface{}` |
-| immutable map | [immutable](#immutable-values) map | - |
-| undefined | [undefined](#undefined-values) value | - |
-| function | [function](#function-values) value | - |
-| _user-defined_ | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/objects.md) | - |
+|       map       | value map with string keys _(mutable)_ | `map[string]interface{}` |
+|  immutable map  | [immutable](#immutable-values) map | - |
+|    undefined    | [undefined](#undefined-values) value | - |
+|     default     | [default](#default-values) value | - |
+|    function     | [function](#function-values) value | - |
+| _user-defined_  | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/objects.md) | - |
 
 ### Error Values
 
@@ -117,6 +118,19 @@ c := {a: "foo"}["b"]        // c == undefined
 d := int("foo")             // d == undefined
 ```
 
+### Default Values
+
+In Tengo, an "default" value can be used to represent an default keyword argument value:
+
+
+```golang
+a := func(;b=2) { return b }()                 // a == 2
+b := func(;b=2) { return b }(b=5)              // b == 5
+c := func(;b=default) { return b }()           // c == default
+d := func(;b=2) { return b }(b=default)        // d == 2
+e := func(;b=default) { return b }(b=default)  // e == default
+```
+
 ### Array Values
 
 In Tengo, array is an ordered list of values of any types. Elements of an array
@@ -170,19 +184,17 @@ Basic examples:
     - `func( arg1, argN, ...other_args ; kw1=1, kwN="n", ...other_kwargs )`
     - `func( ...args ;...kwargs )`
     - `func( ...;... )` - anonymous args and kwargs variadic
-  - Callee:
-    - `callee` - is a keyword to refer a current function scope data.
-      These value is a map with these keys:
-      - `args`:  `callee.args` is `immutable array` with all called arguments;
-      - `kwargs`:  `callee.kwargs` is `immutable map` with all called keyword arguments;
-      - `fn`: is a pointer of this func value.
+  - Callee context: this context has three special variables:
+    - `args`:  `argv` is `array` with all called arguments;
+    - `kwargs`:  `kwargv` is `map` with all called keyword arguments;
+    - `callee`: is a pointer of this function value.
     - Examples:
       - Only `args`:
-        - `func( arg1, ...other_args ) { return [callee.args, callee.kwargs, callee.fn] }`
+        - `func( arg1, ...other_args ) { return [argv, kwargv, callee] }`
         - `func( ... ; )`
       - `args`, `kwargs`: 
-        - `func( arg1, ...other_args ; kw1=1, ...other_kwargs ) { return [callee.args, callee.kwargs, callee.fn] }`
-        - `func( ... ; ... ) { return [callee.args, callee.kwargs, callee.fn] }`
+        - `func( arg1, ...other_args ; kw1=1, ...other_kwargs ) { return [argv, kwargv, callee] }`
+        - `func( ... ; ... ) { return [argv, kwargv, callee] }`
 
 Examples:
 
@@ -199,7 +211,7 @@ nine := add5(4)    // == 9
 
 // recursive multiplication implementation
 mul := func(n , x) {
-   return x == 0 ? 0 : n + callee.fn(n, x-1)
+   return x == 0 ? 0 : n + callee(n, x-1)
 }
 mul_value = mul(7, 5) // == 35
 ```
@@ -233,7 +245,7 @@ then := func() { return 10 }() // == 10
 eleven := (func() { return 11 })() // == 11
 // direct call recursive closure
 mul7to5 := func(n , x) {
-  return x == 0 ? 0 : n + callee.fn(n, x-1)
+  return x == 0 ? 0 : n + callee(n, x-1)
 }(7, 5) // == 35
 ```
 
@@ -282,18 +294,20 @@ f2(1, 2, 3)         // valid; a = 1, b = [2, 3]
 f2([1, 2, 3]...)    // valid; a = 1, b = [2, 3]
 ```
 
-#### Functions/closures supports keyword arguments
+#### Keyword arguments
 
-Tengo also supports keywords of functions/closures:
+Tengo also supports keywords of functions/closures.
 
 ```golang
 f := func(;a=1, b=2) {
   return a + b
 }
 f()   // == 3
+f(a=default)   // == 3
 f(a=2)   // == 4
 f(a=2,b=3)   // == 5
 f(b=6,{a:6}...)   // == 12
+f(b=6,{a:default}...)   // (a = 1, b = 6 ) -> a+b == 7
 f(b=6,map(a=6)...)   // == 12
 f(b=6,{a:6,c:3}...)   // Runtime Error: wrong number of kwargs: want=2, got=3
 ```
@@ -344,10 +358,10 @@ f = func(...; ...) {}
 `callee` - is a keyword to refer a current function scope data.
 
 ```golang
-f := func() { return [callee.args, callee.kwargs, callee.fn] } 
+f := func() { return [argv, kwargv, callee] } 
 f() // == {[], {}, <compiled-function>}
 
-f = func(...;...) { return [callee.args, callee.kwargs, callee.fn] }
+f = func(...;...) { return [argv, kwargv, callee] }
 f(1) // == {[1], {}, <compiled-function>}
 f(1, 2, x = 3, y = 4) // == [[1,2], {x:3,y:4}, <compiled-function>]
 f(1, 2; x = 3, y = 4) // == [[1,2], {x:3,y:4}, <compiled-function>]
@@ -360,7 +374,7 @@ f(0, my_args...; z=5, my_kwargs...) // == [[0,1,2], {x:3,y:4,z:5}]
 f(append(my_args, 200)...; map(;t="TVAL", my_kwargs...)...) // == [[1,2,200], {t:"TVAL",x:3,y:4}]
 
 f = func(a, ...args; z="Z_DEFAULT", ...kwargs) { 
-	return [a, z, callee.args,callee.kwargs]
+	return [a, z, argv,kwargv]
 }
 f("a val", my_args...; my_kwargs...) // == ["a val", "Z_DEFAULT", ["a val", 1, 2], {x: 3, y: 4}]
 f("a val", my_args...; z="NEW_Z", my_kwargs...)// == ["a val", "NEW_Z", ["a val", 1, 2], {z: "NEW_Z", x: 3, y: 4}]

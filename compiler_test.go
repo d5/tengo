@@ -22,7 +22,7 @@ func TestCompiler_Compile(t *testing.T) {
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray()))
 
-	expectCompile(t, `called_args`,
+	expectCompile(t, `argv`,
 		bytecode(
 			concatInsts(
 				tengo.MakeInstruction(parser.OpCalledArgs),
@@ -30,7 +30,7 @@ func TestCompiler_Compile(t *testing.T) {
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray()))
 
-	expectCompile(t, `called_kwargs`,
+	expectCompile(t, `kwargv`,
 		bytecode(
 			concatInsts(
 				tengo.MakeInstruction(parser.OpCalledKwargs),

@@ -22,8 +22,8 @@ var (
 	// UndefinedValue represents an undefined value.
 	UndefinedValue Object = &Undefined{}
 
-	// UndefinedKwargValue represents an undefined kwarg value.
-	UndefinedKwargValue Object = &UndefinedKwarg{}
+	// DefaultValue represents an undefined kwarg value.
+	DefaultValue Object = &Default{}
 )
 
 // Object represents an object in the VM.
@@ -585,18 +585,25 @@ const (
 	VarArgAnonymous
 )
 
+// Variadic represents a variadic expression.
+type Variadic struct {
+	Valid bool
+	Name  string
+}
+
 // CompiledFunction represents a compiled function.
 type CompiledFunction struct {
 	ObjectImpl
-	Instructions []byte
-	NumLocals    int // number of local variables (including function parameters)
-	NumArgs      int
-	VarArgs      VarArgMode
-	KwargsNames  []string
-	Kwargs       map[string]int
-	VarKwargs    VarArgMode
-	SourceMap    map[int]parser.Pos
-	Free         []*ObjectPtr
+	Instructions   []byte
+	NumLocals      int // number of local variables (including function parameters)
+	NumArgs        int
+	VarArgs        Variadic
+	Kwargs         map[string]int
+	KwargsDefaults []Object
+	KwargsNames    []string
+	VarKwargs      Variadic
+	SourceMap      map[int]parser.Pos
+	Free           []*ObjectPtr
 }
 
 // TypeName returns the name of the type.
@@ -611,14 +618,15 @@ func (o *CompiledFunction) String() string {
 // Copy returns a copy of the type.
 func (o *CompiledFunction) Copy() Object {
 	return &CompiledFunction{
-		Instructions: append([]byte{}, o.Instructions...),
-		NumLocals:    o.NumLocals,
-		NumArgs:      o.NumArgs,
-		VarArgs:      o.VarArgs,
-		KwargsNames:  o.KwargsNames,
-		Kwargs:       o.Kwargs,
-		VarKwargs:    o.VarKwargs,
-		Free:         append([]*ObjectPtr{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
+		Instructions:   append([]byte{}, o.Instructions...),
+		NumLocals:      o.NumLocals,
+		NumArgs:        o.NumArgs,
+		VarArgs:        o.VarArgs,
+		Kwargs:         o.Kwargs,
+		KwargsNames:    o.KwargsNames,
+		KwargsDefaults: o.KwargsDefaults,
+		VarKwargs:      o.VarKwargs,
+		Free:           append([]*ObjectPtr{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
 	}
 }
 
@@ -1598,63 +1606,63 @@ func (o *Undefined) Value() Object {
 	return o
 }
 
-// UndefinedKwarg represents an undefined value of keyword argument.
-type UndefinedKwarg struct {
+// Default represents an undefined value of keyword argument.
+type Default struct {
 	ObjectImpl
 }
 
 // TypeName returns the name of the type.
-func (o *UndefinedKwarg) TypeName() string {
-	return "undefined_kwarg"
+func (o *Default) TypeName() string {
+	return "default"
 }
 
-func (o *UndefinedKwarg) String() string {
-	return "<undefined_kwarg>"
+func (o *Default) String() string {
+	return "<default>"
 }
 
 // Copy returns a copy of the type.
-func (o *UndefinedKwarg) Copy() Object {
+func (o *Default) Copy() Object {
 	return o
 }
 
 // IsFalsy returns true if the value of the type is falsy.
-func (o *UndefinedKwarg) IsFalsy() bool {
+func (o *Default) IsFalsy() bool {
 	return true
 }
 
 // Equals returns true if the value of the type is equal to the value of
 // another object.
-func (o *UndefinedKwarg) Equals(x Object) bool {
+func (o *Default) Equals(x Object) bool {
 	return o == x
 }
 
 // IndexGet returns an element at a given index.
-func (o *UndefinedKwarg) IndexGet(_ Object) (Object, error) {
+func (o *Default) IndexGet(_ Object) (Object, error) {
 	return UndefinedValue, nil
 }
 
 // Iterate creates a map iterator.
-func (o *UndefinedKwarg) Iterate() Iterator {
+func (o *Default) Iterate() Iterator {
 	return o
 }
 
 // CanIterate returns whether the Object can be Iterated.
-func (o *UndefinedKwarg) CanIterate() bool {
+func (o *Default) CanIterate() bool {
 	return true
 }
 
 // Next returns true if there are more elements to iterate.
-func (o *UndefinedKwarg) Next() bool {
+func (o *Default) Next() bool {
 	return false
 }
 
 // Key returns the key or index value of the current element.
-func (o *UndefinedKwarg) Key() Object {
+func (o *Default) Key() Object {
 	return o
 }
 
 // Value returns the value of the current element.
-func (o *UndefinedKwarg) Value() Object {
+func (o *Default) Value() Object {
 	return o
 }
 
