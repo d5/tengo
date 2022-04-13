@@ -72,6 +72,7 @@ times := import("times")
   2006" would be interpreted if it were the value; it serves as an example of
   the input format. The same interpretation will then be made to the input
   string.
+- `parseInLocation(format string, s string, loc string)`: parseInLocation is like parse but parse interprets a time as UTC; parseInLocation interprets the time as in the given location.
 - `unix(sec int, nsec int) => time`: returns the local Time corresponding to
   the given Unix time, sec seconds and nsec nanoseconds since January 1,
   1970 UTC.
@@ -88,6 +89,7 @@ times := import("times")
 - `time_month(t time) => int`: returns the month of the year specified by t.
 - `time_day(t time) => int`: returns the day of the month specified by t.
 - `time_weekday(t time) => int`: returns the day of the week specified by t.
+- `time_yearday(t time) => int`: returns the day of the year specified by t, in the range [1,365] for non-leap years, and [1,366] in leap years.
 - `time_hour(t time) => int`: returns the hour within the day specified by t,
   in the range [0, 23].
 - `time_minute(t time) => int`: returns the minute offset within the hour
@@ -114,6 +116,7 @@ times := import("times")
   t.
 - `time_string(t time) => string`: returns the time formatted using the format
   string "2006-01-02 15:04:05.999999999 -0700 MST".
+- `to_location(t time, loc string)`: returns a copy of t representing the same time instant, but with the copy's location information set to loc for display purposes.
 - `is_zero(t time) => bool`: reports whether t represents the zero time
   instant, January 1, year 1, 00:00:00 UTC.
 - `to_local(t time) => time`: returns t with the location set to local time.
