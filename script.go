@@ -200,6 +200,7 @@ type Compiled struct {
 	globals       []Object
 	maxAllocs     int64
 	lock          sync.RWMutex
+	vm            *VM
 }
 
 // Run executes the compiled script in the virtual machine.
@@ -207,8 +208,10 @@ func (c *Compiled) Run() error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	v := NewVM(c.bytecode, c.globals, c.maxAllocs)
-	return v.Run()
+	if c.vm == nil {
+		c.vm = NewVM(c.bytecode, c.globals, c.maxAllocs)
+	}
+	return c.vm.Run()
 }
 
 // RunContext is like Run but includes a context.
@@ -216,7 +219,9 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	v := NewVM(c.bytecode, c.globals, c.maxAllocs)
+	if c.vm == nil {
+		c.vm = NewVM(c.bytecode, c.globals, c.maxAllocs)
+	}
 	ch := make(chan error, 1)
 	go func() {
 		defer func() {
@@ -231,12 +236,13 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 				}
 			}
 		}()
-		ch <- v.Run()
+		ch <- c.vm.Run()
 	}()
 
 	select {
 	case <-ctx.Done():
-		v.Abort()
+		c.vm.Abort()
+		c.vm = nil
 		<-ch
 		err = ctx.Err()
 	case err = <-ch:
