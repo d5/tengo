@@ -1,7 +1,7 @@
 # Module - "hex"
 
 ```golang
-fmt := import("hex")
+hex := import("hex")
 ```
 
 ## Functions
