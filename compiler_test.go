@@ -1159,6 +1159,30 @@ func() {
 				tengo.MakeInstruction(parser.OpReturn, 1),
 				tengo.MakeInstruction(parser.OpConstant, 1),
 				tengo.MakeInstruction(parser.OpReturn, 1)))))
+
+	expectCompile(t, `
+func() {
+	if true {
+		return
+	}
+
+    return
+
+    return 123
+}`, bytecode(
+		concatInsts(
+			tengo.MakeInstruction(parser.OpConstant, 1),
+			tengo.MakeInstruction(parser.OpPop),
+			tengo.MakeInstruction(parser.OpSuspend)),
+		objectsArray(
+			intObject(123),
+			compiledFunction(0, 0,
+				tengo.MakeInstruction(parser.OpTrue),
+				tengo.MakeInstruction(parser.OpJumpFalsy, 6),
+				tengo.MakeInstruction(parser.OpReturn, 0),
+				tengo.MakeInstruction(parser.OpReturn, 0),
+				tengo.MakeInstruction(parser.OpConstant, 0),
+				tengo.MakeInstruction(parser.OpReturn, 1)))))
 }
 
 func TestCompilerScopes(t *testing.T) {
