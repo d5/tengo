@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -41,8 +42,8 @@ func TestParseArray(t *testing.T) {
 
 	expectParse(t, `
 [
-	1, 
-	2, 
+	1,
+	2,
 	3
 ]`, func(p pfn) []Stmt {
 		return stmts(
@@ -54,8 +55,8 @@ func TestParseArray(t *testing.T) {
 	})
 	expectParse(t, `
 [
-	1, 
-	2, 
+	1,
+	2,
 	3
 
 ]`, func(p pfn) []Stmt {
@@ -113,14 +114,14 @@ func TestParseArray(t *testing.T) {
 	expectParseError(t, `[1, 2, 3,]`)
 	expectParseError(t, `
 [
-	1, 
-	2, 
+	1,
+	2,
 	3,
 ]`)
 	expectParseError(t, `
 [
-	1, 
-	2, 
+	1,
+	2,
 	3,
 
 ]`)
@@ -497,8 +498,8 @@ c`, func(p pfn) []Stmt {
 		"x := (a ? (b ? c : d) : e)")
 
 	// ? : should be at the end of each line if it's multi-line
-	expectParseError(t, `a 
-? b 
+	expectParseError(t, `a
+? b
 : c`)
 	expectParseError(t, `a ? (b : e)`)
 	expectParseError(t, `(a ? b) : e`)
@@ -892,13 +893,13 @@ func TestParseIf(t *testing.T) {
 		})
 
 	expectParse(t, `
-if a == 5 { 
-	b = 3 
+if a == 5 {
+	b = 3
 	c = 1
-} else if d == 3 { 
+} else if d == 3 {
 	e = 8
 	f = 3
-} else { 
+} else {
 	g = 2
 	h = 4
 }`, func(p pfn) []Stmt {
@@ -1502,6 +1503,153 @@ func TestParseString(t *testing.T) {
 				exprs(stringLit("raw string", p(1, 5))),
 				token.Assign,
 				p(1, 3)))
+	})
+}
+
+func TestParseInt(t *testing.T) {
+	testCases := []string{
+		// All valid digits
+		"1234567890",
+		"0b10",
+		"0o12345670",
+		"0x123456789abcdef0",
+		"0x123456789ABCDEF0",
+
+		// Alternative base prefixes
+		"010",
+		"0B10",
+		"0O10",
+		"0X10",
+
+		// Invalid digits
+		"0b2",
+		"08",
+		"0o8",
+		"1a",
+		"0xg",
+
+		// Range errors
+		"9223372036854775807",
+		"9223372036854775808", // invalid: range error
+
+		// Examples from specification (https://go.dev/ref/spec#Integer_literals)
+		"42",
+		"4_2",
+		"0600",
+		"0_600",
+		"0o600",
+		"0O600", // second character is capital letter 'O'
+		"0xBadFace",
+		"0xBad_Face",
+		"0x_67_7a_2f_cc_40_c6",
+		"170141183460469231731687303715884105727",
+		"170_141183_460469_231731_687303_715884_105727",
+		"42_",        // invalid: _ must separate successive digits
+		"4__2",       // invalid: only one _ at a time
+		"0_xBadFace", // invalid: _ must separate successive digits
+	}
+
+	for _, num := range testCases {
+		t.Run(num, func(t *testing.T) {
+			expected, err := strconv.ParseInt(num, 0, 64)
+			if err == nil {
+				expectParse(t, num, func(p pfn) []Stmt {
+					return stmts(exprStmt(intLit(expected, p(1, 1))))
+				})
+			} else {
+				expectParseError(t, num)
+			}
+		})
+	}
+}
+
+func TestParseFloat(t *testing.T) {
+	testCases := []string{
+		// Different placements of decimal point
+		".0",
+		"0.",
+		"0.0",
+		"00.0",
+		"00.00",
+		"0.0.0",
+		"0..0",
+
+		// Ignoring leading zeros
+		"010.0",
+		"00010.0",
+		"08.0",
+		"0a.0", // ivalid: hex character
+
+		// Exponents
+		"1e1",
+		"1E1",
+		"1e1.1",
+		"1e+1",
+		"1e-1",
+		"1e+-1",
+		"0x1p1",
+		"0x10p1",
+
+		// Examples from language specifcation (https://go.dev/ref/spec#Floating-point_literals)
+		"0.",
+		"72.40",
+		"072.40", // == 72.40
+		"2.71828",
+		"1.e+0",
+		"6.67428e-11",
+		"1E6",
+		".25",
+		".12345E+5",
+		"1_5.",        // == 15.0
+		"0.15e+0_2",   // == 15.0
+		"0x1p-2",      // == 0.25
+		"0x2.p10",     // == 2048.0
+		"0x1.Fp+0",    // == 1.9375
+		"0X.8p-0",     // == 0.5
+		"0X_1FFFP-16", // == 0.1249847412109375
+		"0x.p1",       // invalid: mantissa has no digits
+		"1p-2",        // invalid: p exponent requires hexadecimal mantissa
+		"0x1.5e-2",    // invalid: hexadecimal mantissa requires p exponent
+		"1_.5",        // invalid: _ must separate successive digits
+		"1._5",        // invalid: _ must separate successive digits
+		"1.5_e1",      // invalid: _ must separate successive digits
+		"1.5e_1",      // invalid: _ must separate successive digits
+		"1.5e1_",      // invalid: _ must separate successive digits
+	}
+
+	for _, num := range testCases {
+		t.Run(num, func(t *testing.T) {
+			expected, err := strconv.ParseFloat(num, 64)
+			if err == nil {
+				expectParse(t, num, func(p pfn) []Stmt {
+					return stmts(exprStmt(floatLit(expected, p(1, 1))))
+				})
+			} else {
+				expectParseError(t, num)
+			}
+		})
+	}
+}
+
+func TestParseNumberExpressions(t *testing.T) {
+	expectParse(t, `0x15e+2`, func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				binaryExpr(
+					intLit(0x15e, p(1, 1)),
+					intLit(2, p(1, 7)),
+					token.Add,
+					p(1, 6))))
+	})
+
+	expectParse(t, `0-_42`, func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				binaryExpr(
+					intLit(0, p(1, 1)),
+					ident("_42", p(1, 3)),
+					token.Sub,
+					p(1, 2))))
 	})
 }
 
