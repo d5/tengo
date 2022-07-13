@@ -12,7 +12,7 @@ import (
 // Script can simplify compilation and execution of embedded scripts.
 type Script struct {
 	variables        map[string]*Variable
-	modules          *ModuleMap
+	modules          ModuleGetter
 	input            []byte
 	maxAllocs        int64
 	maxConstObjects  int
@@ -54,7 +54,7 @@ func (s *Script) Remove(name string) bool {
 }
 
 // SetImports sets import modules.
-func (s *Script) SetImports(modules *ModuleMap) {
+func (s *Script) SetImports(modules ModuleGetter) {
 	s.modules = modules
 }
 

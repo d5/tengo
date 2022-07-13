@@ -1,0 +1,23 @@
+#!/usr/bin/env tengo
+// This is a test of custom extension for issue #286 and PR #350.
+// Which allows the tengo library to use custom extension names for the
+// source files.
+//
+// This test should pass if the interpreter's tengo.Compiler.SetImportExt()
+// was set as `c.SetImportExt(".tengo", ".mshk")`.
+
+os := import("os")
+uno := import("uno") // it will search uno.tengo and uno.mshk
+fmt := import("fmt")
+text := import("text")
+
+expected := ["test", "uno", "dos", "tres", "quatro", "cinco"]
+expected = text.join(expected, " ")
+if v := uno.fn("test"); v != expected {
+    fmt.printf("relative import test error:\n\texpected: %v\n\tgot     : %v\n",
+                expected, v)
+    os.exit(1)
+}
+
+args := text.join(os.args(), " ")
+fmt.println("ok\t", args)

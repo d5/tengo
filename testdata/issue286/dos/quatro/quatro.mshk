@@ -1,0 +1,7 @@
+export {
+    fn: func(a, b, c, d) {
+        cinco := import("../cinco/cinco")
+
+        return cinco.fn(a, b, c, d, "quatro")
+    }
+}

@@ -1,7 +1,7 @@
 # Module - "base64"
 
 ```golang
-fmt := import("base64")
+base64 := import("base64")
 ```
 
 ## Functions
