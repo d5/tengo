@@ -79,8 +79,8 @@ type Object interface {
 	CanCall() bool
 }
 
-// PtrObjectImpl represents a default Object Implementation. To defined a new
-// value type, one can embed PtrObjectImpl in their type declarations to avoid
+// ObjectImpl represents a default Object Implementation. To defined a new
+// value type, one can embed ObjectImpl in their type declarations to avoid
 // implementing all non-significant methods. TypeName() and String() methods
 // still need to be implemented.
 type ObjectImpl struct {
@@ -148,7 +148,7 @@ func (o ObjectImpl) CanCall() bool {
 	return false
 }
 
-// PtrObjectImpl represents a default Object Implementation. To defined a new
+// PtrObjectImpl represents a default  Object Implementation. To defined a new
 // value type, one can embed PtrObjectImpl in their type declarations to avoid
 // implementing all non-significant methods. TypeName() and String() methods
 // still need to be implemented.
