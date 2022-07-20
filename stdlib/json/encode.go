@@ -206,9 +206,9 @@ func Encode(o tengo.Object) ([]byte, error) {
 		base64.StdEncoding.Encode(dst, o.Value)
 		b = append(b, dst...)
 		b = append(b, '"')
-	case *tengo.Char:
+	case tengo.Char:
 		b = strconv.AppendInt(b, int64(o.Value), 10)
-	case *tengo.Float:
+	case tengo.Float:
 		var y []byte
 
 		f := o.Value
@@ -236,7 +236,7 @@ func Encode(o tengo.Object) ([]byte, error) {
 		}
 
 		b = append(b, y...)
-	case *tengo.Int:
+	case tengo.Int:
 		b = strconv.AppendInt(b, o.Value, 10)
 	case *tengo.String:
 		// string encoding bug is fixed with newly introduced function

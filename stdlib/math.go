@@ -7,17 +7,17 @@ import (
 )
 
 var mathModule = map[string]tengo.Object{
-	"e":       &tengo.Float{Value: math.E},
-	"pi":      &tengo.Float{Value: math.Pi},
-	"phi":     &tengo.Float{Value: math.Phi},
-	"sqrt2":   &tengo.Float{Value: math.Sqrt2},
-	"sqrtE":   &tengo.Float{Value: math.SqrtE},
-	"sqrtPi":  &tengo.Float{Value: math.SqrtPi},
-	"sqrtPhi": &tengo.Float{Value: math.SqrtPhi},
-	"ln2":     &tengo.Float{Value: math.Ln2},
-	"log2E":   &tengo.Float{Value: math.Log2E},
-	"ln10":    &tengo.Float{Value: math.Ln10},
-	"log10E":  &tengo.Float{Value: math.Log10E},
+	"e":       tengo.Float{Value: math.E},
+	"pi":      tengo.Float{Value: math.Pi},
+	"phi":     tengo.Float{Value: math.Phi},
+	"sqrt2":   tengo.Float{Value: math.Sqrt2},
+	"sqrtE":   tengo.Float{Value: math.SqrtE},
+	"sqrtPi":  tengo.Float{Value: math.SqrtPi},
+	"sqrtPhi": tengo.Float{Value: math.SqrtPhi},
+	"ln2":     tengo.Float{Value: math.Ln2},
+	"log2E":   tengo.Float{Value: math.Log2E},
+	"ln10":    tengo.Float{Value: math.Ln10},
+	"log10E":  tengo.Float{Value: math.Log10E},
 	"abs": &tengo.UserFunction{
 		Name:  "abs",
 		Value: FuncAFRF(math.Abs),

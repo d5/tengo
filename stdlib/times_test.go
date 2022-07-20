@@ -16,10 +16,10 @@ func TestTimes(t *testing.T) {
 
 	require.True(t, module(t, "times").
 		call("since", time.Now().Add(-time.Hour)).
-		o.(*tengo.Int).Value > 3600000000000)
+		o.(tengo.Int).Value > 3600000000000)
 	require.True(t, module(t, "times").
 		call("until", time.Now().Add(time.Hour)).
-		o.(*tengo.Int).Value < 3600000000000)
+		o.(tengo.Int).Value < 3600000000000)
 
 	module(t, "times").call("parse_duration", "1ns").expect(1)
 	module(t, "times").call("parse_duration", "1ms").expect(1000000)

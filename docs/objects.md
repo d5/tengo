@@ -227,14 +227,14 @@ for more details on these runtime types.
 
 Users can easily extend and add their own types by implementing the same
 [Object](https://godoc.org/github.com/d5/tengo#Object) interface and the
-default `ObjectImpl` implementation. Tengo runtime will treat them in the
+default `PtrObjectImpl` or `ObjectImpl` implementation. Tengo runtime will treat them in the
 same way as its runtime types with no performance overhead.
 
 Here's an example user type implementation, `StringArray`:
 
 ```golang
 type StringArray struct {
-    tengo.ObjectImpl
+    tengo.PtrObjectImpl
     Value []string
 }
 
@@ -309,7 +309,7 @@ It can also implement `IndexGet` and `IndexSet`:
 
 ```golang
 func (o *StringArray) IndexGet(index tengo.Object) (tengo.Object, error) {
-    intIdx, ok := index.(*tengo.Int)
+    intIdx, ok := index.(tengo.Int)
     if ok {
         if intIdx.Value >= 0 && intIdx.Value < int64(len(o.Value)) {
             return &tengo.String{Value: o.Value[intIdx.Value]}, nil
@@ -322,7 +322,7 @@ func (o *StringArray) IndexGet(index tengo.Object) (tengo.Object, error) {
     if ok {
         for vidx, str := range o.Value {
             if strIdx.Value == str {
-                return &tengo.Int{Value: int64(vidx)}, nil
+                return tengo.Int{Value: int64(vidx)}, nil
             }
         }
 
@@ -338,7 +338,7 @@ func (o *StringArray) IndexSet(index, value tengo.Object) error {
         return tengo.ErrInvalidIndexValueType
     }
 
-    intIdx, ok := index.(*tengo.Int)
+    intIdx, ok := index.(tengo.Int)
     if ok {
         if intIdx.Value >= 0 && intIdx.Value < int64(len(o.Value)) {
             o.Value[intIdx.Value] = strVal
@@ -375,7 +375,7 @@ func (o *StringArray) Call(args ...tengo.Object) (ret tengo.Object, err error) {
 
     for i, v := range o.Value {
         if v == s1 {
-            return &tengo.Int{Value: int64(i)}, nil
+            return tengo.Int{Value: int64(i)}, nil
         }
     }
 
@@ -409,7 +409,7 @@ func (o *StringArray) Iterate() tengo.Iterator {
 }
 
 type StringArrayIterator struct {
-    tengo.ObjectImpl
+    tengo.PtrObjectImpl
     strArr *StringArray
     idx    int
 }
@@ -424,17 +424,16 @@ func (i *StringArrayIterator) Next() bool {
 }
 
 func (i *StringArrayIterator) Key() tengo.Object {
-    return &tengo.Int{Value: int64(i.idx - 1)}
+    return tengo.Int{Value: int64(i.idx - 1)}
 }
 
 func (i *StringArrayIterator) Value() tengo.Object {
     return &tengo.String{Value: i.strArr.Value[i.idx-1]}
 }
 ```
+### PtrObjectImpl and ObjectImpl
 
-### ObjectImpl
-
-ObjectImpl represents a default Object Implementation. To defined a new value
-type, one can embed ObjectImpl in their type declarations to avoid implementing
+PtrObjectImpl and ObjectImpl represent a default Object Implementation. To defined a new value
+type, one can embed PtrObjectImpl or ObjectImpl in their type declarations to avoid implementing
 all non-significant methods. TypeName() and String() methods still need to be
 implemented.

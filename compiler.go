@@ -204,10 +204,10 @@ func (c *Compiler) Compile(node parser.Node) error {
 		}
 	case *parser.IntLit:
 		c.emit(node, parser.OpConstant,
-			c.addConstant(&Int{Value: node.Value}))
+			c.addConstant(Int{Value: node.Value}))
 	case *parser.FloatLit:
 		c.emit(node, parser.OpConstant,
-			c.addConstant(&Float{Value: node.Value}))
+			c.addConstant(Float{Value: node.Value}))
 	case *parser.BoolLit:
 		if node.Value {
 			c.emit(node, parser.OpTrue)
@@ -222,7 +222,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 			c.addConstant(&String{Value: node.Value}))
 	case *parser.CharLit:
 		c.emit(node, parser.OpConstant,
-			c.addConstant(&Char{Value: node.Value}))
+			c.addConstant(Char{Value: node.Value}))
 	case *parser.UndefinedLit:
 		c.emit(node, parser.OpNull)
 	case *parser.UnaryExpr:

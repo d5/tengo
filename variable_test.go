@@ -33,7 +33,7 @@ func TestVariable(t *testing.T) {
 			CharValue:   rune(1),
 			BoolValue:   true,
 			StringValue: "1",
-			Object:      &tengo.Int{Value: 1},
+			Object:      tengo.Int{Value: 1},
 		},
 		{
 			Name:        "b",

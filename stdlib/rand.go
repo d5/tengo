@@ -54,7 +54,7 @@ var randModule = map[string]tengo.Object{
 				ret = wrapError(err)
 				return
 			}
-			return &tengo.Int{Value: int64(res)}, nil
+			return tengo.Int{Value: int64(res)}, nil
 		},
 	},
 	"rand": &tengo.UserFunction{
@@ -130,7 +130,7 @@ func randRand(r *rand.Rand) *tengo.ImmutableMap {
 						ret = wrapError(err)
 						return
 					}
-					return &tengo.Int{Value: int64(res)}, nil
+					return tengo.Int{Value: int64(res)}, nil
 				},
 			},
 		},

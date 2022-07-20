@@ -287,8 +287,8 @@ func textREFind(args ...tengo.Object) (ret tengo.Object, err error) {
 			arr.Value = append(arr.Value,
 				&tengo.ImmutableMap{Value: map[string]tengo.Object{
 					"text":  &tengo.String{Value: s2[m[i]:m[i+1]]},
-					"begin": &tengo.Int{Value: int64(m[i])},
-					"end":   &tengo.Int{Value: int64(m[i+1])},
+					"begin": tengo.Int{Value: int64(m[i])},
+					"end":   tengo.Int{Value: int64(m[i+1])},
 				}})
 		}
 
@@ -319,8 +319,8 @@ func textREFind(args ...tengo.Object) (ret tengo.Object, err error) {
 			subMatch.Value = append(subMatch.Value,
 				&tengo.ImmutableMap{Value: map[string]tengo.Object{
 					"text":  &tengo.String{Value: s2[m[i]:m[i+1]]},
-					"begin": &tengo.Int{Value: int64(m[i])},
-					"end":   &tengo.Int{Value: int64(m[i+1])},
+					"begin": tengo.Int{Value: int64(m[i])},
+					"end":   tengo.Int{Value: int64(m[i+1])},
 				}})
 		}
 
@@ -831,7 +831,7 @@ func textFormatFloat(args ...tengo.Object) (ret tengo.Object, err error) {
 		return
 	}
 
-	f1, ok := args[0].(*tengo.Float)
+	f1, ok := args[0].(tengo.Float)
 	if !ok {
 		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
@@ -882,7 +882,7 @@ func textFormatInt(args ...tengo.Object) (ret tengo.Object, err error) {
 		return
 	}
 
-	i1, ok := args[0].(*tengo.Int)
+	i1, ok := args[0].(tengo.Int)
 	if !ok {
 		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",
@@ -970,7 +970,7 @@ func textParseFloat(args ...tengo.Object) (ret tengo.Object, err error) {
 		return
 	}
 
-	ret = &tengo.Float{Value: parsed}
+	ret = tengo.Float{Value: parsed}
 
 	return
 }
@@ -1017,7 +1017,7 @@ func textParseInt(args ...tengo.Object) (ret tengo.Object, err error) {
 		return
 	}
 
-	ret = &tengo.Int{Value: parsed}
+	ret = tengo.Int{Value: parsed}
 
 	return
 }

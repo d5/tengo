@@ -16,7 +16,7 @@ type Iterator interface {
 
 // ArrayIterator is an iterator for an array.
 type ArrayIterator struct {
-	ObjectImpl
+	PtrObjectImpl
 	v []Object
 	i int
 	l int
@@ -55,7 +55,7 @@ func (i *ArrayIterator) Next() bool {
 
 // Key returns the key or index value of the current element.
 func (i *ArrayIterator) Key() Object {
-	return &Int{Value: int64(i.i - 1)}
+	return Int{Value: int64(i.i - 1)}
 }
 
 // Value returns the value of the current element.
@@ -65,7 +65,7 @@ func (i *ArrayIterator) Value() Object {
 
 // BytesIterator represents an iterator for a string.
 type BytesIterator struct {
-	ObjectImpl
+	PtrObjectImpl
 	v []byte
 	i int
 	l int
@@ -99,17 +99,17 @@ func (i *BytesIterator) Next() bool {
 
 // Key returns the key or index value of the current element.
 func (i *BytesIterator) Key() Object {
-	return &Int{Value: int64(i.i - 1)}
+	return Int{Value: int64(i.i - 1)}
 }
 
 // Value returns the value of the current element.
 func (i *BytesIterator) Value() Object {
-	return &Int{Value: int64(i.v[i.i-1])}
+	return Int{Value: int64(i.v[i.i-1])}
 }
 
 // MapIterator represents an iterator for the map.
 type MapIterator struct {
-	ObjectImpl
+	PtrObjectImpl
 	v map[string]Object
 	k []string
 	i int
@@ -161,7 +161,7 @@ func (i *MapIterator) Value() Object {
 
 // StringIterator represents an iterator for a string.
 type StringIterator struct {
-	ObjectImpl
+	PtrObjectImpl
 	v []rune
 	i int
 	l int
@@ -200,10 +200,10 @@ func (i *StringIterator) Next() bool {
 
 // Key returns the key or index value of the current element.
 func (i *StringIterator) Key() Object {
-	return &Int{Value: int64(i.i - 1)}
+	return Int{Value: int64(i.i - 1)}
 }
 
 // Value returns the value of the current element.
 func (i *StringIterator) Value() Object {
-	return &Char{Value: i.v[i.i-1]}
+	return Char{Value: i.v[i.i-1]}
 }

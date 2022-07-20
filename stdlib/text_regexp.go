@@ -78,10 +78,10 @@ func makeTextRegexp(re *regexp.Regexp) *tengo.ImmutableMap {
 										"text": &tengo.String{
 											Value: s1[m[i]:m[i+1]],
 										},
-										"begin": &tengo.Int{
+										"begin": tengo.Int{
 											Value: int64(m[i]),
 										},
-										"end": &tengo.Int{
+										"end": tengo.Int{
 											Value: int64(m[i+1]),
 										},
 									}})
@@ -117,10 +117,10 @@ func makeTextRegexp(re *regexp.Regexp) *tengo.ImmutableMap {
 										"text": &tengo.String{
 											Value: s1[m[i]:m[i+1]],
 										},
-										"begin": &tengo.Int{
+										"begin": tengo.Int{
 											Value: int64(m[i]),
 										},
-										"end": &tengo.Int{
+										"end": tengo.Int{
 											Value: int64(m[i+1]),
 										},
 									}})

@@ -39,7 +39,7 @@ func NewGoProxy(ctx context.Context) *GoProxy {
 
 // GoProxy is a builtin tengo module to register tengo functions and run them.
 type GoProxy struct {
-	tengo.ObjectImpl
+	tengo.PtrObjectImpl
 	ctx       context.Context
 	moduleMap map[string]tengo.Object
 	callbacks map[string]tengo.Object
@@ -145,7 +145,7 @@ func (mod *GoProxy) args(args ...tengo.Object) (tengo.Object, error) {
 					}
 					return tengo.UndefinedValue, nil
 				}},
-			"num_params": &tengo.Int{Value: int64(compiledFunc.NumParameters)},
+			"num_params": tengo.Int{Value: int64(compiledFunc.NumParameters)},
 			"callable":   compiledFunc,
 			"params":     &tengo.Array{Value: params},
 		},
@@ -243,8 +243,8 @@ func main() {
 			fmt.Println("Calling tengo sum function")
 			i1, i2 := rand.Int63n(100), rand.Int63n(100)
 			callChan <- &CallArgs{Func: "sum",
-				Params: []tengo.Object{&tengo.Int{Value: i1},
-					&tengo.Int{Value: i2}},
+				Params: []tengo.Object{tengo.Int{Value: i1},
+					tengo.Int{Value: i2}},
 				Result: result,
 			}
 			v := <-result
@@ -253,8 +253,8 @@ func main() {
 			fmt.Println("Calling tengo multiply function")
 			i1, i2 = rand.Int63n(20), rand.Int63n(20)
 			callChan <- &CallArgs{Func: "multiply",
-				Params: []tengo.Object{&tengo.Int{Value: i1},
-					&tengo.Int{Value: i2}},
+				Params: []tengo.Object{tengo.Int{Value: i1},
+					tengo.Int{Value: i2}},
 				Result: result,
 			}
 			v = <-result

@@ -1458,8 +1458,8 @@ func objectsArray(o ...tengo.Object) []tengo.Object {
 	return o
 }
 
-func intObject(v int64) *tengo.Int {
-	return &tengo.Int{Value: v}
+func intObject(v int64) tengo.Int {
+	return tengo.Int{Value: v}
 }
 
 func stringObject(v string) *tengo.String {

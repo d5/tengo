@@ -175,8 +175,8 @@ func (v *VM) run() {
 			v.sp--
 
 			switch x := operand.(type) {
-			case *Int:
-				var res Object = &Int{Value: ^x.Value}
+			case Int:
+				var res Object = Int{Value: ^x.Value}
 				v.allocs--
 				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
@@ -194,8 +194,8 @@ func (v *VM) run() {
 			v.sp--
 
 			switch x := operand.(type) {
-			case *Int:
-				var res Object = &Int{Value: -x.Value}
+			case Int:
+				var res Object = Int{Value: -x.Value}
 				v.allocs--
 				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
@@ -203,8 +203,8 @@ func (v *VM) run() {
 				}
 				v.stack[v.sp] = res
 				v.sp++
-			case *Float:
-				var res Object = &Float{Value: -x.Value}
+			case Float:
+				var res Object = Float{Value: -x.Value}
 				v.allocs--
 				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
@@ -275,7 +275,7 @@ func (v *VM) run() {
 			v.ip += 2
 			numElements := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
-			var elements []Object
+			elements := make([]Object, 0, numElements)
 			for i := v.sp - numElements; i < v.sp; i++ {
 				elements = append(elements, v.stack[i])
 			}
@@ -376,7 +376,7 @@ func (v *VM) run() {
 
 			var lowIdx int64
 			if low != UndefinedValue {
-				if low, ok := low.(*Int); ok {
+				if low, ok := low.(Int); ok {
 					lowIdx = low.Value
 				} else {
 					v.err = fmt.Errorf("invalid slice index type: %s",
@@ -391,7 +391,7 @@ func (v *VM) run() {
 				var highIdx int64
 				if high == UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := high.(*Int); ok {
+				} else if high, ok := high.(Int); ok {
 					highIdx = high.Value
 				} else {
 					v.err = fmt.Errorf("invalid slice index type: %s",
@@ -428,7 +428,7 @@ func (v *VM) run() {
 				var highIdx int64
 				if high == UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := high.(*Int); ok {
+				} else if high, ok := high.(Int); ok {
 					highIdx = high.Value
 				} else {
 					v.err = fmt.Errorf("invalid slice index type: %s",
@@ -465,7 +465,7 @@ func (v *VM) run() {
 				var highIdx int64
 				if high == UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := high.(*Int); ok {
+				} else if high, ok := high.(Int); ok {
 					highIdx = high.Value
 				} else {
 					v.err = fmt.Errorf("invalid slice index type: %s",
@@ -502,7 +502,7 @@ func (v *VM) run() {
 				var highIdx int64
 				if high == UndefinedValue {
 					highIdx = numElements
-				} else if high, ok := high.(*Int); ok {
+				} else if high, ok := high.(Int); ok {
 					highIdx = high.Value
 				} else {
 					v.err = fmt.Errorf("invalid slice index type: %s",
@@ -628,8 +628,7 @@ func (v *VM) run() {
 				v.framesIndex++
 				v.sp = v.sp - numArgs + callee.NumLocals
 			} else {
-				var args []Object
-				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
+				args := v.stack[v.sp-numArgs : v.sp]
 				ret, e := value.Call(args...)
 				v.sp -= numArgs + 1
 
