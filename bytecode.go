@@ -4,7 +4,6 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io"
-	"reflect"
 
 	"github.com/d5/tengo/v2/parser"
 )
@@ -56,7 +55,7 @@ func (b *Bytecode) FormatConstants() (output []string) {
 			}
 		default:
 			output = append(output, fmt.Sprintf("[% 3d] %s (%s|%p)",
-				cidx, cn, reflect.TypeOf(cn).Elem().Name(), &cn))
+				cidx, cn, cn.TypeName(), &cn))
 		}
 	}
 	return
@@ -126,7 +125,7 @@ func (b *Bytecode) RemoveDuplicates() {
 				indexMap[curIdx] = newIdx
 				deduped = append(deduped, c)
 			}
-		case *Int:
+		case Int:
 			if newIdx, ok := ints[c.Value]; ok {
 				indexMap[curIdx] = newIdx
 			} else {
@@ -144,7 +143,7 @@ func (b *Bytecode) RemoveDuplicates() {
 				indexMap[curIdx] = newIdx
 				deduped = append(deduped, c)
 			}
-		case *Float:
+		case Float:
 			if newIdx, ok := floats[c.Value]; ok {
 				indexMap[curIdx] = newIdx
 			} else {
@@ -153,7 +152,7 @@ func (b *Bytecode) RemoveDuplicates() {
 				indexMap[curIdx] = newIdx
 				deduped = append(deduped, c)
 			}
-		case *Char:
+		case Char:
 			if newIdx, ok := chars[c.Value]; ok {
 				indexMap[curIdx] = newIdx
 			} else {
@@ -188,7 +187,7 @@ func fixDecodedObject(
 	modules *ModuleMap,
 ) (Object, error) {
 	switch o := o.(type) {
-	case *Bool:
+	case Bool:
 		if o.IsFalsy() {
 			return FalseValue, nil
 		}
@@ -281,15 +280,15 @@ func init() {
 	gob.Register(&parser.SourceFileSet{})
 	gob.Register(&parser.SourceFile{})
 	gob.Register(&Array{})
-	gob.Register(&Bool{})
+	gob.Register(Bool{})
 	gob.Register(&Bytes{})
-	gob.Register(&Char{})
+	gob.Register(Char{})
 	gob.Register(&CompiledFunction{})
 	gob.Register(&Error{})
-	gob.Register(&Float{})
+	gob.Register(Float{})
 	gob.Register(&ImmutableArray{})
 	gob.Register(&ImmutableMap{})
-	gob.Register(&Int{})
+	gob.Register(Int{})
 	gob.Register(&Map{})
 	gob.Register(&String{})
 	gob.Register(&Time{})

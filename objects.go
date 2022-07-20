@@ -14,10 +14,10 @@ import (
 
 var (
 	// TrueValue represents a true value.
-	TrueValue Object = &Bool{value: true}
+	TrueValue Object = Bool{value: true}
 
 	// FalseValue represents a false value.
-	FalseValue Object = &Bool{value: false}
+	FalseValue Object = Bool{value: false}
 
 	// UndefinedValue represents an undefined value.
 	UndefinedValue Object = &Undefined{}
@@ -87,70 +87,139 @@ type ObjectImpl struct {
 }
 
 // TypeName returns the name of the type.
-func (o *ObjectImpl) TypeName() string {
+func (o ObjectImpl) TypeName() string {
 	panic(ErrNotImplemented)
 }
 
-func (o *ObjectImpl) String() string {
+func (o ObjectImpl) String() string {
 	panic(ErrNotImplemented)
 }
 
 // BinaryOp returns another object that is the result of a given binary
 // operator and a right-hand side object.
-func (o *ObjectImpl) BinaryOp(_ token.Token, _ Object) (Object, error) {
+func (o ObjectImpl) BinaryOp(_ token.Token, _ Object) (Object, error) {
 	return nil, ErrInvalidOperator
 }
 
 // Copy returns a copy of the type.
-func (o *ObjectImpl) Copy() Object {
+func (o ObjectImpl) Copy() Object {
 	return nil
 }
 
 // IsFalsy returns true if the value of the type is falsy.
-func (o *ObjectImpl) IsFalsy() bool {
+func (o ObjectImpl) IsFalsy() bool {
 	return false
 }
 
 // Equals returns true if the value of the type is equal to the value of
 // another object.
-func (o *ObjectImpl) Equals(x Object) bool {
+func (o ObjectImpl) Equals(x Object) bool {
 	return o == x
 }
 
 // IndexGet returns an element at a given index.
-func (o *ObjectImpl) IndexGet(_ Object) (res Object, err error) {
+func (o ObjectImpl) IndexGet(_ Object) (res Object, err error) {
 	return nil, ErrNotIndexable
 }
 
 // IndexSet sets an element at a given index.
-func (o *ObjectImpl) IndexSet(_, _ Object) (err error) {
+func (o ObjectImpl) IndexSet(_, _ Object) (err error) {
 	return ErrNotIndexAssignable
 }
 
 // Iterate returns an iterator.
-func (o *ObjectImpl) Iterate() Iterator {
+func (o ObjectImpl) Iterate() Iterator {
 	return nil
 }
 
 // CanIterate returns whether the Object can be Iterated.
-func (o *ObjectImpl) CanIterate() bool {
+func (o ObjectImpl) CanIterate() bool {
 	return false
 }
 
 // Call takes an arbitrary number of arguments and returns a return value
 // and/or an error.
-func (o *ObjectImpl) Call(_ ...Object) (ret Object, err error) {
+func (o ObjectImpl) Call(_ ...Object) (ret Object, err error) {
 	return nil, nil
 }
 
 // CanCall returns whether the Object can be Called.
-func (o *ObjectImpl) CanCall() bool {
+func (o ObjectImpl) CanCall() bool {
+	return false
+}
+
+// PtrObjectImpl represents a default  Object Implementation. To defined a new
+// value type, one can embed PtrObjectImpl in their type declarations to avoid
+// implementing all non-significant methods. TypeName() and String() methods
+// still need to be implemented.
+type PtrObjectImpl struct {
+}
+
+// TypeName returns the name of the type.
+func (o *PtrObjectImpl) TypeName() string {
+	panic(ErrNotImplemented)
+}
+
+func (o *PtrObjectImpl) String() string {
+	panic(ErrNotImplemented)
+}
+
+// BinaryOp returns another object that is the result of a given binary
+// operator and a right-hand side object.
+func (o *PtrObjectImpl) BinaryOp(_ token.Token, _ Object) (Object, error) {
+	return nil, ErrInvalidOperator
+}
+
+// Copy returns a copy of the type.
+func (o *PtrObjectImpl) Copy() Object {
+	return nil
+}
+
+// IsFalsy returns true if the value of the type is falsy.
+func (o *PtrObjectImpl) IsFalsy() bool {
+	return false
+}
+
+// Equals returns true if the value of the type is equal to the value of
+// another object.
+func (o *PtrObjectImpl) Equals(x Object) bool {
+	return o == x
+}
+
+// IndexGet returns an element at a given index.
+func (o *PtrObjectImpl) IndexGet(_ Object) (res Object, err error) {
+	return nil, ErrNotIndexable
+}
+
+// IndexSet sets an element at a given index.
+func (o *PtrObjectImpl) IndexSet(_, _ Object) (err error) {
+	return ErrNotIndexAssignable
+}
+
+// Iterate returns an iterator.
+func (o *PtrObjectImpl) Iterate() Iterator {
+	return nil
+}
+
+// CanIterate returns whether the Object can be Iterated.
+func (o *PtrObjectImpl) CanIterate() bool {
+	return false
+}
+
+// Call takes an arbitrary number of arguments and returns a return value
+// and/or an error.
+func (o *PtrObjectImpl) Call(_ ...Object) (ret Object, err error) {
+	return nil, nil
+}
+
+// CanCall returns whether the Object can be Called.
+func (o *PtrObjectImpl) CanCall() bool {
 	return false
 }
 
 // Array represents an array of objects.
 type Array struct {
-	ObjectImpl
+	PtrObjectImpl
 	Value []Object
 }
 
@@ -221,7 +290,7 @@ func (o *Array) Equals(x Object) bool {
 
 // IndexGet returns an element at a given index.
 func (o *Array) IndexGet(index Object) (res Object, err error) {
-	intIdx, ok := index.(*Int)
+	intIdx, ok := index.(Int)
 	if !ok {
 		err = ErrInvalidIndexType
 		return
@@ -272,7 +341,7 @@ type Bool struct {
 	value bool
 }
 
-func (o *Bool) String() string {
+func (o Bool) String() string {
 	if o.value {
 		return "true"
 	}
@@ -281,23 +350,23 @@ func (o *Bool) String() string {
 }
 
 // TypeName returns the name of the type.
-func (o *Bool) TypeName() string {
+func (o Bool) TypeName() string {
 	return "bool"
 }
 
 // Copy returns a copy of the type.
-func (o *Bool) Copy() Object {
+func (o Bool) Copy() Object {
 	return o
 }
 
 // IsFalsy returns true if the value of the type is falsy.
-func (o *Bool) IsFalsy() bool {
+func (o Bool) IsFalsy() bool {
 	return !o.value
 }
 
 // Equals returns true if the value of the type is equal to the value of
 // another object.
-func (o *Bool) Equals(x Object) bool {
+func (o Bool) Equals(x Object) bool {
 	return o == x
 }
 
@@ -308,7 +377,7 @@ func (o *Bool) GobDecode(b []byte) (err error) {
 }
 
 // GobEncode encodes bool values into bytes.
-func (o *Bool) GobEncode() (b []byte, err error) {
+func (o Bool) GobEncode() (b []byte, err error) {
 	if o.value {
 		b = []byte{1}
 	} else {
@@ -319,7 +388,7 @@ func (o *Bool) GobEncode() (b []byte, err error) {
 
 // BuiltinFunction represents a builtin function.
 type BuiltinFunction struct {
-	ObjectImpl
+	PtrObjectImpl
 	Name  string
 	Value CallableFunc
 }
@@ -376,7 +445,7 @@ func (m *BuiltinModule) AsImmutableMap(moduleName string) *ImmutableMap {
 
 // Bytes represents a byte array.
 type Bytes struct {
-	ObjectImpl
+	PtrObjectImpl
 	Value []byte
 }
 
@@ -427,7 +496,7 @@ func (o *Bytes) Equals(x Object) bool {
 
 // IndexGet returns an element (as Int) at a given index.
 func (o *Bytes) IndexGet(index Object) (res Object, err error) {
-	intIdx, ok := index.(*Int)
+	intIdx, ok := index.(Int)
 	if !ok {
 		err = ErrInvalidIndexType
 		return
@@ -437,7 +506,7 @@ func (o *Bytes) IndexGet(index Object) (res Object, err error) {
 		res = UndefinedValue
 		return
 	}
-	res = &Int{Value: int64(o.Value[idxVal])}
+	res = Int{Value: int64(o.Value[idxVal])}
 	return
 }
 
@@ -460,33 +529,33 @@ type Char struct {
 	Value rune
 }
 
-func (o *Char) String() string {
+func (o Char) String() string {
 	return string(o.Value)
 }
 
 // TypeName returns the name of the type.
-func (o *Char) TypeName() string {
+func (o Char) TypeName() string {
 	return "char"
 }
 
 // BinaryOp returns another object that is the result of a given binary
 // operator and a right-hand side object.
-func (o *Char) BinaryOp(op token.Token, rhs Object) (Object, error) {
+func (o Char) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	switch rhs := rhs.(type) {
-	case *Char:
+	case Char:
 		switch op {
 		case token.Add:
 			r := o.Value + rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Char{Value: r}, nil
+			return Char{Value: r}, nil
 		case token.Sub:
 			r := o.Value - rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Char{Value: r}, nil
+			return Char{Value: r}, nil
 		case token.Less:
 			if o.Value < rhs.Value {
 				return TrueValue, nil
@@ -508,20 +577,20 @@ func (o *Char) BinaryOp(op token.Token, rhs Object) (Object, error) {
 			}
 			return FalseValue, nil
 		}
-	case *Int:
+	case Int:
 		switch op {
 		case token.Add:
 			r := o.Value + rune(rhs.Value)
 			if r == o.Value {
 				return o, nil
 			}
-			return &Char{Value: r}, nil
+			return Char{Value: r}, nil
 		case token.Sub:
 			r := o.Value - rune(rhs.Value)
 			if r == o.Value {
 				return o, nil
 			}
-			return &Char{Value: r}, nil
+			return Char{Value: r}, nil
 		case token.Less:
 			if int64(o.Value) < rhs.Value {
 				return TrueValue, nil
@@ -548,19 +617,19 @@ func (o *Char) BinaryOp(op token.Token, rhs Object) (Object, error) {
 }
 
 // Copy returns a copy of the type.
-func (o *Char) Copy() Object {
-	return &Char{Value: o.Value}
+func (o Char) Copy() Object {
+	return Char{Value: o.Value}
 }
 
 // IsFalsy returns true if the value of the type is falsy.
-func (o *Char) IsFalsy() bool {
+func (o Char) IsFalsy() bool {
 	return o.Value == 0
 }
 
 // Equals returns true if the value of the type is equal to the value of
 // another object.
-func (o *Char) Equals(x Object) bool {
-	t, ok := x.(*Char)
+func (o Char) Equals(x Object) bool {
+	t, ok := x.(Char)
 	if !ok {
 		return false
 	}
@@ -569,7 +638,7 @@ func (o *Char) Equals(x Object) bool {
 
 // CompiledFunction represents a compiled function.
 type CompiledFunction struct {
-	ObjectImpl
+	PtrObjectImpl
 	Instructions  []byte
 	NumLocals     int // number of local variables (including function parameters)
 	NumParameters int
@@ -622,7 +691,7 @@ func (o *CompiledFunction) CanCall() bool {
 
 // Error represents an error value.
 type Error struct {
-	ObjectImpl
+	PtrObjectImpl
 	Value Object
 }
 
@@ -670,45 +739,45 @@ type Float struct {
 	Value float64
 }
 
-func (o *Float) String() string {
+func (o Float) String() string {
 	return strconv.FormatFloat(o.Value, 'f', -1, 64)
 }
 
 // TypeName returns the name of the type.
-func (o *Float) TypeName() string {
+func (o Float) TypeName() string {
 	return "float"
 }
 
 // BinaryOp returns another object that is the result of a given binary
 // operator and a right-hand side object.
-func (o *Float) BinaryOp(op token.Token, rhs Object) (Object, error) {
+func (o Float) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	switch rhs := rhs.(type) {
-	case *Float:
+	case Float:
 		switch op {
 		case token.Add:
 			r := o.Value + rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Float{Value: r}, nil
+			return Float{Value: r}, nil
 		case token.Sub:
 			r := o.Value - rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Float{Value: r}, nil
+			return Float{Value: r}, nil
 		case token.Mul:
 			r := o.Value * rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Float{Value: r}, nil
+			return Float{Value: r}, nil
 		case token.Quo:
 			r := o.Value / rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Float{Value: r}, nil
+			return Float{Value: r}, nil
 		case token.Less:
 			if o.Value < rhs.Value {
 				return TrueValue, nil
@@ -730,32 +799,32 @@ func (o *Float) BinaryOp(op token.Token, rhs Object) (Object, error) {
 			}
 			return FalseValue, nil
 		}
-	case *Int:
+	case Int:
 		switch op {
 		case token.Add:
 			r := o.Value + float64(rhs.Value)
 			if r == o.Value {
 				return o, nil
 			}
-			return &Float{Value: r}, nil
+			return Float{Value: r}, nil
 		case token.Sub:
 			r := o.Value - float64(rhs.Value)
 			if r == o.Value {
 				return o, nil
 			}
-			return &Float{Value: r}, nil
+			return Float{Value: r}, nil
 		case token.Mul:
 			r := o.Value * float64(rhs.Value)
 			if r == o.Value {
 				return o, nil
 			}
-			return &Float{Value: r}, nil
+			return Float{Value: r}, nil
 		case token.Quo:
 			r := o.Value / float64(rhs.Value)
 			if r == o.Value {
 				return o, nil
 			}
-			return &Float{Value: r}, nil
+			return Float{Value: r}, nil
 		case token.Less:
 			if o.Value < float64(rhs.Value) {
 				return TrueValue, nil
@@ -782,19 +851,19 @@ func (o *Float) BinaryOp(op token.Token, rhs Object) (Object, error) {
 }
 
 // Copy returns a copy of the type.
-func (o *Float) Copy() Object {
-	return &Float{Value: o.Value}
+func (o Float) Copy() Object {
+	return Float{Value: o.Value}
 }
 
 // IsFalsy returns true if the value of the type is falsy.
-func (o *Float) IsFalsy() bool {
+func (o Float) IsFalsy() bool {
 	return math.IsNaN(o.Value)
 }
 
 // Equals returns true if the value of the type is equal to the value of
 // another object.
-func (o *Float) Equals(x Object) bool {
-	t, ok := x.(*Float)
+func (o Float) Equals(x Object) bool {
+	t, ok := x.(Float)
 	if !ok {
 		return false
 	}
@@ -803,7 +872,7 @@ func (o *Float) Equals(x Object) bool {
 
 // ImmutableArray represents an immutable array of objects.
 type ImmutableArray struct {
-	ObjectImpl
+	PtrObjectImpl
 	Value []Object
 }
 
@@ -871,7 +940,7 @@ func (o *ImmutableArray) Equals(x Object) bool {
 
 // IndexGet returns an element at a given index.
 func (o *ImmutableArray) IndexGet(index Object) (res Object, err error) {
-	intIdx, ok := index.(*Int)
+	intIdx, ok := index.(Int)
 	if !ok {
 		err = ErrInvalidIndexType
 		return
@@ -900,7 +969,7 @@ func (o *ImmutableArray) CanIterate() bool {
 
 // ImmutableMap represents an immutable map object.
 type ImmutableMap struct {
-	ObjectImpl
+	PtrObjectImpl
 	Value map[string]Object
 }
 
@@ -993,87 +1062,87 @@ type Int struct {
 	Value int64
 }
 
-func (o *Int) String() string {
+func (o Int) String() string {
 	return strconv.FormatInt(o.Value, 10)
 }
 
 // TypeName returns the name of the type.
-func (o *Int) TypeName() string {
+func (o Int) TypeName() string {
 	return "int"
 }
 
 // BinaryOp returns another object that is the result of a given binary
 // operator and a right-hand side object.
-func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
+func (o Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	switch rhs := rhs.(type) {
-	case *Int:
+	case Int:
 		switch op {
 		case token.Add:
 			r := o.Value + rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.Sub:
 			r := o.Value - rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.Mul:
 			r := o.Value * rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.Quo:
 			r := o.Value / rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.Rem:
 			r := o.Value % rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.And:
 			r := o.Value & rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.Or:
 			r := o.Value | rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.Xor:
 			r := o.Value ^ rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.AndNot:
 			r := o.Value &^ rhs.Value
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.Shl:
 			r := o.Value << uint64(rhs.Value)
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.Shr:
 			r := o.Value >> uint64(rhs.Value)
 			if r == o.Value {
 				return o, nil
 			}
-			return &Int{Value: r}, nil
+			return Int{Value: r}, nil
 		case token.Less:
 			if o.Value < rhs.Value {
 				return TrueValue, nil
@@ -1095,16 +1164,16 @@ func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 			}
 			return FalseValue, nil
 		}
-	case *Float:
+	case Float:
 		switch op {
 		case token.Add:
-			return &Float{Value: float64(o.Value) + rhs.Value}, nil
+			return Float{Value: float64(o.Value) + rhs.Value}, nil
 		case token.Sub:
-			return &Float{Value: float64(o.Value) - rhs.Value}, nil
+			return Float{Value: float64(o.Value) - rhs.Value}, nil
 		case token.Mul:
-			return &Float{Value: float64(o.Value) * rhs.Value}, nil
+			return Float{Value: float64(o.Value) * rhs.Value}, nil
 		case token.Quo:
-			return &Float{Value: float64(o.Value) / rhs.Value}, nil
+			return Float{Value: float64(o.Value) / rhs.Value}, nil
 		case token.Less:
 			if float64(o.Value) < rhs.Value {
 				return TrueValue, nil
@@ -1126,12 +1195,12 @@ func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 			}
 			return FalseValue, nil
 		}
-	case *Char:
+	case Char:
 		switch op {
 		case token.Add:
-			return &Char{Value: rune(o.Value) + rhs.Value}, nil
+			return Char{Value: rune(o.Value) + rhs.Value}, nil
 		case token.Sub:
-			return &Char{Value: rune(o.Value) - rhs.Value}, nil
+			return Char{Value: rune(o.Value) - rhs.Value}, nil
 		case token.Less:
 			if o.Value < int64(rhs.Value) {
 				return TrueValue, nil
@@ -1158,19 +1227,19 @@ func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 }
 
 // Copy returns a copy of the type.
-func (o *Int) Copy() Object {
-	return &Int{Value: o.Value}
+func (o Int) Copy() Object {
+	return Int{Value: o.Value}
 }
 
 // IsFalsy returns true if the value of the type is falsy.
-func (o *Int) IsFalsy() bool {
+func (o Int) IsFalsy() bool {
 	return o.Value == 0
 }
 
 // Equals returns true if the value of the type is equal to the value of
 // another object.
-func (o *Int) Equals(x Object) bool {
-	t, ok := x.(*Int)
+func (o Int) Equals(x Object) bool {
+	t, ok := x.(Int)
 	if !ok {
 		return false
 	}
@@ -1179,7 +1248,7 @@ func (o *Int) Equals(x Object) bool {
 
 // Map represents a map of objects.
 type Map struct {
-	ObjectImpl
+	PtrObjectImpl
 	Value map[string]Object
 }
 
@@ -1279,7 +1348,7 @@ func (o *Map) CanIterate() bool {
 
 // ObjectPtr represents a free variable.
 type ObjectPtr struct {
-	ObjectImpl
+	PtrObjectImpl
 	Value *Object
 }
 
@@ -1310,7 +1379,7 @@ func (o *ObjectPtr) Equals(x Object) bool {
 
 // String represents a string value.
 type String struct {
-	ObjectImpl
+	PtrObjectImpl
 	Value   string
 	runeStr []rune
 }
@@ -1400,7 +1469,7 @@ func (o *String) Equals(x Object) bool {
 
 // IndexGet returns a character at a given index.
 func (o *String) IndexGet(index Object) (res Object, err error) {
-	intIdx, ok := index.(*Int)
+	intIdx, ok := index.(Int)
 	if !ok {
 		err = ErrInvalidIndexType
 		return
@@ -1413,7 +1482,7 @@ func (o *String) IndexGet(index Object) (res Object, err error) {
 		res = UndefinedValue
 		return
 	}
-	res = &Char{Value: o.runeStr[idxVal]}
+	res = Char{Value: o.runeStr[idxVal]}
 	return
 }
 
@@ -1435,7 +1504,7 @@ func (o *String) CanIterate() bool {
 
 // Time represents a time value.
 type Time struct {
-	ObjectImpl
+	PtrObjectImpl
 	Value time.Time
 }
 
@@ -1452,7 +1521,7 @@ func (o *Time) TypeName() string {
 // operator and a right-hand side object.
 func (o *Time) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	switch rhs := rhs.(type) {
-	case *Int:
+	case Int:
 		switch op {
 		case token.Add: // time + int => time
 			if rhs.Value == 0 {
@@ -1468,7 +1537,7 @@ func (o *Time) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	case *Time:
 		switch op {
 		case token.Sub: // time - time => int (duration)
-			return &Int{Value: int64(o.Value.Sub(rhs.Value))}, nil
+			return Int{Value: int64(o.Value.Sub(rhs.Value))}, nil
 		case token.Less: // time < time => bool
 			if o.Value.Before(rhs.Value) {
 				return TrueValue, nil
@@ -1516,7 +1585,7 @@ func (o *Time) Equals(x Object) bool {
 
 // Undefined represents an undefined value.
 type Undefined struct {
-	ObjectImpl
+	PtrObjectImpl
 }
 
 // TypeName returns the name of the type.
@@ -1576,7 +1645,7 @@ func (o *Undefined) Value() Object {
 
 // UserFunction represents a user function.
 type UserFunction struct {
-	ObjectImpl
+	PtrObjectImpl
 	Name  string
 	Value CallableFunc
 }

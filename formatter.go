@@ -951,11 +951,11 @@ func (p *pp) printArg(arg Object, verb rune) {
 
 	// Some types can be done without reflection.
 	switch f := arg.(type) {
-	case *Bool:
+	case Bool:
 		p.fmtBool(!f.IsFalsy(), verb)
-	case *Float:
+	case Float:
 		p.fmtFloat(f.Value, 64, verb)
-	case *Int:
+	case Int:
 		p.fmtInteger(uint64(f.Value), signed, verb)
 	case *String:
 		p.fmtString(f.Value, verb)

@@ -9,15 +9,15 @@ import (
 )
 
 func TestObject_TypeName(t *testing.T) {
-	var o tengo.Object = &tengo.Int{}
+	var o tengo.Object = tengo.Int{}
 	require.Equal(t, "int", o.TypeName())
-	o = &tengo.Float{}
+	o = tengo.Float{}
 	require.Equal(t, "float", o.TypeName())
-	o = &tengo.Char{}
+	o = tengo.Char{}
 	require.Equal(t, "char", o.TypeName())
 	o = &tengo.String{}
 	require.Equal(t, "string", o.TypeName())
-	o = &tengo.Bool{}
+	o = tengo.Bool{}
 	require.Equal(t, "bool", o.TypeName())
 	o = &tengo.Array{}
 	require.Equal(t, "array", o.TypeName())
@@ -44,17 +44,17 @@ func TestObject_TypeName(t *testing.T) {
 }
 
 func TestObject_IsFalsy(t *testing.T) {
-	var o tengo.Object = &tengo.Int{Value: 0}
+	var o tengo.Object = tengo.Int{Value: 0}
 	require.True(t, o.IsFalsy())
-	o = &tengo.Int{Value: 1}
+	o = tengo.Int{Value: 1}
 	require.False(t, o.IsFalsy())
-	o = &tengo.Float{Value: 0}
+	o = tengo.Float{Value: 0}
 	require.False(t, o.IsFalsy())
-	o = &tengo.Float{Value: 1}
+	o = tengo.Float{Value: 1}
 	require.False(t, o.IsFalsy())
-	o = &tengo.Char{Value: ' '}
+	o = tengo.Char{Value: ' '}
 	require.False(t, o.IsFalsy())
-	o = &tengo.Char{Value: 'T'}
+	o = tengo.Char{Value: 'T'}
 	require.False(t, o.IsFalsy())
 	o = &tengo.String{Value: ""}
 	require.True(t, o.IsFalsy())
@@ -89,17 +89,17 @@ func TestObject_IsFalsy(t *testing.T) {
 }
 
 func TestObject_String(t *testing.T) {
-	var o tengo.Object = &tengo.Int{Value: 0}
+	var o tengo.Object = tengo.Int{Value: 0}
 	require.Equal(t, "0", o.String())
-	o = &tengo.Int{Value: 1}
+	o = tengo.Int{Value: 1}
 	require.Equal(t, "1", o.String())
-	o = &tengo.Float{Value: 0}
+	o = tengo.Float{Value: 0}
 	require.Equal(t, "0", o.String())
-	o = &tengo.Float{Value: 1}
+	o = tengo.Float{Value: 1}
 	require.Equal(t, "1", o.String())
-	o = &tengo.Char{Value: ' '}
+	o = tengo.Char{Value: ' '}
 	require.Equal(t, " ", o.String())
-	o = &tengo.Char{Value: 'T'}
+	o = tengo.Char{Value: 'T'}
 	require.Equal(t, "T", o.String())
 	o = &tengo.String{Value: ""}
 	require.Equal(t, `""`, o.String())
@@ -128,10 +128,10 @@ func TestObject_String(t *testing.T) {
 }
 
 func TestObject_BinaryOp(t *testing.T) {
-	var o tengo.Object = &tengo.Char{}
+	var o tengo.Object = tengo.Char{}
 	_, err := o.BinaryOp(token.Add, tengo.UndefinedValue)
 	require.Error(t, err)
-	o = &tengo.Bool{}
+	o = tengo.Bool{}
 	_, err = o.BinaryOp(token.Add, tengo.UndefinedValue)
 	require.Error(t, err)
 	o = &tengo.Map{}
@@ -172,45 +172,45 @@ func TestArray_BinaryOp(t *testing.T) {
 		&tengo.Array{Value: []tengo.Object{}})
 	testBinaryOp(t, &tengo.Array{Value: nil}, token.Add,
 		&tengo.Array{Value: []tengo.Object{
-			&tengo.Int{Value: 1},
+			tengo.Int{Value: 1},
 		}}, &tengo.Array{Value: []tengo.Object{
-			&tengo.Int{Value: 1},
+			tengo.Int{Value: 1},
 		}})
 	testBinaryOp(t, &tengo.Array{Value: nil}, token.Add,
 		&tengo.Array{Value: []tengo.Object{
-			&tengo.Int{Value: 1},
-			&tengo.Int{Value: 2},
-			&tengo.Int{Value: 3},
+			tengo.Int{Value: 1},
+			tengo.Int{Value: 2},
+			tengo.Int{Value: 3},
 		}}, &tengo.Array{Value: []tengo.Object{
-			&tengo.Int{Value: 1},
-			&tengo.Int{Value: 2},
-			&tengo.Int{Value: 3},
+			tengo.Int{Value: 1},
+			tengo.Int{Value: 2},
+			tengo.Int{Value: 3},
 		}})
 	testBinaryOp(t, &tengo.Array{Value: []tengo.Object{
-		&tengo.Int{Value: 1},
-		&tengo.Int{Value: 2},
-		&tengo.Int{Value: 3},
+		tengo.Int{Value: 1},
+		tengo.Int{Value: 2},
+		tengo.Int{Value: 3},
 	}}, token.Add, &tengo.Array{Value: nil},
 		&tengo.Array{Value: []tengo.Object{
-			&tengo.Int{Value: 1},
-			&tengo.Int{Value: 2},
-			&tengo.Int{Value: 3},
+			tengo.Int{Value: 1},
+			tengo.Int{Value: 2},
+			tengo.Int{Value: 3},
 		}})
 	testBinaryOp(t, &tengo.Array{Value: []tengo.Object{
-		&tengo.Int{Value: 1},
-		&tengo.Int{Value: 2},
-		&tengo.Int{Value: 3},
+		tengo.Int{Value: 1},
+		tengo.Int{Value: 2},
+		tengo.Int{Value: 3},
 	}}, token.Add, &tengo.Array{Value: []tengo.Object{
-		&tengo.Int{Value: 4},
-		&tengo.Int{Value: 5},
-		&tengo.Int{Value: 6},
+		tengo.Int{Value: 4},
+		tengo.Int{Value: 5},
+		tengo.Int{Value: 6},
 	}}, &tengo.Array{Value: []tengo.Object{
-		&tengo.Int{Value: 1},
-		&tengo.Int{Value: 2},
-		&tengo.Int{Value: 3},
-		&tengo.Int{Value: 4},
-		&tengo.Int{Value: 5},
-		&tengo.Int{Value: 6},
+		tengo.Int{Value: 1},
+		tengo.Int{Value: 2},
+		tengo.Int{Value: 3},
+		tengo.Int{Value: 4},
+		tengo.Int{Value: 5},
+		tengo.Int{Value: 6},
 	}})
 }
 
@@ -229,24 +229,24 @@ func TestFloat_BinaryOp(t *testing.T) {
 	// float + float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.Add,
-				&tengo.Float{Value: r}, &tengo.Float{Value: l + r})
+			testBinaryOp(t, tengo.Float{Value: l}, token.Add,
+				tengo.Float{Value: r}, tengo.Float{Value: l + r})
 		}
 	}
 
 	// float - float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.Sub,
-				&tengo.Float{Value: r}, &tengo.Float{Value: l - r})
+			testBinaryOp(t, tengo.Float{Value: l}, token.Sub,
+				tengo.Float{Value: r}, tengo.Float{Value: l - r})
 		}
 	}
 
 	// float * float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.Mul,
-				&tengo.Float{Value: r}, &tengo.Float{Value: l * r})
+			testBinaryOp(t, tengo.Float{Value: l}, token.Mul,
+				tengo.Float{Value: r}, tengo.Float{Value: l * r})
 		}
 	}
 
@@ -254,8 +254,8 @@ func TestFloat_BinaryOp(t *testing.T) {
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
 			if r != 0 {
-				testBinaryOp(t, &tengo.Float{Value: l}, token.Quo,
-					&tengo.Float{Value: r}, &tengo.Float{Value: l / r})
+				testBinaryOp(t, tengo.Float{Value: l}, token.Quo,
+					tengo.Float{Value: r}, tengo.Float{Value: l / r})
 			}
 		}
 	}
@@ -263,56 +263,56 @@ func TestFloat_BinaryOp(t *testing.T) {
 	// float < float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.Less,
-				&tengo.Float{Value: r}, boolValue(l < r))
+			testBinaryOp(t, tengo.Float{Value: l}, token.Less,
+				tengo.Float{Value: r}, boolValue(l < r))
 		}
 	}
 
 	// float > float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.Greater,
-				&tengo.Float{Value: r}, boolValue(l > r))
+			testBinaryOp(t, tengo.Float{Value: l}, token.Greater,
+				tengo.Float{Value: r}, boolValue(l > r))
 		}
 	}
 
 	// float <= float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.LessEq,
-				&tengo.Float{Value: r}, boolValue(l <= r))
+			testBinaryOp(t, tengo.Float{Value: l}, token.LessEq,
+				tengo.Float{Value: r}, boolValue(l <= r))
 		}
 	}
 
 	// float >= float
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := float64(-2); r <= 2.1; r += 0.4 {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.GreaterEq,
-				&tengo.Float{Value: r}, boolValue(l >= r))
+			testBinaryOp(t, tengo.Float{Value: l}, token.GreaterEq,
+				tengo.Float{Value: r}, boolValue(l >= r))
 		}
 	}
 
 	// float + int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.Add,
-				&tengo.Int{Value: r}, &tengo.Float{Value: l + float64(r)})
+			testBinaryOp(t, tengo.Float{Value: l}, token.Add,
+				tengo.Int{Value: r}, tengo.Float{Value: l + float64(r)})
 		}
 	}
 
 	// float - int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.Sub,
-				&tengo.Int{Value: r}, &tengo.Float{Value: l - float64(r)})
+			testBinaryOp(t, tengo.Float{Value: l}, token.Sub,
+				tengo.Int{Value: r}, tengo.Float{Value: l - float64(r)})
 		}
 	}
 
 	// float * int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.Mul,
-				&tengo.Int{Value: r}, &tengo.Float{Value: l * float64(r)})
+			testBinaryOp(t, tengo.Float{Value: l}, token.Mul,
+				tengo.Int{Value: r}, tengo.Float{Value: l * float64(r)})
 		}
 	}
 
@@ -320,9 +320,9 @@ func TestFloat_BinaryOp(t *testing.T) {
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
 			if r != 0 {
-				testBinaryOp(t, &tengo.Float{Value: l}, token.Quo,
-					&tengo.Int{Value: r},
-					&tengo.Float{Value: l / float64(r)})
+				testBinaryOp(t, tengo.Float{Value: l}, token.Quo,
+					tengo.Int{Value: r},
+					tengo.Float{Value: l / float64(r)})
 			}
 		}
 	}
@@ -330,32 +330,32 @@ func TestFloat_BinaryOp(t *testing.T) {
 	// float < int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.Less,
-				&tengo.Int{Value: r}, boolValue(l < float64(r)))
+			testBinaryOp(t, tengo.Float{Value: l}, token.Less,
+				tengo.Int{Value: r}, boolValue(l < float64(r)))
 		}
 	}
 
 	// float > int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.Greater,
-				&tengo.Int{Value: r}, boolValue(l > float64(r)))
+			testBinaryOp(t, tengo.Float{Value: l}, token.Greater,
+				tengo.Int{Value: r}, boolValue(l > float64(r)))
 		}
 	}
 
 	// float <= int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.LessEq,
-				&tengo.Int{Value: r}, boolValue(l <= float64(r)))
+			testBinaryOp(t, tengo.Float{Value: l}, token.LessEq,
+				tengo.Int{Value: r}, boolValue(l <= float64(r)))
 		}
 	}
 
 	// float >= int
 	for l := float64(-2); l <= 2.1; l += 0.4 {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Float{Value: l}, token.GreaterEq,
-				&tengo.Int{Value: r}, boolValue(l >= float64(r)))
+			testBinaryOp(t, tengo.Float{Value: l}, token.GreaterEq,
+				tengo.Int{Value: r}, boolValue(l >= float64(r)))
 		}
 	}
 }
@@ -364,24 +364,24 @@ func TestInt_BinaryOp(t *testing.T) {
 	// int + int
 	for l := int64(-2); l <= 2; l++ {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.Add,
-				&tengo.Int{Value: r}, &tengo.Int{Value: l + r})
+			testBinaryOp(t, tengo.Int{Value: l}, token.Add,
+				tengo.Int{Value: r}, tengo.Int{Value: l + r})
 		}
 	}
 
 	// int - int
 	for l := int64(-2); l <= 2; l++ {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.Sub,
-				&tengo.Int{Value: r}, &tengo.Int{Value: l - r})
+			testBinaryOp(t, tengo.Int{Value: l}, token.Sub,
+				tengo.Int{Value: r}, tengo.Int{Value: l - r})
 		}
 	}
 
 	// int * int
 	for l := int64(-2); l <= 2; l++ {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.Mul,
-				&tengo.Int{Value: r}, &tengo.Int{Value: l * r})
+			testBinaryOp(t, tengo.Int{Value: l}, token.Mul,
+				tengo.Int{Value: r}, tengo.Int{Value: l * r})
 		}
 	}
 
@@ -389,8 +389,8 @@ func TestInt_BinaryOp(t *testing.T) {
 	for l := int64(-2); l <= 2; l++ {
 		for r := int64(-2); r <= 2; r++ {
 			if r != 0 {
-				testBinaryOp(t, &tengo.Int{Value: l}, token.Quo,
-					&tengo.Int{Value: r}, &tengo.Int{Value: l / r})
+				testBinaryOp(t, tengo.Int{Value: l}, token.Quo,
+					tengo.Int{Value: r}, tengo.Int{Value: l / r})
 			}
 		}
 	}
@@ -399,243 +399,243 @@ func TestInt_BinaryOp(t *testing.T) {
 	for l := int64(-4); l <= 4; l++ {
 		for r := -int64(-4); r <= 4; r++ {
 			if r == 0 {
-				testBinaryOp(t, &tengo.Int{Value: l}, token.Rem,
-					&tengo.Int{Value: r}, &tengo.Int{Value: l % r})
+				testBinaryOp(t, tengo.Int{Value: l}, token.Rem,
+					tengo.Int{Value: r}, tengo.Int{Value: l % r})
 			}
 		}
 	}
 
 	// int & int
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.And, &tengo.Int{Value: 0},
-		&tengo.Int{Value: int64(0)})
+		tengo.Int{Value: 0}, token.And, tengo.Int{Value: 0},
+		tengo.Int{Value: int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.And, &tengo.Int{Value: 0},
-		&tengo.Int{Value: int64(1) & int64(0)})
+		tengo.Int{Value: 1}, token.And, tengo.Int{Value: 0},
+		tengo.Int{Value: int64(1) & int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.And, &tengo.Int{Value: 1},
-		&tengo.Int{Value: int64(0) & int64(1)})
+		tengo.Int{Value: 0}, token.And, tengo.Int{Value: 1},
+		tengo.Int{Value: int64(0) & int64(1)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.And, &tengo.Int{Value: 1},
-		&tengo.Int{Value: int64(1)})
+		tengo.Int{Value: 1}, token.And, tengo.Int{Value: 1},
+		tengo.Int{Value: int64(1)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.And, &tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(0) & int64(0xffffffff)})
+		tengo.Int{Value: 0}, token.And, tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(0) & int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.And, &tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(1) & int64(0xffffffff)})
+		tengo.Int{Value: 1}, token.And, tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(1) & int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: int64(0xffffffff)}, token.And,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(0xffffffff)})
+		tengo.Int{Value: int64(0xffffffff)}, token.And,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1984}, token.And,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(1984) & int64(0xffffffff)})
-	testBinaryOp(t, &tengo.Int{Value: -1984}, token.And,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(-1984) & int64(0xffffffff)})
+		tengo.Int{Value: 1984}, token.And,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(1984) & int64(0xffffffff)})
+	testBinaryOp(t, tengo.Int{Value: -1984}, token.And,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(-1984) & int64(0xffffffff)})
 
 	// int | int
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.Or, &tengo.Int{Value: 0},
-		&tengo.Int{Value: int64(0)})
+		tengo.Int{Value: 0}, token.Or, tengo.Int{Value: 0},
+		tengo.Int{Value: int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.Or, &tengo.Int{Value: 0},
-		&tengo.Int{Value: int64(1) | int64(0)})
+		tengo.Int{Value: 1}, token.Or, tengo.Int{Value: 0},
+		tengo.Int{Value: int64(1) | int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.Or, &tengo.Int{Value: 1},
-		&tengo.Int{Value: int64(0) | int64(1)})
+		tengo.Int{Value: 0}, token.Or, tengo.Int{Value: 1},
+		tengo.Int{Value: int64(0) | int64(1)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.Or, &tengo.Int{Value: 1},
-		&tengo.Int{Value: int64(1)})
+		tengo.Int{Value: 1}, token.Or, tengo.Int{Value: 1},
+		tengo.Int{Value: int64(1)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.Or, &tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(0) | int64(0xffffffff)})
+		tengo.Int{Value: 0}, token.Or, tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(0) | int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.Or, &tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(1) | int64(0xffffffff)})
+		tengo.Int{Value: 1}, token.Or, tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(1) | int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: int64(0xffffffff)}, token.Or,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(0xffffffff)})
+		tengo.Int{Value: int64(0xffffffff)}, token.Or,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1984}, token.Or,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(1984) | int64(0xffffffff)})
+		tengo.Int{Value: 1984}, token.Or,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(1984) | int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: -1984}, token.Or,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(-1984) | int64(0xffffffff)})
+		tengo.Int{Value: -1984}, token.Or,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(-1984) | int64(0xffffffff)})
 
 	// int ^ int
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.Xor, &tengo.Int{Value: 0},
-		&tengo.Int{Value: int64(0)})
+		tengo.Int{Value: 0}, token.Xor, tengo.Int{Value: 0},
+		tengo.Int{Value: int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.Xor, &tengo.Int{Value: 0},
-		&tengo.Int{Value: int64(1) ^ int64(0)})
+		tengo.Int{Value: 1}, token.Xor, tengo.Int{Value: 0},
+		tengo.Int{Value: int64(1) ^ int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.Xor, &tengo.Int{Value: 1},
-		&tengo.Int{Value: int64(0) ^ int64(1)})
+		tengo.Int{Value: 0}, token.Xor, tengo.Int{Value: 1},
+		tengo.Int{Value: int64(0) ^ int64(1)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.Xor, &tengo.Int{Value: 1},
-		&tengo.Int{Value: int64(0)})
+		tengo.Int{Value: 1}, token.Xor, tengo.Int{Value: 1},
+		tengo.Int{Value: int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.Xor, &tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(0) ^ int64(0xffffffff)})
+		tengo.Int{Value: 0}, token.Xor, tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(0) ^ int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.Xor, &tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(1) ^ int64(0xffffffff)})
+		tengo.Int{Value: 1}, token.Xor, tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(1) ^ int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: int64(0xffffffff)}, token.Xor,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(0)})
+		tengo.Int{Value: int64(0xffffffff)}, token.Xor,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1984}, token.Xor,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(1984) ^ int64(0xffffffff)})
+		tengo.Int{Value: 1984}, token.Xor,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(1984) ^ int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: -1984}, token.Xor,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(-1984) ^ int64(0xffffffff)})
+		tengo.Int{Value: -1984}, token.Xor,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(-1984) ^ int64(0xffffffff)})
 
 	// int &^ int
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.AndNot, &tengo.Int{Value: 0},
-		&tengo.Int{Value: int64(0)})
+		tengo.Int{Value: 0}, token.AndNot, tengo.Int{Value: 0},
+		tengo.Int{Value: int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.AndNot, &tengo.Int{Value: 0},
-		&tengo.Int{Value: int64(1) &^ int64(0)})
+		tengo.Int{Value: 1}, token.AndNot, tengo.Int{Value: 0},
+		tengo.Int{Value: int64(1) &^ int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.AndNot,
-		&tengo.Int{Value: 1}, &tengo.Int{Value: int64(0) &^ int64(1)})
+		tengo.Int{Value: 0}, token.AndNot,
+		tengo.Int{Value: 1}, tengo.Int{Value: int64(0) &^ int64(1)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.AndNot, &tengo.Int{Value: 1},
-		&tengo.Int{Value: int64(0)})
+		tengo.Int{Value: 1}, token.AndNot, tengo.Int{Value: 1},
+		tengo.Int{Value: int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 0}, token.AndNot,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(0) &^ int64(0xffffffff)})
+		tengo.Int{Value: 0}, token.AndNot,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(0) &^ int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1}, token.AndNot,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(1) &^ int64(0xffffffff)})
+		tengo.Int{Value: 1}, token.AndNot,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(1) &^ int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: int64(0xffffffff)}, token.AndNot,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(0)})
+		tengo.Int{Value: int64(0xffffffff)}, token.AndNot,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(0)})
 	testBinaryOp(t,
-		&tengo.Int{Value: 1984}, token.AndNot,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(1984) &^ int64(0xffffffff)})
+		tengo.Int{Value: 1984}, token.AndNot,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(1984) &^ int64(0xffffffff)})
 	testBinaryOp(t,
-		&tengo.Int{Value: -1984}, token.AndNot,
-		&tengo.Int{Value: int64(0xffffffff)},
-		&tengo.Int{Value: int64(-1984) &^ int64(0xffffffff)})
+		tengo.Int{Value: -1984}, token.AndNot,
+		tengo.Int{Value: int64(0xffffffff)},
+		tengo.Int{Value: int64(-1984) &^ int64(0xffffffff)})
 
 	// int << int
 	for s := int64(0); s < 64; s++ {
 		testBinaryOp(t,
-			&tengo.Int{Value: 0}, token.Shl, &tengo.Int{Value: s},
-			&tengo.Int{Value: int64(0) << uint(s)})
+			tengo.Int{Value: 0}, token.Shl, tengo.Int{Value: s},
+			tengo.Int{Value: int64(0) << uint(s)})
 		testBinaryOp(t,
-			&tengo.Int{Value: 1}, token.Shl, &tengo.Int{Value: s},
-			&tengo.Int{Value: int64(1) << uint(s)})
+			tengo.Int{Value: 1}, token.Shl, tengo.Int{Value: s},
+			tengo.Int{Value: int64(1) << uint(s)})
 		testBinaryOp(t,
-			&tengo.Int{Value: 2}, token.Shl, &tengo.Int{Value: s},
-			&tengo.Int{Value: int64(2) << uint(s)})
+			tengo.Int{Value: 2}, token.Shl, tengo.Int{Value: s},
+			tengo.Int{Value: int64(2) << uint(s)})
 		testBinaryOp(t,
-			&tengo.Int{Value: -1}, token.Shl, &tengo.Int{Value: s},
-			&tengo.Int{Value: int64(-1) << uint(s)})
+			tengo.Int{Value: -1}, token.Shl, tengo.Int{Value: s},
+			tengo.Int{Value: int64(-1) << uint(s)})
 		testBinaryOp(t,
-			&tengo.Int{Value: -2}, token.Shl, &tengo.Int{Value: s},
-			&tengo.Int{Value: int64(-2) << uint(s)})
+			tengo.Int{Value: -2}, token.Shl, tengo.Int{Value: s},
+			tengo.Int{Value: int64(-2) << uint(s)})
 		testBinaryOp(t,
-			&tengo.Int{Value: int64(0xffffffff)}, token.Shl,
-			&tengo.Int{Value: s},
-			&tengo.Int{Value: int64(0xffffffff) << uint(s)})
+			tengo.Int{Value: int64(0xffffffff)}, token.Shl,
+			tengo.Int{Value: s},
+			tengo.Int{Value: int64(0xffffffff) << uint(s)})
 	}
 
 	// int >> int
 	for s := int64(0); s < 64; s++ {
 		testBinaryOp(t,
-			&tengo.Int{Value: 0}, token.Shr, &tengo.Int{Value: s},
-			&tengo.Int{Value: int64(0) >> uint(s)})
+			tengo.Int{Value: 0}, token.Shr, tengo.Int{Value: s},
+			tengo.Int{Value: int64(0) >> uint(s)})
 		testBinaryOp(t,
-			&tengo.Int{Value: 1}, token.Shr, &tengo.Int{Value: s},
-			&tengo.Int{Value: int64(1) >> uint(s)})
+			tengo.Int{Value: 1}, token.Shr, tengo.Int{Value: s},
+			tengo.Int{Value: int64(1) >> uint(s)})
 		testBinaryOp(t,
-			&tengo.Int{Value: 2}, token.Shr, &tengo.Int{Value: s},
-			&tengo.Int{Value: int64(2) >> uint(s)})
+			tengo.Int{Value: 2}, token.Shr, tengo.Int{Value: s},
+			tengo.Int{Value: int64(2) >> uint(s)})
 		testBinaryOp(t,
-			&tengo.Int{Value: -1}, token.Shr, &tengo.Int{Value: s},
-			&tengo.Int{Value: int64(-1) >> uint(s)})
+			tengo.Int{Value: -1}, token.Shr, tengo.Int{Value: s},
+			tengo.Int{Value: int64(-1) >> uint(s)})
 		testBinaryOp(t,
-			&tengo.Int{Value: -2}, token.Shr, &tengo.Int{Value: s},
-			&tengo.Int{Value: int64(-2) >> uint(s)})
+			tengo.Int{Value: -2}, token.Shr, tengo.Int{Value: s},
+			tengo.Int{Value: int64(-2) >> uint(s)})
 		testBinaryOp(t,
-			&tengo.Int{Value: int64(0xffffffff)}, token.Shr,
-			&tengo.Int{Value: s},
-			&tengo.Int{Value: int64(0xffffffff) >> uint(s)})
+			tengo.Int{Value: int64(0xffffffff)}, token.Shr,
+			tengo.Int{Value: s},
+			tengo.Int{Value: int64(0xffffffff) >> uint(s)})
 	}
 
 	// int < int
 	for l := int64(-2); l <= 2; l++ {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.Less,
-				&tengo.Int{Value: r}, boolValue(l < r))
+			testBinaryOp(t, tengo.Int{Value: l}, token.Less,
+				tengo.Int{Value: r}, boolValue(l < r))
 		}
 	}
 
 	// int > int
 	for l := int64(-2); l <= 2; l++ {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.Greater,
-				&tengo.Int{Value: r}, boolValue(l > r))
+			testBinaryOp(t, tengo.Int{Value: l}, token.Greater,
+				tengo.Int{Value: r}, boolValue(l > r))
 		}
 	}
 
 	// int <= int
 	for l := int64(-2); l <= 2; l++ {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.LessEq,
-				&tengo.Int{Value: r}, boolValue(l <= r))
+			testBinaryOp(t, tengo.Int{Value: l}, token.LessEq,
+				tengo.Int{Value: r}, boolValue(l <= r))
 		}
 	}
 
 	// int >= int
 	for l := int64(-2); l <= 2; l++ {
 		for r := int64(-2); r <= 2; r++ {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.GreaterEq,
-				&tengo.Int{Value: r}, boolValue(l >= r))
+			testBinaryOp(t, tengo.Int{Value: l}, token.GreaterEq,
+				tengo.Int{Value: r}, boolValue(l >= r))
 		}
 	}
 
 	// int + float
 	for l := int64(-2); l <= 2; l++ {
 		for r := float64(-2); r <= 2.1; r += 0.5 {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.Add,
-				&tengo.Float{Value: r},
-				&tengo.Float{Value: float64(l) + r})
+			testBinaryOp(t, tengo.Int{Value: l}, token.Add,
+				tengo.Float{Value: r},
+				tengo.Float{Value: float64(l) + r})
 		}
 	}
 
 	// int - float
 	for l := int64(-2); l <= 2; l++ {
 		for r := float64(-2); r <= 2.1; r += 0.5 {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.Sub,
-				&tengo.Float{Value: r},
-				&tengo.Float{Value: float64(l) - r})
+			testBinaryOp(t, tengo.Int{Value: l}, token.Sub,
+				tengo.Float{Value: r},
+				tengo.Float{Value: float64(l) - r})
 		}
 	}
 
 	// int * float
 	for l := int64(-2); l <= 2; l++ {
 		for r := float64(-2); r <= 2.1; r += 0.5 {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.Mul,
-				&tengo.Float{Value: r},
-				&tengo.Float{Value: float64(l) * r})
+			testBinaryOp(t, tengo.Int{Value: l}, token.Mul,
+				tengo.Float{Value: r},
+				tengo.Float{Value: float64(l) * r})
 		}
 	}
 
@@ -643,9 +643,9 @@ func TestInt_BinaryOp(t *testing.T) {
 	for l := int64(-2); l <= 2; l++ {
 		for r := float64(-2); r <= 2.1; r += 0.5 {
 			if r != 0 {
-				testBinaryOp(t, &tengo.Int{Value: l}, token.Quo,
-					&tengo.Float{Value: r},
-					&tengo.Float{Value: float64(l) / r})
+				testBinaryOp(t, tengo.Int{Value: l}, token.Quo,
+					tengo.Float{Value: r},
+					tengo.Float{Value: float64(l) / r})
 			}
 		}
 	}
@@ -653,39 +653,39 @@ func TestInt_BinaryOp(t *testing.T) {
 	// int < float
 	for l := int64(-2); l <= 2; l++ {
 		for r := float64(-2); r <= 2.1; r += 0.5 {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.Less,
-				&tengo.Float{Value: r}, boolValue(float64(l) < r))
+			testBinaryOp(t, tengo.Int{Value: l}, token.Less,
+				tengo.Float{Value: r}, boolValue(float64(l) < r))
 		}
 	}
 
 	// int > float
 	for l := int64(-2); l <= 2; l++ {
 		for r := float64(-2); r <= 2.1; r += 0.5 {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.Greater,
-				&tengo.Float{Value: r}, boolValue(float64(l) > r))
+			testBinaryOp(t, tengo.Int{Value: l}, token.Greater,
+				tengo.Float{Value: r}, boolValue(float64(l) > r))
 		}
 	}
 
 	// int <= float
 	for l := int64(-2); l <= 2; l++ {
 		for r := float64(-2); r <= 2.1; r += 0.5 {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.LessEq,
-				&tengo.Float{Value: r}, boolValue(float64(l) <= r))
+			testBinaryOp(t, tengo.Int{Value: l}, token.LessEq,
+				tengo.Float{Value: r}, boolValue(float64(l) <= r))
 		}
 	}
 
 	// int >= float
 	for l := int64(-2); l <= 2; l++ {
 		for r := float64(-2); r <= 2.1; r += 0.5 {
-			testBinaryOp(t, &tengo.Int{Value: l}, token.GreaterEq,
-				&tengo.Float{Value: r}, boolValue(float64(l) >= r))
+			testBinaryOp(t, tengo.Int{Value: l}, token.GreaterEq,
+				tengo.Float{Value: r}, boolValue(float64(l) >= r))
 		}
 	}
 }
 
 func TestMap_Index(t *testing.T) {
 	m := &tengo.Map{Value: make(map[string]tengo.Object)}
-	k := &tengo.Int{Value: 1}
+	k := tengo.Int{Value: 1}
 	v := &tengo.String{Value: "abcdef"}
 	err := m.IndexSet(k, v)
 
@@ -709,7 +709,7 @@ func TestString_BinaryOp(t *testing.T) {
 
 			rc := []rune(rstr)[r]
 			testBinaryOp(t, &tengo.String{Value: ls}, token.Add,
-				&tengo.Char{Value: rc},
+				tengo.Char{Value: rc},
 				&tengo.String{Value: ls + string(rc)})
 		}
 	}

@@ -50,8 +50,8 @@ func TestFileStatFile(t *testing.T) {
 		Value: map[string]tengo.Object{
 			"name":      &tengo.String{Value: stat.Name()},
 			"mtime":     &tengo.Time{Value: stat.ModTime()},
-			"size":      &tengo.Int{Value: stat.Size()},
-			"mode":      &tengo.Int{Value: int64(stat.Mode())},
+			"size":      tengo.Int{Value: stat.Size()},
+			"mode":      tengo.Int{Value: int64(stat.Mode())},
 			"directory": tengo.FalseValue,
 		},
 	})
@@ -69,8 +69,8 @@ func TestFileStatDir(t *testing.T) {
 		Value: map[string]tengo.Object{
 			"name":      &tengo.String{Value: stat.Name()},
 			"mtime":     &tengo.Time{Value: stat.ModTime()},
-			"size":      &tengo.Int{Value: stat.Size()},
-			"mode":      &tengo.Int{Value: int64(stat.Mode())},
+			"size":      tengo.Int{Value: stat.Size()},
+			"mode":      tengo.Int{Value: int64(stat.Mode())},
 			"directory": tengo.TrueValue,
 		},
 	})

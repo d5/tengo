@@ -99,7 +99,7 @@ func makeOSFile(file *os.File) *tengo.ImmutableMap {
 					if err != nil {
 						return wrapError(err), nil
 					}
-					return &tengo.Int{Value: res}, nil
+					return tengo.Int{Value: res}, nil
 				},
 			},
 			// stat() => imap(fileinfo)/error

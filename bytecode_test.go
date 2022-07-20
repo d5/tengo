@@ -20,15 +20,15 @@ func TestBytecode(t *testing.T) {
 
 	testBytecodeSerialization(t, bytecode(
 		concatInsts(), objectsArray(
-			&tengo.Char{Value: 'y'},
-			&tengo.Float{Value: 93.11},
+			tengo.Char{Value: 'y'},
+			tengo.Float{Value: 93.11},
 			compiledFunction(1, 0,
 				tengo.MakeInstruction(parser.OpConstant, 3),
 				tengo.MakeInstruction(parser.OpSetLocal, 0),
 				tengo.MakeInstruction(parser.OpGetGlobal, 0),
 				tengo.MakeInstruction(parser.OpGetFree, 0)),
-			&tengo.Float{Value: 39.2},
-			&tengo.Int{Value: 192},
+			tengo.Float{Value: 39.2},
+			tengo.Int{Value: 192},
 			&tengo.String{Value: "bar"})))
 
 	testBytecodeSerialization(t, bytecodeFileSet(
@@ -38,17 +38,17 @@ func TestBytecode(t *testing.T) {
 			tengo.MakeInstruction(parser.OpConstant, 6),
 			tengo.MakeInstruction(parser.OpPop)),
 		objectsArray(
-			&tengo.Int{Value: 55},
-			&tengo.Int{Value: 66},
-			&tengo.Int{Value: 77},
-			&tengo.Int{Value: 88},
+			tengo.Int{Value: 55},
+			tengo.Int{Value: 66},
+			tengo.Int{Value: 77},
+			tengo.Int{Value: 88},
 			&tengo.ImmutableMap{
 				Value: map[string]tengo.Object{
 					"array": &tengo.ImmutableArray{
 						Value: []tengo.Object{
-							&tengo.Int{Value: 1},
-							&tengo.Int{Value: 2},
-							&tengo.Int{Value: 3},
+							tengo.Int{Value: 1},
+							tengo.Int{Value: 2},
+							tengo.Int{Value: 3},
 							tengo.TrueValue,
 							tengo.FalseValue,
 							tengo.UndefinedValue,
@@ -57,16 +57,16 @@ func TestBytecode(t *testing.T) {
 					"true":  tengo.TrueValue,
 					"false": tengo.FalseValue,
 					"bytes": &tengo.Bytes{Value: make([]byte, 16)},
-					"char":  &tengo.Char{Value: 'Y'},
+					"char":  tengo.Char{Value: 'Y'},
 					"error": &tengo.Error{Value: &tengo.String{
 						Value: "some error",
 					}},
-					"float": &tengo.Float{Value: -19.84},
+					"float": tengo.Float{Value: -19.84},
 					"immutable_array": &tengo.ImmutableArray{
 						Value: []tengo.Object{
-							&tengo.Int{Value: 1},
-							&tengo.Int{Value: 2},
-							&tengo.Int{Value: 3},
+							tengo.Int{Value: 1},
+							tengo.Int{Value: 2},
+							tengo.Int{Value: 3},
 							tengo.TrueValue,
 							tengo.FalseValue,
 							tengo.UndefinedValue,
@@ -74,20 +74,20 @@ func TestBytecode(t *testing.T) {
 					},
 					"immutable_map": &tengo.ImmutableMap{
 						Value: map[string]tengo.Object{
-							"a": &tengo.Int{Value: 1},
-							"b": &tengo.Int{Value: 2},
-							"c": &tengo.Int{Value: 3},
+							"a": tengo.Int{Value: 1},
+							"b": tengo.Int{Value: 2},
+							"c": tengo.Int{Value: 3},
 							"d": tengo.TrueValue,
 							"e": tengo.FalseValue,
 							"f": tengo.UndefinedValue,
 						},
 					},
-					"int": &tengo.Int{Value: 91},
+					"int": tengo.Int{Value: 91},
 					"map": &tengo.Map{
 						Value: map[string]tengo.Object{
-							"a": &tengo.Int{Value: 1},
-							"b": &tengo.Int{Value: 2},
-							"c": &tengo.Int{Value: 3},
+							"a": tengo.Int{Value: 1},
+							"b": tengo.Int{Value: 2},
+							"c": tengo.Int{Value: 3},
 							"d": tengo.TrueValue,
 							"e": tengo.FalseValue,
 							"f": tengo.UndefinedValue,
@@ -130,27 +130,27 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 	testBytecodeRemoveDuplicates(t,
 		bytecode(
 			concatInsts(), objectsArray(
-				&tengo.Char{Value: 'y'},
-				&tengo.Float{Value: 93.11},
+				tengo.Char{Value: 'y'},
+				tengo.Float{Value: 93.11},
 				compiledFunction(1, 0,
 					tengo.MakeInstruction(parser.OpConstant, 3),
 					tengo.MakeInstruction(parser.OpSetLocal, 0),
 					tengo.MakeInstruction(parser.OpGetGlobal, 0),
 					tengo.MakeInstruction(parser.OpGetFree, 0)),
-				&tengo.Float{Value: 39.2},
-				&tengo.Int{Value: 192},
+				tengo.Float{Value: 39.2},
+				tengo.Int{Value: 192},
 				&tengo.String{Value: "bar"})),
 		bytecode(
 			concatInsts(), objectsArray(
-				&tengo.Char{Value: 'y'},
-				&tengo.Float{Value: 93.11},
+				tengo.Char{Value: 'y'},
+				tengo.Float{Value: 93.11},
 				compiledFunction(1, 0,
 					tengo.MakeInstruction(parser.OpConstant, 3),
 					tengo.MakeInstruction(parser.OpSetLocal, 0),
 					tengo.MakeInstruction(parser.OpGetGlobal, 0),
 					tengo.MakeInstruction(parser.OpGetFree, 0)),
-				&tengo.Float{Value: 39.2},
-				&tengo.Int{Value: 192},
+				tengo.Float{Value: 39.2},
+				tengo.Int{Value: 192},
 				&tengo.String{Value: "bar"})))
 
 	testBytecodeRemoveDuplicates(t,
@@ -167,9 +167,9 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				tengo.MakeInstruction(parser.OpConstant, 8),
 				tengo.MakeInstruction(parser.OpClosure, 4, 1)),
 			objectsArray(
-				&tengo.Int{Value: 1},
-				&tengo.Float{Value: 2.0},
-				&tengo.Char{Value: '3'},
+				tengo.Int{Value: 1},
+				tengo.Float{Value: 2.0},
+				tengo.Char{Value: '3'},
 				&tengo.String{Value: "four"},
 				compiledFunction(1, 0,
 					tengo.MakeInstruction(parser.OpConstant, 3),
@@ -177,9 +177,9 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 					tengo.MakeInstruction(parser.OpSetLocal, 0),
 					tengo.MakeInstruction(parser.OpGetGlobal, 0),
 					tengo.MakeInstruction(parser.OpGetFree, 0)),
-				&tengo.Int{Value: 1},
-				&tengo.Float{Value: 2.0},
-				&tengo.Char{Value: '3'},
+				tengo.Int{Value: 1},
+				tengo.Float{Value: 2.0},
+				tengo.Char{Value: '3'},
 				&tengo.String{Value: "four"})),
 		bytecode(
 			concatInsts(
@@ -194,9 +194,9 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				tengo.MakeInstruction(parser.OpConstant, 3),
 				tengo.MakeInstruction(parser.OpClosure, 4, 1)),
 			objectsArray(
-				&tengo.Int{Value: 1},
-				&tengo.Float{Value: 2.0},
-				&tengo.Char{Value: '3'},
+				tengo.Int{Value: 1},
+				tengo.Float{Value: 2.0},
+				tengo.Char{Value: '3'},
 				&tengo.String{Value: "four"},
 				compiledFunction(1, 0,
 					tengo.MakeInstruction(parser.OpConstant, 3),
@@ -214,11 +214,11 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				tengo.MakeInstruction(parser.OpConstant, 3),
 				tengo.MakeInstruction(parser.OpConstant, 4)),
 			objectsArray(
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 2},
-				&tengo.Int{Value: 3},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 3})),
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 2},
+				tengo.Int{Value: 3},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 3})),
 		bytecode(
 			concatInsts(
 				tengo.MakeInstruction(parser.OpConstant, 0),
@@ -227,19 +227,19 @@ func TestBytecode_RemoveDuplicates(t *testing.T) {
 				tengo.MakeInstruction(parser.OpConstant, 0),
 				tengo.MakeInstruction(parser.OpConstant, 2)),
 			objectsArray(
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 2},
-				&tengo.Int{Value: 3})))
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 2},
+				tengo.Int{Value: 3})))
 }
 
 func TestBytecode_CountObjects(t *testing.T) {
 	b := bytecode(
 		concatInsts(),
 		objectsArray(
-			&tengo.Int{Value: 55},
-			&tengo.Int{Value: 66},
-			&tengo.Int{Value: 77},
-			&tengo.Int{Value: 88},
+			tengo.Int{Value: 55},
+			tengo.Int{Value: 66},
+			tengo.Int{Value: 77},
+			tengo.Int{Value: 88},
 			compiledFunction(1, 0,
 				tengo.MakeInstruction(parser.OpConstant, 3),
 				tengo.MakeInstruction(parser.OpReturn, 1)),

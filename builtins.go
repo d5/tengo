@@ -153,7 +153,7 @@ func builtinIsInt(args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Int); ok {
+	if _, ok := args[0].(Int); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
@@ -163,7 +163,7 @@ func builtinIsFloat(args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Float); ok {
+	if _, ok := args[0].(Float); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
@@ -173,7 +173,7 @@ func builtinIsBool(args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Bool); ok {
+	if _, ok := args[0].(Bool); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
@@ -183,7 +183,7 @@ func builtinIsChar(args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Char); ok {
+	if _, ok := args[0].(Char); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
@@ -307,17 +307,17 @@ func builtinLen(args ...Object) (Object, error) {
 	}
 	switch arg := args[0].(type) {
 	case *Array:
-		return &Int{Value: int64(len(arg.Value))}, nil
+		return Int{Value: int64(len(arg.Value))}, nil
 	case *ImmutableArray:
-		return &Int{Value: int64(len(arg.Value))}, nil
+		return Int{Value: int64(len(arg.Value))}, nil
 	case *String:
-		return &Int{Value: int64(len(arg.Value))}, nil
+		return Int{Value: int64(len(arg.Value))}, nil
 	case *Bytes:
-		return &Int{Value: int64(len(arg.Value))}, nil
+		return Int{Value: int64(len(arg.Value))}, nil
 	case *Map:
-		return &Int{Value: int64(len(arg.Value))}, nil
+		return Int{Value: int64(len(arg.Value))}, nil
 	case *ImmutableMap:
-		return &Int{Value: int64(len(arg.Value))}, nil
+		return Int{Value: int64(len(arg.Value))}, nil
 	default:
 		return nil, ErrInvalidArgumentType{
 			Name:     "first",
@@ -333,10 +333,11 @@ func builtinRange(args ...Object) (Object, error) {
 	if numArgs < 2 || numArgs > 3 {
 		return nil, ErrWrongNumArguments
 	}
-	var start, stop, step *Int
+	var start, stop Int
+	step := Int{Value: 1}
 
 	for i, arg := range args {
-		v, ok := args[i].(*Int)
+		v, ok := args[i].(Int)
 		if !ok {
 			var name string
 			switch i {
@@ -367,10 +368,6 @@ func builtinRange(args ...Object) (Object, error) {
 		}
 	}
 
-	if step == nil {
-		step = &Int{Value: int64(1)}
-	}
-
 	return buildRange(start.Value, stop.Value, step.Value), nil
 }
 
@@ -378,13 +375,13 @@ func buildRange(start, stop, step int64) *Array {
 	array := &Array{}
 	if start <= stop {
 		for i := start; i < stop; i += step {
-			array.Value = append(array.Value, &Int{
+			array.Value = append(array.Value, Int{
 				Value: i,
 			})
 		}
 	} else {
 		for i := start; i > stop; i -= step {
-			array.Value = append(array.Value, &Int{
+			array.Value = append(array.Value, Int{
 				Value: i,
 			})
 		}
@@ -449,12 +446,12 @@ func builtinInt(args ...Object) (Object, error) {
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Int); ok {
+	if _, ok := args[0].(Int); ok {
 		return args[0], nil
 	}
 	v, ok := ToInt64(args[0])
 	if ok {
-		return &Int{Value: v}, nil
+		return Int{Value: v}, nil
 	}
 	if argsLen == 2 {
 		return args[1], nil
@@ -467,12 +464,12 @@ func builtinFloat(args ...Object) (Object, error) {
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Float); ok {
+	if _, ok := args[0].(Float); ok {
 		return args[0], nil
 	}
 	v, ok := ToFloat64(args[0])
 	if ok {
-		return &Float{Value: v}, nil
+		return Float{Value: v}, nil
 	}
 	if argsLen == 2 {
 		return args[1], nil
@@ -484,7 +481,7 @@ func builtinBool(args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Bool); ok {
+	if _, ok := args[0].(Bool); ok {
 		return args[0], nil
 	}
 	v, ok := ToBool(args[0])
@@ -502,12 +499,12 @@ func builtinChar(args ...Object) (Object, error) {
 	if !(argsLen == 1 || argsLen == 2) {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Char); ok {
+	if _, ok := args[0].(Char); ok {
 		return args[0], nil
 	}
 	v, ok := ToRune(args[0])
 	if ok {
-		return &Char{Value: v}, nil
+		return Char{Value: v}, nil
 	}
 	if argsLen == 2 {
 		return args[1], nil
@@ -522,7 +519,7 @@ func builtinBytes(args ...Object) (Object, error) {
 	}
 
 	// bytes(N) => create a new bytes with given size N
-	if n, ok := args[0].(*Int); ok {
+	if n, ok := args[0].(Int); ok {
 		if n.Value > int64(MaxBytesLen) {
 			return nil, ErrBytesLimit
 		}
@@ -627,7 +624,7 @@ func builtinSplice(args ...Object) (Object, error) {
 
 	var startIdx int
 	if argsLen > 1 {
-		arg1, ok := args[1].(*Int)
+		arg1, ok := args[1].(Int)
 		if !ok {
 			return nil, ErrInvalidArgumentType{
 				Name:     "second",
@@ -643,7 +640,7 @@ func builtinSplice(args ...Object) (Object, error) {
 
 	delCount := len(array.Value)
 	if argsLen > 2 {
-		arg2, ok := args[2].(*Int)
+		arg2, ok := args[2].(Int)
 		if !ok {
 			return nil, ErrInvalidArgumentType{
 				Name:     "third",

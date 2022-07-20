@@ -134,15 +134,15 @@ func Equal(
 		}
 	case []tengo.Object:
 		equalObjectSlice(t, expected, actual.([]tengo.Object), msg...)
-	case *tengo.Int:
-		Equal(t, expected.Value, actual.(*tengo.Int).Value, msg...)
-	case *tengo.Float:
-		Equal(t, expected.Value, actual.(*tengo.Float).Value, msg...)
+	case tengo.Int:
+		Equal(t, expected.Value, actual.(tengo.Int).Value, msg...)
+	case tengo.Float:
+		Equal(t, expected.Value, actual.(tengo.Float).Value, msg...)
 	case *tengo.String:
 		Equal(t, expected.Value, actual.(*tengo.String).Value, msg...)
-	case *tengo.Char:
-		Equal(t, expected.Value, actual.(*tengo.Char).Value, msg...)
-	case *tengo.Bool:
+	case tengo.Char:
+		Equal(t, expected.Value, actual.(tengo.Char).Value, msg...)
+	case tengo.Bool:
 		if expected != actual {
 			failExpectedActual(t, expected, actual, msg...)
 		}

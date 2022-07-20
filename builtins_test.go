@@ -52,7 +52,7 @@ func Test_builtinDelete(t *testing.T) {
 		},
 		{name: "nil-map-nonstr-key",
 			args: args{[]tengo.Object{
-				&tengo.Map{}, &tengo.Int{}}}, wantErr: true,
+				&tengo.Map{}, tengo.Int{}}}, wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
 				Name: "second", Expected: "string", Found: "int"},
 		},
@@ -88,12 +88,12 @@ func Test_builtinDelete(t *testing.T) {
 				[]tengo.Object{
 					&tengo.Map{Value: map[string]tengo.Object{
 						"key1": &tengo.String{Value: "value1"},
-						"key2": &tengo.Int{Value: 10},
+						"key2": tengo.Int{Value: 10},
 					}},
 					&tengo.String{Value: "key1"}}},
 			want: tengo.UndefinedValue,
 			target: &tengo.Map{Value: map[string]tengo.Object{
-				"key2": &tengo.Int{Value: 10}}},
+				"key2": tengo.Int{Value: 10}}},
 		},
 	}
 	for _, tt := range tests {
@@ -166,12 +166,12 @@ func Test_builtinSplice(t *testing.T) {
 				Name: "second", Expected: "int", Found: "string"},
 		},
 		{name: "negative index",
-			args:      []tengo.Object{&tengo.Array{}, &tengo.Int{Value: -1}},
+			args:      []tengo.Object{&tengo.Array{}, tengo.Int{Value: -1}},
 			wantErr:   true,
 			wantedErr: tengo.ErrIndexOutOfBounds},
 		{name: "non int count",
 			args: []tengo.Object{
-				&tengo.Array{}, &tengo.Int{Value: 0},
+				&tengo.Array{}, tengo.Int{Value: 0},
 				&tengo.String{Value: ""}},
 			wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
@@ -180,153 +180,153 @@ func Test_builtinSplice(t *testing.T) {
 		{name: "negative count",
 			args: []tengo.Object{
 				&tengo.Array{Value: []tengo.Object{
-					&tengo.Int{Value: 0},
-					&tengo.Int{Value: 1},
-					&tengo.Int{Value: 2}}},
-				&tengo.Int{Value: 0},
-				&tengo.Int{Value: -1}},
+					tengo.Int{Value: 0},
+					tengo.Int{Value: 1},
+					tengo.Int{Value: 2}}},
+				tengo.Int{Value: 0},
+				tengo.Int{Value: -1}},
 			wantErr:   true,
 			wantedErr: tengo.ErrIndexOutOfBounds,
 		},
 		{name: "insert with zero count",
 			args: []tengo.Object{
 				&tengo.Array{Value: []tengo.Object{
-					&tengo.Int{Value: 0},
-					&tengo.Int{Value: 1},
-					&tengo.Int{Value: 2}}},
-				&tengo.Int{Value: 0},
-				&tengo.Int{Value: 0},
+					tengo.Int{Value: 0},
+					tengo.Int{Value: 1},
+					tengo.Int{Value: 2}}},
+				tengo.Int{Value: 0},
+				tengo.Int{Value: 0},
 				&tengo.String{Value: "b"}},
 			deleted: &tengo.Array{Value: []tengo.Object{}},
 			Array: &tengo.Array{Value: []tengo.Object{
 				&tengo.String{Value: "b"},
-				&tengo.Int{Value: 0},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 2}}},
+				tengo.Int{Value: 0},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 2}}},
 		},
 		{name: "insert",
 			args: []tengo.Object{
 				&tengo.Array{Value: []tengo.Object{
-					&tengo.Int{Value: 0},
-					&tengo.Int{Value: 1},
-					&tengo.Int{Value: 2}}},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 0},
+					tengo.Int{Value: 0},
+					tengo.Int{Value: 1},
+					tengo.Int{Value: 2}}},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 0},
 				&tengo.String{Value: "c"},
 				&tengo.String{Value: "d"}},
 			deleted: &tengo.Array{Value: []tengo.Object{}},
 			Array: &tengo.Array{Value: []tengo.Object{
-				&tengo.Int{Value: 0},
+				tengo.Int{Value: 0},
 				&tengo.String{Value: "c"},
 				&tengo.String{Value: "d"},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 2}}},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 2}}},
 		},
 		{name: "insert with zero count",
 			args: []tengo.Object{
 				&tengo.Array{Value: []tengo.Object{
-					&tengo.Int{Value: 0},
-					&tengo.Int{Value: 1},
-					&tengo.Int{Value: 2}}},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 0},
+					tengo.Int{Value: 0},
+					tengo.Int{Value: 1},
+					tengo.Int{Value: 2}}},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 0},
 				&tengo.String{Value: "c"},
 				&tengo.String{Value: "d"}},
 			deleted: &tengo.Array{Value: []tengo.Object{}},
 			Array: &tengo.Array{Value: []tengo.Object{
-				&tengo.Int{Value: 0},
+				tengo.Int{Value: 0},
 				&tengo.String{Value: "c"},
 				&tengo.String{Value: "d"},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 2}}},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 2}}},
 		},
 		{name: "insert with delete",
 			args: []tengo.Object{
 				&tengo.Array{Value: []tengo.Object{
-					&tengo.Int{Value: 0},
-					&tengo.Int{Value: 1},
-					&tengo.Int{Value: 2}}},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 1},
+					tengo.Int{Value: 0},
+					tengo.Int{Value: 1},
+					tengo.Int{Value: 2}}},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 1},
 				&tengo.String{Value: "c"},
 				&tengo.String{Value: "d"}},
 			deleted: &tengo.Array{
-				Value: []tengo.Object{&tengo.Int{Value: 1}}},
+				Value: []tengo.Object{tengo.Int{Value: 1}}},
 			Array: &tengo.Array{Value: []tengo.Object{
-				&tengo.Int{Value: 0},
+				tengo.Int{Value: 0},
 				&tengo.String{Value: "c"},
 				&tengo.String{Value: "d"},
-				&tengo.Int{Value: 2}}},
+				tengo.Int{Value: 2}}},
 		},
 		{name: "insert with delete multi",
 			args: []tengo.Object{
 				&tengo.Array{Value: []tengo.Object{
-					&tengo.Int{Value: 0},
-					&tengo.Int{Value: 1},
-					&tengo.Int{Value: 2}}},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 2},
+					tengo.Int{Value: 0},
+					tengo.Int{Value: 1},
+					tengo.Int{Value: 2}}},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 2},
 				&tengo.String{Value: "c"},
 				&tengo.String{Value: "d"}},
 			deleted: &tengo.Array{Value: []tengo.Object{
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 2}}},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 2}}},
 			Array: &tengo.Array{
 				Value: []tengo.Object{
-					&tengo.Int{Value: 0},
+					tengo.Int{Value: 0},
 					&tengo.String{Value: "c"},
 					&tengo.String{Value: "d"}}},
 		},
 		{name: "delete all with positive count",
 			args: []tengo.Object{
 				&tengo.Array{Value: []tengo.Object{
-					&tengo.Int{Value: 0},
-					&tengo.Int{Value: 1},
-					&tengo.Int{Value: 2}}},
-				&tengo.Int{Value: 0},
-				&tengo.Int{Value: 3}},
+					tengo.Int{Value: 0},
+					tengo.Int{Value: 1},
+					tengo.Int{Value: 2}}},
+				tengo.Int{Value: 0},
+				tengo.Int{Value: 3}},
 			deleted: &tengo.Array{Value: []tengo.Object{
-				&tengo.Int{Value: 0},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 2}}},
+				tengo.Int{Value: 0},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 2}}},
 			Array: &tengo.Array{Value: []tengo.Object{}},
 		},
 		{name: "delete all with big count",
 			args: []tengo.Object{
 				&tengo.Array{Value: []tengo.Object{
-					&tengo.Int{Value: 0},
-					&tengo.Int{Value: 1},
-					&tengo.Int{Value: 2}}},
-				&tengo.Int{Value: 0},
-				&tengo.Int{Value: 5}},
+					tengo.Int{Value: 0},
+					tengo.Int{Value: 1},
+					tengo.Int{Value: 2}}},
+				tengo.Int{Value: 0},
+				tengo.Int{Value: 5}},
 			deleted: &tengo.Array{Value: []tengo.Object{
-				&tengo.Int{Value: 0},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 2}}},
+				tengo.Int{Value: 0},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 2}}},
 			Array: &tengo.Array{Value: []tengo.Object{}},
 		},
 		{name: "nothing2",
 			args: []tengo.Object{
 				&tengo.Array{Value: []tengo.Object{
-					&tengo.Int{Value: 0},
-					&tengo.Int{Value: 1},
-					&tengo.Int{Value: 2}}}},
+					tengo.Int{Value: 0},
+					tengo.Int{Value: 1},
+					tengo.Int{Value: 2}}}},
 			Array: &tengo.Array{Value: []tengo.Object{}},
 			deleted: &tengo.Array{Value: []tengo.Object{
-				&tengo.Int{Value: 0},
-				&tengo.Int{Value: 1},
-				&tengo.Int{Value: 2}}},
+				tengo.Int{Value: 0},
+				tengo.Int{Value: 1},
+				tengo.Int{Value: 2}}},
 		},
 		{name: "pop without count",
 			args: []tengo.Object{
 				&tengo.Array{Value: []tengo.Object{
-					&tengo.Int{Value: 0},
-					&tengo.Int{Value: 1},
-					&tengo.Int{Value: 2}}},
-				&tengo.Int{Value: 2}},
-			deleted: &tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 2}}},
+					tengo.Int{Value: 0},
+					tengo.Int{Value: 1},
+					tengo.Int{Value: 2}}},
+				tengo.Int{Value: 2}},
+			deleted: &tengo.Array{Value: []tengo.Object{tengo.Int{Value: 2}}},
 			Array: &tengo.Array{Value: []tengo.Object{
-				&tengo.Int{Value: 0}, &tengo.Int{Value: 1}}},
+				tengo.Int{Value: 0}, tengo.Int{Value: 1}}},
 		},
 	}
 	for _, tt := range tests {
@@ -388,36 +388,36 @@ func Test_builtinRange(t *testing.T) {
 				Name: "start", Expected: "int", Found: "string"},
 		},
 		{name: "invalid stop",
-			args:    []tengo.Object{&tengo.Int{}, &tengo.String{}},
+			args:    []tengo.Object{tengo.Int{}, &tengo.String{}},
 			wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
 				Name: "stop", Expected: "int", Found: "string"},
 		},
 		{name: "invalid step",
-			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{}, &tengo.String{}},
+			args:    []tengo.Object{tengo.Int{}, tengo.Int{}, &tengo.String{}},
 			wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
 				Name: "step", Expected: "int", Found: "string"},
 		},
 		{name: "zero step",
-			args:      []tengo.Object{&tengo.Int{}, &tengo.Int{}, &tengo.Int{}}, //must greate than 0
+			args:      []tengo.Object{tengo.Int{}, tengo.Int{}, tengo.Int{}}, //must greate than 0
 			wantErr:   true,
 			wantedErr: tengo.ErrInvalidRangeStep,
 		},
 		{name: "negative step",
-			args:      []tengo.Object{&tengo.Int{}, &tengo.Int{}, intObject(-2)}, //must greate than 0
+			args:      []tengo.Object{tengo.Int{}, tengo.Int{}, intObject(-2)}, //must greate than 0
 			wantErr:   true,
 			wantedErr: tengo.ErrInvalidRangeStep,
 		},
 		{name: "same bound",
-			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{}},
+			args:    []tengo.Object{tengo.Int{}, tengo.Int{}},
 			wantErr: false,
 			result: &tengo.Array{
 				Value: nil,
 			},
 		},
 		{name: "positive range",
-			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{Value: 5}},
+			args:    []tengo.Object{tengo.Int{}, tengo.Int{Value: 5}},
 			wantErr: false,
 			result: &tengo.Array{
 				Value: []tengo.Object{
@@ -430,7 +430,7 @@ func Test_builtinRange(t *testing.T) {
 			},
 		},
 		{name: "negative range",
-			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{Value: -5}},
+			args:    []tengo.Object{tengo.Int{}, tengo.Int{Value: -5}},
 			wantErr: false,
 			result: &tengo.Array{
 				Value: []tengo.Object{
@@ -444,7 +444,7 @@ func Test_builtinRange(t *testing.T) {
 		},
 
 		{name: "positive with step",
-			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{Value: 5}, &tengo.Int{Value: 2}},
+			args:    []tengo.Object{tengo.Int{}, tengo.Int{Value: 5}, tengo.Int{Value: 2}},
 			wantErr: false,
 			result: &tengo.Array{
 				Value: []tengo.Object{
@@ -456,7 +456,7 @@ func Test_builtinRange(t *testing.T) {
 		},
 
 		{name: "negative with step",
-			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{Value: -10}, &tengo.Int{Value: 2}},
+			args:    []tengo.Object{tengo.Int{}, tengo.Int{Value: -10}, tengo.Int{Value: 2}},
 			wantErr: false,
 			result: &tengo.Array{
 				Value: []tengo.Object{
@@ -470,7 +470,7 @@ func Test_builtinRange(t *testing.T) {
 		},
 
 		{name: "large range",
-			args:    []tengo.Object{intObject(-10), intObject(10), &tengo.Int{Value: 3}},
+			args:    []tengo.Object{intObject(-10), intObject(10), tengo.Int{Value: 3}},
 			wantErr: false,
 			result: &tengo.Array{
 				Value: []tengo.Object{

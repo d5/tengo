@@ -36,9 +36,9 @@ fib := func(x) {
 		panic(err)
 	}
 
-	if nativeResult != int(result.(*tengo.Int).Value) {
+	if nativeResult != int(result.(tengo.Int).Value) {
 		panic(fmt.Errorf("wrong result: %d != %d", nativeResult,
-			int(result.(*tengo.Int).Value)))
+			int(result.(tengo.Int).Value)))
 	}
 
 	fmt.Println("-------------------------------------")
@@ -73,9 +73,9 @@ fib := func(x, s) {
 		panic(err)
 	}
 
-	if nativeResult != int(result.(*tengo.Int).Value) {
+	if nativeResult != int(result.(tengo.Int).Value) {
 		panic(fmt.Errorf("wrong result: %d != %d", nativeResult,
-			int(result.(*tengo.Int).Value)))
+			int(result.(tengo.Int).Value)))
 	}
 
 	fmt.Println("-------------------------------------")
@@ -110,9 +110,9 @@ fib := func(x, a, b) {
 		panic(err)
 	}
 
-	if nativeResult != int(result.(*tengo.Int).Value) {
+	if nativeResult != int(result.(tengo.Int).Value) {
 		panic(fmt.Errorf("wrong result: %d != %d", nativeResult,
-			int(result.(*tengo.Int).Value)))
+			int(result.(tengo.Int).Value)))
 	}
 
 	fmt.Println("-------------------------------------")
