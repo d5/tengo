@@ -806,7 +806,7 @@ func textFormatBool(args ...tengo.Object) (ret tengo.Object, err error) {
 		return
 	}
 
-	b1, ok := args[0].(*tengo.Bool)
+	b1, ok := args[0].(tengo.Bool)
 	if !ok {
 		err = tengo.ErrInvalidArgumentType{
 			Name:     "first",

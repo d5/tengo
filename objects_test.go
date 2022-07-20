@@ -17,7 +17,7 @@ func TestObject_TypeName(t *testing.T) {
 	require.Equal(t, "char", o.TypeName())
 	o = &tengo.String{}
 	require.Equal(t, "string", o.TypeName())
-	o = &tengo.Bool{}
+	o = tengo.Bool{}
 	require.Equal(t, "bool", o.TypeName())
 	o = &tengo.Array{}
 	require.Equal(t, "array", o.TypeName())
@@ -131,7 +131,7 @@ func TestObject_BinaryOp(t *testing.T) {
 	var o tengo.Object = tengo.Char{}
 	_, err := o.BinaryOp(token.Add, tengo.UndefinedValue)
 	require.Error(t, err)
-	o = &tengo.Bool{}
+	o = tengo.Bool{}
 	_, err = o.BinaryOp(token.Add, tengo.UndefinedValue)
 	require.Error(t, err)
 	o = &tengo.Map{}

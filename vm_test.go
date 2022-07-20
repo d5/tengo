@@ -3953,8 +3953,8 @@ func objectZeroCopy(o tengo.Object) tengo.Object {
 		return tengo.Int{}
 	case tengo.Float:
 		return tengo.Float{}
-	case *tengo.Bool:
-		return &tengo.Bool{}
+	case tengo.Bool:
+		return tengo.Bool{}
 	case tengo.Char:
 		return tengo.Char{}
 	case *tengo.String:

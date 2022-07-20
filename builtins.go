@@ -173,7 +173,7 @@ func builtinIsBool(args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Bool); ok {
+	if _, ok := args[0].(Bool); ok {
 		return TrueValue, nil
 	}
 	return FalseValue, nil
@@ -481,7 +481,7 @@ func builtinBool(args ...Object) (Object, error) {
 	if len(args) != 1 {
 		return nil, ErrWrongNumArguments
 	}
-	if _, ok := args[0].(*Bool); ok {
+	if _, ok := args[0].(Bool); ok {
 		return args[0], nil
 	}
 	v, ok := ToBool(args[0])

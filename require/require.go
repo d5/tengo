@@ -142,7 +142,7 @@ func Equal(
 		Equal(t, expected.Value, actual.(*tengo.String).Value, msg...)
 	case tengo.Char:
 		Equal(t, expected.Value, actual.(tengo.Char).Value, msg...)
-	case *tengo.Bool:
+	case tengo.Bool:
 		if expected != actual {
 			failExpectedActual(t, expected, actual, msg...)
 		}

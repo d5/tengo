@@ -88,7 +88,7 @@ func ToInt(o Object) (v int, ok bool) {
 	case Char:
 		v = int(o.Value)
 		ok = true
-	case *Bool:
+	case Bool:
 		if o == TrueValue {
 			v = 1
 		}
@@ -115,7 +115,7 @@ func ToInt64(o Object) (v int64, ok bool) {
 	case Char:
 		v = int64(o.Value)
 		ok = true
-	case *Bool:
+	case Bool:
 		if o == TrueValue {
 			v = 1
 		}
@@ -204,7 +204,7 @@ func ToInterface(o Object) (res interface{}) {
 		res = o.Value
 	case Float:
 		res = o.Value
-	case *Bool:
+	case Bool:
 		res = o == TrueValue
 	case Char:
 		res = o.Value

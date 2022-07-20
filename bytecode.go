@@ -187,7 +187,7 @@ func fixDecodedObject(
 	modules *ModuleMap,
 ) (Object, error) {
 	switch o := o.(type) {
-	case *Bool:
+	case Bool:
 		if o.IsFalsy() {
 			return FalseValue, nil
 		}
@@ -280,7 +280,7 @@ func init() {
 	gob.Register(&parser.SourceFileSet{})
 	gob.Register(&parser.SourceFile{})
 	gob.Register(&Array{})
-	gob.Register(&Bool{})
+	gob.Register(Bool{})
 	gob.Register(&Bytes{})
 	gob.Register(Char{})
 	gob.Register(&CompiledFunction{})

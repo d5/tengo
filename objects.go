@@ -14,10 +14,10 @@ import (
 
 var (
 	// TrueValue represents a true value.
-	TrueValue Object = &Bool{value: true}
+	TrueValue Object = Bool{value: true}
 
 	// FalseValue represents a false value.
-	FalseValue Object = &Bool{value: false}
+	FalseValue Object = Bool{value: false}
 
 	// UndefinedValue represents an undefined value.
 	UndefinedValue Object = &Undefined{}
@@ -334,14 +334,14 @@ func (o *Array) CanIterate() bool {
 
 // Bool represents a boolean value.
 type Bool struct {
-	PtrObjectImpl
+	ObjectImpl
 
 	// this is intentionally non-public to force using objects.TrueValue and
 	// FalseValue always
 	value bool
 }
 
-func (o *Bool) String() string {
+func (o Bool) String() string {
 	if o.value {
 		return "true"
 	}
@@ -350,23 +350,23 @@ func (o *Bool) String() string {
 }
 
 // TypeName returns the name of the type.
-func (o *Bool) TypeName() string {
+func (o Bool) TypeName() string {
 	return "bool"
 }
 
 // Copy returns a copy of the type.
-func (o *Bool) Copy() Object {
+func (o Bool) Copy() Object {
 	return o
 }
 
 // IsFalsy returns true if the value of the type is falsy.
-func (o *Bool) IsFalsy() bool {
+func (o Bool) IsFalsy() bool {
 	return !o.value
 }
 
 // Equals returns true if the value of the type is equal to the value of
 // another object.
-func (o *Bool) Equals(x Object) bool {
+func (o Bool) Equals(x Object) bool {
 	return o == x
 }
 
@@ -377,7 +377,7 @@ func (o *Bool) GobDecode(b []byte) (err error) {
 }
 
 // GobEncode encodes bool values into bytes.
-func (o *Bool) GobEncode() (b []byte, err error) {
+func (o Bool) GobEncode() (b []byte, err error) {
 	if o.value {
 		b = []byte{1}
 	} else {

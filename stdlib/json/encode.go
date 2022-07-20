@@ -193,7 +193,7 @@ func Encode(o tengo.Object) ([]byte, error) {
 			idx++
 		}
 		b = append(b, '}')
-	case *tengo.Bool:
+	case tengo.Bool:
 		if o.IsFalsy() {
 			b = strconv.AppendBool(b, false)
 		} else {
