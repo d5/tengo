@@ -7,7 +7,7 @@ var keywords map[string]Token
 // Token represents a token.
 type Token int
 
-// List of tokens
+// Names of tokens
 const (
 	Illegal Token = iota
 	EOF
@@ -83,7 +83,11 @@ const (
 	False
 	In
 	Undefined
+	Default
 	Import
+	Callee
+	CalledArgs
+	CalledKwargs
 	_keywordEnd
 )
 
@@ -157,7 +161,11 @@ var tokens = [...]string{
 	False:        "false",
 	In:           "in",
 	Undefined:    "undefined",
+	Default:      "default",
 	Import:       "import",
+	Callee:       "callee",
+	CalledArgs:   "argv",
+	CalledKwargs: "kwargv",
 }
 
 func (tok Token) String() string {

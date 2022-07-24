@@ -22,14 +22,14 @@ func() { /*...*/ }    // function value
 
 Here's a list of all available value types in Tengo.
 
-| Tengo Type | Description | Equivalent Type in Go |
-| :---: | :---: | :---: |
+|   Tengo Type    | Description | Equivalent Type in Go |
+|:---:| :---: | :---: |
 | int | signed 64-bit integer value | `int64` |
 | float | 64-bit floating point value | `float64` |
 | bool | boolean value | `bool` |
 | char | unicode character | `rune` |
-| string | unicode string | `string` |
-| bytes | byte array | `[]byte` |
+| string | unicode string | `string` |
+| bytes | byte array | `[]byte` |
 | error | [error](#error-values) value | - |
 | time | time value | `time.Time` |
 | array | value array _(mutable)_ | `[]interface{}` |
@@ -37,6 +37,7 @@ Here's a list of all available value types in Tengo.
 | map | value map with string keys _(mutable)_ | `map[string]interface{}` |
 | immutable map | [immutable](#immutable-values) map | - |
 | undefined | [undefined](#undefined-values) value | - |
+| default | [default](#default-values) value | - |
 | function | [function](#function-values) value | - |
 | _user-defined_ | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/objects.md) | - |
 
@@ -117,6 +118,19 @@ c := {a: "foo"}["b"]        // c == undefined
 d := int("foo")             // d == undefined
 ```
 
+### Default Values
+
+In Tengo, an "default" value can be used to represent an default keyword argument value:
+
+
+```golang
+a := func(;b=2) { return b }()                 // a == 2
+b := func(;b=2) { return b }(b=5)              // b == 5
+c := func(;b=default) { return b }()           // c == default
+d := func(;b=2) { return b }(b=default)        // d == 2
+e := func(;b=default) { return b }(b=default)  // e == default
+```
+
 ### Array Values
 
 In Tengo, array is an ordered list of values of any types. Elements of an array
@@ -142,7 +156,7 @@ m["b"]                                // == false
 m.c                                   // == "foo"
 m.x                                   // == undefined
 
-{a: [1,2,3], b: {c: "foo", d: "bar"}} // ok: map with an array element and a map element
+{a: [1,2,3], b: {c: "foo", d: "bar"}} // ok: map with an array element and a map element  
 ```
 
 ### Function Values
@@ -150,6 +164,39 @@ m.x                                   // == undefined
 In Tengo, function is a callable value with a number of function arguments and
 a return value. Just like any other values, functions can be passed into or
 returned from another function.
+
+Syntaxe: `func( [ARGS] [; KWARGS] )`.  
+
+
+Basic examples: 
+  - Only args: 
+    - `func( arg1, ...other_args )`
+    - `func( arg1, argN, ...other_args )`
+    - `func( ...args )`
+    - `func( ... )` - anonymous args variadic
+  - Only kwargs (see call examples below): 
+    - `func( ;kw1=1, ...other_kwargs )`
+    - `func( ;kw1=1, kwN="n", ...other_kwargs )`
+    - `func( ;...kwargs )`
+    - `func( ;... )` - anonymous kwargs variadic
+  - Args and Kwargs (see call examples below):
+    - `func( arg1, ...other_args ; kw1=1, ...other_kwargs )`
+    - `func( arg1, argN, ...other_args ; kw1=1, kwN="n", ...other_kwargs )`
+    - `func( ...args ;...kwargs )`
+    - `func( ...;... )` - anonymous args and kwargs variadic
+  - Callee context: this context has three special variables:
+    - `args`:  `argv` is `array` with all called arguments;
+    - `kwargs`:  `kwargv` is `map` with all called keyword arguments;
+    - `callee`: is a pointer of this function value.
+    - Examples:
+      - Only `args`:
+        - `func( arg1, ...other_args ) { return [argv, kwargv, callee] }`
+        - `func( ... ; )`
+      - `args`, `kwargs`: 
+        - `func( arg1, ...other_args ; kw1=1, ...other_kwargs ) { return [argv, kwargv, callee] }`
+        - `func( ... ; ... ) { return [argv, kwargv, callee] }`
+
+Examples:
 
 ```golang
 my_func := func(arg1, arg2) {
@@ -161,6 +208,12 @@ adder := func(base) {
 }
 add5 := adder(5)
 nine := add5(4)    // == 9
+
+// recursive multiplication implementation
+mul := func(n , x) {
+   return x == 0 ? 0 : n + callee(n, x-1)
+}
+mul_value = mul(7, 5) // == 35
 ```
 
 Unlike Go, Tengo does not have declarations. So the following code is illegal:
@@ -185,6 +238,29 @@ variadicClosure := func(a) {
   }
 }
 variadicClosure(1)(2, 3, 4) // [1, 2, [3, 4]]
+
+// direct call closure
+then := func() { return 10 }() // == 10
+// or into parenthesis
+eleven := (func() { return 11 })() // == 11
+// direct call recursive closure
+mul7to5 := func(n , x) {
+  return x == 0 ? 0 : n + callee(n, x-1)
+}(7, 5) // == 35
+```
+
+Anonymous variadic.
+
+```golang
+f := func (a, b, ...) {
+    return [a, b]
+}
+f(1, 2, 3, 4) // [1,2]
+
+f2 := func (...) {
+    return []
+}
+f2(1, 2, 3, 4) // []
 ```
 
 Only the last parameter can be variadic. The following code is also illegal:
@@ -216,6 +292,92 @@ f2(1)               // valid; a = 1, b = []
 f2(1, 2)            // valid; a = 1, b = [2]
 f2(1, 2, 3)         // valid; a = 1, b = [2, 3]
 f2([1, 2, 3]...)    // valid; a = 1, b = [2, 3]
+```
+
+#### Keyword arguments
+
+Tengo also supports keywords of functions/closures.
+
+```golang
+f := func(;a=1, b=2) {
+  return a + b
+}
+f()   // == 3
+f(a=default)   // == 3
+f(a=2)   // == 4
+f(a=2,b=3)   // == 5
+f(b=6,{a:6}...)   // == 12
+f(b=6,{a:default}...)   // (a = 1, b = 6 ) -> a+b == 7
+f(b=6,map(a=6)...)   // == 12
+f(b=6,{a:6,c:3}...)   // Runtime Error: wrong number of kwargs: want=2, got=3
+```
+
+Only the last parameter can be variadic.
+
+```golang
+f := func(;a=1, b=2, ...kw) {
+    return [a, b, kw]
+}
+f()   // == [1,2,{}]
+f(a=2)   // == [2,2,{}]
+f(b=6,{a:2,c:7}...)   // == [2,6,{c:7}]
+
+f := func(;...kw) {
+    return kw
+}
+f()   // == {}
+f(a=2)   // == {a:2}
+f(b=6,{a:2,c:7}...)   // == {a:2,b:6,c:7}
+
+// pass only kwargs variadic
+f(;{a:2,c:7}...)   // == {a:2,b:6,c:7}
+```
+
+Anonymous variadic:
+
+```golang
+f := func(;a=1, b=2, ...) {
+    return [a, b]
+}
+f()   // == [1,2]
+f(a=2)   // == [2,2]
+f(b=6,{a:2,c:7}...)   // == [2,6]
+```
+
+Mix args and kwargs.
+
+```golang
+f := func(a, ...args; b=2, ...kwargs) { return [a, b, args, kwargs]}
+f = func(a, ...; b=2, ...) { return [a, b] }
+// anonymous variadict of args and kwargs
+f = func(...; ...) {}
+```
+
+#### CALLEE
+
+`callee` - is a keyword to refer a current function scope data.
+
+```golang
+f := func() { return [argv, kwargv, callee] } 
+f() // == {[], {}, <compiled-function>}
+
+f = func(...;...) { return [argv, kwargv, callee] }
+f(1) // == {[1], {}, <compiled-function>}
+f(1, 2, x = 3, y = 4) // == [[1,2], {x:3,y:4}, <compiled-function>]
+f(1, 2; x = 3, y = 4) // == [[1,2], {x:3,y:4}, <compiled-function>]
+f([1, 2]...; {x: 3, y: 4}...) // == [[1,2], {x:3,y:4}, <compiled-function>]
+
+my_args := [1, 2];
+my_kwargs := {x: 3, y: 4}
+f(my_args...; my_kwargs...) // == [[1,2], {x:3,y:4}]
+f(0, my_args...; z=5, my_kwargs...) // == [[0,1,2], {x:3,y:4,z:5}]
+f(append(my_args, 200)...; map(;t="TVAL", my_kwargs...)...) // == [[1,2,200], {t:"TVAL",x:3,y:4}]
+
+f = func(a, ...args; z="Z_DEFAULT", ...kwargs) { 
+	return [a, z, argv,kwargv]
+}
+f("a val", my_args...; my_kwargs...) // == ["a val", "Z_DEFAULT", ["a val", 1, 2], {x: 3, y: 4}]
+f("a val", my_args...; z="NEW_Z", my_kwargs...)// == ["a val", "NEW_Z", ["a val", 1, 2], {z: "NEW_Z", x: 3, y: 4}]
 ```
 
 ## Variables and Scopes

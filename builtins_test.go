@@ -9,7 +9,7 @@ import (
 )
 
 func Test_builtinDelete(t *testing.T) {
-	var builtinDelete func(args ...tengo.Object) (tengo.Object, error)
+	var builtinDelete func(p *tengo.CallContext) (tengo.Object, error)
 	for _, f := range tengo.GetAllBuiltinFunctions() {
 		if f.Name == "delete" {
 			builtinDelete = f.Value
@@ -98,7 +98,7 @@ func Test_builtinDelete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := builtinDelete(tt.args.args...)
+			got, err := builtinDelete(&tengo.CallContext{Args: tt.args.args})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("builtinDelete() error = %v, wantErr %v",
 					err, tt.wantErr)
@@ -133,7 +133,7 @@ func Test_builtinDelete(t *testing.T) {
 }
 
 func Test_builtinSplice(t *testing.T) {
-	var builtinSplice func(args ...tengo.Object) (tengo.Object, error)
+	var builtinSplice func(p *tengo.CallContext) (tengo.Object, error)
 	for _, f := range tengo.GetAllBuiltinFunctions() {
 		if f.Name == "splice" {
 			builtinSplice = f.Value
@@ -331,7 +331,7 @@ func Test_builtinSplice(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := builtinSplice(tt.args...)
+			got, err := builtinSplice(&tengo.CallContext{Args: tt.args})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("builtinSplice() error = %v, wantErr %v",
 					err, tt.wantErr)
@@ -353,7 +353,7 @@ func Test_builtinSplice(t *testing.T) {
 }
 
 func Test_builtinRange(t *testing.T) {
-	var builtinRange func(args ...tengo.Object) (tengo.Object, error)
+	var builtinRange func(p *tengo.CallContext) (tengo.Object, error)
 	for _, f := range tengo.GetAllBuiltinFunctions() {
 		if f.Name == "range" {
 			builtinRange = f.Value
@@ -400,12 +400,12 @@ func Test_builtinRange(t *testing.T) {
 				Name: "step", Expected: "int", Found: "string"},
 		},
 		{name: "zero step",
-			args:      []tengo.Object{&tengo.Int{}, &tengo.Int{}, &tengo.Int{}}, //must greate than 0
+			args:      []tengo.Object{&tengo.Int{}, &tengo.Int{}, &tengo.Int{}}, // must greate than 0
 			wantErr:   true,
 			wantedErr: tengo.ErrInvalidRangeStep,
 		},
 		{name: "negative step",
-			args:      []tengo.Object{&tengo.Int{}, &tengo.Int{}, intObject(-2)}, //must greate than 0
+			args:      []tengo.Object{&tengo.Int{}, &tengo.Int{}, intObject(-2)}, // must greate than 0
 			wantErr:   true,
 			wantedErr: tengo.ErrInvalidRangeStep,
 		},
@@ -487,7 +487,7 @@ func Test_builtinRange(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := builtinRange(tt.args...)
+			got, err := builtinRange(&tengo.CallContext{Args: tt.args})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("builtinRange() error = %v, wantErr %v",
 					err, tt.wantErr)
@@ -500,6 +500,74 @@ func Test_builtinRange(t *testing.T) {
 			if tt.result != nil && !reflect.DeepEqual(tt.result, got) {
 				t.Errorf("builtinRange() arrays are not equal expected"+
 					" %s, got %s", tt.result, got.(*tengo.Array))
+			}
+		})
+	}
+}
+
+func Test_map(t *testing.T) {
+	var fn func(p *tengo.CallContext) (tengo.Object, error)
+	for _, f := range tengo.GetAllBuiltinFunctions() {
+		if f.Name == "map" {
+			fn = f.Value
+			break
+		}
+	}
+	if fn == nil {
+		t.Fatal("builtin map not found")
+	}
+	tests := []struct {
+		name      string
+		args      []tengo.Object
+		kwargs    map[string]tengo.Object
+		result    *tengo.Map
+		wantErr   bool
+		wantedErr error
+	}{
+		{name: "no args",
+			result: &tengo.Map{Value: map[string]tengo.Object{}},
+		},
+		{name: "only kargs",
+			kwargs: map[string]tengo.Object{"a": &tengo.Int{Value: 1}},
+			result: &tengo.Map{Value: map[string]tengo.Object{"a": &tengo.Int{Value: 1}}},
+		},
+		{name: "undefined arg and kargs",
+			args:   []tengo.Object{tengo.UndefinedValue, nil},
+			kwargs: map[string]tengo.Object{"a": &tengo.Int{Value: 1}},
+			result: &tengo.Map{Value: map[string]tengo.Object{"a": &tengo.Int{Value: 1}}},
+		},
+		{name: "args and kargs",
+			args:   []tengo.Object{&tengo.Map{Value: map[string]tengo.Object{"b": &tengo.Int{Value: 2}}}},
+			kwargs: map[string]tengo.Object{"a": &tengo.Int{Value: 1}},
+			result: &tengo.Map{Value: map[string]tengo.Object{"a": &tengo.Int{Value: 1}, "b": &tengo.Int{Value: 2}}},
+		},
+		{name: "args without kargs",
+			args:   []tengo.Object{
+			&tengo.Map{Value: map[string]tengo.Object{"b": &tengo.Int{Value: 2}}},
+			&tengo.Map{Value: map[string]tengo.Object{"a": &tengo.Int{Value: 1}}},
+			},
+			result: &tengo.Map{Value: map[string]tengo.Object{"a": &tengo.Int{Value: 1}, "b": &tengo.Int{Value: 2}}},
+		},
+		{name: "bad arg",
+			args:   []tengo.Object{&tengo.Int{Value: 2}},
+			wantErr: true, wantedErr: errors.New("invalid type for argument 'arg #0': expected map, found int"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := fn(&tengo.CallContext{Args: tt.args, Kwargs: tt.kwargs})
+			if (err != nil) != tt.wantErr {
+				t.Errorf("builtinMap() error = %v, wantErr %v",
+					err, tt.wantErr)
+				return
+			}
+			if tt.wantErr && tt.wantedErr.Error() != err.Error() {
+				t.Errorf("builtinMap() error = %v, wantedErr %v",
+					err, tt.wantedErr)
+			}
+			if tt.result != nil && !reflect.DeepEqual(tt.result.Value, got.(*tengo.Map).Value) {
+				t.Errorf("builtinMap() map are not equal expected"+
+					" %s, got %s", tt.result, got.(*tengo.Map))
 			}
 		})
 	}

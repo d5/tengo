@@ -562,7 +562,7 @@ func funcCall(
 	args ...tengo.Object,
 ) (tengo.Object, error) {
 	userFunc := &tengo.UserFunction{Value: fn}
-	return userFunc.Call(args...)
+	return userFunc.Call(&tengo.CallContext{Args: args})
 }
 
 func array(elements ...tengo.Object) *tengo.Array {

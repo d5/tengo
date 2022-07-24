@@ -14,7 +14,7 @@ const bom = 0xFEFF
 // ScanMode represents a scanner mode.
 type ScanMode int
 
-// List of scanner modes.
+// Names of scanner modes.
 const (
 	ScanComments ScanMode = 1 << iota
 	DontInsertSemis
@@ -90,7 +90,10 @@ func (s *Scanner) Scan() (
 		tok = token.Lookup(literal)
 		switch tok {
 		case token.Ident, token.Break, token.Continue, token.Return,
-			token.Export, token.True, token.False, token.Undefined:
+			token.Export, token.True, token.False, token.Undefined,
+			token.Default:
+			insertSemi = true
+		case token.CalledArgs, token.CalledKwargs, token.Callee:
 			insertSemi = true
 		}
 	case ('0' <= ch && ch <= '9') || (ch == '.' && '0' <= s.peek() && s.peek() <= '9'):
@@ -279,7 +282,7 @@ func (s *Scanner) scanComment() string {
 	var numCR int
 
 	if s.ch == '/' {
-		//-style comment
+		// -style comment
 		// (the final '\n' is not considered part of the comment)
 		s.next()
 		for s.ch != '\n' && s.ch >= 0 {
@@ -337,7 +340,7 @@ func (s *Scanner) findLineEnd() bool {
 	// read ahead until a newline, EOF, or non-comment tok is found
 	for s.ch == '/' || s.ch == '*' {
 		if s.ch == '/' {
-			//-style comment always contains a newline
+			// -style comment always contains a newline
 			return true
 		}
 		/*-style comment: look for newline */

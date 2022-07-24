@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"strings"
 
 	"github.com/d5/tengo/v2/token"
@@ -109,13 +110,26 @@ func (e *BoolLit) String() string {
 	return e.Literal
 }
 
+// CallExprArgs represents a call expression arguments.
+type CallExprArgs struct {
+	Values   []Expr
+	Ellipsis Pos
+}
+
+// CallExprKwargs represents a call expression keyword arguments.
+type CallExprKwargs struct {
+	Names    []*Ident
+	Values   []Expr
+	Ellipsis Pos
+}
+
 // CallExpr represents a function call expression.
 type CallExpr struct {
-	Func     Expr
-	LParen   Pos
-	Args     []Expr
-	Ellipsis Pos
-	RParen   Pos
+	Func   Expr
+	LParen Pos
+	Args   CallExprArgs
+	Kwargs CallExprKwargs
+	RParen Pos
 }
 
 func (e *CallExpr) exprNode() {}
@@ -131,14 +145,48 @@ func (e *CallExpr) End() Pos {
 }
 
 func (e *CallExpr) String() string {
-	var args []string
-	for _, e := range e.Args {
-		args = append(args, e.String())
+	var buf = bytes.NewBufferString(e.Func.String())
+	buf.WriteString("(")
+	if l := len(e.Args.Values); l > 0 {
+		for i, e := range e.Args.Values {
+			if i != 0 {
+				buf.WriteString(", ")
+			}
+			buf.WriteString(e.String())
+		}
+		if e.Args.Ellipsis.IsValid() {
+			buf.WriteString("...")
+		}
 	}
-	if len(args) > 0 && e.Ellipsis.IsValid() {
-		args[len(args)-1] = args[len(args)-1] + "..."
+	if l := len(e.Kwargs.Values); l > 0 {
+		if len(e.Args.Values) == 0 {
+			buf.WriteString(";")
+		} else {
+			buf.WriteString(", ")
+		}
+
+		qnt := l
+		if e.Kwargs.Ellipsis.IsValid() {
+			qnt--
+		}
+		for i, n := range e.Kwargs.Names[0:qnt] {
+			if i != 0 {
+				buf.WriteString(", ")
+			}
+			buf.WriteString(n.String())
+			buf.WriteString(" = ")
+			buf.WriteString(e.Kwargs.Values[i].String())
+		}
+		if e.Kwargs.Ellipsis.IsValid() {
+			if qnt > 0 {
+				buf.WriteString(", ")
+			}
+			buf.WriteString(e.Kwargs.Values[qnt].String())
+			buf.WriteString("...")
+		}
 	}
-	return e.Func.String() + "(" + strings.Join(args, ", ") + ")"
+	buf.WriteString(")")
+	return buf.String()
 }
 
 // CharLit represents a character literal.
@@ -262,7 +310,7 @@ func (e *FuncLit) String() string {
 // FuncType represents a function type definition.
 type FuncType struct {
 	FuncPos Pos
-	Params  *IdentList
+	Params  *FuncParams
 }
 
 func (e *FuncType) exprNode() {}
@@ -598,4 +646,88 @@ func (e *UndefinedLit) End() Pos {
 
 func (e *UndefinedLit) String() string {
 	return "undefined"
+}
+
+// DefaultLit represents an undefined kwarg literal.
+type DefaultLit struct {
+	TokenPos Pos
+}
+
+func (e *DefaultLit) exprNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (e *DefaultLit) Pos() Pos {
+	return e.TokenPos
+}
+
+// End returns the position of first character immediately after the node.
+func (e *DefaultLit) End() Pos {
+	return e.TokenPos + 7 // len("default") == 7
+}
+
+func (e *DefaultLit) String() string {
+	return "default"
+}
+
+// CalleeLit represents an literal callee function/closure flag.
+type CalleeLit struct {
+	TokenPos Pos
+}
+
+func (e *CalleeLit) exprNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (e *CalleeLit) Pos() Pos {
+	return e.TokenPos
+}
+
+// End returns the position of first character immediately after the node.
+func (e *CalleeLit) End() Pos {
+	return e.TokenPos + 6 // len(callee) == 15
+}
+
+func (e *CalleeLit) String() string {
+	return "callee"
+}
+
+// CalledArgsLit represents an literal called arguments.
+type CalledArgsLit struct {
+	TokenPos Pos
+}
+
+func (e *CalledArgsLit) exprNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (e *CalledArgsLit) Pos() Pos {
+	return e.TokenPos
+}
+
+// End returns the position of first character immediately after the node.
+func (e *CalledArgsLit) End() Pos {
+	return e.TokenPos + 4 // len("argv") == 4
+}
+
+func (e *CalledArgsLit) String() string {
+	return "argv"
+}
+
+// CalledArgsLit represents an literal called arguments.
+type CalledKwargsLit struct {
+	TokenPos Pos
+}
+
+func (e *CalledKwargsLit) exprNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (e *CalledKwargsLit) Pos() Pos {
+	return e.TokenPos
+}
+
+// End returns the position of first character immediately after the node.
+func (e *CalledKwargsLit) End() Pos {
+	return e.TokenPos + 6 // len("kwargv") == 6
+}
+
+func (e *CalledKwargsLit) String() string {
+	return "kwargv"
 }

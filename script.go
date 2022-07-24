@@ -231,7 +231,7 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 				}
 			}
 		}()
-		ch <- v.Run()
+		ch <- v.RunContext(ctx)
 	}()
 
 	select {

@@ -134,7 +134,7 @@ CanCall should return whether the Object can be called. When this function
 returns true, the Object is considered Callable.
 
 ```golang
-Call(args ...Object) (ret Object, err error)
+Call(ctx *CallContext) (ret Object, err error)
 ```
 
 Call should take an arbitrary number of arguments and return a return value
@@ -208,6 +208,7 @@ These are the basic types Tengo runtime supports out of the box:
   [CompiledFunction](https://godoc.org/github.com/d5/tengo#CompiledFunction),
   [BuiltinFunction](https://godoc.org/github.com/d5/tengo#BuiltinFunction),
   [UserFunction](https://godoc.org/github.com/d5/tengo#UserFunction)
+  [UserFunctionCtx](https://godoc.org/github.com/d5/tengo#UserFunctionCtx)
 - [Iterators](https://godoc.org/github.com/d5/tengo#Iterator):
   [StringIterator](https://godoc.org/github.com/d5/tengo#StringIterator),
   [ArrayIterator](https://godoc.org/github.com/d5/tengo#ArrayIterator),
@@ -218,6 +219,7 @@ These are the basic types Tengo runtime supports out of the box:
 - Other internal objects: [Break](https://godoc.org/github.com/d5/tengo#Break),
   [Continue](https://godoc.org/github.com/d5/tengo#Continue),
   [ReturnValue](https://godoc.org/github.com/d5/tengo#ReturnValue)
+  [CallContext](https://godoc.org/github.com/d5/tengo#CallContext)
 
 See
 [Runtime Types](https://github.com/d5/tengo/blob/master/docs/runtime-types.md)
@@ -359,17 +361,20 @@ func (o *StringArray) CanCall() bool {
     return true
 }
 
-func (o *StringArray) Call(args ...tengo.Object) (ret tengo.Object, err error) {
-    if len(args) != 1 {
+func (o *StringArray) Call(ctx *CallContext) (ret tengo.Object, err error) {
+    if len(ctx.Args) != 1 {
         return nil, tengo.ErrWrongNumArguments
     }
+    if len(ctx.Kwargs) > 0 {
+        return nil, tengo.ErrUnexpectedKwargs
+    }
 
-    s1, ok := tengo.ToString(args[0])
+    s1, ok := tengo.ToString(ctx.Args[0])
     if !ok {
         return nil, tengo.ErrInvalidArgumentType{
             Name:     "first",
             Expected: "string",
-            Found:    args[0].TypeName(),
+            Found:    ctx.Args[0].TypeName(),
         }
     }
 

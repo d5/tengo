@@ -33,6 +33,8 @@ func TestObject_TypeName(t *testing.T) {
 	require.Equal(t, "builtin-function:fn", o.TypeName())
 	o = &tengo.UserFunction{Name: "fn"}
 	require.Equal(t, "user-function:fn", o.TypeName())
+	o = &tengo.UserFunctionCtx{Name: "fn"}
+	require.Equal(t, "user-function-ctx:fn", o.TypeName())
 	o = &tengo.CompiledFunction{}
 	require.Equal(t, "compiled-function", o.TypeName())
 	o = &tengo.Undefined{}
@@ -41,6 +43,8 @@ func TestObject_TypeName(t *testing.T) {
 	require.Equal(t, "error", o.TypeName())
 	o = &tengo.Bytes{}
 	require.Equal(t, "bytes", o.TypeName())
+	o = &tengo.VmContextObject{}
+	require.Equal(t, "context", o.TypeName())
 }
 
 func TestObject_IsFalsy(t *testing.T) {
@@ -125,6 +129,8 @@ func TestObject_String(t *testing.T) {
 	require.Equal(t, "", o.String())
 	o = &tengo.Bytes{Value: []byte("foo")}
 	require.Equal(t, "foo", o.String())
+	o = &tengo.VmContextObject{}
+	require.Equal(t, "<vm-context>", o.String())
 }
 
 func TestObject_BinaryOp(t *testing.T) {

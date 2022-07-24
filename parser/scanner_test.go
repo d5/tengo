@@ -116,6 +116,10 @@ func TestScanner_Scan(t *testing.T) {
 		{token.If, "if"},
 		{token.Return, "return"},
 		{token.Export, "export"},
+		{token.Callee, "callee"},
+		{token.CalledArgs, "argv"},
+		{token.CalledKwargs, "kwargv"},
+		{token.Default, "default"},
 	}
 
 	// combine
@@ -154,7 +158,7 @@ func TestScanner_Scan(t *testing.T) {
 			expectedLiteral = string(parser.StripCR([]byte(tc.literal),
 				tc.literal[1] == '*'))
 
-			//-style comment literal doesn't contain newline
+			// -style comment literal doesn't contain newline
 			if expectedLiteral[1] == '/' {
 				expectedLiteral = expectedLiteral[:len(expectedLiteral)-1]
 			}
