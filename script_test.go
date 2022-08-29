@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -477,6 +478,67 @@ func TestCompiled_RunContext(t *testing.T) {
 	defer cancel()
 	err = c.RunContext(ctx)
 	require.Equal(t, context.DeadlineExceeded, err)
+}
+
+func TestCompiled_CustomObject(t *testing.T) {
+	c := compile(t, `r := (t<130)`, M{"t": &customNumber{value: 123}})
+	compiledRun(t, c)
+	compiledGet(t, c, "r", true)
+
+	c = compile(t, `r := (t>13)`, M{"t": &customNumber{value: 123}})
+	compiledRun(t, c)
+	compiledGet(t, c, "r", true)
+}
+
+// customNumber is a user defined object that can compare to tengo.Int
+// very shitty implementation, just to test that token.Less and token.Greater in BinaryOp works
+type customNumber struct {
+	tengo.ObjectImpl
+	value int64
+}
+
+func (n *customNumber) TypeName() string {
+	return "Number"
+}
+
+func (n *customNumber) String() string {
+	return strconv.FormatInt(n.value, 10)
+}
+
+func (n *customNumber) BinaryOp(op token.Token, rhs tengo.Object) (tengo.Object, error) {
+	tengoInt, ok := rhs.(*tengo.Int)
+	if !ok {
+		return nil, tengo.ErrInvalidOperator
+	}
+	return n.binaryOpInt(op, tengoInt)
+}
+
+func (n *customNumber) binaryOpInt(op token.Token, rhs *tengo.Int) (tengo.Object, error) {
+	i := n.value
+
+	switch op {
+	case token.Less:
+		if i < rhs.Value {
+			return tengo.TrueValue, nil
+		}
+		return tengo.FalseValue, nil
+	case token.Greater:
+		if i > rhs.Value {
+			return tengo.TrueValue, nil
+		}
+		return tengo.FalseValue, nil
+	case token.LessEq:
+		if i <= rhs.Value {
+			return tengo.TrueValue, nil
+		}
+		return tengo.FalseValue, nil
+	case token.GreaterEq:
+		if i >= rhs.Value {
+			return tengo.TrueValue, nil
+		}
+		return tengo.FalseValue, nil
+	}
+	return nil, tengo.ErrInvalidOperator
 }
 
 func compile(t *testing.T, input string, vars M) *tengo.Compiled {
