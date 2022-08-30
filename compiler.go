@@ -141,25 +141,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 		if node.Token == token.LAnd || node.Token == token.LOr {
 			return c.compileLogical(node)
 		}
-		if node.Token == token.Less {
-			if err := c.Compile(node.RHS); err != nil {
-				return err
-			}
-			if err := c.Compile(node.LHS); err != nil {
-				return err
-			}
-			c.emit(node, parser.OpBinaryOp, int(token.Greater))
-			return nil
-		} else if node.Token == token.LessEq {
-			if err := c.Compile(node.RHS); err != nil {
-				return err
-			}
-			if err := c.Compile(node.LHS); err != nil {
-				return err
-			}
-			c.emit(node, parser.OpBinaryOp, int(token.GreaterEq))
-			return nil
-		}
+
 		if err := c.Compile(node.LHS); err != nil {
 			return err
 		}
@@ -182,6 +164,10 @@ func (c *Compiler) Compile(node parser.Node) error {
 			c.emit(node, parser.OpBinaryOp, int(token.Greater))
 		case token.GreaterEq:
 			c.emit(node, parser.OpBinaryOp, int(token.GreaterEq))
+		case token.Less:
+			c.emit(node, parser.OpBinaryOp, int(token.Less))
+		case token.LessEq:
+			c.emit(node, parser.OpBinaryOp, int(token.LessEq))
 		case token.Equal:
 			c.emit(node, parser.OpEqual)
 		case token.NotEqual:
@@ -692,12 +678,15 @@ func (c *Compiler) compileAssign(
 		return c.errorf(node, "operator ':=' not allowed with selector")
 	}
 
+	_, isFunc := rhs[0].(*parser.FuncLit)
 	symbol, depth, exists := c.symbolTable.Resolve(ident, false)
 	if op == token.Define {
 		if depth == 0 && exists {
 			return c.errorf(node, "'%s' redeclared in this block", ident)
 		}
-		symbol = c.symbolTable.Define(ident)
+		if isFunc {
+			symbol = c.symbolTable.Define(ident)
+		}
 	} else {
 		if !exists {
 			return c.errorf(node, "unresolved reference '%s'", ident)
@@ -716,6 +705,10 @@ func (c *Compiler) compileAssign(
 		if err := c.Compile(expr); err != nil {
 			return err
 		}
+	}
+
+	if op == token.Define && !isFunc {
+		symbol = c.symbolTable.Define(ident)
 	}
 
 	switch op {

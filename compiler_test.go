@@ -107,12 +107,12 @@ func TestCompiler_Compile(t *testing.T) {
 			concatInsts(
 				tengo.MakeInstruction(parser.OpConstant, 0),
 				tengo.MakeInstruction(parser.OpConstant, 1),
-				tengo.MakeInstruction(parser.OpBinaryOp, 39),
+				tengo.MakeInstruction(parser.OpBinaryOp, 38),
 				tengo.MakeInstruction(parser.OpPop),
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray(
-				intObject(2),
-				intObject(1))))
+				intObject(1),
+				intObject(2))))
 
 	expectCompile(t, `1 >= 2`,
 		bytecode(
@@ -131,12 +131,12 @@ func TestCompiler_Compile(t *testing.T) {
 			concatInsts(
 				tengo.MakeInstruction(parser.OpConstant, 0),
 				tengo.MakeInstruction(parser.OpConstant, 1),
-				tengo.MakeInstruction(parser.OpBinaryOp, 44),
+				tengo.MakeInstruction(parser.OpBinaryOp, 43),
 				tengo.MakeInstruction(parser.OpPop),
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray(
-				intObject(2),
-				intObject(1))))
+				intObject(1),
+				intObject(2))))
 
 	expectCompile(t, `1 == 2`,
 		bytecode(
@@ -929,9 +929,9 @@ func() {
 			concatInsts(
 				tengo.MakeInstruction(parser.OpConstant, 0),
 				tengo.MakeInstruction(parser.OpSetGlobal, 0),
-				tengo.MakeInstruction(parser.OpConstant, 1),
 				tengo.MakeInstruction(parser.OpGetGlobal, 0),
-				tengo.MakeInstruction(parser.OpBinaryOp, 39),
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpBinaryOp, 38),
 				tengo.MakeInstruction(parser.OpJumpFalsy, 31),
 				tengo.MakeInstruction(parser.OpGetGlobal, 0),
 				tengo.MakeInstruction(parser.OpConstant, 2),
@@ -978,9 +978,9 @@ func() {
 				tengo.MakeInstruction(parser.OpConstant, 1),
 				tengo.MakeInstruction(parser.OpNotEqual),
 				tengo.MakeInstruction(parser.OpOrJump, 34),
-				tengo.MakeInstruction(parser.OpConstant, 1),
 				tengo.MakeInstruction(parser.OpGetGlobal, 0),
-				tengo.MakeInstruction(parser.OpBinaryOp, 39),
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpBinaryOp, 38),
 				tengo.MakeInstruction(parser.OpPop),
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray(
@@ -1023,6 +1023,8 @@ func TestCompilerErrorReport(t *testing.T) {
 
 	expectCompileError(t, `a = 1`,
 		"Compile Error: unresolved reference 'a'\n\tat test:1:1")
+	expectCompileError(t, `a := a`,
+		"Compile Error: unresolved reference 'a'\n\tat test:1:6")
 	expectCompileError(t, `a, b := 1, 2`,
 		"Compile Error: tuple assignment not allowed\n\tat test:1:1")
 	expectCompileError(t, `a.b := 1`,
