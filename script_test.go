@@ -549,10 +549,14 @@ func TestScript_ImportError(t *testing.T) {
 
 	src := `
 export func(ctx) {
-	if ctx.actiontimes <= 0 {
+	closure := func() {
+		if ctx.actiontimes < 0 { // an error is thrown here because actiontimes is undefined
+			return true
+		}
 		return false
 	}
-	return true
+
+	return closure()
 }`
 
 	s := tengo.NewScript([]byte(m))
@@ -566,7 +570,7 @@ export func(ctx) {
 	require.NoError(t, err)
 
 	_, err = s.Run()
-	require.True(t, strings.Contains(err.Error(), "expression:3:5"))
+	require.True(t, strings.Contains(err.Error(), "expression:4:6"))
 }
 
 func compile(t *testing.T, input string, vars M) *tengo.Compiled {
