@@ -541,6 +541,34 @@ func (n *customNumber) binaryOpInt(op token.Token, rhs *tengo.Int) (tengo.Object
 	return nil, tengo.ErrInvalidOperator
 }
 
+func TestScript_ImportError(t *testing.T) {
+	m := `
+	exp := import("expression")
+	r := exp(ctx)
+`
+
+	src := `
+export func(ctx) {
+	if ctx.actiontimes <= 0 {
+		return false
+	}
+	return true
+}`
+
+	s := tengo.NewScript([]byte(m))
+	mods := tengo.NewModuleMap()
+	mods.AddSourceModule("expression", []byte(src))
+	s.SetImports(mods)
+
+	err := s.Add("ctx", map[string]interface{}{
+		"ctx": 12,
+	})
+	require.NoError(t, err)
+
+	_, err = s.Run()
+	require.True(t, strings.Contains(err.Error(), "expression:3:5"))
+}
+
 func compile(t *testing.T, input string, vars M) *tengo.Compiled {
 	s := tengo.NewScript([]byte(input))
 	for vn, vv := range vars {
