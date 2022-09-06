@@ -3655,14 +3655,28 @@ func TestRunCompiledWithModules(t *testing.T) {
 
 	cFn := c.Get("fnMap").Map()["fun1"].(*tengo.CompiledFunction)
 
-	//globals := make([]tengo.Object, tengo.GlobalsSize)
-	vm := tengo.NewVM(c.Bytecode(), c.Globals(), -1)
-	require.NotNil(t, vm)
+	var testCases [][]int64
+	for i := 0; i < 1000; i++ {
+		testCases = append(testCases, []int64{int64(i), int64(2*i + 15)})
+	}
 
-	res, err := vm.RunCompiled(cFn, &tengo.Int{Value: 12})
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, &tengo.Int{Value: 39}, res)
+	results := make(chan bool, 1000)
+
+	for _, testCase := range testCases {
+		go func(pair []int64) {
+			vm := tengo.NewVM(c.Bytecode(), c.Globals(), -1)
+			require.NotNil(t, vm)
+			res, err := vm.RunCompiled(cFn, &tengo.Int{Value: pair[0]})
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			require.Equal(t, &tengo.Int{Value: pair[1]}, res)
+			results <- true
+		}(testCase)
+	}
+
+	for i := 0; i < 1000; i++ {
+		require.True(t, <-results)
+	}
 }
 
 func expectRun(
