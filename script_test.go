@@ -608,3 +608,49 @@ func compiledIsDefined(
 ) {
 	require.Equal(t, expected, c.IsDefined(name))
 }
+
+func TestCompiled_Clone(t *testing.T) {
+	// simple script that modify a primitive and
+	// map-typed global variables
+	script := tengo.NewScript([]byte(`
+round = 1000			// overwrite primitive type
+last_key := ""
+for key, val in data {
+    last_key = key
+}
+delete(data, last_key)	// delete entry from data
+`))
+
+	params := map[string]interface{}{
+		"round": 1,
+		"data": map[string]interface{}{
+			"key1":    "test1",
+			"num1":    1,
+			"flag":    true,
+			"numbers": []interface{}{"one", 2},
+		},
+	}
+	for name, val := range params {
+		script.Add(name, val)
+	}
+
+	// 1st run the script.
+	// - "round" will be overwriten to 1000
+	// - one entry will be removed from "data"
+	compiled, err := script.RunContext(context.Background())
+	require.NoError(t, err)
+
+	for i := 2; i <= 5; i++ {
+		clone := compiled.Clone()
+		clone.Set("round", i)
+		err = clone.RunContext(context.Background())
+		require.NoError(t, err)
+	}
+
+	// retrieve values
+	round := compiled.Get("round").Int()
+	require.Equal(t, 1000, round) // round, modified to 1000 in script
+
+	data := compiled.Get("data").Map()
+	require.Equal(t, 3, len(data)) // data, one entry removed
+}
