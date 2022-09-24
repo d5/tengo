@@ -767,6 +767,7 @@ func (v *VM) run() {
 				NumLocals:     fn.NumLocals,
 				NumParameters: fn.NumParameters,
 				VarArgs:       fn.VarArgs,
+				SourceMap:     fn.SourceMap,
 				Free:          free,
 			}
 			v.allocs--
