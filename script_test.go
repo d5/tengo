@@ -640,3 +640,28 @@ func compiledIsDefined(
 ) {
 	require.Equal(t, expected, c.IsDefined(name))
 }
+func TestCompiled_Clone(t *testing.T) {
+	script := tengo.NewScript([]byte(`
+count += 1
+data["b"] = 2
+`))
+
+	err := script.Add("data", map[string]interface{}{"a": 1})
+	require.NoError(t, err)
+
+	err = script.Add("count", 1000)
+	require.NoError(t, err)
+
+	compiled, err := script.Compile()
+	require.NoError(t, err)
+
+	clone := compiled.Clone()
+	err = clone.RunContext(context.Background())
+	require.NoError(t, err)
+
+	require.Equal(t, 1000, compiled.Get("count").Int())
+	require.Equal(t, 1, len(compiled.Get("data").Map()))
+
+	require.Equal(t, 1001, clone.Get("count").Int())
+	require.Equal(t, 2, len(clone.Get("data").Map()))
+}
