@@ -1,6 +1,7 @@
 package tengo_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -664,4 +665,90 @@ data["b"] = 2
 
 	require.Equal(t, 1001, clone.Get("count").Int())
 	require.Equal(t, 2, len(clone.Get("data").Map()))
+}
+
+func compileEncodeDecode(
+	t *testing.T,
+	input string,
+	modules *tengo.ModuleMap,
+	vars M,
+) *tengo.Compiled {
+
+	// 1. compile input script
+	s := tengo.NewScript([]byte(input))
+	for vn, vv := range vars {
+		err := s.Add(vn, vv)
+		require.NoError(t, err)
+	}
+	s.SetImports(modules)
+	c, err := s.Compile()
+	require.NoError(t, err)
+	require.NotNil(t, c)
+
+	// 2. run compiled script
+	err = c.Run()
+	require.NoError(t, err)
+
+	// 3. encode compile script
+	buf := bytes.Buffer{}
+	err = c.Encode(&buf)
+	require.NoError(t, err)
+
+	// 4. create new compiled from bytecode
+	c, err = tengo.NewCompiled(buf.Bytes(), modules)
+	require.NoError(t, err)
+
+	// 5. assign variables to compiled bytecode
+	for name, val := range vars {
+		err := c.Set(name, val)
+		require.NoError(t, err)
+	}
+
+	// 6. run decoded compiled script
+	err = c.Run()
+	require.NoError(t, err)
+
+	return c
+}
+
+func TestCompiled_EncodeDecode(t *testing.T) {
+	// A. Encode empty bytecode
+	ec := tengo.Compiled{}
+	err := ec.Encode(nil)
+	require.Error(t, err)
+
+	// B. Encode/decode empty script
+	c := compileEncodeDecode(t, "", nil, nil)
+	all := c.GetAll()
+	require.Equal(t, len(all), 0)
+
+	// C. Script with function and variables
+	script := `
+b := 20
+a := func() { 
+	return func() {
+		return b + 5
+	}() 
+}()
+`
+	vars := M{"msg": "Hello world!"}
+	c = compileEncodeDecode(t, script, nil, vars)
+	require.Equal(t, c.Get("a").Int(), 25)
+	require.Equal(t, c.Get("b").Int(), 20)
+	require.Equal(t, c.Get("msg").String(), "Hello world!")
+
+	// D. Scripts with built in module
+	script = `text := import("text"); out := text.atoi("100");`
+	modules := stdlib.GetModuleMap("text")
+	c = compileEncodeDecode(t, script, modules, nil)
+	require.Equal(t, c.Get("out").Int(), 100)
+
+	// E. With source modules
+	script = `fn := import("mod"); out := fn()`
+	modules.AddSourceModule("mod",
+		[]byte(`a := 3; export func() { return a + 5 }`))
+	c = compileEncodeDecode(t, script, modules, nil)
+	all = c.GetAll()
+	require.True(t, len(all) != 0)
+	require.Equal(t, 8, c.Get("out").Int())
 }

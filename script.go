@@ -1,8 +1,11 @@
 package tengo
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"fmt"
+	"io"
 	"path/filepath"
 	"sync"
 
@@ -202,6 +205,17 @@ type Compiled struct {
 	lock          sync.RWMutex
 }
 
+// NewCompiled creates Compiled object from bytecode given as input.
+func NewCompiled(input []byte, modules *ModuleMap) (*Compiled, error) {
+	c := Compiled{}
+	r := bytes.NewReader(input)
+	if err := c.Decode(r, modules); err != nil {
+		return nil, err
+	}
+
+	return &c, nil
+}
+
 // Run executes the compiled script in the virtual machine.
 func (c *Compiled) Run() error {
 	c.lock.Lock()
@@ -334,5 +348,73 @@ func (c *Compiled) Set(name string, value interface{}) error {
 		return fmt.Errorf("'%s' is not defined", name)
 	}
 	c.globals[idx] = obj
+	return nil
+}
+
+// Encode write compiled script to writer
+func (c *Compiled) Encode(w io.Writer) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	if c.bytecode == nil {
+		return fmt.Errorf("encode: bytecode is not assigned")
+	}
+	// 1. encode bytecode
+	if err := c.bytecode.Encode(w); err != nil {
+		return err
+	}
+
+	enc := gob.NewEncoder(w)
+	// 2. encode maxAllocs
+	if err := enc.Encode(c.maxAllocs); err != nil {
+		return err
+	}
+
+	// 3. encode global indexes and globals
+	if err := enc.Encode(c.globalIndexes); err != nil {
+		return err
+	}
+	if err := enc.Encode(c.globals); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Decode read compiled script from reader.
+func (c *Compiled) Decode(r io.Reader, modules *ModuleMap) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	// 1. decode bytecode
+	if c.bytecode == nil {
+		c.bytecode = &Bytecode{}
+	}
+	if err := c.bytecode.Decode(r, modules); err != nil {
+		return err
+	}
+
+	// decode additional info
+	dec := gob.NewDecoder(r)
+	// 2. decode maxAllocs
+	if err := dec.Decode(&c.maxAllocs); err != nil {
+		return err
+	}
+
+	// 3. decode global indexes and globals
+	if err := dec.Decode(&c.globalIndexes); err != nil {
+		return err
+	}
+	if err := dec.Decode(&c.globals); err != nil {
+		return err
+	}
+	for i, v := range c.globals {
+		fv, err := fixDecodedObject(v, modules)
+		if err != nil {
+			return err
+		}
+		c.globals[i] = fv
+	}
+
 	return nil
 }
