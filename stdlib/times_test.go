@@ -11,6 +11,7 @@ import (
 func TestTimes(t *testing.T) {
 	time1 := time.Date(1982, 9, 28, 19, 21, 44, 999, time.Now().Location())
 	time2 := time.Now()
+	location, _ := time.LoadLocation("Pacific/Auckland")
 
 	module(t, "times").call("sleep", 1).expect(tengo.UndefinedValue)
 
@@ -80,4 +81,5 @@ func TestTimes(t *testing.T) {
 	module(t, "times").call("time_location", time1).
 		expect(time1.Location().String())
 	module(t, "times").call("time_string", time1).expect(time1.String())
+	module(t, "times").call("in_location", time1, location.String()).expect(time1.In(location))
 }
