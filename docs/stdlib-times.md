@@ -62,9 +62,10 @@ times := import("times")
   duration.
 - `month_string(month int) => string`:  returns the English name of the month
   ("January", "February", ...).
-- `date(year int, month int, day int, hour int, min int, sec int, nsec int) => time`:
-  returns the Time corresponding to "yyyy-mm-dd hh:mm:ss + nsec nanoseconds".
-  Current location is used.
+- `date(year int, month int, day int, hour int, min int, sec int, nsec int, loc string) => time`:
+  returns the Time corresponding to "yyyy-mm-dd hh:mm:ss + nsec nanoseconds" in
+  the appropriate zone for that Time in the given (optional) location.
+  The Local time zone will be used if executed without specifying a location.
 - `now() => time`: returns the current local time.
 - `parse(format string, s string) => time`: parses a formatted string and
   returns the time value it represents. The layout defines the format by
@@ -116,5 +117,8 @@ times := import("times")
   string "2006-01-02 15:04:05.999999999 -0700 MST".
 - `is_zero(t time) => bool`: reports whether t represents the zero time
   instant, January 1, year 1, 00:00:00 UTC.
+- `in_location(t time, l string) => time`:  returns a copy of t representing
+  the same time instant, but with the copy's location information set to l for 
+  display purposes.
 - `to_local(t time) => time`: returns t with the location set to local time.
 - `to_utc(t time) => time`: returns t with the location set to UTC.
