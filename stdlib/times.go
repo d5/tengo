@@ -434,7 +434,7 @@ func timesDate(args ...tengo.Object) (
 	ret tengo.Object,
 	err error,
 ) {
-	if len(args) != 7 {
+	if len(args) < 7 || len(args) > 8 {
 		err = tengo.ErrWrongNumArguments
 		return
 	}
@@ -503,9 +503,29 @@ func timesDate(args ...tengo.Object) (
 		return
 	}
 
+	var loc *time.Location
+	if len(args) == 8 {
+		i8, ok := tengo.ToString(args[7])
+		if !ok {
+			err = tengo.ErrInvalidArgumentType{
+				Name:     "eighth",
+				Expected: "string(compatible)",
+				Found:    args[7].TypeName(),
+			}
+			return
+		}
+		loc, err = time.LoadLocation(i8)
+		if err != nil {
+			ret = wrapError(err)
+			return
+		}
+	} else {
+		loc = time.Now().Location()
+	}
+
 	ret = &tengo.Time{
 		Value: time.Date(i1,
-			time.Month(i2), i3, i4, i5, i6, i7, time.Now().Location()),
+			time.Month(i2), i3, i4, i5, i6, i7, loc),
 	}
 
 	return
