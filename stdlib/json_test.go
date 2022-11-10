@@ -48,13 +48,13 @@ func TestJSON(t *testing.T) {
 		expect([]byte("[[\"bar\",1],[\"bar\",1]]"))
 
 	module(t, "json").call("decode", `5`).
-		expect(5.0)
+		expect(5)
 	module(t, "json").call("decode", `"foo"`).
 		expect("foo")
 	module(t, "json").call("decode", `[1,2,3,"bar"]`).
-		expect(ARR{1.0, 2.0, 3.0, "bar"})
+		expect(ARR{1, 2, 3, "bar"})
 	module(t, "json").call("decode", `{"foo":5}`).
-		expect(MAP{"foo": 5.0})
+		expect(MAP{"foo": 5})
 	module(t, "json").call("decode", `{"foo":2.5}`).
 		expect(MAP{"foo": 2.5})
 	module(t, "json").call("decode", `{"foo":true}`).
@@ -62,7 +62,7 @@ func TestJSON(t *testing.T) {
 	module(t, "json").call("decode", `{"foo":"bar"}`).
 		expect(MAP{"foo": "bar"})
 	module(t, "json").call("decode", `{"foo":[1,2,3,"bar"]}`).
-		expect(MAP{"foo": ARR{1.0, 2.0, 3.0, "bar"}})
+		expect(MAP{"foo": ARR{1, 2, 3, "bar"}})
 
 	module(t, "json").
 		call("indent", []byte("{\"foo\":[\"bar\",1,1.8,56,true]}"), "", "  ").
