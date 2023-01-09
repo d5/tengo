@@ -99,10 +99,10 @@ func CompileOnly(
 	modules *tengo.ModuleMap,
 	data []byte,
 	inputFile, outputFile string,
-) (err error) {
+) error {
 	bytecode, err := compileSrc(modules, data, inputFile)
 	if err != nil {
-		return
+		return err
 	}
 
 	if outputFile == "" {
@@ -111,7 +111,7 @@ func CompileOnly(
 
 	out, err := os.OpenFile(outputFile, os.O_CREATE|os.O_WRONLY, os.ModePerm)
 	if err != nil {
-		return
+		return err
 	}
 	defer func() {
 		if err != nil {
@@ -123,10 +123,10 @@ func CompileOnly(
 
 	err = bytecode.Encode(out)
 	if err != nil {
-		return
+		return err
 	}
 	fmt.Println(outputFile)
-	return
+	return err
 }
 
 // CompileAndRun compiles the source code and executes it.
@@ -134,28 +134,26 @@ func CompileAndRun(
 	modules *tengo.ModuleMap,
 	data []byte,
 	inputFile string,
-) (err error) {
+) error {
 	bytecode, err := compileSrc(modules, data, inputFile)
 	if err != nil {
-		return
+		return err
 	}
 
 	machine := tengo.NewVM(bytecode, nil, -1)
-	err = machine.Run()
-	return
+	return machine.Run()
 }
 
 // RunCompiled reads the compiled binary from file and executes it.
-func RunCompiled(modules *tengo.ModuleMap, data []byte) (err error) {
+func RunCompiled(modules *tengo.ModuleMap, data []byte) error {
 	bytecode := &tengo.Bytecode{}
-	err = bytecode.Decode(bytes.NewReader(data), modules)
+	err := bytecode.Decode(bytes.NewReader(data), modules)
 	if err != nil {
-		return
+		return err
 	}
 
 	machine := tengo.NewVM(bytecode, nil, -1)
-	err = machine.Run()
-	return
+	return machine.Run()
 }
 
 // RunREPL starts REPL.
@@ -172,19 +170,19 @@ func RunREPL(modules *tengo.ModuleMap, in io.Reader, out io.Writer) {
 	symbol := symbolTable.Define("__repl_println__")
 	globals[symbol.Index] = &tengo.UserFunction{
 		Name: "println",
-		Value: func(args ...tengo.Object) (ret tengo.Object, err error) {
+		Value: func(args ...tengo.Object) (tengo.Object, error) {
 			var printArgs []interface{}
-			for _, arg := range args {
-				if _, isUndefined := arg.(*tengo.Undefined); isUndefined {
+			for i := range args {
+				if _, isUndefined := args[i].(*tengo.Undefined); isUndefined {
 					printArgs = append(printArgs, "<undefined>")
 				} else {
-					s, _ := tengo.ToString(arg)
+					s, _ := tengo.ToString(i, args...)
 					printArgs = append(printArgs, s)
 				}
 			}
 			printArgs = append(printArgs, "\n")
 			_, _ = fmt.Print(printArgs...)
-			return
+			return nil, nil
 		},
 	}
 

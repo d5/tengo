@@ -32,7 +32,7 @@ func TestObject_TypeName(t *testing.T) {
 	o = &tengo.BuiltinFunction{Name: "fn"}
 	require.Equal(t, "builtin-function:fn", o.TypeName())
 	o = &tengo.UserFunction{Name: "fn"}
-	require.Equal(t, "user-function:fn", o.TypeName())
+	require.Equal(t, "user-function", o.TypeName())
 	o = &tengo.CompiledFunction{}
 	require.Equal(t, "compiled-function", o.TypeName())
 	o = &tengo.Undefined{}

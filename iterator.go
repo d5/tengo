@@ -22,13 +22,16 @@ type ArrayIterator struct {
 	l int
 }
 
+// ArrayIteratorTN is the array iterator type name
+const ArrayIteratorTN = "array-iterator"
+
 // TypeName returns the name of the type.
 func (i *ArrayIterator) TypeName() string {
-	return "array-iterator"
+	return ArrayIteratorTN
 }
 
 func (i *ArrayIterator) String() string {
-	return "<array-iterator>"
+	return TypeString(ArrayIteratorTN)
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -63,6 +66,16 @@ func (i *ArrayIterator) Value() Object {
 	return i.v[i.i-1]
 }
 
+// HasLen returns whether the Object has a length value.
+func (i *ArrayIterator) HasLen() bool {
+	return true
+}
+
+// Len returns the Objects length value.
+func (i *ArrayIterator) Len() int {
+	return i.l
+}
+
 // BytesIterator represents an iterator for a string.
 type BytesIterator struct {
 	ObjectImpl
@@ -71,13 +84,16 @@ type BytesIterator struct {
 	l int
 }
 
+// BytesIteratorTN is the bytes iterator type name
+const BytesIteratorTN = "bytes-iterator"
+
 // TypeName returns the name of the type.
 func (i *BytesIterator) TypeName() string {
-	return "bytes-iterator"
+	return BytesIteratorTN
 }
 
 func (i *BytesIterator) String() string {
-	return "<bytes-iterator>"
+	return TypeString(BytesIteratorTN)
 }
 
 // Equals returns true if the value of the type is equal to the value of
@@ -107,6 +123,16 @@ func (i *BytesIterator) Value() Object {
 	return &Int{Value: int64(i.v[i.i-1])}
 }
 
+// HasLen returns whether the Object has a length value.
+func (i *BytesIterator) HasLen() bool {
+	return true
+}
+
+// Len returns the Objects length value.
+func (i *BytesIterator) Len() int {
+	return i.l
+}
+
 // MapIterator represents an iterator for the map.
 type MapIterator struct {
 	ObjectImpl
@@ -116,13 +142,16 @@ type MapIterator struct {
 	l int
 }
 
+// MapIteratorTN is the map iterator type name
+const MapIteratorTN = "map-iterator"
+
 // TypeName returns the name of the type.
 func (i *MapIterator) TypeName() string {
-	return "map-iterator"
+	return MapIteratorTN
 }
 
 func (i *MapIterator) String() string {
-	return "<map-iterator>"
+	return TypeString(MapIteratorTN)
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -159,6 +188,16 @@ func (i *MapIterator) Value() Object {
 	return i.v[k]
 }
 
+// HasLen returns whether the Object has a length value.
+func (i *MapIterator) HasLen() bool {
+	return true
+}
+
+// Len returns the Objects length value.
+func (i *MapIterator) Len() int {
+	return i.l
+}
+
 // StringIterator represents an iterator for a string.
 type StringIterator struct {
 	ObjectImpl
@@ -167,13 +206,16 @@ type StringIterator struct {
 	l int
 }
 
+// StringIteratorTN is the string iterator type name
+const StringIteratorTN = "string-iterator"
+
 // TypeName returns the name of the type.
 func (i *StringIterator) TypeName() string {
-	return "string-iterator"
+	return StringIteratorTN
 }
 
 func (i *StringIterator) String() string {
-	return "<string-iterator>"
+	return TypeString(StringIteratorTN)
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -206,4 +248,14 @@ func (i *StringIterator) Key() Object {
 // Value returns the value of the current element.
 func (i *StringIterator) Value() Object {
 	return &Char{Value: i.v[i.i-1]}
+}
+
+// HasLen returns whether the Object has a length value.
+func (i *StringIterator) HasLen() bool {
+	return true
+}
+
+// Len returns the Objects length value.
+func (i *StringIterator) Len() int {
+	return i.l
 }

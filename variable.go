@@ -40,36 +40,35 @@ func (v *Variable) ValueType() string {
 // Int returns int value of the variable value.
 // It returns 0 if the value is not convertible to int.
 func (v *Variable) Int() int {
-	c, _ := ToInt(v.value)
+	c, _ := ToInt(0, v.value)
 	return c
 }
 
 // Int64 returns int64 value of the variable value. It returns 0 if the value
 // is not convertible to int64.
 func (v *Variable) Int64() int64 {
-	c, _ := ToInt64(v.value)
+	c, _ := ToInt64(0, v.value)
 	return c
 }
 
 // Float returns float64 value of the variable value. It returns 0.0 if the
 // value is not convertible to float64.
 func (v *Variable) Float() float64 {
-	c, _ := ToFloat64(v.value)
+	c, _ := ToFloat64(0, v.value)
 	return c
 }
 
 // Char returns rune value of the variable value. It returns 0 if the value is
 // not convertible to rune.
 func (v *Variable) Char() rune {
-	c, _ := ToRune(v.value)
+	c, _ := ToRune(0, v.value)
 	return c
 }
 
 // Bool returns bool value of the variable value. It returns 0 if the value is
 // not convertible to bool.
 func (v *Variable) Bool() bool {
-	c, _ := ToBool(v.value)
-	return c
+	return ToBool(0, v.value)
 }
 
 // Array returns []interface value of the variable value. It returns 0 if the
@@ -103,14 +102,14 @@ func (v *Variable) Map() map[string]interface{} {
 // String returns string value of the variable value. It returns 0 if the value
 // is not convertible to string.
 func (v *Variable) String() string {
-	c, _ := ToString(v.value)
+	c, _ := ToString(0, v.value)
 	return c
 }
 
 // Bytes returns a byte slice of the variable value. It returns nil if the
 // value is not convertible to byte slice.
 func (v *Variable) Bytes() []byte {
-	c, _ := ToByteSlice(v.value)
+	c, _ := ToByteSlice(0, v.value)
 	return c
 }
 

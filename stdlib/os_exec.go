@@ -37,82 +37,57 @@ func makeOSExecCommand(cmd *exec.Cmd) *tengo.ImmutableMap {
 			// set_path(path string)
 			"set_path": &tengo.UserFunction{
 				Name: "set_path",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 1 {
-						return nil, tengo.ErrWrongNumArguments
-					}
-					s1, ok := tengo.ToString(args[0])
-					if !ok {
-						return nil, tengo.ErrInvalidArgumentType{
-							Name:     "first",
-							Expected: "string(compatible)",
-							Found:    args[0].TypeName(),
-						}
+				Value: tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+					s1, err := tengo.ToString(0, args...)
+					if err != nil {
+						return nil, err
 					}
 					cmd.Path = s1
 					return tengo.UndefinedValue, nil
-				},
+				}, 1),
 			},
 			// set_dir(dir string)
 			"set_dir": &tengo.UserFunction{
 				Name: "set_dir",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 1 {
-						return nil, tengo.ErrWrongNumArguments
-					}
-					s1, ok := tengo.ToString(args[0])
-					if !ok {
-						return nil, tengo.ErrInvalidArgumentType{
-							Name:     "first",
-							Expected: "string(compatible)",
-							Found:    args[0].TypeName(),
-						}
+				Value: tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+					s1, err := tengo.ToString(0, args...)
+					if err != nil {
+						return nil, err
 					}
 					cmd.Dir = s1
 					return tengo.UndefinedValue, nil
-				},
+				}, 1),
 			},
 			// set_env(env array(string))
 			"set_env": &tengo.UserFunction{
 				Name: "set_env",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 1 {
-						return nil, tengo.ErrWrongNumArguments
-					}
-
+				Value: tengo.CheckArgs(func(args ...tengo.Object) (tengo.Object, error) {
 					var env []string
 					var err error
 					switch arg0 := args[0].(type) {
 					case *tengo.Array:
-						env, err = stringArray(arg0.Value, "first")
+						env, err = stringArray(arg0.Value, 0)
 						if err != nil {
 							return nil, err
 						}
 					case *tengo.ImmutableArray:
-						env, err = stringArray(arg0.Value, "first")
+						env, err = stringArray(arg0.Value, 0)
 						if err != nil {
 							return nil, err
 						}
 					default:
-						return nil, tengo.ErrInvalidArgumentType{
-							Name:     "first",
-							Expected: "array",
-							Found:    arg0.TypeName(),
-						}
+						panic("impossible")
 					}
 					cmd.Env = env
 					return tengo.UndefinedValue, nil
-				},
+				}, 1, 1, tengo.TNs{tengo.ArrayTN, tengo.ImmutableArrayTN}),
 			},
 			// process() => imap(process)
 			"process": &tengo.UserFunction{
 				Name: "process",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 0 {
-						return nil, tengo.ErrWrongNumArguments
-					}
+				Value: tengo.CheckStrictArgs(func(args ...tengo.Object) (tengo.Object, error) {
 					return makeOSProcess(cmd.Process), nil
-				},
+				}),
 			},
 		},
 	}

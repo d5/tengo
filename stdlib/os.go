@@ -1,7 +1,6 @@
 package stdlib
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -200,17 +199,10 @@ var osModule = map[string]tengo.Object{
 	}, // readfile(name) => array(byte)/error
 }
 
-func osReadFile(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	fname, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
+var osReadFile = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	fname, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
 	bytes, err := ioutil.ReadFile(fname)
 	if err != nil {
@@ -220,19 +212,12 @@ func osReadFile(args ...tengo.Object) (ret tengo.Object, err error) {
 		return nil, tengo.ErrBytesLimit
 	}
 	return &tengo.Bytes{Value: bytes}, nil
-}
+}, 1)
 
-func osStat(args ...tengo.Object) (ret tengo.Object, err error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	fname, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
+var osStat = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	fname, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
 	stat, err := os.Stat(fname)
 	if err != nil {
@@ -252,85 +237,53 @@ func osStat(args ...tengo.Object) (ret tengo.Object, err error) {
 		fstat.Value["directory"] = tengo.FalseValue
 	}
 	return fstat, nil
-}
+}, 1)
 
-func osCreate(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
+var osCreate = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	s1, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
 	res, err := os.Create(s1)
 	if err != nil {
 		return wrapError(err), nil
 	}
 	return makeOSFile(res), nil
-}
+}, 1)
 
-func osOpen(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
+var osOpen = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	s1, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
 	res, err := os.Open(s1)
 	if err != nil {
 		return wrapError(err), nil
 	}
 	return makeOSFile(res), nil
-}
+}, 1)
 
-func osOpenFile(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 3 {
-		return nil, tengo.ErrWrongNumArguments
+var osOpenFile = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	s1, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
+	i2, err := tengo.ToInt(1, args...)
+	if err != nil {
+		return nil, err
 	}
-	i2, ok := tengo.ToInt(args[1])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "int(compatible)",
-			Found:    args[1].TypeName(),
-		}
-	}
-	i3, ok := tengo.ToInt(args[2])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "third",
-			Expected: "int(compatible)",
-			Found:    args[2].TypeName(),
-		}
+	i3, err := tengo.ToInt(2, args...)
+	if err != nil {
+		return nil, err
 	}
 	res, err := os.OpenFile(s1, i2, os.FileMode(i3))
 	if err != nil {
 		return wrapError(err), nil
 	}
 	return makeOSFile(res), nil
-}
+}, 3)
 
-func osArgs(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 0 {
-		return nil, tengo.ErrWrongNumArguments
-	}
+var osArgs = tengo.CheckStrictArgs(func(args ...tengo.Object) (tengo.Object, error) {
 	arr := &tengo.Array{}
 	for _, osArg := range os.Args {
 		if len(osArg) > tengo.MaxStringLen {
@@ -339,7 +292,7 @@ func osArgs(args ...tengo.Object) (tengo.Object, error) {
 		arr.Value = append(arr.Value, &tengo.String{Value: osArg})
 	}
 	return arr, nil
-}
+})
 
 func osFuncASFmRE(
 	name string,
@@ -347,42 +300,24 @@ func osFuncASFmRE(
 ) *tengo.UserFunction {
 	return &tengo.UserFunction{
 		Name: name,
-		Value: func(args ...tengo.Object) (tengo.Object, error) {
-			if len(args) != 2 {
-				return nil, tengo.ErrWrongNumArguments
+		Value: tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+			s1, err := tengo.ToString(0, args...)
+			if err != nil {
+				return nil, err
 			}
-			s1, ok := tengo.ToString(args[0])
-			if !ok {
-				return nil, tengo.ErrInvalidArgumentType{
-					Name:     "first",
-					Expected: "string(compatible)",
-					Found:    args[0].TypeName(),
-				}
-			}
-			i2, ok := tengo.ToInt64(args[1])
-			if !ok {
-				return nil, tengo.ErrInvalidArgumentType{
-					Name:     "second",
-					Expected: "int(compatible)",
-					Found:    args[1].TypeName(),
-				}
+			i2, err := tengo.ToInt64(1, args...)
+			if err != nil {
+				return nil, err
 			}
 			return wrapError(fn(s1, os.FileMode(i2))), nil
-		},
+		}, 2),
 	}
 }
 
-func osLookupEnv(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
+var osLookupEnv = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	s1, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
 	res, ok := os.LookupEnv(s1)
 	if !ok {
@@ -392,19 +327,12 @@ func osLookupEnv(args ...tengo.Object) (tengo.Object, error) {
 		return nil, tengo.ErrStringLimit
 	}
 	return &tengo.String{Value: res}, nil
-}
+}, 1)
 
-func osExpandEnv(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
+var osExpandEnv = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	s1, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
 	var vlen int
 	var failed bool
@@ -427,114 +355,76 @@ func osExpandEnv(args ...tengo.Object) (tengo.Object, error) {
 		return nil, tengo.ErrStringLimit
 	}
 	return &tengo.String{Value: s}, nil
-}
+}, 1)
 
-func osExec(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) == 0 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	name, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
+var osExec = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	name, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
 	var execArgs []string
-	for idx, arg := range args[1:] {
-		execArg, ok := tengo.ToString(arg)
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     fmt.Sprintf("args[%d]", idx),
-				Expected: "string(compatible)",
-				Found:    args[1+idx].TypeName(),
-			}
+	for idx := range args[1:] {
+		execArg, err := tengo.ToString(idx, args[1:]...)
+		if err != nil {
+			return nil, err
 		}
 		execArgs = append(execArgs, execArg)
 	}
 	return makeOSExecCommand(exec.Command(name, execArgs...)), nil
-}
+}, 1, -1)
 
-func osFindProcess(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	i1, ok := tengo.ToInt(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "int(compatible)",
-			Found:    args[0].TypeName(),
-		}
+var osFindProcess = tengo.CheckAnyArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	i1, err := tengo.ToInt(0, args...)
+	if err != nil {
+		return nil, err
 	}
 	proc, err := os.FindProcess(i1)
 	if err != nil {
 		return wrapError(err), nil
 	}
 	return makeOSProcess(proc), nil
-}
+}, 1)
 
-func osStartProcess(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 4 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	name, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
+var osStartProcess = tengo.CheckArgs(func(args ...tengo.Object) (tengo.Object, error) {
+	name, err := tengo.ToString(0, args...)
+	if err != nil {
+		return nil, err
 	}
 	var argv []string
-	var err error
 	switch arg1 := args[1].(type) {
 	case *tengo.Array:
-		argv, err = stringArray(arg1.Value, "second")
+		argv, err = stringArray(arg1.Value, 1)
 		if err != nil {
 			return nil, err
 		}
 	case *tengo.ImmutableArray:
-		argv, err = stringArray(arg1.Value, "second")
+		argv, err = stringArray(arg1.Value, 1)
 		if err != nil {
 			return nil, err
 		}
 	default:
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "second",
-			Expected: "array",
-			Found:    arg1.TypeName(),
-		}
+		panic("impossible")
 	}
 
-	dir, ok := tengo.ToString(args[2])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "third",
-			Expected: "string(compatible)",
-			Found:    args[2].TypeName(),
-		}
+	dir, err := tengo.ToString(2, args...)
+	if err != nil {
+		return nil, err
 	}
 
 	var env []string
 	switch arg3 := args[3].(type) {
 	case *tengo.Array:
-		env, err = stringArray(arg3.Value, "fourth")
+		env, err = stringArray(arg3.Value, 3)
 		if err != nil {
 			return nil, err
 		}
 	case *tengo.ImmutableArray:
-		env, err = stringArray(arg3.Value, "fourth")
+		env, err = stringArray(arg3.Value, 3)
 		if err != nil {
 			return nil, err
 		}
 	default:
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "fourth",
-			Expected: "array",
-			Found:    arg3.TypeName(),
-		}
+		panic("impossible")
 	}
 
 	proc, err := os.StartProcess(name, argv, &os.ProcAttr{
@@ -545,17 +435,23 @@ func osStartProcess(args ...tengo.Object) (tengo.Object, error) {
 		return wrapError(err), nil
 	}
 	return makeOSProcess(proc), nil
-}
+},
+	4,
+	4,
+	nil,
+	tengo.TNs{tengo.ArrayTN, tengo.ImmutableArrayTN},
+	nil,
+	tengo.TNs{tengo.ArrayTN, tengo.ImmutableArrayTN})
 
-func stringArray(arr []tengo.Object, argName string) ([]string, error) {
+func stringArray(arr []tengo.Object, index int) ([]string, error) {
 	var sarr []string
-	for idx, elem := range arr {
+	for _, elem := range arr {
 		str, ok := elem.(*tengo.String)
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
-				Name:     fmt.Sprintf("%s[%d]", argName, idx),
-				Expected: "string",
-				Found:    elem.TypeName(),
+				Index:    index,
+				Expected: tengo.StringTN,
+				Actual:   elem.TypeName(),
 			}
 		}
 		sarr = append(sarr, str.Value)

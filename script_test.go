@@ -22,7 +22,7 @@ func TestScript_Add(t *testing.T) {
 	require.NoError(t, s.Add("b", 5))     // b = 5
 	require.NoError(t, s.Add("b", "foo")) // b = "foo"  (re-define before compilation)
 	require.NoError(t, s.Add("test",
-		func(args ...tengo.Object) (ret tengo.Object, err error) {
+		func(args ...tengo.Object) (tengo.Object, error) {
 			if len(args) > 0 {
 				switch arg := args[0].(type) {
 				case *tengo.Int:
@@ -174,12 +174,11 @@ e := mod1.double(s)
 	mod1 := map[string]tengo.Object{
 		"double": &tengo.UserFunction{
 			Value: func(args ...tengo.Object) (
-				ret tengo.Object,
-				err error,
+				tengo.Object,
+				error,
 			) {
-				arg0, _ := tengo.ToInt64(args[0])
-				ret = &tengo.Int{Value: arg0 * 2}
-				return
+				arg0, err := tengo.ToInt64(0, args...)
+				return &tengo.Int{Value: arg0 * 2}, err
 			},
 		},
 	}
@@ -232,8 +231,10 @@ type Counter struct {
 	value int64
 }
 
+const CounterTN = "counter"
+
 func (o *Counter) TypeName() string {
-	return "counter"
+	return CounterTN
 }
 
 func (o *Counter) String() string {
@@ -353,7 +354,7 @@ func TestScriptSourceModule(t *testing.T) {
 			"title": &tengo.UserFunction{
 				Name: "title",
 				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					s, _ := tengo.ToString(args[0])
+					s, _ := tengo.ToString(0, args...)
 					return &tengo.String{Value: strings.Title(s)}, nil
 				}},
 		})

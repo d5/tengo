@@ -740,24 +740,24 @@ func (p *pp) Flag(b int) bool {
 
 // Implement Write so we can call Fprintf on a pp (through State), for
 // recursive use in custom verbs.
-func (p *pp) Write(b []byte) (ret int, err error) {
+func (p *pp) Write(b []byte) (int, error) {
 	p.buf.Write(b)
 	return len(b), nil
 }
 
 // Implement WriteString so that we can call io.WriteString
 // on a pp (through state), for efficiency.
-func (p *pp) WriteString(s string) (ret int, err error) {
+func (p *pp) WriteString(s string) (int, error) {
 	p.buf.WriteString(s)
 	return len(s), nil
 }
 
-func (p *pp) WriteRune(r rune) (ret int, err error) {
+func (p *pp) WriteRune(r rune) (int, error) {
 	p.buf.WriteRune(r)
 	return utf8.RuneLen(r), nil
 }
 
-func (p *pp) WriteSingleByte(c byte) (ret int, err error) {
+func (p *pp) WriteSingleByte(c byte) (int, error) {
 	p.buf.WriteSingleByte(c)
 	return 1, nil
 }
@@ -968,19 +968,21 @@ func (p *pp) printArg(arg Object, verb rune) {
 
 // intFromArg gets the argNumth element of a. On return, isInt reports whether
 // the argument has integer type.
-func intFromArg(a []Object, argNum int) (num int, isInt bool, newArgNum int) {
-	newArgNum = argNum
+func intFromArg(a []Object, argNum int) (int, bool, int) {
+	newArgNum := argNum
 	if argNum < len(a) {
 		var num64 int64
-		num64, isInt = ToInt64(a[argNum])
-		num = int(num64)
+		num64, err := ToInt64(argNum, a...)
+		isInt := err == nil
+		num := int(num64)
 		newArgNum = argNum + 1
 		if tooLarge(num) {
 			num = 0
 			isInt = false
 		}
+		return num, isInt, newArgNum
 	}
-	return
+	return 0, false, newArgNum
 }
 
 // parseArgNumber returns the value of the bracketed number, minus 1

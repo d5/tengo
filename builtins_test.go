@@ -33,32 +33,48 @@ func Test_builtinDelete(t *testing.T) {
 		{name: "invalid-arg", args: args{[]tengo.Object{&tengo.String{},
 			&tengo.String{}}}, wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
-				Name:     "first",
+				Index:    0,
 				Expected: "map",
-				Found:    "string"},
+				Actual:   "string"},
 		},
-		{name: "no-args",
-			wantErr: true, wantedErr: tengo.ErrWrongNumArguments},
-		{name: "empty-args", args: args{[]tengo.Object{}}, wantErr: true,
-			wantedErr: tengo.ErrWrongNumArguments,
+		{name: "no-args", wantErr: true,
+			wantedErr: tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0},
 		},
-		{name: "3-args", args: args{[]tengo.Object{
-			(*tengo.Map)(nil), (*tengo.String)(nil), (*tengo.String)(nil)}},
-			wantErr: true, wantedErr: tengo.ErrWrongNumArguments,
+		{
+			name:      "empty-args",
+			args:      args{[]tengo.Object{}},
+			wantErr:   true,
+			wantedErr: tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 0},
+		},
+		{
+			name: "3-args",
+			args: args{[]tengo.Object{
+				(*tengo.Map)(nil), (*tengo.String)(nil), (*tengo.String)(nil)},
+			},
+			wantErr:   true,
+			wantedErr: tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 3},
+		},
+		{name: "nil-map-empty-key-int",
+			args:      args{[]tengo.Object{&tengo.Map{}, &tengo.String{}, &tengo.Int{}}},
+			wantErr:   true,
+			wantedErr: tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 3},
 		},
 		{name: "nil-map-empty-key",
 			args: args{[]tengo.Object{&tengo.Map{}, &tengo.String{}}},
 			want: tengo.UndefinedValue,
 		},
-		{name: "nil-map-nonstr-key",
+		{
+			name: "nil-map-nonstr-key",
 			args: args{[]tengo.Object{
-				&tengo.Map{}, &tengo.Int{}}}, wantErr: true,
-			wantedErr: tengo.ErrInvalidArgumentType{
-				Name: "second", Expected: "string", Found: "int"},
+				&tengo.Map{}, &tengo.Int{}}},
+			wantErr:   true,
+			wantedErr: tengo.ErrInvalidArgumentType{Index: 1, Expected: tengo.StringTN, Actual: tengo.IntTN},
 		},
-		{name: "nil-map-no-key",
-			args: args{[]tengo.Object{&tengo.Map{}}}, wantErr: true,
-			wantedErr: tengo.ErrWrongNumArguments,
+		{
+			name:      "nil-map-no-key",
+			args:      args{[]tengo.Object{&tengo.Map{}}},
+			wantErr:   true,
+			wantedErr: tengo.ErrInvalidArgumentCount{Min: 2, Max: 2, Actual: 1},
 		},
 		{name: "map-missing-key",
 			args: args{
@@ -152,18 +168,20 @@ func Test_builtinSplice(t *testing.T) {
 		wantedErr error
 	}{
 		{name: "no args", args: []tengo.Object{}, wantErr: true,
-			wantedErr: tengo.ErrWrongNumArguments,
+			wantedErr: tengo.ErrInvalidArgumentCount{
+				Min: 1, Max: -1, Actual: 0,
+			},
 		},
 		{name: "invalid args", args: []tengo.Object{&tengo.Map{}},
 			wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
-				Name: "first", Expected: "array", Found: "map"},
+				Index: 0, Expected: tengo.ArrayTN, Actual: tengo.MapTN},
 		},
 		{name: "invalid args",
 			args:    []tengo.Object{&tengo.Array{}, &tengo.String{}},
 			wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
-				Name: "second", Expected: "int", Found: "string"},
+				Index: 1, Expected: tengo.IntTN, Actual: tengo.StringTN},
 		},
 		{name: "negative index",
 			args:      []tengo.Object{&tengo.Array{}, &tengo.Int{Value: -1}},
@@ -175,7 +193,7 @@ func Test_builtinSplice(t *testing.T) {
 				&tengo.String{Value: ""}},
 			wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
-				Name: "third", Expected: "int", Found: "string"},
+				Index: 2, Expected: tengo.IntTN, Actual: tengo.StringTN},
 		},
 		{name: "negative count",
 			args: []tengo.Object{
@@ -371,33 +389,39 @@ func Test_builtinRange(t *testing.T) {
 		wantedErr error
 	}{
 		{name: "no args", args: []tengo.Object{}, wantErr: true,
-			wantedErr: tengo.ErrWrongNumArguments,
+			wantedErr: tengo.ErrInvalidArgumentCount{
+				Min: 2, Max: 3, Actual: 0,
+			},
 		},
 		{name: "single args", args: []tengo.Object{&tengo.Map{}},
-			wantErr:   true,
-			wantedErr: tengo.ErrWrongNumArguments,
+			wantErr: true,
+			wantedErr: tengo.ErrInvalidArgumentCount{
+				Min: 2, Max: 3, Actual: 1,
+			},
 		},
 		{name: "4 args", args: []tengo.Object{&tengo.Map{}, &tengo.String{}, &tengo.String{}, &tengo.String{}},
-			wantErr:   true,
-			wantedErr: tengo.ErrWrongNumArguments,
+			wantErr: true,
+			wantedErr: tengo.ErrInvalidArgumentCount{
+				Min: 2, Max: 3, Actual: 4,
+			},
 		},
 		{name: "invalid start",
 			args:    []tengo.Object{&tengo.String{}, &tengo.String{}},
 			wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
-				Name: "start", Expected: "int", Found: "string"},
+				Index: 0, Expected: tengo.IntTN, Actual: tengo.StringTN},
 		},
 		{name: "invalid stop",
 			args:    []tengo.Object{&tengo.Int{}, &tengo.String{}},
 			wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
-				Name: "stop", Expected: "int", Found: "string"},
+				Index: 1, Expected: tengo.IntTN, Actual: tengo.StringTN},
 		},
 		{name: "invalid step",
 			args:    []tengo.Object{&tengo.Int{}, &tengo.Int{}, &tengo.String{}},
 			wantErr: true,
 			wantedErr: tengo.ErrInvalidArgumentType{
-				Name: "step", Expected: "int", Found: "string"},
+				Index: 2, Expected: tengo.IntTN, Actual: tengo.StringTN},
 		},
 		{name: "zero step",
 			args:      []tengo.Object{&tengo.Int{}, &tengo.Int{}, &tengo.Int{}}, //must greate than 0

@@ -238,6 +238,12 @@ type StringArray struct {
     Value []string
 }
 
+const StringArrayTN = "string-array"
+
+func (o *StringArray) TypeName() string {
+    return StringArrayTN
+}
+
 func (o *StringArray) String() string {
     return strings.Join(o.Value, ", ")
 }
@@ -282,10 +288,6 @@ func (o *StringArray) Copy() tengo.Object {
     return &StringArray{
         Value: append([]string{}, o.Value...),
     }
-}
-
-func (o *StringArray) TypeName() string {
-    return "string-array"
 }
 ```
 
@@ -359,27 +361,16 @@ func (o *StringArray) CanCall() bool {
     return true
 }
 
-func (o *StringArray) Call(args ...tengo.Object) (ret tengo.Object, err error) {
-    if len(args) != 1 {
-        return nil, tengo.ErrWrongNumArguments
-    }
-
-    s1, ok := tengo.ToString(args[0])
-    if !ok {
-        return nil, tengo.ErrInvalidArgumentType{
-            Name:     "first",
-            Expected: "string",
-            Found:    args[0].TypeName(),
+func (o *StringArray) Call(args ...tengo.Object) (tengo.Object, error) {
+    return tengo.CheckStrictArgs(func(args ...tengo.Object) (tengo.Object, error){
+        s1, _ := tengo.ToString(0, args...)
+        for i, v := range o.Value {
+            if v == s1 {
+                return &tengo.Int{Value: int64(i)}, nil
+            }
         }
-    }
-
-    for i, v := range o.Value {
-        if v == s1 {
-            return &tengo.Int{Value: int64(i)}, nil
-        }
-    }
-
-    return tengo.UndefinedValue, nil
+        return tengo.UndefinedValue, nil
+    }, tengo.StringTN)(args...)
 }
 ```
 
@@ -414,8 +405,10 @@ type StringArrayIterator struct {
     idx    int
 }
 
+const StringArrayIteratorTN = "string-array-iterator"
+
 func (i *StringArrayIterator) TypeName() string {
-    return "string-array-iterator"
+    return StringArrayIteratorTN
 }
 
 func (i *StringArrayIterator) Next() bool {

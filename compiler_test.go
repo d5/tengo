@@ -1410,7 +1410,7 @@ type compileTracer struct {
 	Out []string
 }
 
-func (o *compileTracer) Write(p []byte) (n int, err error) {
+func (o *compileTracer) Write(p []byte) (int, error) {
 	o.Out = append(o.Out, string(p))
 	return len(p), nil
 }
@@ -1418,7 +1418,7 @@ func (o *compileTracer) Write(p []byte) (n int, err error) {
 func traceCompile(
 	input string,
 	symbols map[string]tengo.Object,
-) (res *tengo.Bytecode, trace []string, err error) {
+) (*tengo.Bytecode, []string, error) {
 	fileSet := parser.NewFileSet()
 	file := fileSet.AddFile("test", -1, len(input))
 
@@ -1436,11 +1436,12 @@ func traceCompile(
 	c := tengo.NewCompiler(file, symTable, nil, nil, tr)
 	parsed, err := p.ParseFile()
 	if err != nil {
-		return
+		return nil, nil, err
 	}
 
 	err = c.Compile(parsed)
-	res = c.Bytecode()
+	var trace []string
+	res := c.Bytecode()
 	res.RemoveDuplicates()
 	{
 		trace = append(trace, fmt.Sprintf("Compiler Trace:\n%s",
@@ -1450,10 +1451,7 @@ func traceCompile(
 		trace = append(trace, fmt.Sprintf("Compiled Instructions:\n%s\n",
 			strings.Join(res.FormatInstructions(), "\n")))
 	}
-	if err != nil {
-		return
-	}
-	return
+	return res, trace, err
 }
 
 func objectsArray(o ...tengo.Object) []tengo.Object {
