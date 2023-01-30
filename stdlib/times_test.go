@@ -43,6 +43,9 @@ func TestTimes(t *testing.T) {
 		call("parse", time.RFC3339, "1982-09-28T19:21:44+07:00").
 		expect(parsed)
 	module(t, "times").
+		call("parseInLocation", time.RFC3339, "1982-09-28T19:21:44+07:00", "America/Los_Angeles").
+		expect(parsed)
+	module(t, "times").
 		call("unix", 1234325, 94493).
 		expect(time.Unix(1234325, 94493))
 
@@ -80,4 +83,8 @@ func TestTimes(t *testing.T) {
 	module(t, "times").call("time_location", time1).
 		expect(time1.Location().String())
 	module(t, "times").call("time_string", time1).expect(time1.String())
+	location, _ := time.LoadLocation("America/Los_Angeles")
+	module(t, "times").call("to_location", time1, "America/Los_Angeles").expect(time1.In(location))
+	module(t, "times").call("time_location", time1.In(location)).expect("America/Los_Angeles")
+	module(t, "times").call("to_location", time1, "invalid location name").expectError()
 }

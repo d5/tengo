@@ -92,6 +92,10 @@ var timesModule = map[string]tengo.Object{
 		Name:  "parse",
 		Value: timesParse,
 	}, // parse(format, str) => time
+	"parseInLocation": &tengo.UserFunction{
+		Name:  "parseInLocation",
+		Value: timesParseInLocation,
+	}, // parseInLocation(format, str, location) => time
 	"unix": &tengo.UserFunction{
 		Name:  "unix",
 		Value: timesUnix,
@@ -132,6 +136,10 @@ var timesModule = map[string]tengo.Object{
 		Name:  "time_weekday",
 		Value: timesTimeWeekday,
 	}, // time_weekday(time) => int
+	"time_yearday": &tengo.UserFunction{
+		Name:  "time_yearday",
+		Value: timesTimeYearday,
+	}, // time_yearday(time) => int
 	"time_hour": &tengo.UserFunction{
 		Name:  "time_hour",
 		Value: timesTimeHour,
@@ -168,6 +176,10 @@ var timesModule = map[string]tengo.Object{
 		Name:  "time_string",
 		Value: timesTimeString,
 	}, // time_string(time) => string
+	"to_location": &tengo.UserFunction{
+		Name:  "to_location",
+		Value: timesToLocation,
+	}, // to_location(time, location) => time
 	"is_zero": &tengo.UserFunction{
 		Name:  "is_zero",
 		Value: timesIsZero,
@@ -555,6 +567,59 @@ func timesParse(args ...tengo.Object) (ret tengo.Object, err error) {
 	return
 }
 
+func timesParseInLocation(args ...tengo.Object) (ret tengo.Object, err error) {
+	if len(args) != 3 {
+		err = tengo.ErrWrongNumArguments
+		return
+	}
+
+	s1, ok := tengo.ToString(args[0])
+	if !ok {
+		err = tengo.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "string(compatible)",
+			Found:    args[0].TypeName(),
+		}
+		return
+	}
+
+	s2, ok := tengo.ToString(args[1])
+	if !ok {
+		err = tengo.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
+		return
+	}
+
+	s3, ok := tengo.ToString(args[2])
+	if !ok {
+		err = tengo.ErrInvalidArgumentType{
+			Name:     "third",
+			Expected: "string(compatible)",
+			Found:    args[2].TypeName(),
+		}
+		return
+	}
+
+	location, err := time.LoadLocation(s3)
+	if err != nil {
+		ret = wrapError(err)
+		return
+	}
+
+	parsed, err := time.ParseInLocation(s1, s2, location)
+	if err != nil {
+		ret = wrapError(err)
+		return
+	}
+
+	ret = &tengo.Time{Value: parsed}
+
+	return
+}
+
 func timesUnix(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 2 {
 		err = tengo.ErrWrongNumArguments
@@ -853,6 +918,27 @@ func timesTimeWeekday(args ...tengo.Object) (ret tengo.Object, err error) {
 	return
 }
 
+func timesTimeYearday(args ...tengo.Object) (ret tengo.Object, err error) {
+	if len(args) != 1 {
+		err = tengo.ErrWrongNumArguments
+		return
+	}
+
+	t1, ok := tengo.ToTime(args[0])
+	if !ok {
+		err = tengo.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
+		return
+	}
+
+	ret = &tengo.Int{Value: int64(t1.YearDay())}
+
+	return
+}
+
 func timesTimeHour(args ...tengo.Object) (ret tengo.Object, err error) {
 	if len(args) != 1 {
 		err = tengo.ErrWrongNumArguments
@@ -1018,6 +1104,43 @@ func timesTimeFormat(args ...tengo.Object) (ret tengo.Object, err error) {
 	}
 
 	ret = &tengo.String{Value: s}
+
+	return
+}
+
+func timesToLocation(args ...tengo.Object) (ret tengo.Object, err error) {
+	if len(args) != 2 {
+		err = tengo.ErrWrongNumArguments
+		return
+	}
+
+	t1, ok := tengo.ToTime(args[0])
+	if !ok {
+		err = tengo.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
+		return
+	}
+
+	s2, ok := tengo.ToString(args[1])
+	if !ok {
+		err = tengo.ErrInvalidArgumentType{
+			Name:     "second",
+			Expected: "string(compatible)",
+			Found:    args[1].TypeName(),
+		}
+		return
+	}
+
+	location, err := time.LoadLocation(s2)
+	if err != nil {
+		ret = wrapError(err)
+		return
+	}
+
+	ret = &tengo.Time{Value: t1.In(location)}
 
 	return
 }
