@@ -11,6 +11,8 @@ import (
 func TestTimes(t *testing.T) {
 	time1 := time.Date(1982, 9, 28, 19, 21, 44, 999, time.Now().Location())
 	time2 := time.Now()
+	location, _ := time.LoadLocation("Pacific/Auckland")
+	time3 := time.Date(1982, 9, 28, 19, 21, 44, 999, location)
 
 	module(t, "times").call("sleep", 1).expect(tengo.UndefinedValue)
 
@@ -35,6 +37,9 @@ func TestTimes(t *testing.T) {
 
 	module(t, "times").call("date", 1982, 9, 28, 19, 21, 44, 999).
 		expect(time1)
+	module(t, "times").call("date", 1982, 9, 28, 19, 21, 44, 999, "Pacific/Auckland").
+		expect(time3)
+
 	nowD := time.Until(module(t, "times").call("now").
 		o.(*tengo.Time).Value).Nanoseconds()
 	require.True(t, 0 > nowD && nowD > -100000000) // within 100ms
@@ -80,4 +85,5 @@ func TestTimes(t *testing.T) {
 	module(t, "times").call("time_location", time1).
 		expect(time1.Location().String())
 	module(t, "times").call("time_string", time1).expect(time1.String())
+	module(t, "times").call("in_location", time1, location.String()).expect(time1.In(location))
 }
