@@ -30,6 +30,11 @@ func NewScript(input []byte) *Script {
 	}
 }
 
+// Change input script
+func (s *Script) SetInput(input []byte) {
+	s.input = input
+}
+
 // Add adds a new variable or updates an existing variable to the script.
 func (s *Script) Add(name string, value interface{}) error {
 	obj, err := FromInterface(value)
