@@ -3,7 +3,7 @@ package parser_test
 import (
 	"testing"
 
-	"github.com/d5/tengo/v2/parser"
+	"github.com/sin3degrees/tengo/v2/parser"
 )
 
 func TestIdentListString(t *testing.T) {
