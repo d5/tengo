@@ -3,7 +3,7 @@ package parser
 import (
 	"strings"
 
-	"github.com/d5/tengo/v2/token"
+	"github.com/sin3degrees/tengo/v2/token"
 )
 
 // Stmt represents a statement in the AST.
