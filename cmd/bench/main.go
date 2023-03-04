@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/d5/tengo/v2"
-	"github.com/d5/tengo/v2/parser"
+	"github.com/sin3degrees/tengo/v2"
+	"github.com/d5/sin3degrees/v2/parser"
 )
 
 func main() {
