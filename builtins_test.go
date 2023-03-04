@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/d5/tengo/v2"
+	"github.com/sin3degrees/tengo/v2"
 )
 
 func Test_builtinDelete(t *testing.T) {

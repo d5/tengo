@@ -3,7 +3,7 @@ package tengo
 import (
 	"fmt"
 
-	"github.com/d5/tengo/v2/parser"
+	"github.com/sin3degrees/tengo/v2/parser"
 )
 
 // MakeInstruction returns a bytecode for an opcode and the operands.
