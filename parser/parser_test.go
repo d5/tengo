@@ -1631,6 +1631,20 @@ func TestParseFloat(t *testing.T) {
 	}
 }
 
+func TestMismatchBrace(t *testing.T) {
+	expectParseError(t, `
+fmt := import("fmt")
+out := 0
+if 3 == 1 {
+	out = 1
+}
+} else {
+	out = 2
+}
+fmt.println(out)
+	`)
+}
+
 func TestParseNumberExpressions(t *testing.T) {
 	expectParse(t, `0x15e+2`, func(p pfn) []Stmt {
 		return stmts(
