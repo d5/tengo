@@ -14,10 +14,10 @@ import (
 
 var (
 	// TrueValue represents a true value.
-	TrueValue Object = &Bool{value: true}
+	TrueValue Object = &Bool{Value: true}
 
 	// FalseValue represents a false value.
-	FalseValue Object = &Bool{value: false}
+	FalseValue Object = &Bool{Value: false}
 
 	// UndefinedValue represents an undefined value.
 	UndefinedValue Object = &Undefined{}
@@ -77,6 +77,11 @@ type Object interface {
 
 	// CanCall should return whether the Object can be Called.
 	CanCall() bool
+}
+
+// Measurable interface
+type Measurable interface {
+	Length() int
 }
 
 // ObjectImpl represents a default Object Implementation. To defined a new
@@ -263,17 +268,22 @@ func (o *Array) CanIterate() bool {
 	return true
 }
 
+// Length implement Measurable interface
+func (o *Array) Length() *Int {
+	return len(o.Value)
+}
+
 // Bool represents a boolean value.
 type Bool struct {
 	ObjectImpl
 
 	// this is intentionally non-public to force using objects.TrueValue and
 	// FalseValue always
-	value bool
+	Value bool
 }
 
 func (o *Bool) String() string {
-	if o.value {
+	if o.Value {
 		return "true"
 	}
 
@@ -292,7 +302,7 @@ func (o *Bool) Copy() Object {
 
 // IsFalsy returns true if the value of the type is falsy.
 func (o *Bool) IsFalsy() bool {
-	return !o.value
+	return !o.Value
 }
 
 // Equals returns true if the value of the type is equal to the value of
@@ -303,13 +313,13 @@ func (o *Bool) Equals(x Object) bool {
 
 // GobDecode decodes bool value from input bytes.
 func (o *Bool) GobDecode(b []byte) (err error) {
-	o.value = b[0] == 1
+	o.Value = b[0] == 1
 	return
 }
 
 // GobEncode encodes bool values into bytes.
 func (o *Bool) GobEncode() (b []byte, err error) {
-	if o.value {
+	if o.Value {
 		b = []byte{1}
 	} else {
 		b = []byte{0}
@@ -452,6 +462,11 @@ func (o *Bytes) Iterate() Iterator {
 // CanIterate returns whether the Object can be Iterated.
 func (o *Bytes) CanIterate() bool {
 	return true
+}
+
+// Length implement Measurable interface
+func (o *Bytes) Length() *Int {
+	return len(o.Value)
 }
 
 // Char represents a character value.
@@ -898,6 +913,11 @@ func (o *ImmutableArray) CanIterate() bool {
 	return true
 }
 
+// Length implement Measurable interface
+func (o *ImmutableArray) Length() *Int {
+	return len(o.Value)
+}
+
 // ImmutableMap represents an immutable map object.
 type ImmutableMap struct {
 	ObjectImpl
@@ -985,6 +1005,11 @@ func (o *ImmutableMap) Iterate() Iterator {
 // CanIterate returns whether the Object can be Iterated.
 func (o *ImmutableMap) CanIterate() bool {
 	return true
+}
+
+// Length implement Measurable interface
+func (o *ImmutableMap) Length() *Int {
+	return len(o.Value)
 }
 
 // Int represents an integer value.
@@ -1277,6 +1302,11 @@ func (o *Map) CanIterate() bool {
 	return true
 }
 
+// Length implement Measurable interface
+func (o *Map) Length() *Int {
+	return len(o.Value)
+}
+
 // ObjectPtr represents a free variable.
 type ObjectPtr struct {
 	ObjectImpl
@@ -1431,6 +1461,11 @@ func (o *String) Iterate() Iterator {
 // CanIterate returns whether the Object can be Iterated.
 func (o *String) CanIterate() bool {
 	return true
+}
+
+// Length implement Measurable interface
+func (o *String) Length() *Int {
+	return len(o.Value)
 }
 
 // Time represents a time value.
