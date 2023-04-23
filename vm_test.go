@@ -2754,10 +2754,10 @@ export func(a) {
 		Opts().Module("mod0", `if 1 { } else { export true }`),
 		tengo.UndefinedValue)
 	expectRun(t, `out = import("mod0")`,
-		Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { export true } } }`),
+		Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { export true } }`),
 		true)
 	expectRun(t, `out = import("mod0")`,
-		Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { break } } }`),
+		Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { break } }`),
 		tengo.UndefinedValue)
 
 	// duplicate compiled functions
