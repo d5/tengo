@@ -52,7 +52,7 @@ func TestJSON(t *testing.T) {
 	module(t, "json").call("decode", `"foo"`).
 		expect("foo")
 	module(t, "json").call("decode", `[1,2,3,"bar"]`).
-		expect(ARR{1, 2, 3, "bar"})
+		expect(ARR{1.0, 2.0, 3.0, "bar"})
 	module(t, "json").call("decode", `{"foo":5}`).
 		expect(MAP{"foo": 5})
 	module(t, "json").call("decode", `{"foo":2.5}`).
