@@ -65,7 +65,7 @@ func (d *decodeState) scanNext() {
 func (d *decodeState) scanWhile(op int) (isFloat bool) {
 	s, data, i := &d.scan, d.data, d.off
 	for i < len(data) {
-		if !unicode.IsDigit(data) {
+		if !unicode.IsDigit(rune(data[i])) {
 			isFloat = true
 		}
 		newOp := s.step(s, data[i])
