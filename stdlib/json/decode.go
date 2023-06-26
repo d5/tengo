@@ -65,7 +65,7 @@ func (d *decodeState) scanNext() {
 func (d *decodeState) scanWhile(op int) (isFloat bool) {
 	s, data, i := &d.scan, d.data, d.off
 	for i < len(data) {
-		if data[i] == '.' {
+		if data[i] == '.' || data[i] == 'e' || data[i] == 'E' {
 			isFloat = true
 		}
 		newOp := s.step(s, data[i])
