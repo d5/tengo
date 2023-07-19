@@ -12,7 +12,7 @@ import (
 // Script can simplify compilation and execution of embedded scripts.
 type Script struct {
 	variables        map[string]*Variable
-	modules          *ModuleMap
+	modules          ModuleGetter
 	input            []byte
 	maxAllocs        int64
 	maxConstObjects  int
@@ -54,7 +54,7 @@ func (s *Script) Remove(name string) bool {
 }
 
 // SetImports sets import modules.
-func (s *Script) SetImports(modules *ModuleMap) {
+func (s *Script) SetImports(modules ModuleGetter) {
 	s.modules = modules
 }
 
@@ -219,6 +219,18 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 	v := NewVM(c.bytecode, c.globals, c.maxAllocs)
 	ch := make(chan error, 1)
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				switch e := r.(type) {
+				case string:
+					ch <- fmt.Errorf(e)
+				case error:
+					ch <- e
+				default:
+					ch <- fmt.Errorf("unknown panic: %v", e)
+				}
+			}
+		}()
 		ch <- v.Run()
 	}()
 
@@ -235,8 +247,8 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 // Clone creates a new copy of Compiled. Cloned copies are safe for concurrent
 // use by multiple goroutines.
 func (c *Compiled) Clone() *Compiled {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 
 	clone := &Compiled{
 		globalIndexes: c.globalIndexes,
@@ -247,7 +259,7 @@ func (c *Compiled) Clone() *Compiled {
 	// copy global objects
 	for idx, g := range c.globals {
 		if g != nil {
-			clone.globals[idx] = g
+			clone.globals[idx] = g.Copy()
 		}
 	}
 	return clone

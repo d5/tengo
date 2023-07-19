@@ -37,7 +37,7 @@ Here's a list of all available value types in Tengo.
 | map | value map with string keys _(mutable)_ | `map[string]interface{}` |
 | immutable map | [immutable](#immutable-values) map | - |
 | undefined | [undefined](#undefined-values) value | - |
-| function | [function](#function-values) value | - |  
+| function | [function](#function-values) value | - |
 | _user-defined_ | value of [user-defined types](https://github.com/d5/tengo/blob/master/docs/objects.md) | - |
 
 ### Error Values
@@ -45,14 +45,14 @@ Here's a list of all available value types in Tengo.
 In Tengo, an error can be represented using "error" typed values. An error
 value is created using `error` expression, and, it must have an underlying
 value. The underlying value of an error value can be access using `.value`
-selector.  
+selector.
 
 ```golang
 err1 := error("oops")    // error with string value
 err2 := error(1+2+3)     // error with int value
 if is_error(err1) {      // 'is_error' builtin function
   err_val := err1.value  // get underlying value
-}  
+}
 ```
 
 ### Immutable Values
@@ -101,12 +101,12 @@ a.c[1] = 5     // illegal
 ### Undefined Values
 
 In Tengo, an "undefined" value can be used to represent an unexpected or
-non-existing value:  
+non-existing value:
 
 - A function that does not return a value explicitly considered to return
 `undefined` value.
 - Indexer or selector on composite value types may return `undefined` if the
-key or index does not exist.  
+key or index does not exist.
 - Type conversion builtin functions without a default value will return
 `undefined` if conversion fails.
 
@@ -142,8 +142,8 @@ m["b"]                                // == false
 m.c                                   // == "foo"
 m.x                                   // == undefined
 
-{a: [1,2,3], b: {c: "foo", d: "bar"}} // ok: map with an array element and a map element  
-```  
+{a: [1,2,3], b: {c: "foo", d: "bar"}} // ok: map with an array element and a map element
+```
 
 ### Function Values
 
@@ -233,7 +233,7 @@ a := "foo"      // define 'a' in global scope
 
 func() {        // function scope A
   b := 52       // define 'b' in function scope A
-  
+
   func() {      // function scope B
     c := 19.84  // define 'c' in function scope B
 
@@ -243,12 +243,12 @@ func() {        // function scope A
     b := true   // ok: define new 'b' in function scope B
                 //     (shadowing 'b' from function scope A)
   }
-  
+
   a = "bar"     // ok: assigne new value to 'a' from global scope
   b = 10        // ok: assigne new value to 'b'
   a := -100     // ok: define new 'a' in function scope A
                 //     (shadowing 'a' from global scope)
-  
+
   c = -9.1      // illegal: 'c' is not defined
   b := [1, 2]   // illegal: 'b' is already defined in the same scope
 }
@@ -470,7 +470,7 @@ for {
 
 "For-In" statement is new in Tengo. It's similar to Go's `for range` statement.
 "For-In" statement can iterate any iterable value types (array, map, bytes,
-string, undefined).  
+string, undefined).
 
 ```golang
 for v in [1, 2, 3] {          // array: element
@@ -478,7 +478,7 @@ for v in [1, 2, 3] {          // array: element
 }
 for i, v in [1, 2, 3] {       // array: index and element
   // 'i' is index
-  // 'v' is value  
+  // 'v' is value
 }
 for k, v in {k1: 1, k2: 2} {  // map: key and value
   // 'k' is key
@@ -508,6 +508,16 @@ export func(x) {
 }
 ```
 
+By default, `import` solves the missing extension name of a module file as
+"`.tengo`"[^note].
+Thus, `sum := import("./sum")` is equivalent to `sum := import("./sum.tengo")`.
+
+[^note]:
+    If using Tengo as a library in Go, the file extension name "`.tengo`" can
+    be customized. In that case, use the `SetImportFileExt` function of the
+    `Compiler` type.
+    See the [Go reference](https://pkg.go.dev/github.com/d5/tengo/v2) for details.
+
 In Tengo, modules are very similar to functions.
 
 - `import` expression loads the module code and execute it like a function.
@@ -517,9 +527,9 @@ In Tengo, modules are very similar to functions.
   return a value to the importing code.
   - `export`-ed values are always immutable.
   - If the module does not have any `export` statement, `import` expression
-  simply returns `undefined`. _(Just like the function that has no `return`.)_  
+  simply returns `undefined`. _(Just like the function that has no `return`.)_
   - Note that `export` statement is completely ignored and not evaluated if
-  the code is executed as a main module.  
+  the code is executed as a main module.
 
 Also, you can use `import` expression to load the
 [Standard Library](https://github.com/d5/tengo/blob/master/docs/stdlib.md) as

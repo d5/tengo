@@ -1090,6 +1090,15 @@ export func() {
 	b := 5
 	return b + "foo"
 }`), "Runtime Error: invalid operation: int + string\n\tat mod2:4:9")
+
+	expectError(t, `a := [1, 2, 3]; b := a[:"invalid"];`, nil,
+		"Runtime Error: invalid slice index type: string")
+	expectError(t, `a := immutable([4, 5, 6]); b := a[:false];`, nil,
+		"Runtime Error: invalid slice index type: bool")
+	expectError(t, `a := "hello"; b := a[:1.23];`, nil,
+		"Runtime Error: invalid slice index type: float")
+	expectError(t, `a := bytes("world"); b := a[:time(1)];`, nil,
+		"Runtime Error: invalid slice index type: time")
 }
 
 func TestVMErrorUnwrap(t *testing.T) {
@@ -2745,10 +2754,10 @@ export func(a) {
 		Opts().Module("mod0", `if 1 { } else { export true }`),
 		tengo.UndefinedValue)
 	expectRun(t, `out = import("mod0")`,
-		Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { export true } } }`),
+		Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { export true } }`),
 		true)
 	expectRun(t, `out = import("mod0")`,
-		Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { break } } }`),
+		Opts().Module("mod0", `for v:=0;;v++ { if v == 3 { break } }`),
 		tengo.UndefinedValue)
 
 	// duplicate compiled functions

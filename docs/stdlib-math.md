@@ -18,6 +18,28 @@ math := import("math")
 - `ln10`
 - `ln10E`
 
+Mathematical constants.
+
+- `maxFloat32`
+- `smallestNonzeroFloat32`
+- `maxFloat64`
+- `smallestNonzeroFloat64`
+
+Floating-point limit values. Max is the largest finite value representable by the type. SmallestNonzero is the smallest positive, non-zero value representable by the type.
+
+- `maxInt`
+- `minInt`
+- `maxInt8`
+- `minInt8`
+- `maxInt16`
+- `minInt16`
+- `maxInt32`
+- `minInt32`
+- `maxInt64`
+- `minInt64`
+
+Integer limit values.
+
 ## Functions
 
 - `abs(x float) => float`: returns the absolute value of x.

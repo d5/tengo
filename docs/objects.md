@@ -297,9 +297,11 @@ to add `StringArray` to the script:
 ```golang
 // script that uses 'my_list'
 s := tengo.NewScript([]byte(`
-    print(my_list + "three")
+    fmt := import("fmt")
+    fmt.println(my_list, ", three")
 `))
 
+s.SetImports(stdlib.GetModuleMap("fmt"))
 myList := &StringArray{Value: []string{"one", "two"}}
 s.Add("my_list", myList)  // add StringArray value 'my_list'
 s.Run()                   // prints "one, two, three"

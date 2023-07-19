@@ -2,12 +2,15 @@ package tengo_test
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/d5/tengo/v2"
 	"github.com/d5/tengo/v2/parser"
 	"github.com/d5/tengo/v2/require"
+	"github.com/d5/tengo/v2/stdlib"
 )
 
 func TestCompiler_Compile(t *testing.T) {
@@ -104,12 +107,12 @@ func TestCompiler_Compile(t *testing.T) {
 			concatInsts(
 				tengo.MakeInstruction(parser.OpConstant, 0),
 				tengo.MakeInstruction(parser.OpConstant, 1),
-				tengo.MakeInstruction(parser.OpBinaryOp, 39),
+				tengo.MakeInstruction(parser.OpBinaryOp, 38),
 				tengo.MakeInstruction(parser.OpPop),
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray(
-				intObject(2),
-				intObject(1))))
+				intObject(1),
+				intObject(2))))
 
 	expectCompile(t, `1 >= 2`,
 		bytecode(
@@ -128,12 +131,12 @@ func TestCompiler_Compile(t *testing.T) {
 			concatInsts(
 				tengo.MakeInstruction(parser.OpConstant, 0),
 				tengo.MakeInstruction(parser.OpConstant, 1),
-				tengo.MakeInstruction(parser.OpBinaryOp, 44),
+				tengo.MakeInstruction(parser.OpBinaryOp, 43),
 				tengo.MakeInstruction(parser.OpPop),
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray(
-				intObject(2),
-				intObject(1))))
+				intObject(1),
+				intObject(2))))
 
 	expectCompile(t, `1 == 2`,
 		bytecode(
@@ -926,9 +929,9 @@ func() {
 			concatInsts(
 				tengo.MakeInstruction(parser.OpConstant, 0),
 				tengo.MakeInstruction(parser.OpSetGlobal, 0),
-				tengo.MakeInstruction(parser.OpConstant, 1),
 				tengo.MakeInstruction(parser.OpGetGlobal, 0),
-				tengo.MakeInstruction(parser.OpBinaryOp, 39),
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpBinaryOp, 38),
 				tengo.MakeInstruction(parser.OpJumpFalsy, 31),
 				tengo.MakeInstruction(parser.OpGetGlobal, 0),
 				tengo.MakeInstruction(parser.OpConstant, 2),
@@ -975,9 +978,9 @@ func() {
 				tengo.MakeInstruction(parser.OpConstant, 1),
 				tengo.MakeInstruction(parser.OpNotEqual),
 				tengo.MakeInstruction(parser.OpOrJump, 34),
-				tengo.MakeInstruction(parser.OpConstant, 1),
 				tengo.MakeInstruction(parser.OpGetGlobal, 0),
-				tengo.MakeInstruction(parser.OpBinaryOp, 39),
+				tengo.MakeInstruction(parser.OpConstant, 1),
+				tengo.MakeInstruction(parser.OpBinaryOp, 38),
 				tengo.MakeInstruction(parser.OpPop),
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray(
@@ -1010,7 +1013,7 @@ r["x"] = {
 	expectCompileError(t, `
 (func() {
 	fn := fn()
-})()	
+})()
 `, "unresolved reference 'fn")
 }
 
@@ -1020,6 +1023,8 @@ func TestCompilerErrorReport(t *testing.T) {
 
 	expectCompileError(t, `a = 1`,
 		"Compile Error: unresolved reference 'a'\n\tat test:1:1")
+	expectCompileError(t, `a := a`,
+		"Compile Error: unresolved reference 'a'\n\tat test:1:6")
 	expectCompileError(t, `a, b := 1, 2`,
 		"Compile Error: tuple assignment not allowed\n\tat test:1:1")
 	expectCompileError(t, `a.b := 1`,
@@ -1156,6 +1161,30 @@ func() {
 				tengo.MakeInstruction(parser.OpReturn, 1),
 				tengo.MakeInstruction(parser.OpConstant, 1),
 				tengo.MakeInstruction(parser.OpReturn, 1)))))
+
+	expectCompile(t, `
+func() {
+	if true {
+		return
+	}
+
+    return
+
+    return 123
+}`, bytecode(
+		concatInsts(
+			tengo.MakeInstruction(parser.OpConstant, 1),
+			tengo.MakeInstruction(parser.OpPop),
+			tengo.MakeInstruction(parser.OpSuspend)),
+		objectsArray(
+			intObject(123),
+			compiledFunction(0, 0,
+				tengo.MakeInstruction(parser.OpTrue),
+				tengo.MakeInstruction(parser.OpJumpFalsy, 6),
+				tengo.MakeInstruction(parser.OpReturn, 0),
+				tengo.MakeInstruction(parser.OpReturn, 0),
+				tengo.MakeInstruction(parser.OpConstant, 0),
+				tengo.MakeInstruction(parser.OpReturn, 1)))))
 }
 
 func TestCompilerScopes(t *testing.T) {
@@ -1220,6 +1249,91 @@ func() {
 				tengo.MakeInstruction(parser.OpGetLocal, 0),
 				tengo.MakeInstruction(parser.OpDefineLocal, 1),
 				tengo.MakeInstruction(parser.OpReturn, 0)))))
+}
+
+func TestCompiler_custom_extension(t *testing.T) {
+	pathFileSource := "./testdata/issue286/test.mshk"
+
+	modules := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
+
+	src, err := ioutil.ReadFile(pathFileSource)
+	require.NoError(t, err)
+
+	// Escape shegang
+	if len(src) > 1 && string(src[:2]) == "#!" {
+		copy(src, "//")
+	}
+
+	fileSet := parser.NewFileSet()
+	srcFile := fileSet.AddFile(filepath.Base(pathFileSource), -1, len(src))
+
+	p := parser.NewParser(srcFile, src, nil)
+	file, err := p.ParseFile()
+	require.NoError(t, err)
+
+	c := tengo.NewCompiler(srcFile, nil, nil, modules, nil)
+	c.EnableFileImport(true)
+	c.SetImportDir(filepath.Dir(pathFileSource))
+
+	// Search for "*.tengo" and ".mshk"(custom extension)
+	c.SetImportFileExt(".tengo", ".mshk")
+
+	err = c.Compile(file)
+	require.NoError(t, err)
+}
+
+func TestCompilerNewCompiler_default_file_extension(t *testing.T) {
+	modules := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
+	input := "{}"
+	fileSet := parser.NewFileSet()
+	file := fileSet.AddFile("test", -1, len(input))
+
+	c := tengo.NewCompiler(file, nil, nil, modules, nil)
+	c.EnableFileImport(true)
+
+	require.Equal(t, []string{".tengo"}, c.GetImportFileExt(),
+		"newly created compiler object must contain the default extension")
+}
+
+func TestCompilerSetImportExt_extension_name_validation(t *testing.T) {
+	c := new(tengo.Compiler) // Instantiate a new compiler object with no initialization
+
+	// Test of empty arg
+	err := c.SetImportFileExt()
+
+	require.Error(t, err, "empty arg should return an error")
+
+	// Test of various arg types
+	for _, test := range []struct {
+		extensions []string
+		expect     []string
+		requireErr bool
+		msgFail    string
+	}{
+		{[]string{".tengo"}, []string{".tengo"}, false,
+			"well-formed extension should not return an error"},
+		{[]string{""}, []string{".tengo"}, true,
+			"empty extension name should return an error"},
+		{[]string{"foo"}, []string{".tengo"}, true,
+			"name without dot prefix should return an error"},
+		{[]string{"foo.bar"}, []string{".tengo"}, true,
+			"malformed extension should return an error"},
+		{[]string{"foo."}, []string{".tengo"}, true,
+			"malformed extension should return an error"},
+		{[]string{".mshk"}, []string{".mshk"}, false,
+			"name with dot prefix should be added"},
+		{[]string{".foo", ".bar"}, []string{".foo", ".bar"}, false,
+			"it should replace instead of appending"},
+	} {
+		err := c.SetImportFileExt(test.extensions...)
+		if test.requireErr {
+			require.Error(t, err, test.msgFail)
+		}
+
+		expect := test.expect
+		actual := c.GetImportFileExt()
+		require.Equal(t, expect, actual, test.msgFail)
+	}
 }
 
 func concatInsts(instructions ...[]byte) []byte {

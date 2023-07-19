@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -479,6 +480,99 @@ func TestCompiled_RunContext(t *testing.T) {
 	require.Equal(t, context.DeadlineExceeded, err)
 }
 
+func TestCompiled_CustomObject(t *testing.T) {
+	c := compile(t, `r := (t<130)`, M{"t": &customNumber{value: 123}})
+	compiledRun(t, c)
+	compiledGet(t, c, "r", true)
+
+	c = compile(t, `r := (t>13)`, M{"t": &customNumber{value: 123}})
+	compiledRun(t, c)
+	compiledGet(t, c, "r", true)
+}
+
+// customNumber is a user defined object that can compare to tengo.Int
+// very shitty implementation, just to test that token.Less and token.Greater in BinaryOp works
+type customNumber struct {
+	tengo.ObjectImpl
+	value int64
+}
+
+func (n *customNumber) TypeName() string {
+	return "Number"
+}
+
+func (n *customNumber) String() string {
+	return strconv.FormatInt(n.value, 10)
+}
+
+func (n *customNumber) BinaryOp(op token.Token, rhs tengo.Object) (tengo.Object, error) {
+	tengoInt, ok := rhs.(*tengo.Int)
+	if !ok {
+		return nil, tengo.ErrInvalidOperator
+	}
+	return n.binaryOpInt(op, tengoInt)
+}
+
+func (n *customNumber) binaryOpInt(op token.Token, rhs *tengo.Int) (tengo.Object, error) {
+	i := n.value
+
+	switch op {
+	case token.Less:
+		if i < rhs.Value {
+			return tengo.TrueValue, nil
+		}
+		return tengo.FalseValue, nil
+	case token.Greater:
+		if i > rhs.Value {
+			return tengo.TrueValue, nil
+		}
+		return tengo.FalseValue, nil
+	case token.LessEq:
+		if i <= rhs.Value {
+			return tengo.TrueValue, nil
+		}
+		return tengo.FalseValue, nil
+	case token.GreaterEq:
+		if i >= rhs.Value {
+			return tengo.TrueValue, nil
+		}
+		return tengo.FalseValue, nil
+	}
+	return nil, tengo.ErrInvalidOperator
+}
+
+func TestScript_ImportError(t *testing.T) {
+	m := `
+	exp := import("expression")
+	r := exp(ctx)
+`
+
+	src := `
+export func(ctx) {
+	closure := func() {
+		if ctx.actiontimes < 0 { // an error is thrown here because actiontimes is undefined
+			return true
+		}
+		return false
+	}
+
+	return closure()
+}`
+
+	s := tengo.NewScript([]byte(m))
+	mods := tengo.NewModuleMap()
+	mods.AddSourceModule("expression", []byte(src))
+	s.SetImports(mods)
+
+	err := s.Add("ctx", map[string]interface{}{
+		"ctx": 12,
+	})
+	require.NoError(t, err)
+
+	_, err = s.Run()
+	require.True(t, strings.Contains(err.Error(), "expression:4:6"))
+}
+
 func compile(t *testing.T, input string, vars M) *tengo.Compiled {
 	s := tengo.NewScript([]byte(input))
 	for vn, vv := range vars {
@@ -545,4 +639,29 @@ func compiledIsDefined(
 	expected bool,
 ) {
 	require.Equal(t, expected, c.IsDefined(name))
+}
+func TestCompiled_Clone(t *testing.T) {
+	script := tengo.NewScript([]byte(`
+count += 1
+data["b"] = 2
+`))
+
+	err := script.Add("data", map[string]interface{}{"a": 1})
+	require.NoError(t, err)
+
+	err = script.Add("count", 1000)
+	require.NoError(t, err)
+
+	compiled, err := script.Compile()
+	require.NoError(t, err)
+
+	clone := compiled.Clone()
+	err = clone.RunContext(context.Background())
+	require.NoError(t, err)
+
+	require.Equal(t, 1000, compiled.Get("count").Int())
+	require.Equal(t, 1, len(compiled.Get("data").Map()))
+
+	require.Equal(t, 1001, clone.Get("count").Int())
+	require.Equal(t, 2, len(clone.Get("data").Map()))
 }
