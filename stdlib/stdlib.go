@@ -3,7 +3,7 @@ package stdlib
 //go:generate go run gensrcmods.go
 
 import (
-	"github.com/d5/tengo/v2"
+	"github.com/bsido/tengo"
 )
 
 // AllModuleNames returns a list of all default module names.

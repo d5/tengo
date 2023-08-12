@@ -3,7 +3,7 @@ package stdlib
 import (
 	"encoding/base64"
 
-	"github.com/d5/tengo/v2"
+	"github.com/bsido/tengo"
 )
 
 var base64Module = map[string]tengo.Object{

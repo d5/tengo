@@ -3,7 +3,7 @@ package stdlib
 import (
 	"math"
 
-	"github.com/d5/tengo/v2"
+	"github.com/bsido/tengo"
 )
 
 var mathModule = map[string]tengo.Object{

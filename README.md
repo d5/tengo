@@ -73,7 +73,7 @@ _* See [here](https://github.com/d5/tengobench) for commands/codes used_
 ## Quick Start
 
 ```
-go get github.com/d5/tengo/v2
+go get github.com/bsido/tengo
 ```
 
 A simple Go example code that compiles/runs Tengo script code with some input/output values:
@@ -85,7 +85,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/d5/tengo/v2"
+	"github.com/bsido/tengo"
 )
 
 func main() {
