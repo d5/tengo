@@ -4,9 +4,9 @@ import (
 	gojson "encoding/json"
 	"testing"
 
-	"github.com/d5/tengo/v2"
-	"github.com/d5/tengo/v2/require"
-	"github.com/d5/tengo/v2/stdlib/json"
+	"github.com/bsido/tengo"
+	"github.com/bsido/tengo/require"
+	"github.com/bsido/tengo/stdlib/json"
 )
 
 type ARR = []interface{}
@@ -59,7 +59,7 @@ func TestJSON(t *testing.T) {
 		"arr": ARR{1, 2, 3, MAP{"a": false, "b": 109.4}}})
 
 	testJSONEncodeDecode(t, MAP{"id1": 7075984636689534001, "id2": 7075984636689534002})
-	testJSONEncodeDecode(t, ARR{1e3, 1E7})
+	testJSONEncodeDecode(t, ARR{1e3, 1e7})
 }
 
 func TestDecode(t *testing.T) {

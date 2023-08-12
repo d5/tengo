@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/d5/tengo/v2"
+	"github.com/bsido/tengo"
 )
 
 // CallArgs holds function name to be executed and its required parameters with

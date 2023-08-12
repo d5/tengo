@@ -1,3 +1,3 @@
-module github.com/d5/tengo/v2
+module github.com/bsido/tengo
 
-go 1.13
+go 1.20

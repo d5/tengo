@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/d5/tengo/v2/parser"
-	"github.com/d5/tengo/v2/require"
-	"github.com/d5/tengo/v2/token"
+	. "github.com/bsido/tengo/parser"
+	"github.com/bsido/tengo/require"
+	"github.com/bsido/tengo/token"
 )
 
 func TestParserError(t *testing.T) {

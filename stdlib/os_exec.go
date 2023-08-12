@@ -3,7 +3,7 @@ package stdlib
 import (
 	"os/exec"
 
-	"github.com/d5/tengo/v2"
+	"github.com/bsido/tengo"
 )
 
 func makeOSExecCommand(cmd *exec.Cmd) *tengo.ImmutableMap {

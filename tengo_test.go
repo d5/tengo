@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/d5/tengo/v2"
-	"github.com/d5/tengo/v2/parser"
-	"github.com/d5/tengo/v2/require"
+	"github.com/bsido/tengo"
+	"github.com/bsido/tengo/parser"
+	"github.com/bsido/tengo/require"
 )
 
 func TestInstructions_String(t *testing.T) {
