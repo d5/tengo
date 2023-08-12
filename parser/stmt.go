@@ -299,8 +299,8 @@ func (s *IfStmt) String() string {
 
 // GuardStmt represents a guard statement.
 type GuardStmt struct {
-	RHS      Expr
-	GuardPos Pos
+	Assignment *AssignStmt
+	GuardPos   Pos
 }
 
 func (s *GuardStmt) stmtNode() {}
@@ -312,11 +312,11 @@ func (s *GuardStmt) Pos() Pos {
 
 // End returns the position of first character immediately after the node.
 func (s *GuardStmt) End() Pos {
-	return s.RHS.End()
+	return s.Assignment.End()
 }
 
 func (s *GuardStmt) String() string {
-	return "guard " + s.RHS.String()
+	return "guard " + s.Assignment.String()
 }
 
 // IncDecStmt represents increment or decrement statement.

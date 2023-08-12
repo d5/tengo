@@ -460,8 +460,6 @@ func (p *Parser) parseOperand() Expr {
 		return p.parseErrorExpr()
 	case token.Immutable: // immutable expression
 		return p.parseImmutableExpr()
-	case token.Guard: // guard expression
-		return p.parseGuardExpr()
 	default:
 		p.errorExpected(p.pos, "operand")
 	}
@@ -529,22 +527,6 @@ func (p *Parser) parseFuncLit() Expr {
 	return &FuncLit{
 		Type: typ,
 		Body: body,
-	}
-}
-
-func (p *Parser) parseGuardExpr() Expr {
-	if p.trace {
-		defer untracep(tracep(p, "GuardExpr"))
-	}
-
-	pos := p.pos
-	p.next()
-	p.exprLevel++
-	expr := p.parseExpr()
-	p.exprLevel--
-	return &GuardExpr{
-		RHS:      expr,
-		GuardPos: pos,
 	}
 }
 
@@ -945,22 +927,6 @@ func (p *Parser) parseReturnStmt() Stmt {
 	}
 }
 
-func (p *Parser) parseGuardStmt() Stmt {
-	if p.trace {
-		defer untracep(tracep(p, "GuardStmt"))
-	}
-
-	pos := p.pos
-	p.expect(token.Guard)
-
-	x := p.parseExpr()
-	p.expectSemi()
-	return &GuardStmt{
-		GuardPos: pos,
-		RHS:      x,
-	}
-}
-
 func (p *Parser) parseExportStmt() Stmt {
 	if p.trace {
 		defer untracep(tracep(p, "ExportStmt"))
@@ -973,6 +939,37 @@ func (p *Parser) parseExportStmt() Stmt {
 	return &ExportStmt{
 		ExportPos: pos,
 		Result:    x,
+	}
+}
+
+func (p *Parser) parseGuardStmt() Stmt {
+	if p.trace {
+		defer untracep(tracep(p, "GuardStmt"))
+	}
+
+	pos := p.pos
+	p.expect(token.Guard)
+
+	x := p.parseExprList()
+
+	if p.token != token.Assign && p.token != token.Define {
+		p.errorExpected(p.pos, "assignment statement")
+		return nil
+	}
+
+	if len(x) > 1 {
+		p.errorExpected(x[0].Pos(), "1 expression")
+		// continue with first expression
+	}
+
+	pos = p.pos
+	tok := p.token
+	p.next()
+	y := p.parseExprList()
+	p.expectSemi()
+	return &GuardStmt{
+		GuardPos:   pos,
+		Assignment: &AssignStmt{LHS: x, RHS: y, Token: tok, TokenPos: pos},
 	}
 }
 
