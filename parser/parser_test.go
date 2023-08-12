@@ -1036,6 +1036,32 @@ func TestParseImport(t *testing.T) {
 	})
 }
 
+func TestParse_Guard(t *testing.T) {
+	expectParse(t, `a := guard function()`, func(p pfn) []Stmt {
+		return stmts(
+			assignStmt(
+				exprs(ident("a", p(1, 1))),
+				exprs(guardExpr(
+					callExpr(
+						ident("function", p(1, 12)),
+						p(1, 20), p(1, 21), NoPos),
+					p(1, 6))),
+				token.Define, p(1, 3)))
+	})
+
+	expectParse(t, `guard function()`, func(p pfn) []Stmt {
+		return stmts(
+			guardStmt(
+				callExpr(
+					ident("function", p(1, 7)),
+					p(1, 15), p(1, 16), NoPos),
+				p(1, 1)))
+	})
+
+	expectParseError(t, `guard if a == b { return 0 }`)
+	expectParseError(t, `guard for { }`)
+}
+
 func TestParseIndex(t *testing.T) {
 	expectParse(t, "[1, 2, 3][1]", func(p pfn) []Stmt {
 		return stmts(
@@ -1776,6 +1802,24 @@ func assignStmt(
 	return &AssignStmt{LHS: lhs, RHS: rhs, Token: token, TokenPos: pos}
 }
 
+func guardStmt(
+	rhs Expr,
+	pos Pos,
+) *GuardStmt {
+	return &GuardStmt{
+		RHS: rhs, GuardPos: pos,
+	}
+}
+
+func guardExpr(
+	rhs Expr,
+	pos Pos,
+) *GuardExpr {
+	return &GuardExpr{
+		RHS: rhs, GuardPos: pos,
+	}
+}
+
 func emptyStmt(implicit bool, pos Pos) *EmptyStmt {
 	return &EmptyStmt{Implicit: implicit, Semicolon: pos}
 }
@@ -2048,6 +2092,11 @@ func equalStmt(t *testing.T, expected, actual Stmt) {
 			actual.(*BranchStmt).Token)
 		require.Equal(t, expected.TokenPos,
 			actual.(*BranchStmt).TokenPos)
+	case *GuardStmt:
+		equalExpr(t, expected.RHS,
+			actual.(*GuardStmt).RHS)
+		require.Equal(t, expected.GuardPos,
+			actual.(*GuardStmt).GuardPos)
 	default:
 		panic(fmt.Errorf("unknown type: %T", expected))
 	}
@@ -2195,6 +2244,11 @@ func equalExpr(t *testing.T, expected, actual Expr) {
 			actual.(*CondExpr).QuestionPos)
 		require.Equal(t, expected.ColonPos,
 			actual.(*CondExpr).ColonPos)
+	case *GuardExpr:
+		equalExpr(t, expected.RHS,
+			actual.(*GuardExpr).RHS)
+		require.Equal(t, expected.GuardPos,
+			actual.(*GuardExpr).GuardPos)
 	default:
 		panic(fmt.Errorf("unknown type: %T", expected))
 	}

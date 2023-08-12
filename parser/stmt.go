@@ -297,6 +297,28 @@ func (s *IfStmt) String() string {
 		s.Body.String() + elseStmt
 }
 
+// GuardStmt represents a guard statement.
+type GuardStmt struct {
+	RHS      Expr
+	GuardPos Pos
+}
+
+func (s *GuardStmt) stmtNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (s *GuardStmt) Pos() Pos {
+	return s.GuardPos
+}
+
+// End returns the position of first character immediately after the node.
+func (s *GuardStmt) End() Pos {
+	return s.RHS.End()
+}
+
+func (s *GuardStmt) String() string {
+	return "guard " + s.RHS.String()
+}
+
 // IncDecStmt represents increment or decrement statement.
 type IncDecStmt struct {
 	Expr     Expr

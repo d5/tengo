@@ -2,3 +2,6 @@ dist/
 
 *.iml
 .idea/
+
+# test files
+*.tengo

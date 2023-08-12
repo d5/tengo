@@ -18,6 +18,7 @@ var stmtStart = map[token.Token]bool{
 	token.If:       true,
 	token.Return:   true,
 	token.Export:   true,
+	token.Guard:    true,
 }
 
 // Error represents a parser error.
@@ -459,6 +460,8 @@ func (p *Parser) parseOperand() Expr {
 		return p.parseErrorExpr()
 	case token.Immutable: // immutable expression
 		return p.parseImmutableExpr()
+	case token.Guard: // guard expression
+		return p.parseGuardExpr()
 	default:
 		p.errorExpected(p.pos, "operand")
 	}
@@ -526,6 +529,22 @@ func (p *Parser) parseFuncLit() Expr {
 	return &FuncLit{
 		Type: typ,
 		Body: body,
+	}
+}
+
+func (p *Parser) parseGuardExpr() Expr {
+	if p.trace {
+		defer untracep(tracep(p, "GuardExpr"))
+	}
+
+	pos := p.pos
+	p.next()
+	p.exprLevel++
+	expr := p.parseExpr()
+	p.exprLevel--
+	return &GuardExpr{
+		RHS:      expr,
+		GuardPos: pos,
 	}
 }
 
@@ -697,6 +716,8 @@ func (p *Parser) parseStmt() (stmt Stmt) {
 		return p.parseIfStmt()
 	case token.For:
 		return p.parseForStmt()
+	case token.Guard:
+		return p.parseGuardStmt()
 	case token.Break, token.Continue:
 		return p.parseBranchStmt(p.token)
 	case token.Semicolon:
@@ -924,6 +945,22 @@ func (p *Parser) parseReturnStmt() Stmt {
 	}
 }
 
+func (p *Parser) parseGuardStmt() Stmt {
+	if p.trace {
+		defer untracep(tracep(p, "GuardStmt"))
+	}
+
+	pos := p.pos
+	p.expect(token.Guard)
+
+	x := p.parseExpr()
+	p.expectSemi()
+	return &GuardStmt{
+		GuardPos: pos,
+		RHS:      x,
+	}
+}
+
 func (p *Parser) parseExportStmt() Stmt {
 	if p.trace {
 		defer untracep(tracep(p, "ExportStmt"))
@@ -1027,7 +1064,7 @@ func (p *Parser) parseExprList() (list []Expr) {
 	}
 
 	list = append(list, p.parseExpr())
-	for p.token == token.Comma {
+	for p.token == token.Comma || p.token == token.Guard {
 		p.next()
 		list = append(list, p.parseExpr())
 	}

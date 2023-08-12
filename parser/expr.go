@@ -599,3 +599,24 @@ func (e *UndefinedLit) End() Pos {
 func (e *UndefinedLit) String() string {
 	return "undefined"
 }
+
+type GuardExpr struct {
+	RHS      Expr
+	GuardPos Pos
+}
+
+func (e *GuardExpr) exprNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (e *GuardExpr) Pos() Pos {
+	return e.GuardPos
+}
+
+// End returns the position of first character immediately after the node.
+func (e *GuardExpr) End() Pos {
+	return e.RHS.End()
+}
+
+func (e *GuardExpr) String() string {
+	return "guard " + e.RHS.String()
+}
