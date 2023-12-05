@@ -218,30 +218,30 @@ func (v *VM) run() {
 				return
 			}
 		case parser.OpJumpFalsy:
-			v.ip += 4
+			v.ip += 2
 			v.sp--
 			if v.stack[v.sp].IsFalsy() {
-				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8 | int(v.curInsts[v.ip-2])<<16 | int(v.curInsts[v.ip-3])<<24
+				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 				v.ip = pos - 1
 			}
 		case parser.OpAndJump:
-			v.ip += 4
+			v.ip += 2
 			if v.stack[v.sp-1].IsFalsy() {
-				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8 | int(v.curInsts[v.ip-2])<<16 | int(v.curInsts[v.ip-3])<<24
+				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 				v.ip = pos - 1
 			} else {
 				v.sp--
 			}
 		case parser.OpOrJump:
-			v.ip += 4
+			v.ip += 2
 			if v.stack[v.sp-1].IsFalsy() {
 				v.sp--
 			} else {
-				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8 | int(v.curInsts[v.ip-2])<<16 | int(v.curInsts[v.ip-3])<<24
+				pos := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 				v.ip = pos - 1
 			}
 		case parser.OpJump:
-			pos := int(v.curInsts[v.ip+4]) | int(v.curInsts[v.ip+3])<<8 | int(v.curInsts[v.ip+2])<<16 | int(v.curInsts[v.ip+1])<<24
+			pos := int(v.curInsts[v.ip+2]) | int(v.curInsts[v.ip+1])<<8
 			v.ip = pos - 1
 		case parser.OpSetGlobal:
 			v.ip += 2
