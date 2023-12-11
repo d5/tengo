@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BufFileManager">
+    <libraries>
+      <module>
+        <name>buf.build/envoyproxy/protoc-gen-validate</name>
+        <path>$USER_HOME$/.cache/buf/v1/module/data/buf.build/envoyproxy/protoc-gen-validate/6607b10f00ed4a3d98f906807131c44a</path>
+        <reference>buf.build/envoyproxy/protoc-gen-validate:6607b10f00ed4a3d98f906807131c44a</reference>
+        <yaml>$USER_HOME$/.cache/buf/v1/module/data/buf.build/envoyproxy/protoc-gen-validate/6607b10f00ed4a3d98f906807131c44a/buf.yaml</yaml>
+      </module>
+      <module>
+        <name>buf.build/googleapis/googleapis</name>
+        <path>$USER_HOME$/.cache/buf/v1/module/data/buf.build/googleapis/googleapis/5abafbf55b5c4c07ad5fb06d2599560f</path>
+        <reference>buf.build/googleapis/googleapis:5abafbf55b5c4c07ad5fb06d2599560f</reference>
+        <yaml>$USER_HOME$/.cache/buf/v1/module/data/buf.build/googleapis/googleapis/5abafbf55b5c4c07ad5fb06d2599560f/buf.yaml</yaml>
+      </module>
+      <module>
+        <lockedDependencies>
+          <dependency>
+            <commit>62f35d8aed1149c291d606d958a7ce32</commit>
+            <owner>googleapis</owner>
+            <remote>buf.build</remote>
+            <repository>googleapis</repository>
+          </dependency>
+        </lockedDependencies>
+        <name>buf.build/grpc-ecosystem/grpc-gateway</name>
+        <path>$USER_HOME$/.cache/buf/v1/module/data/buf.build/grpc-ecosystem/grpc-gateway/a1ecdc58eccd49aa8bea2a7a9022dc27</path>
+        <reference>buf.build/grpc-ecosystem/grpc-gateway:a1ecdc58eccd49aa8bea2a7a9022dc27</reference>
+        <yaml>$USER_HOME$/.cache/buf/v1/module/data/buf.build/grpc-ecosystem/grpc-gateway/a1ecdc58eccd49aa8bea2a7a9022dc27/buf.yaml</yaml>
+      </module>
+      <module>
+        <lockedDependencies>
+          <dependency>
+            <commit>62f35d8aed1149c291d606d958a7ce32</commit>
+            <owner>googleapis</owner>
+            <remote>buf.build</remote>
+            <repository>googleapis</repository>
+          </dependency>
+        </lockedDependencies>
+        <name>buf.build/grpc-ecosystem/protoc-gen-swagger</name>
+        <path>$USER_HOME$/.cache/buf/v1/module/data/buf.build/grpc-ecosystem/protoc-gen-swagger/177bd018c960492d831aee5e88594dec</path>
+        <reference>buf.build/grpc-ecosystem/protoc-gen-swagger:177bd018c960492d831aee5e88594dec</reference>
+        <yaml>$USER_HOME$/.cache/buf/v1/module/data/buf.build/grpc-ecosystem/protoc-gen-swagger/177bd018c960492d831aee5e88594dec/buf.yaml</yaml>
+      </module>
+    </libraries>
+  </component>
+</project>

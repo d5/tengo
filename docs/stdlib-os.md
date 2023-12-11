@@ -6,6 +6,8 @@ os := import("os")
 
 ## Constants
 
+- `platform`
+- `arch`
 - `o_rdonly`
 - `o_wronly`
 - `o_rdwr`
