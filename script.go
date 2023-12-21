@@ -336,3 +336,13 @@ func (c *Compiled) Set(name string, value interface{}) error {
 	c.globals[idx] = obj
 	return nil
 }
+
+// Bytecode returns bytecode of this Compiled
+func (c *Compiled) Bytecode() *Bytecode {
+	return c.bytecode
+}
+
+// Globals return globals in this Compiled
+func (c *Compiled) Globals() []Object {
+	return c.globals
+}

@@ -64,18 +64,69 @@ func (v *VM) Abort() {
 	atomic.StoreInt64(&v.aborting, 1)
 }
 
+// constant wrapper function func(fn, ...args){ return fn(args...) }
+var funcWrapper = &CompiledFunction{
+	Instructions: append(
+		MakeInstruction(parser.OpGetLocal, 0),
+		append(MakeInstruction(parser.OpGetLocal, 1),
+			append(MakeInstruction(parser.OpCall, 1, 1),
+				MakeInstruction(parser.OpReturn, 1)...)...)...,
+	),
+	NumLocals:     2,
+	NumParameters: 2,
+	VarArgs:       true,
+}
+
+// RunCompiled run specified function in VM context
+func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (val Object, err error) {
+	v.stack = [StackSize]Object{}
+	sp := 0
+
+	if fn != nil { // run user supplied function
+		entry := &CompiledFunction{
+			Instructions: append(
+				MakeInstruction(parser.OpCall, 1+len(args), 0),
+				MakeInstruction(parser.OpSuspend)...,
+			),
+		}
+		v.stack[0] = funcWrapper
+		v.stack[1] = fn
+		for i, arg := range args {
+			v.stack[i+2] = arg
+		}
+		sp = 2 + len(args)
+		v.frames[0].fn = entry
+	}
+
+	v.resetState()
+	v.sp = sp
+
+	val = UndefinedValue
+	v.run()
+	if fn != nil && atomic.LoadInt64(&v.aborting) == 0 {
+		val = v.stack[v.sp-1]
+	}
+	atomic.StoreInt64(&v.aborting, 0)
+	err = v.handleError()
+	return
+}
+
 // Run starts the execution.
 func (v *VM) Run() (err error) {
-	// reset VM states
+	_, err = v.RunCompiled(nil)
+	return
+}
+
+func (v *VM) resetState() {
 	v.sp = 0
 	v.curFrame = &(v.frames[0])
 	v.curInsts = v.curFrame.fn.Instructions
 	v.framesIndex = 1
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
+}
 
-	v.run()
-	atomic.StoreInt64(&v.aborting, 0)
+func (v *VM) handleError() (err error) {
 	err = v.err
 	if err != nil {
 		filePos := v.fileSet.Position(
@@ -89,9 +140,8 @@ func (v *VM) Run() (err error) {
 				v.curFrame.fn.SourcePos(v.curFrame.ip - 1))
 			err = fmt.Errorf("%w\n\tat %s", err, filePos)
 		}
-		return err
 	}
-	return nil
+	return
 }
 
 func (v *VM) run() {
