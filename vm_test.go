@@ -3634,6 +3634,12 @@ func TestSpread(t *testing.T) {
 		"Runtime Error: wrong number of arguments: want=3, got=2")
 }
 
+func TestSliceIndex(t *testing.T) {
+	expectError(t, `undefined[:1]`, nil, "Runtime Error: not indexable")
+	expectError(t, `123[-1:2]`, nil, "Runtime Error: not indexable")
+	expectError(t, `{}[:]`, nil, "Runtime Error: not indexable")
+}
+
 func expectRun(
 	t *testing.T,
 	input string,
