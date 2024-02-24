@@ -3638,6 +3638,7 @@ func TestSliceIndex(t *testing.T) {
 	expectError(t, `undefined[:1]`, nil, "Runtime Error: not indexable")
 	expectError(t, `123[-1:2]`, nil, "Runtime Error: not indexable")
 	expectError(t, `{}[:]`, nil, "Runtime Error: not indexable")
+	expectError(t, `a := 123[-1:2] ; a += 1`, nil, "Runtime Error: not indexable")
 }
 
 func expectRun(
