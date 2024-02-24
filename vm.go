@@ -534,6 +534,8 @@ func (v *VM) run() {
 				}
 				v.stack[v.sp] = val
 				v.sp++
+			default:
+				v.err = fmt.Errorf("not indexable: %s", left.TypeName())
 			}
 		case parser.OpCall:
 			numArgs := int(v.curInsts[v.ip+1])
