@@ -536,6 +536,7 @@ func (v *VM) run() {
 				v.sp++
 			default:
 				v.err = fmt.Errorf("not indexable: %s", left.TypeName())
+				return
 			}
 		case parser.OpCall:
 			numArgs := int(v.curInsts[v.ip+1])
