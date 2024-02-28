@@ -1,0 +1,33 @@
+_sort := func(arr, left, right, less) {
+  if right-left <= 0 {
+    return arr
+  }
+  i := left
+
+  for j := left; j < right; j++ {
+    if less(j, right) {
+      if i != j {
+        tmp := arr[i]
+        arr[i] = arr[j]
+        arr[j] = tmp
+      }
+      i++
+    }
+  }
+
+  if i != right {
+    tmp := arr[i]
+    arr[i] = arr[right]
+    arr[right] = tmp
+  }
+
+  _sort(arr, left, i-1, less)
+  _sort(arr, i+1, right, less)
+  return arr
+}
+
+export {
+  sort: func(arr, less) {
+    return _sort(arr, 0, len(arr)-1, less)
+  }
+}
