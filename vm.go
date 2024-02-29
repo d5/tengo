@@ -21,6 +21,7 @@ type VM struct {
 	constants   []Object
 	stack       [StackSize]Object
 	sp          int
+	builtins    []*BuiltinFunction
 	globals     []Object
 	fileSet     *parser.SourceFileSet
 	frames      [MaxFrames]frame
@@ -37,15 +38,20 @@ type VM struct {
 // NewVM creates a VM.
 func NewVM(
 	bytecode *Bytecode,
+	builtins []*BuiltinFunction,
 	globals []Object,
 	maxAllocs int64,
 ) *VM {
+	if builtins == nil {
+		builtins = GetAllBuiltinFunctions()
+	}
 	if globals == nil {
 		globals = make([]Object, GlobalsSize)
 	}
 	v := &VM{
 		constants:   bytecode.Constants,
 		sp:          0,
+		builtins:    builtins,
 		globals:     globals,
 		fileSet:     bytecode.FileSet,
 		framesIndex: 1,
@@ -742,7 +748,7 @@ func (v *VM) run() {
 		case parser.OpGetBuiltin:
 			v.ip++
 			builtinIndex := int(v.curInsts[v.ip])
-			v.stack[v.sp] = builtinFuncs[builtinIndex]
+			v.stack[v.sp] = v.builtins[builtinIndex]
 			v.sp++
 		case parser.OpClosure:
 			v.ip += 3

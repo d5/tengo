@@ -3859,7 +3859,7 @@ func traceCompileRun(
 	trace = append(trace, fmt.Sprintf("\n[Compiled Instructions]\n\n%s\n",
 		strings.Join(bytecode.FormatInstructions(), "\n")))
 
-	v = tengo.NewVM(bytecode, globals, maxAllocs)
+	v = tengo.NewVM(bytecode, nil, globals, maxAllocs)
 
 	err = v.Run()
 	{
