@@ -2,6 +2,7 @@ package tengo
 
 import (
 	"fmt"
+	"sync"
 	"sync/atomic"
 
 	"github.com/d5/tengo/v2/parser"
@@ -18,20 +19,32 @@ type frame struct {
 
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
-	constants   []Object
-	stack       [StackSize]Object
-	sp          int
-	globals     []Object
-	fileSet     *parser.SourceFileSet
-	frames      [MaxFrames]frame
-	framesIndex int
-	curFrame    *frame
-	curInsts    []byte
-	ip          int
-	aborting    int64
-	maxAllocs   int64
-	allocs      int64
-	err         error
+	constants    []Object
+	mainFunction *CompiledFunction
+	stack        *[StackSize]Object
+	sp           int
+	globals      []Object
+	fileSet      *parser.SourceFileSet
+	frames       *[MaxFrames]frame
+	framesIndex  int
+	curFrame     *frame
+	curInsts     []byte
+	ip           int
+	aborting     int64
+	maxAllocs    int64
+	allocs       int64
+	err          error
+}
+
+var vmStackPool = sync.Pool{
+	New: func() interface{} {
+		return &[StackSize]Object{}
+	},
+}
+var vmFramePool = sync.Pool{
+	New: func() interface{} {
+		return &[MaxFrames]frame{}
+	},
 }
 
 // NewVM creates a VM.
@@ -44,18 +57,16 @@ func NewVM(
 		globals = make([]Object, GlobalsSize)
 	}
 	v := &VM{
-		constants:   bytecode.Constants,
-		sp:          0,
-		globals:     globals,
-		fileSet:     bytecode.FileSet,
-		framesIndex: 1,
-		ip:          -1,
-		maxAllocs:   maxAllocs,
+		constants:    bytecode.Constants,
+		mainFunction: bytecode.MainFunction,
+		sp:           0,
+		globals:      globals,
+		fileSet:      bytecode.FileSet,
+		framesIndex:  1,
+		ip:           -1,
+		maxAllocs:    maxAllocs,
 	}
-	v.frames[0].fn = bytecode.MainFunction
-	v.frames[0].ip = -1
-	v.curFrame = &v.frames[0]
-	v.curInsts = v.curFrame.fn.Instructions
+
 	return v
 }
 
@@ -67,6 +78,15 @@ func (v *VM) Abort() {
 // Run starts the execution.
 func (v *VM) Run() (err error) {
 	// reset VM states
+	v.stack = vmStackPool.Get().(*[StackSize]Object)
+	v.frames = vmFramePool.Get().(*[MaxFrames]frame)
+	defer func() {
+		vmStackPool.Put(v.stack)
+		vmFramePool.Put(v.frames)
+	}()
+
+	v.frames[0].fn = v.mainFunction
+	v.frames[0].ip = -1
 	v.sp = 0
 	v.curFrame = &(v.frames[0])
 	v.curInsts = v.curFrame.fn.Instructions
