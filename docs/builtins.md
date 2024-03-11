@@ -126,6 +126,240 @@ v := ["a", "b", "c"]
 items := splice(v, 1, 1, "d", "e") // items == ["b"], v == ["a", "d", "e", "c"]
 ```
 
+## go
+
+Starts an independent concurrent goroutine which runs fn(arg1, arg2, ...)
+
+If fn is CompiledFunction, the current running VM will be cloned to create
+a new VM in which the CompiledFunction will be running.
+The fn can also be any object that has Call() method, such as BuiltinFunction,
+in which case no cloned VM will be created.
+Returns a goroutineVM object that has wait, result, abort methods.
+
+The goroutineVM will not exit unless:
+1. All its descendant goroutineVMs exit
+2. It calls abort()
+3. Its goroutineVM object abort() is called on behalf of its parent VM
+The latter 2 cases will trigger aborting procedure of all the descendant
+goroutineVMs, which will further result in #1 above.
+
+```golang
+var := 0
+
+f1 := func(a,b) { var = 10; return a+b }
+f2 := func(a,b,c) { var = 11; return a+b+c }
+
+gvm1 := go(f1,1,2)
+gvm2 := go(f2,1,2,5)
+
+fmt.println(gvm1.result()) // 3
+fmt.println(gvm2.result()) // 8
+fmt.println(var) // 10 or 11
+```
+
+* wait() waits for the goroutineVM to complete up to timeout seconds and
+returns true if the goroutineVM exited(successfully or not) within the
+timeout. It waits forever if the optional timeout not specified,
+or timeout < 0.
+* abort() triggers the termination process of the goroutineVM and all
+its descendant VMs.
+* result() waits the goroutineVM to complete, returns Error object if
+any runtime error occurred during the execution, otherwise returns the
+result value of fn(arg1, arg2, ...)
+
+### 1 client 1 server
+
+Below is a simple client server example:
+
+```golang
+reqChan := makechan(8)
+repChan := makechan(8)
+
+client := func(interval) {
+	reqChan.send("hello")
+	for i := 0; true; i++ {
+		fmt.println(repChan.recv())
+		times.sleep(interval*times.second)
+		reqChan.send(i)
+	}
+}
+
+server := func() {
+	for {
+		req := reqChan.recv()
+		if req == "hello" {
+			fmt.println(req)
+			repChan.send("world")
+		} else {
+			repChan.send(req+100)
+		}
+	}
+}
+
+gClient := go(client, 2)
+gServer := go(server)
+
+if ok := gClient.wait(5); !ok {
+	gClient.abort()
+}
+gServer.abort()
+
+//output:
+//hello
+//world
+//100
+//101
+```
+
+### n client n server, channel in channel
+
+```golang
+sharedReqChan := makechan(128)
+
+client = func(name, interval, timeout) {
+	print := func(s) {
+		fmt.println(name, s)
+	}
+	print("started")
+
+	repChan := makechan(1)
+	msg := {chan:repChan}
+
+	msg.data = "hello"
+	sharedReqChan.send(msg)
+	print(repChan.recv())
+
+	for i := 0; i * interval < timeout; i++ {
+		msg.data = i
+		sharedReqChan.send(msg)
+		print(repChan.recv())
+		times.sleep(interval*times.second)
+	}
+}
+
+server = func(name) {
+	print := func(s) {
+		fmt.println(name, s)
+	}
+	print("started")
+
+	for {
+		req := sharedReqChan.recv()
+		if req.data == "hello" {
+			req.chan.send("world")
+		} else {
+			req.chan.send(req.data+100)
+		}
+	}
+}
+
+clients := func() {
+	for i :=0; i < 5; i++ {
+		go(client, format("client %d: ", i), 1, 4)
+	}
+}
+
+servers := func() {
+	for i :=0; i < 2; i++ {
+		go(server, format("server %d: ", i))
+	}
+}
+
+// After 4 seconds, all clients should have exited normally
+gclts := go(clients)
+// If servers exit earlier than clients, then clients may be
+// blocked forever waiting for the reply chan, because servers
+// were aborted with the req fetched from sharedReqChan before
+// sending back the reply.
+// In such case, do below to abort() the clients manually
+//go(func(){times.sleep(6*times.second); gclts.abort()})
+
+// Servers are infinite loop, abort() them after 5 seconds
+gsrvs := go(servers)
+if ok := gsrvs.wait(5); !ok {
+	gsrvs.abort()
+}
+
+// Main VM waits here until all the child "go" finish
+
+// If somehow the main VM is stuck, that is because there is
+// at least one child VM that has not exited as expected, we
+// can do abort() to force exit.
+abort()
+
+//output:
+//3
+//8
+//hello
+//world
+//100
+//101
+
+//unordered output:
+//client 4: started
+//server 0: started
+//client 4: world
+//client 4: 100
+//client 3: started
+//client 3: world
+//client 3: 100
+//client 2: started
+//client 2: world
+//client 2: 100
+//client 0: started
+//client 0: world
+//client 0: 100
+//client 1: started
+//client 1: world
+//client 1: 100
+//server 1: started
+//client 1: 101
+//client 2: 101
+//client 4: 101
+//client 0: 101
+//client 3: 101
+//client 3: 102
+//client 0: 102
+//client 2: 102
+//client 1: 102
+//client 4: 102
+//client 0: 103
+//client 3: 103
+//client 2: 103
+//client 1: 103
+//client 4: 103
+
+```
+
+## abort
+Triggers the termination process of the current VM and all its descendant VMs.
+
+## makechan
+
+Makes a channel to send/receive object and returns a chan object that has
+send, recv, close methods.
+
+```golang
+unbufferedChan := makechan()
+bufferedChan := makechan(128)
+
+// Send will block if the channel is full.
+bufferedChan.send("hello") // send string
+bufferedChan.send(55) // send int
+bufferedChan.send([66, makechan(1)]) // channel in channel
+
+// Receive will block if the channel is empty.
+obj := bufferedChan.recv()
+
+// Send to a closed channel causes panic.
+// Receive from a closed channel returns undefined value.
+unbufferedChan.close()
+bufferedChan.close()
+```
+
+On the time the VM that the chan is running in is aborted, the sending
+or receiving call returns immediately.
+
 ## type_name
 
 Returns the type_name of an object.

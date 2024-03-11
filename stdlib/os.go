@@ -42,9 +42,10 @@ var osModule = map[string]tengo.Object{
 	"seek_set":            &tengo.Int{Value: int64(io.SeekStart)},
 	"seek_cur":            &tengo.Int{Value: int64(io.SeekCurrent)},
 	"seek_end":            &tengo.Int{Value: int64(io.SeekEnd)},
-	"args": &tengo.UserFunction{
-		Name:  "args",
-		Value: osArgs,
+	"args": &tengo.BuiltinFunction{
+		Name:      "args",
+		Value:     osArgs,
+		NeedVMObj: true,
 	}, // args() => array(string)
 	"chdir": &tengo.UserFunction{
 		Name:  "chdir",
@@ -331,11 +332,13 @@ func osOpenFile(args ...tengo.Object) (tengo.Object, error) {
 }
 
 func osArgs(args ...tengo.Object) (tengo.Object, error) {
+	vm := args[0].(*tengo.VMObj).Value
+	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) != 0 {
 		return nil, tengo.ErrWrongNumArguments
 	}
 	arr := &tengo.Array{}
-	for _, osArg := range os.Args {
+	for _, osArg := range vm.Args {
 		if len(osArg) > tengo.MaxStringLen {
 			return nil, tengo.ErrStringLimit
 		}

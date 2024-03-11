@@ -52,6 +52,9 @@ var (
 
 	// ErrInvalidRangeStep is an error where the step parameter is less than or equal to 0 when using builtin range function.
 	ErrInvalidRangeStep = errors.New("range step must be greater than 0")
+
+	// ErrVMAborted is an error to denote the VM was forcibly terminated without proper exit.
+	ErrVMAborted = errors.New("virtual machine aborted")
 )
 
 // ErrInvalidArgumentType represents an invalid argument value type error.

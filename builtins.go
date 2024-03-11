@@ -1,130 +1,44 @@
 package tengo
 
-var builtinFuncs = []*BuiltinFunction{
-	{
-		Name:  "len",
-		Value: builtinLen,
-	},
-	{
-		Name:  "copy",
-		Value: builtinCopy,
-	},
-	{
-		Name:  "append",
-		Value: builtinAppend,
-	},
-	{
-		Name:  "delete",
-		Value: builtinDelete,
-	},
-	{
-		Name:  "splice",
-		Value: builtinSplice,
-	},
-	{
-		Name:  "string",
-		Value: builtinString,
-	},
-	{
-		Name:  "int",
-		Value: builtinInt,
-	},
-	{
-		Name:  "bool",
-		Value: builtinBool,
-	},
-	{
-		Name:  "float",
-		Value: builtinFloat,
-	},
-	{
-		Name:  "char",
-		Value: builtinChar,
-	},
-	{
-		Name:  "bytes",
-		Value: builtinBytes,
-	},
-	{
-		Name:  "time",
-		Value: builtinTime,
-	},
-	{
-		Name:  "is_int",
-		Value: builtinIsInt,
-	},
-	{
-		Name:  "is_float",
-		Value: builtinIsFloat,
-	},
-	{
-		Name:  "is_string",
-		Value: builtinIsString,
-	},
-	{
-		Name:  "is_bool",
-		Value: builtinIsBool,
-	},
-	{
-		Name:  "is_char",
-		Value: builtinIsChar,
-	},
-	{
-		Name:  "is_bytes",
-		Value: builtinIsBytes,
-	},
-	{
-		Name:  "is_array",
-		Value: builtinIsArray,
-	},
-	{
-		Name:  "is_immutable_array",
-		Value: builtinIsImmutableArray,
-	},
-	{
-		Name:  "is_map",
-		Value: builtinIsMap,
-	},
-	{
-		Name:  "is_immutable_map",
-		Value: builtinIsImmutableMap,
-	},
-	{
-		Name:  "is_iterable",
-		Value: builtinIsIterable,
-	},
-	{
-		Name:  "is_time",
-		Value: builtinIsTime,
-	},
-	{
-		Name:  "is_error",
-		Value: builtinIsError,
-	},
-	{
-		Name:  "is_undefined",
-		Value: builtinIsUndefined,
-	},
-	{
-		Name:  "is_function",
-		Value: builtinIsFunction,
-	},
-	{
-		Name:  "is_callable",
-		Value: builtinIsCallable,
-	},
-	{
-		Name:  "type_name",
-		Value: builtinTypeName,
-	},
-	{
-		Name:  "format",
-		Value: builtinFormat,
-	},
-	{
-		Name:  "range",
-		Value: builtinRange,
-	},
+var builtinFuncs []*BuiltinFunction
+
+// if needVMObj is true, VM will pass [VMObj, args...] to fn when calling it.
+func addBuiltinFunction(name string, fn CallableFunc, needVMObj bool) {
+	builtinFuncs = append(builtinFuncs, &BuiltinFunction{Name: name, Value: fn, NeedVMObj: needVMObj})
+}
+
+func init() {
+	addBuiltinFunction("len", builtinLen, false)
+	addBuiltinFunction("copy", builtinCopy, false)
+	addBuiltinFunction("append", builtinAppend, false)
+	addBuiltinFunction("delete", builtinDelete, false)
+	addBuiltinFunction("splice", builtinSplice, false)
+	addBuiltinFunction("string", builtinString, false)
+	addBuiltinFunction("int", builtinInt, false)
+	addBuiltinFunction("bool", builtinBool, false)
+	addBuiltinFunction("float", builtinFloat, false)
+	addBuiltinFunction("char", builtinChar, false)
+	addBuiltinFunction("bytes", builtinBytes, false)
+	addBuiltinFunction("time", builtinTime, false)
+	addBuiltinFunction("is_int", builtinIsInt, false)
+	addBuiltinFunction("is_float", builtinIsFloat, false)
+	addBuiltinFunction("is_string", builtinIsString, false)
+	addBuiltinFunction("is_bool", builtinIsBool, false)
+	addBuiltinFunction("is_char", builtinIsChar, false)
+	addBuiltinFunction("is_bytes", builtinIsBytes, false)
+	addBuiltinFunction("is_array", builtinIsArray, false)
+	addBuiltinFunction("is_immutable_array", builtinIsImmutableArray, false)
+	addBuiltinFunction("is_map", builtinIsMap, false)
+	addBuiltinFunction("is_immutable_map", builtinIsImmutableMap, false)
+	addBuiltinFunction("is_iterable", builtinIsIterable, false)
+	addBuiltinFunction("is_time", builtinIsTime, false)
+	addBuiltinFunction("is_error", builtinIsError, false)
+	addBuiltinFunction("is_undefined", builtinIsUndefined, false)
+	addBuiltinFunction("is_function", builtinIsFunction, false)
+	addBuiltinFunction("is_callable", builtinIsCallable, false)
+	addBuiltinFunction("type_name", builtinTypeName, false)
+	addBuiltinFunction("format", builtinFormat, false)
+	addBuiltinFunction("range", builtinRange, false)
 }
 
 // GetAllBuiltinFunctions returns all builtin function objects.
