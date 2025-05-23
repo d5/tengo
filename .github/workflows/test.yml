@@ -9,25 +9,19 @@ jobs:
     name: build
     runs-on: ubuntu-latest
     steps:
+    - name: check out code
+      uses: actions/checkout@v4
     - name: set up Go
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v4
       with:
         go-version: 1.18
-      id: go
     - name: set up Go module cache
-      uses: actions/cache@v1
+      uses: actions/cache@v4
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-    - name: setup env
-      run: |
-        echo "name=GOPATH::$(go env GOPATH)" >> $GITHUB_ENV
-        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-      shell: bash
-    - name: check out code
-      uses: actions/checkout@v2
     - name: install golint
       run: go install golang.org/x/lint/golint@latest
     - name: run tests
