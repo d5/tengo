@@ -304,6 +304,14 @@ func FromInterface(v interface{}) (Object, error) {
 		return v, nil
 	case CallableFunc:
 		return &UserFunction{Value: v}, nil
+    case json.Number:
+        if i, err := v.Int64(); err == nil {
+            return &Int{Value: i}, nil
+        }
+        if f, err := v.Float64(); err == nil {
+            return &Float{Value: f}, nil
+        }
+        return nil, errors.New("invalid json.Number")
 	}
 	return nil, fmt.Errorf("cannot convert to object: %T", v)
 }
