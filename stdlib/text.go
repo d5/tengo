@@ -284,12 +284,14 @@ func textREFind(args ...tengo.Object) (ret tengo.Object, err error) {
 
 		arr := &tengo.Array{}
 		for i := 0; i < len(m); i += 2 {
-			arr.Value = append(arr.Value,
-				&tengo.ImmutableMap{Value: map[string]tengo.Object{
-					"text":  &tengo.String{Value: s2[m[i]:m[i+1]]},
-					"begin": &tengo.Int{Value: int64(m[i])},
-					"end":   &tengo.Int{Value: int64(m[i+1])},
-				}})
+			if m[i] >= 0 && m[i+1] >= 0 {
+				arr.Value = append(arr.Value,
+					&tengo.ImmutableMap{Value: map[string]tengo.Object{
+						"text":  &tengo.String{Value: s2[m[i]:m[i+1]]},
+						"begin": &tengo.Int{Value: int64(m[i])},
+						"end":   &tengo.Int{Value: int64(m[i+1])},
+					}})
+			}
 		}
 
 		ret = &tengo.Array{Value: []tengo.Object{arr}}
@@ -316,12 +318,14 @@ func textREFind(args ...tengo.Object) (ret tengo.Object, err error) {
 	for _, m := range m {
 		subMatch := &tengo.Array{}
 		for i := 0; i < len(m); i += 2 {
-			subMatch.Value = append(subMatch.Value,
-				&tengo.ImmutableMap{Value: map[string]tengo.Object{
-					"text":  &tengo.String{Value: s2[m[i]:m[i+1]]},
-					"begin": &tengo.Int{Value: int64(m[i])},
-					"end":   &tengo.Int{Value: int64(m[i+1])},
-				}})
+			if m[i] >= 0 && m[i+1] >= 0 {
+				subMatch.Value = append(subMatch.Value,
+					&tengo.ImmutableMap{Value: map[string]tengo.Object{
+						"text":  &tengo.String{Value: s2[m[i]:m[i+1]]},
+						"begin": &tengo.Int{Value: int64(m[i])},
+						"end":   &tengo.Int{Value: int64(m[i+1])},
+					}})
+			}
 		}
 
 		arr.Value = append(arr.Value, subMatch)
