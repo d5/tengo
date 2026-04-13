@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/d5/tengo/v2"
@@ -1334,6 +1335,516 @@ func TestCompilerSetImportExt_extension_name_validation(t *testing.T) {
 		actual := c.GetImportFileExt()
 		require.Equal(t, expect, actual, test.msgFail)
 	}
+}
+
+func TestCompiler_ReplaceBuiltinModule(t *testing.T) {
+	sharedValues1 := map[string]int{}
+	sharedValues2 := map[string]int{}
+
+	createSetter := func(vals map[string]int) map[string]tengo.Object {
+		return map[string]tengo.Object{
+			"set": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					n, _ := tengo.ToString(args[0])
+					i, _ := tengo.ToInt64(args[1])
+					vals[n] = int(i)
+					return nil, nil
+				},
+			},
+		}
+	}
+
+	checkValues := func(vals map[string]int, name string, base int) {
+		require.Equal(t, base, vals["direct"], fmt.Sprintf("unexpected value in %s['direct']", name))
+		require.Equal(t, base+1, vals["srcM1"], fmt.Sprintf("unexpected value in %s['srcM1']", name))
+		require.Equal(t, base+2, vals["srcM2"], fmt.Sprintf("unexpected value in %s['srcM2']", name))
+	}
+
+	srcM1 := `
+	m := import("setter")
+	export { set: m.set }
+	`
+
+	srcM2 := `
+	m := import("m1")
+	export { set: m.set }
+	`
+
+	code := `
+	ss := import("setter")
+	m1 := import("m1")
+	m2 := import("m2")
+
+	ss.set("direct", value)
+	m1.set("srcM1", value+1) // should update shared value under <setter> once again (src module shares builtin module instance)
+	m2.set("srcM2", value+2) // should again update the same value (nested src modules share the same builtin module instance)
+	`
+
+	script := tengo.NewScript([]byte(code))
+
+	// set values
+	err := script.Add("value", 0)
+	require.NoError(t, err, "failed to set value in script")
+
+	modules := stdlib.GetModuleMap()
+	modules.AddBuiltinModule("setter", createSetter(sharedValues1))
+	modules.AddSourceModule("m1", []byte(srcM1))
+	modules.AddSourceModule("m2", []byte(srcM2))
+	script.SetImports(modules)
+
+	compiled, err := script.Compile()
+	require.NoError(t, err, "failed to compile script")
+
+	// Check original script uses builtin module it got at start
+	compiled.Set("value", 10)
+	err = compiled.Run()
+
+	require.NoError(t, err, "failed to run original compiled script")
+	checkValues(sharedValues1, "sharedValues1", 10)
+
+	// Check cloned script uses new builtin module after replacement
+	clone := compiled.Clone()
+	clone.Set("value", 20)
+	clone.ReplaceBuiltinModule("setter", createSetter(sharedValues2))
+	err = clone.Run()
+
+	require.NoError(t, err, "failed to run cloned compiled script")
+	checkValues(sharedValues2, "sharedValues2", 20)
+
+	// Check original script still uses old builtin module
+	compiled.Set("value", 30)
+	err = compiled.Run()
+
+	require.NoError(t, err, "failed to run original compiled script")
+	checkValues(sharedValues1, "sharedValues1", 30)
+	checkValues(sharedValues2, "sharedValues2", 20)
+}
+
+func TestCompiler_ConcurrentParallelExecution_Out(t *testing.T) {
+	sharedValues := map[string]int{}
+
+	createBuiltin := func(vals map[string]int, tengoMapValue int64) map[string]tengo.Object {
+		return map[string]tengo.Object{
+			"set": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					n, _ := tengo.ToString(args[0])
+					i, _ := tengo.ToInt64(args[1])
+					vals[n] = int(i)
+					return nil, nil
+				},
+			},
+		}
+	}
+
+	srcM1 := `
+	m := import("builtin")
+	export { set: m.set }
+	`
+
+	srcM2 := `
+	m := import("m1")
+	export { set: m.set }
+	`
+
+	code := `
+	ss := import("builtin")
+	m1 := import("m1")
+	m2 := import("m2")
+
+	m1.set("out", value1+1)
+	`
+
+	script := tengo.NewScript([]byte(code))
+
+	err := script.Add("value1", 0)
+	require.NoError(t, err, "failed to set value in script")
+
+	modules := stdlib.GetModuleMap()
+	modules.AddBuiltinModule("builtin", createBuiltin(sharedValues, 10))
+	modules.AddSourceModule("m1", []byte(srcM1))
+	modules.AddSourceModule("m2", []byte(srcM2))
+	script.SetImports(modules)
+
+	precompiled, err := script.Compile()
+	require.NoError(t, err, "failed to compile script")
+
+	const goroutineCount = 1_000
+	wg := sync.WaitGroup{}
+	for i := 0; i < goroutineCount; i++ {
+		i := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			localMap := make(map[string]int)
+			const base = 20
+			script := precompiled.Clone()
+			script.ReplaceBuiltinModule("builtin", createBuiltin(localMap, int64(i)))
+			script.Set("value1", base)
+			err := script.Run()
+			require.NoError(t, err)
+			require.Equal(t, base+1, localMap["out"], fmt.Sprintf("i: %d", i))
+		}()
+	}
+
+	wg.Wait()
+}
+
+func TestCompiler_ConcurrentParallelExecution_OutFromConstructor(t *testing.T) {
+	sharedValues := map[string]int{}
+
+	createBuiltin := func(vals map[string]int, tengoMapValue int64) map[string]tengo.Object {
+		return map[string]tengo.Object{
+			"set": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					n, _ := tengo.ToString(args[0])
+					i, _ := tengo.ToInt64(args[1])
+					vals[n] = int(i)
+					return nil, nil
+				},
+			},
+			"get": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					return &tengo.Map{Value: map[string]tengo.Object{
+						"Value": &tengo.Int{Value: tengoMapValue},
+					}}, nil
+				},
+			},
+		}
+	}
+
+	srcWithConstructor := `
+    m := import("builtin")
+    export { 
+        get: func() { 
+            return m.get().Value
+        }
+    }
+	`
+
+	code := `
+	m := import("constructor")
+	ss := import("builtin")
+	ss.set("outFromConstructor", m.get())
+	`
+
+	script := tengo.NewScript([]byte(code))
+
+	modules := stdlib.GetModuleMap()
+	modules.AddBuiltinModule("builtin", createBuiltin(sharedValues, 10))
+	modules.AddSourceModule("constructor", []byte(srcWithConstructor))
+	script.SetImports(modules)
+
+	precompiled, err := script.Compile()
+	require.NoError(t, err, "failed to compile script")
+
+	const goroutineCount = 1_000
+	wg := sync.WaitGroup{}
+	for i := 0; i < goroutineCount; i++ {
+		i := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			localMap := make(map[string]int)
+			script := precompiled.Clone()
+			script.ReplaceBuiltinModule("builtin", createBuiltin(localMap, int64(i)))
+			err := script.Run()
+			require.NoError(t, err)
+			require.Equal(t, i, localMap["outFromConstructor"], fmt.Sprintf("constructor i: %d", i))
+		}()
+	}
+
+	wg.Wait()
+}
+
+func TestCompiler_ConcurrentParallelExecution_OutGlobal(t *testing.T) {
+	sharedValues := map[string]int{}
+
+	createBuiltin := func(vals map[string]int, tengoMapValue int64) map[string]tengo.Object {
+		return map[string]tengo.Object{
+			"set": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					n, _ := tengo.ToString(args[0])
+					i, _ := tengo.ToInt64(args[1])
+					vals[n] = int(i)
+					return nil, nil
+				},
+			},
+			"get": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					return &tengo.Map{Value: map[string]tengo.Object{
+						"Value": &tengo.Int{Value: tengoMapValue},
+					}}, nil
+				},
+			},
+		}
+	}
+
+	srcWithConstructor := `
+    m := import("builtin")
+	globalModuleVariable := m.get().Value + 20 
+    export { 
+		global: globalModuleVariable
+    }
+	`
+
+	code := `
+	m := import("constructor")
+	ss := import("builtin")
+	ss.set("outGlobal", m.global)
+	`
+
+	script := tengo.NewScript([]byte(code))
+
+	modules := stdlib.GetModuleMap()
+	modules.AddBuiltinModule("builtin", createBuiltin(sharedValues, 10))
+	modules.AddSourceModule("constructor", []byte(srcWithConstructor))
+	script.SetImports(modules)
+
+	precompiled, err := script.Compile()
+	require.NoError(t, err, "failed to compile script")
+
+	const goroutineCount = 1_000
+	wg := sync.WaitGroup{}
+	for i := 0; i < goroutineCount; i++ {
+		i := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			localMap := make(map[string]int)
+			script := precompiled.Clone()
+			script.ReplaceBuiltinModule("builtin", createBuiltin(localMap, int64(i)))
+			err := script.Run()
+			require.NoError(t, err)
+			require.Equal(t, i+20, localMap["outGlobal"], fmt.Sprintf("global i: %d", i))
+		}()
+	}
+
+	wg.Wait()
+}
+
+func TestCompiler_ConcurrentParallelExecution_OutGlobalTransit(t *testing.T) {
+	sharedValues := map[string]int{}
+
+	createBuiltin := func(vals map[string]int, tengoMapValue int64) map[string]tengo.Object {
+		return map[string]tengo.Object{
+			"set": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					n, _ := tengo.ToString(args[0])
+					i, _ := tengo.ToInt64(args[1])
+					vals[n] = int(i)
+					return nil, nil
+				},
+			},
+			"get": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					return &tengo.Map{Value: map[string]tengo.Object{
+						"Value": &tengo.Int{Value: tengoMapValue},
+					}}, nil
+				},
+			},
+		}
+	}
+
+	srcWithConstructor := `
+    m := import("builtin")
+	globalModuleVariable := m.get().Value + 20 
+    export { 
+        get: func() { 
+            return globalModuleVariable
+        }
+    }
+	`
+
+	transitModule := `
+	m := import("constructor")
+	global := m.get()
+
+	export {
+		transitGlobal: func() {
+			return global
+		}
+	}
+	`
+
+	code := `
+	m := import("transit")
+	ss := import("builtin")
+	ss.set("outGlobalTransit", m.transitGlobal())
+	`
+
+	script := tengo.NewScript([]byte(code))
+
+	modules := stdlib.GetModuleMap()
+	modules.AddBuiltinModule("builtin", createBuiltin(sharedValues, 10))
+	modules.AddSourceModule("constructor", []byte(srcWithConstructor))
+	modules.AddSourceModule("transit", []byte(transitModule))
+	script.SetImports(modules)
+
+	precompiled, err := script.Compile()
+	require.NoError(t, err, "failed to compile script")
+
+	const goroutineCount = 1_000
+	wg := sync.WaitGroup{}
+	for i := 0; i < goroutineCount; i++ {
+		i := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			localMap := make(map[string]int)
+			script := precompiled.Clone()
+			script.ReplaceBuiltinModule("builtin", createBuiltin(localMap, int64(i)))
+			err := script.Run()
+			require.NoError(t, err)
+			require.Equal(t, i+20, localMap["outGlobalTransit"], fmt.Sprintf("transit i: %d", i))
+		}()
+	}
+
+	wg.Wait()
+}
+
+func TestCompiler_ConcurrentParallelExecution_Singleton(t *testing.T) {
+	sharedValues := map[string]int{}
+
+	createBuiltin := func(vals map[string]int, tengoMapValue int64) map[string]tengo.Object {
+		return map[string]tengo.Object{
+			"set": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					n, _ := tengo.ToString(args[0])
+					i, _ := tengo.ToInt64(args[1])
+					vals[n] = int(i)
+					return nil, nil
+				},
+			},
+		}
+	}
+
+	singleton := `
+	localState := 0
+	export {
+		get: func() {
+			return localState
+		},
+		set: func(v) {
+			localState = v
+		}
+	}
+	`
+
+	code := `
+	singleton := import("singleton")
+	ss := import("builtin")
+	ss.set("singleton", func() {
+		state := singleton.get()
+		state = state + 1
+		singleton.set(state)
+		return singleton.get()
+	}())
+	`
+
+	script := tengo.NewScript([]byte(code))
+
+	modules := stdlib.GetModuleMap()
+	modules.AddBuiltinModule("builtin", createBuiltin(sharedValues, 10))
+	modules.AddSourceModule("singleton", []byte(singleton))
+	script.SetImports(modules)
+
+	precompiled, err := script.Compile()
+	require.NoError(t, err, "failed to compile script")
+
+	const goroutineCount = 1_000
+	wg := sync.WaitGroup{}
+	for i := 0; i < goroutineCount; i++ {
+		i := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			localMap := make(map[string]int)
+			script := precompiled.Clone()
+			script.ReplaceBuiltinModule("builtin", createBuiltin(localMap, int64(i)))
+			err := script.Run()
+			require.NoError(t, err)
+			require.Equal(t, 1, localMap["singleton"], fmt.Sprintf("singleton i: %d", i))
+		}()
+	}
+
+	wg.Wait()
+}
+
+func TestCompiler_ConcurrentParallelExecution_Object(t *testing.T) {
+	sharedValues := map[string]int{}
+
+	createBuiltin := func(vals map[string]int, tengoMapValue int64) map[string]tengo.Object {
+		return map[string]tengo.Object{
+			"set": &tengo.UserFunction{
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					n, _ := tengo.ToString(args[0])
+					i, _ := tengo.ToInt64(args[1])
+					vals[n] = int(i)
+					return nil, nil
+				},
+			},
+		}
+	}
+
+	object := `
+	export {
+		newObject: func() {
+			localState := 0
+			return {
+				get: func() {
+					return localState
+				},
+				set: func(v) {
+					localState = v
+				}
+			}
+		}
+	}
+	`
+
+	code := `
+	objectBuilder := import("object")
+	ss := import("builtin")
+	ss.set("object", func() {
+		obj := objectBuilder.newObject()
+		obj.set(1)
+		return obj.get()
+	}())
+	`
+
+	script := tengo.NewScript([]byte(code))
+
+	modules := stdlib.GetModuleMap()
+	modules.AddBuiltinModule("builtin", createBuiltin(sharedValues, 10))
+	modules.AddSourceModule("object", []byte(object))
+	script.SetImports(modules)
+
+	precompiled, err := script.Compile()
+	require.NoError(t, err, "failed to compile script")
+
+	const goroutineCount = 1_000
+	wg := sync.WaitGroup{}
+	for i := 0; i < goroutineCount; i++ {
+		i := i
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			localMap := make(map[string]int)
+			script := precompiled.Clone()
+			script.ReplaceBuiltinModule("builtin", createBuiltin(localMap, int64(i)))
+			err := script.Run()
+			require.NoError(t, err)
+			require.Equal(t, 1, localMap["object"], fmt.Sprintf("object i: %d", i))
+		}()
+	}
+
+	wg.Wait()
 }
 
 func concatInsts(instructions ...[]byte) []byte {

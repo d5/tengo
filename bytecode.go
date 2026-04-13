@@ -22,6 +22,19 @@ func (b *Bytecode) Size() int64 {
 	return b.MainFunction.Size() + b.FileSet.Size() + int64(len(b.Constants))
 }
 
+// Clone of the bytecode suitable for modification without affecting the original.
+// New Bytecode itself is independent, but all the contents of it are still shared
+// with the original.
+// The only thing that is not shared with the original is Constants slice, as it might be updated
+// by ReplaceBuiltinModule(), which should be safe for clone.
+func (b *Bytecode) Clone() *Bytecode {
+	return &Bytecode{
+		FileSet:      b.FileSet,
+		MainFunction: b.MainFunction,
+		Constants:    append([]Object{}, b.Constants...),
+	}
+}
+
 // Encode writes Bytecode data to the writer.
 func (b *Bytecode) Encode(w io.Writer) error {
 	enc := gob.NewEncoder(w)
@@ -66,6 +79,21 @@ func (b *Bytecode) FormatConstants() (output []string) {
 		}
 	}
 	return
+}
+
+// ReplaceBuiltinModule replaces a builtin module with a new one.
+// This is helpful for concurrent script execution, when builtin module does not support
+// concurrency and you need to provide custom module instance for each script clone.
+func (b *Bytecode) ReplaceBuiltinModule(name string, attrs map[string]Object) {
+	for i, c := range b.Constants {
+		switch c := c.(type) {
+		case *ImmutableMap:
+			modName := inferModuleName(c)
+			if modName == name {
+				b.Constants[i] = (&BuiltinModule{Attrs: attrs}).AsImmutableMap(name)
+			}
+		}
+	}
 }
 
 // Decode reads Bytecode data from the reader.

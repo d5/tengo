@@ -138,6 +138,7 @@ func (s *Script) Compile() (*Compiled, error) {
 		bytecode:      bytecode,
 		globals:       globals,
 		maxAllocs:     s.maxAllocs,
+		fullClone:     true, // we do not share bytecode or global indexes with other clones
 	}, nil
 }
 
@@ -200,6 +201,7 @@ type Compiled struct {
 	globals       []Object
 	maxAllocs     int64
 	lock          sync.RWMutex
+	fullClone     bool
 }
 
 // Run executes the compiled script in the virtual machine.
@@ -264,6 +266,7 @@ func (c *Compiled) Clone() *Compiled {
 		bytecode:      c.bytecode,
 		globals:       make([]Object, len(c.globals)),
 		maxAllocs:     c.maxAllocs,
+		fullClone:     false, // this clone shares bytecode and global indexes with the 'original'
 	}
 	// copy global objects
 	for idx, g := range c.globals {
@@ -272,6 +275,35 @@ func (c *Compiled) Clone() *Compiled {
 		}
 	}
 	return clone
+}
+
+// ReplaceBuiltinModule replaces a builtin module with a new one.
+// This is helpful for concurrent script execution, when builtin module does not support
+// concurrency and you need to provide custom module instance for each script clone.
+//
+// Remember to call .Clone() to get an instance of the script safe for concurrent use.
+func (c *Compiled) ReplaceBuiltinModule(name string, attrs map[string]Object) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	if !c.fullClone {
+		// To safely modify compiled script internals we need to be sure noone shares
+		// the same bytecode or global indexes.
+		// We do not do full copy during Clone() call to skip additional memory allocations
+		// when they are not needed, leaving Clone() call as optional as it was
+		// before the 'ReplaceBuiltinModule' feature was added.
+
+		indexes := make(map[string]int, len(c.globalIndexes))
+		for name, idx := range c.globalIndexes {
+			indexes[name] = idx
+		}
+		c.globalIndexes = indexes
+		c.bytecode = c.bytecode.Clone()
+
+		c.fullClone = true
+	}
+
+	c.bytecode.ReplaceBuiltinModule(name, attrs)
 }
 
 // IsDefined returns true if the variable name is defined (has value) before or

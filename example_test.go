@@ -44,3 +44,19 @@ each([a, b, c, d], func(x) {
 	// Output:
 	// 22 288
 }
+
+type TestModule struct {
+	value int
+}
+
+func (t *TestModule) module() *tengo.BuiltinModule {
+	return &tengo.BuiltinModule{
+		Attrs: map[string]tengo.Object{
+			"set": &tengo.UserFunction{Value: func(args ...tengo.Object) (tengo.Object, error) {
+				i, _ := tengo.ToInt64(args[0])
+				t.value = int(i)
+				return nil, nil
+			}},
+		},
+	}
+}
