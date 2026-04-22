@@ -3649,6 +3649,102 @@ func TestSliceIndex(t *testing.T) {
 	expectError(t, `a := 123[-1:2] ; a += 1`, nil, "Runtime Error: not indexable")
 }
 
+func TestSwitch(t *testing.T) {
+	// tagged switch — basic match
+	expectRun(t, `x := 1; switch x { case 1: out = "one" case 2: out = "two" }`, nil, "one")
+	expectRun(t, `x := 2; switch x { case 1: out = "one" case 2: out = "two" }`, nil, "two")
+
+	// no match, no default
+	expectRun(t, `switch 99 { case 1: out = "one" }`, nil, tengo.UndefinedValue)
+
+	// default clause
+	expectRun(t, `switch 99 { case 1: out = "one" default: out = "other" }`, nil, "other")
+	expectRun(t, `switch 1 { case 1: out = "one" default: out = "other" }`, nil, "one")
+
+	// default only
+	expectRun(t, `switch 1 { default: out = 42 }`, nil, 42)
+
+	// empty switch
+	expectRun(t, `switch 1 {}`, nil, tengo.UndefinedValue)
+
+	// multi-value case
+	expectRun(t, `switch 2 { case 1, 2, 3: out = "low" case 4, 5, 6: out = "high" }`, nil, "low")
+	expectRun(t, `switch 5 { case 1, 2, 3: out = "low" case 4, 5, 6: out = "high" }`, nil, "high")
+	expectRun(t, `switch 9 { case 1, 2, 3: out = "low" case 4, 5, 6: out = "high" default: out = "?" }`, nil, "?")
+
+	// string tag
+	expectRun(t, `switch "hello" { case "hello": out = 1 case "world": out = 2 }`, nil, 1)
+
+	// expression as tag
+	expectRun(t, `switch 2 + 3 { case 5: out = "five" case 6: out = "six" }`, nil, "five")
+
+	// tagless switch (boolean conditions)
+	expectRun(t, `x := 3; switch { case x < 2: out = "small" case x > 4: out = "large" default: out = "mid" }`, nil, "mid")
+	expectRun(t, `x := 1; switch { case x < 2: out = "small" case x > 4: out = "large" default: out = "mid" }`, nil, "small")
+	expectRun(t, `x := 9; switch { case x < 2: out = "small" case x > 4: out = "large" default: out = "mid" }`, nil, "large")
+
+	// init statement
+	expectRun(t, `switch x := 5; x { case 5: out = "five" default: out = "other" }`, nil, "five")
+	expectRun(t, `switch x := 9; x { case 5: out = "five" default: out = "other" }`, nil, "other")
+
+	// init with tagless switch
+	expectRun(t, `switch x := 3; { case x > 2: out = "big" default: out = "small" }`, nil, "big")
+
+	// break exits switch early
+	expectRun(t, `switch 1 { case 1: out = 1; break; out = 2 }`, nil, 1)
+
+	// break in switch does not affect enclosing loop
+	expectRun(t, `
+		out = 0
+		for i := 0; i < 3; i++ {
+			switch i {
+			case 1: out = i; break
+			}
+		}`, nil, 1)
+
+	// fallthrough executes next case's body (skipping its condition)
+	expectRun(t, `switch 1 { case 1: out = 1; fallthrough case 2: out = 2 }`, nil, 2)
+	expectRun(t, `switch 2 { case 1: out = 1; fallthrough case 2: out = 2 }`, nil, 2)
+
+	// fallthrough chain
+	expectRun(t, `
+		a := []
+		switch 1 {
+		case 1:
+			a = append(a, 1)
+			fallthrough
+		case 2:
+			a = append(a, 2)
+			fallthrough
+		case 3:
+			a = append(a, 3)
+		}
+		out = a`, nil, ARR{1, 2, 3})
+
+	// continue targets the enclosing loop, not the switch
+	expectRun(t, `
+		out = 0
+		for i := 0; i < 5; i++ {
+			switch i {
+			case 2: continue
+			}
+			out += i
+		}`, nil, 1+3+4) // 0+1+3+4 = 8; i=2 is skipped
+
+	// switch tag evaluated once (not per-case)
+	expectRun(t, `
+		n := 0
+		f := func() { n++; return 2 }
+		switch f() {
+		case 1: out = "one"
+		case 2: out = "two"
+		}
+		out = string(out) + ":" + string(n)`, nil, "two:1")
+
+	// error: default must be last clause
+	expectError(t, `switch 1 { default: out = 1 case 2: out = 2 }`, nil, "default")
+}
+
 func expectRun(
 	t *testing.T,
 	input string,
