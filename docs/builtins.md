@@ -323,3 +323,34 @@ immutable map, string, and bytes are iterable types in Tengo.
 ## is_time
 
 Returns `true` if the object's type is time. Or it returns `false`.
+## freeze
+
+Recursively converts a value into its fully immutable equivalent. Arrays
+become immutable arrays, maps become immutable maps, and all nested containers
+are converted in the same way. Primitives, strings, bytes, functions, and
+errors are returned as-is.
+
+If the input is already fully immutable (no mutable containers anywhere in the
+tree), the original value is returned without allocating anything new.
+
+```golang
+config := freeze({
+    limits: {max_retries: 3, timeout: 30},
+    tags:   ["prod", "v2"],
+})
+// config, config.limits, and config.tags are all immutable arrays/maps.
+is_immutable_map(config)          // true
+is_immutable_map(config.limits)   // true
+is_immutable_array(config.tags)   // true
+```
+
+`freeze` is particularly useful before sharing globals across concurrent
+`Clone()` executions: a frozen value is shared by all clones at zero copy
+cost because no clone can mutate it.
+
+```golang
+// Immutable input with no mutable children is returned as the same object.
+a := immutable([1, 2, 3])
+b := freeze(a)
+// b == a (same pointer, no allocation)
+```
