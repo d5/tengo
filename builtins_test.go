@@ -504,3 +504,143 @@ func Test_builtinRange(t *testing.T) {
 		})
 	}
 }
+
+func TestBuiltinFreeze(t *testing.T) {
+	var freeze func(args ...tengo.Object) (tengo.Object, error)
+	for _, f := range tengo.GetAllBuiltinFunctions() {
+		if f.Name == "freeze" {
+			freeze = f.Value
+			break
+		}
+	}
+	if freeze == nil {
+		t.Fatal("builtin freeze not found")
+	}
+
+	t.Run("array becomes immutable array", func(t *testing.T) {
+		arr := &tengo.Array{Value: []tengo.Object{
+			&tengo.Int{Value: 1}, &tengo.Int{Value: 2},
+		}}
+		got, err := freeze(arr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ia, ok := got.(*tengo.ImmutableArray)
+		if !ok {
+			t.Fatalf("expected *ImmutableArray, got %T", got)
+		}
+		if len(ia.Value) != 2 || !reflect.DeepEqual(ia.Value[0], &tengo.Int{Value: 1}) {
+			t.Fatalf("unexpected value: %v", ia)
+		}
+	})
+
+	t.Run("map becomes immutable map", func(t *testing.T) {
+		m := &tengo.Map{Value: map[string]tengo.Object{
+			"x": &tengo.Int{Value: 42},
+		}}
+		got, err := freeze(m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		im, ok := got.(*tengo.ImmutableMap)
+		if !ok {
+			t.Fatalf("expected *ImmutableMap, got %T", got)
+		}
+		if !reflect.DeepEqual(im.Value["x"], &tengo.Int{Value: 42}) {
+			t.Fatalf("unexpected value: %v", im)
+		}
+	})
+
+	t.Run("nested structures frozen recursively", func(t *testing.T) {
+		inner := &tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 7}}}
+		outer := &tengo.Map{Value: map[string]tengo.Object{"inner": inner}}
+
+		got, err := freeze(outer)
+		if err != nil {
+			t.Fatal(err)
+		}
+		im := got.(*tengo.ImmutableMap)
+		if _, ok := im.Value["inner"].(*tengo.ImmutableArray); !ok {
+			t.Fatalf("inner array not frozen, got %T", im.Value["inner"])
+		}
+	})
+
+	t.Run("already-immutable array with no mutable children returns same pointer", func(t *testing.T) {
+		ia := &tengo.ImmutableArray{Value: []tengo.Object{&tengo.Int{Value: 1}}}
+		got, err := freeze(ia)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != ia {
+			t.Fatal("expected same pointer for already-frozen array")
+		}
+	})
+
+	t.Run("already-immutable map with no mutable children returns same pointer", func(t *testing.T) {
+		im := &tengo.ImmutableMap{Value: map[string]tengo.Object{"a": &tengo.Int{Value: 1}}}
+		got, err := freeze(im)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != im {
+			t.Fatal("expected same pointer for already-frozen map")
+		}
+	})
+
+	t.Run("immutable array with mutable element is re-frozen", func(t *testing.T) {
+		inner := &tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 5}}}
+		ia := &tengo.ImmutableArray{Value: []tengo.Object{inner}}
+		got, err := freeze(ia)
+		if err != nil {
+			t.Fatal(err)
+		}
+		result := got.(*tengo.ImmutableArray)
+		if result == ia {
+			t.Fatal("expected a new ImmutableArray since element was mutable")
+		}
+		if _, ok := result.Value[0].(*tengo.ImmutableArray); !ok {
+			t.Fatalf("inner element not frozen, got %T", result.Value[0])
+		}
+	})
+
+	t.Run("primitives pass through unchanged", func(t *testing.T) {
+		for _, obj := range []tengo.Object{
+			&tengo.Int{Value: 1},
+			&tengo.Float{Value: 3.14},
+			tengo.TrueValue,
+			&tengo.String{Value: "hello"},
+			tengo.UndefinedValue,
+		} {
+			got, err := freeze(obj)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != obj {
+				t.Fatalf("primitive %T was not returned as-is", obj)
+			}
+		}
+	})
+
+	t.Run("self-referential array does not infinite-loop", func(t *testing.T) {
+		arr := &tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 1}}}
+		arr.Value = append(arr.Value, arr) // arr contains itself
+		got, err := freeze(arr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := got.(*tengo.ImmutableArray); !ok {
+			t.Fatalf("expected *ImmutableArray, got %T", got)
+		}
+	})
+
+	t.Run("wrong number of arguments", func(t *testing.T) {
+		_, err := freeze()
+		if err == nil {
+			t.Fatal("expected error for no arguments")
+		}
+		_, err = freeze(&tengo.Int{Value: 1}, &tengo.Int{Value: 2})
+		if err == nil {
+			t.Fatal("expected error for two arguments")
+		}
+	})
+}
