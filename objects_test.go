@@ -683,6 +683,51 @@ func TestInt_BinaryOp(t *testing.T) {
 	}
 }
 
+func TestInt_Equals(t *testing.T) {
+	require.True(t, (&tengo.Int{Value: 1}).Equals(&tengo.Int{Value: 1}))
+	require.False(t, (&tengo.Int{Value: 1}).Equals(&tengo.Int{Value: 2}))
+
+	// int == float: must be consistent with BinaryOp cross-type ordering
+	require.True(t, (&tengo.Int{Value: 1}).Equals(&tengo.Float{Value: 1.0}))
+	require.False(t, (&tengo.Int{Value: 1}).Equals(&tengo.Float{Value: 1.5}))
+	require.True(t, (&tengo.Int{Value: 0}).Equals(&tengo.Float{Value: 0.0}))
+	require.False(t, (&tengo.Int{Value: 1}).Equals(&tengo.Float{Value: -1.0}))
+
+	// trichotomy: neither (a < b) nor (a > b) implies (a == b)
+	for l := int64(-2); l <= 2; l++ {
+		for r := float64(-2); r <= 2.1; r += 0.5 {
+			lt, _ := (&tengo.Int{Value: l}).BinaryOp(token.Less, &tengo.Float{Value: r})
+			gt, _ := (&tengo.Int{Value: l}).BinaryOp(token.Greater, &tengo.Float{Value: r})
+			if lt == tengo.FalseValue && gt == tengo.FalseValue {
+				require.True(t, (&tengo.Int{Value: l}).Equals(&tengo.Float{Value: r}),
+					"expected %d == %g", l, r)
+			}
+		}
+	}
+}
+
+func TestFloat_Equals(t *testing.T) {
+	require.True(t, (&tengo.Float{Value: 1.5}).Equals(&tengo.Float{Value: 1.5}))
+	require.False(t, (&tengo.Float{Value: 1.5}).Equals(&tengo.Float{Value: 2.5}))
+
+	// float == int: must be consistent with BinaryOp cross-type ordering
+	require.True(t, (&tengo.Float{Value: 1.0}).Equals(&tengo.Int{Value: 1}))
+	require.False(t, (&tengo.Float{Value: 1.5}).Equals(&tengo.Int{Value: 1}))
+	require.True(t, (&tengo.Float{Value: 0.0}).Equals(&tengo.Int{Value: 0}))
+
+	// trichotomy: neither (a < b) nor (a > b) implies (a == b)
+	for l := float64(-2); l <= 2.1; l += 0.5 {
+		for r := int64(-2); r <= 2; r++ {
+			lt, _ := (&tengo.Float{Value: l}).BinaryOp(token.Less, &tengo.Int{Value: r})
+			gt, _ := (&tengo.Float{Value: l}).BinaryOp(token.Greater, &tengo.Int{Value: r})
+			if lt == tengo.FalseValue && gt == tengo.FalseValue {
+				require.True(t, (&tengo.Float{Value: l}).Equals(&tengo.Int{Value: r}),
+					"expected %g == %d", l, r)
+			}
+		}
+	}
+}
+
 func TestMap_Index(t *testing.T) {
 	m := &tengo.Map{Value: make(map[string]tengo.Object)}
 	k := &tengo.Int{Value: 1}

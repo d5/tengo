@@ -800,11 +800,13 @@ func (o *Float) IsFalsy() bool {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *Float) Equals(x Object) bool {
-	t, ok := x.(*Float)
-	if !ok {
-		return false
+	switch t := x.(type) {
+	case *Float:
+		return o.Value == t.Value
+	case *Int:
+		return o.Value == float64(t.Value)
 	}
-	return o.Value == t.Value
+	return false
 }
 
 // ImmutableArray represents an immutable array of objects.
@@ -1176,11 +1178,13 @@ func (o *Int) IsFalsy() bool {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *Int) Equals(x Object) bool {
-	t, ok := x.(*Int)
-	if !ok {
-		return false
+	switch t := x.(type) {
+	case *Int:
+		return o.Value == t.Value
+	case *Float:
+		return float64(o.Value) == t.Value
 	}
-	return o.Value == t.Value
+	return false
 }
 
 // Map represents a map of objects.
