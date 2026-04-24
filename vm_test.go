@@ -1029,6 +1029,14 @@ func TestEquality(t *testing.T) {
 	testEquality(t, `{a: 1, b: 2}`, `{b: 2}`, false)
 	testEquality(t, `{a: 1, b: {}}`, `{b: {}, a: 1}`, true)
 
+	// cross-type numeric equality must be consistent with ordering operators:
+	// if neither (a < b) nor (a > b) then (a == b) must hold
+	testEquality(t, `1`, `1.0`, true)
+	testEquality(t, `0`, `0.0`, true)
+	testEquality(t, `2`, `2.0`, true)
+	testEquality(t, `1`, `1.5`, false)
+	testEquality(t, `1`, `0.9`, false)
+
 	testEquality(t, `1`, `"foo"`, false)
 	testEquality(t, `1`, `true`, false)
 	testEquality(t, `[1]`, `["1"]`, false)
