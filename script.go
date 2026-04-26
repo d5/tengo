@@ -209,7 +209,7 @@ func (c *Compiled) Run() error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	v := NewVM(c.bytecode, c.globals, c.maxAllocs)
+	v := NewVM(c.bytecode, nil, c.globals, c.maxAllocs)
 	return v.Run()
 }
 
@@ -218,7 +218,7 @@ func (c *Compiled) RunContext(ctx context.Context) (err error) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	v := NewVM(c.bytecode, c.globals, c.maxAllocs)
+	v := NewVM(c.bytecode, nil, c.globals, c.maxAllocs)
 	ch := make(chan error, 1)
 	go func() {
 		defer func() {

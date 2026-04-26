@@ -140,7 +140,7 @@ func CompileAndRun(
 		return
 	}
 
-	machine := tengo.NewVM(bytecode, nil, -1)
+	machine := tengo.NewVM(bytecode, nil, nil, -1)
 	err = machine.Run()
 	return
 }
@@ -153,7 +153,7 @@ func RunCompiled(modules *tengo.ModuleMap, data []byte) (err error) {
 		return
 	}
 
-	machine := tengo.NewVM(bytecode, nil, -1)
+	machine := tengo.NewVM(bytecode, nil, nil, -1)
 	err = machine.Run()
 	return
 }
@@ -213,7 +213,7 @@ func RunREPL(modules *tengo.ModuleMap, in io.Reader, out io.Writer) {
 		}
 
 		bytecode := c.Bytecode()
-		machine := tengo.NewVM(bytecode, globals, -1)
+		machine := tengo.NewVM(bytecode, nil, globals, -1)
 		if err := machine.Run(); err != nil {
 			_, _ = fmt.Fprintln(out, err.Error())
 			continue
