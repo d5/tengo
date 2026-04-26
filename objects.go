@@ -298,7 +298,12 @@ func (o *Bool) IsFalsy() bool {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *Bool) Equals(x Object) bool {
-	return o == x
+	switch i:=x.(type) {
+	casse  *Bool:
+		return o.value==i.value
+	default:
+		return o == x
+	}
 }
 
 // GobDecode decodes bool value from input bytes.
