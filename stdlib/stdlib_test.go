@@ -1,7 +1,11 @@
 package stdlib_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"math/rand"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -70,6 +74,81 @@ if !is_error(cmd) {
 }
 `, []byte("foo bar\n"))
 
+}
+
+func TestSortModule(t *testing.T) {
+	// normal
+	expect(t, `
+sort := import("sort")
+a := [4, 5, 3, 1, 2]
+a = sort.sort(a, func(i, j) {
+	return a[i] < a[j]
+})
+out := import("json").encode(a)
+`, []byte("[1,2,3,4,5]"))
+
+	// generate random sequences for sorting
+	rand.Seed(time.Now().UnixNano())
+	generateRandomSequence := func() []int {
+		length := 1 + rand.Intn(1000)
+		arr := make([]int, length)
+		for i := 0; i < length; i++ {
+			arr[i] = rand.Intn(1000000)
+		}
+		return arr
+	}
+	for i := 0; i < 500; i++ {
+		seq := generateRandomSequence()
+		seqBytes, _ := json.Marshal(seq)
+		sort.Ints(seq)
+		sortResult, _ := json.Marshal(seq)
+		expect(t, fmt.Sprintf(`
+sort := import("sort")
+a := %s
+a = sort.sort(a, func(i, j) {
+	return a[i] < a[j]
+})
+out := import("json").encode(a)
+`, string(seqBytes)), sortResult)
+	}
+
+	// less is not a function
+	expectErr(t, `
+sort := import("sort")
+a := [4, 5, 3, 1, 2]
+a = sort.sort(a, 0)
+out := import("json").encode(a)`, "Runtime Error: not callable: int")
+
+	// arr is not an array
+	expectErr(t, `
+sort := import("sort")
+a := 12345
+a = sort.sort(a, func(i, j) {
+	return a[i] < a[j]
+})
+out := import("json").encode(a)`, "Runtime Error: invalid type for argument 'first' in call to 'builtin-function:len': expected array/s")
+
+	// empty array
+	expect(t, `
+sort := import("sort")
+a := []
+a = sort.sort(a, func(i, j) {
+	return a[i] < a[j]
+})
+out := import("json").encode(a)`, []byte("[]"))
+
+	// sort json
+	expect(t, `
+sort := import("sort")
+a := [{"age": 12, "name": "A"}, {"age": 18, "name": "B"}, {"age": 9, "name": "C"}, {"age": 10, "name": "D"}, {"age": 21, "name": "E"}]
+a = sort.sort(a, func(i, j) {
+	return a[i].age < a[j].age
+})
+out := []
+for item in a {
+	out = append(out, item.name)
+}
+out = import("json").encode(out)`, []byte(`["C","D","A","B","E"]`))
 }
 
 func TestGetModules(t *testing.T) {
@@ -239,4 +318,11 @@ func expect(t *testing.T, input string, expected interface{}) {
 	v := c.Get("out")
 	require.NotNil(t, v)
 	require.Equal(t, expected, v.Value())
+}
+
+func expectErr(t *testing.T, input string, errMsg string) {
+	s := tengo.NewScript([]byte(input))
+	s.SetImports(stdlib.GetModuleMap(stdlib.AllModuleNames()...))
+	_, err := s.Run()
+	require.True(t, strings.Contains(err.Error(), errMsg))
 }
