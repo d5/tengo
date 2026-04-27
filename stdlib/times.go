@@ -40,9 +40,10 @@ var timesModule = map[string]tengo.Object{
 	"october":             &tengo.Int{Value: int64(time.October)},
 	"november":            &tengo.Int{Value: int64(time.November)},
 	"december":            &tengo.Int{Value: int64(time.December)},
-	"sleep": &tengo.UserFunction{
-		Name:  "sleep",
-		Value: timesSleep,
+	"sleep": &tengo.BuiltinFunction{
+		Name:      "sleep",
+		Value:     timesSleep,
+		NeedVMObj: true,
 	}, // sleep(int)
 	"parse_duration": &tengo.UserFunction{
 		Name:  "parse_duration",
@@ -187,6 +188,8 @@ var timesModule = map[string]tengo.Object{
 }
 
 func timesSleep(args ...tengo.Object) (ret tengo.Object, err error) {
+	vm := args[0].(*tengo.VMObj).Value
+	args = args[1:] // the first arg is VMObj inserted by VM
 	if len(args) != 1 {
 		err = tengo.ErrWrongNumArguments
 		return
@@ -201,10 +204,26 @@ func timesSleep(args ...tengo.Object) (ret tengo.Object, err error) {
 		}
 		return
 	}
-
-	time.Sleep(time.Duration(i1))
 	ret = tengo.UndefinedValue
+	if time.Duration(i1) <= time.Second {
+		time.Sleep(time.Duration(i1))
+		return
+	}
 
+	done := make(chan struct{})
+	go func() {
+		time.Sleep(time.Duration(i1))
+		select {
+		case <-vm.AbortChan:
+		case done <- struct{}{}:
+		}
+	}()
+
+	select {
+	case <-vm.AbortChan:
+		return nil, tengo.ErrVMAborted
+	case <-done:
+	}
 	return
 }
 

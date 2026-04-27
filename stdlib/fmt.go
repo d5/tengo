@@ -7,22 +7,26 @@ import (
 )
 
 var fmtModule = map[string]tengo.Object{
-	"print":   &tengo.UserFunction{Name: "print", Value: fmtPrint},
-	"printf":  &tengo.UserFunction{Name: "printf", Value: fmtPrintf},
-	"println": &tengo.UserFunction{Name: "println", Value: fmtPrintln},
+	"print":   &tengo.BuiltinFunction{Value: fmtPrint, NeedVMObj: true},
+	"printf":  &tengo.BuiltinFunction{Value: fmtPrintf, NeedVMObj: true},
+	"println": &tengo.BuiltinFunction{Value: fmtPrintln, NeedVMObj: true},
 	"sprintf": &tengo.UserFunction{Name: "sprintf", Value: fmtSprintf},
 }
 
 func fmtPrint(args ...tengo.Object) (ret tengo.Object, err error) {
+	vm := args[0].(*tengo.VMObj).Value
+	args = args[1:] // the first arg is VMObj inserted by VM
 	printArgs, err := getPrintArgs(args...)
 	if err != nil {
 		return nil, err
 	}
-	_, _ = fmt.Print(printArgs...)
+	fmt.Fprint(vm.Out, printArgs...)
 	return nil, nil
 }
 
 func fmtPrintf(args ...tengo.Object) (ret tengo.Object, err error) {
+	vm := args[0].(*tengo.VMObj).Value
+	args = args[1:] // the first arg is VMObj inserted by VM
 	numArgs := len(args)
 	if numArgs == 0 {
 		return nil, tengo.ErrWrongNumArguments
@@ -37,7 +41,7 @@ func fmtPrintf(args ...tengo.Object) (ret tengo.Object, err error) {
 		}
 	}
 	if numArgs == 1 {
-		fmt.Print(format)
+		fmt.Fprint(vm.Out, format)
 		return nil, nil
 	}
 
@@ -45,17 +49,19 @@ func fmtPrintf(args ...tengo.Object) (ret tengo.Object, err error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Print(s)
+	fmt.Fprint(vm.Out, s)
 	return nil, nil
 }
 
 func fmtPrintln(args ...tengo.Object) (ret tengo.Object, err error) {
+	vm := args[0].(*tengo.VMObj).Value
+	args = args[1:] // the first arg is VMObj inserted by VM
 	printArgs, err := getPrintArgs(args...)
 	if err != nil {
 		return nil, err
 	}
 	printArgs = append(printArgs, "\n")
-	_, _ = fmt.Print(printArgs...)
+	fmt.Fprint(vm.Out, printArgs...)
 	return nil, nil
 }
 

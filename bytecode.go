@@ -329,4 +329,5 @@ func init() {
 	gob.Register(&Time{})
 	gob.Register(&Undefined{})
 	gob.Register(&UserFunction{})
+	gob.Register(&BuiltinFunction{})
 }

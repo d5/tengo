@@ -1,7 +1,13 @@
 package tengo
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"os"
+	"runtime/debug"
+	"strings"
+	"sync"
 	"sync/atomic"
 
 	"github.com/d5/tengo/v2/parser"
@@ -16,14 +22,21 @@ type frame struct {
 	basePointer int
 }
 
+type vmChildCtl struct {
+	sync.WaitGroup
+	sync.Mutex
+	vmMap  map[*VM]struct{}
+	errors []error
+}
+
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
 	constants   []Object
-	stack       [StackSize]Object
+	stack       []Object
 	sp          int
 	globals     []Object
 	fileSet     *parser.SourceFileSet
-	frames      [MaxFrames]frame
+	frames      []*frame
 	framesIndex int
 	curFrame    *frame
 	curInsts    []byte
@@ -32,7 +45,17 @@ type VM struct {
 	maxAllocs   int64
 	allocs      int64
 	err         error
+	AbortChan   chan struct{}
+	childCtl    vmChildCtl
+	In          io.Reader
+	Out         io.Writer
+	Args        []string
 }
+
+const (
+	initialStackSize = 64
+	initialFrames    = 16
+)
 
 // NewVM creates a VM.
 func NewVM(
@@ -48,50 +71,252 @@ func NewVM(
 		sp:          0,
 		globals:     globals,
 		fileSet:     bytecode.FileSet,
+		frames:      make([]*frame, 0, initialFrames),
 		framesIndex: 1,
 		ip:          -1,
 		maxAllocs:   maxAllocs,
+		AbortChan:   make(chan struct{}),
+		childCtl:    vmChildCtl{vmMap: make(map[*VM]struct{})},
+		In:          os.Stdin,
+		Out:         os.Stdout,
+		Args:        os.Args,
 	}
-	v.frames[0].fn = bytecode.MainFunction
-	v.frames[0].ip = -1
-	v.curFrame = &v.frames[0]
-	v.curInsts = v.curFrame.fn.Instructions
+	frame := &frame{
+		fn: bytecode.MainFunction,
+		ip: -1,
+	}
+	v.frames = append(v.frames, frame)
 	return v
-}
-
-// Abort aborts the execution.
-func (v *VM) Abort() {
-	atomic.StoreInt64(&v.aborting, 1)
 }
 
 // Run starts the execution.
 func (v *VM) Run() (err error) {
-	// reset VM states
-	v.sp = 0
-	v.curFrame = &(v.frames[0])
+	atomic.StoreInt64(&v.aborting, 0)
+	_, err = v.RunCompiled(nil)
+	if err == nil && atomic.LoadInt64(&v.aborting) == 1 {
+		err = ErrVMAborted // root VM was aborted
+	}
+	return
+}
+
+func concatInsts(instructions ...[]byte) []byte {
+	var concat []byte
+	for _, i := range instructions {
+		concat = append(concat, i...)
+	}
+	return concat
+}
+
+var emptyEntry = &CompiledFunction{
+	Instructions: MakeInstruction(parser.OpSuspend),
+}
+
+// ShallowClone creates a shallow copy of the current VM, with separate stack and frame.
+// The copy shares the underlying globals, constants with the original.
+// ShallowClone is typically followed by RunCompiled to run user supplied compiled function.
+func (v *VM) ShallowClone() *VM {
+	vClone := &VM{
+		constants:   v.constants,
+		sp:          0,
+		globals:     v.globals,
+		fileSet:     v.fileSet,
+		frames:      make([]*frame, 0, initialFrames),
+		framesIndex: 1,
+		ip:          -1,
+		maxAllocs:   v.maxAllocs,
+		AbortChan:   make(chan struct{}),
+		childCtl:    vmChildCtl{vmMap: make(map[*VM]struct{})},
+		In:          v.In,
+		Out:         v.Out,
+		Args:        v.Args,
+	}
+	frame := &frame{
+		fn: emptyEntry,
+		ip: -1,
+	}
+	vClone.frames = append(vClone.frames, frame)
+	return vClone
+}
+
+// constract wrapper function func(fn, ...args){ return fn(args...) }
+var funcWrapper = &CompiledFunction{
+	Instructions: concatInsts(
+		MakeInstruction(parser.OpGetLocal, 0),
+		MakeInstruction(parser.OpGetLocal, 1),
+		MakeInstruction(parser.OpCall, 1, 1),
+		MakeInstruction(parser.OpReturn, 1),
+	),
+	NumLocals:     2,
+	NumParameters: 2,
+	VarArgs:       true,
+}
+
+func (v *VM) releaseSpace() {
+	v.stack = nil
+	v.frames = append(make([]*frame, 0, initialFrames), v.frames[0])
+}
+
+// RunCompiled run the VM with user supplied function fn.
+func (v *VM) RunCompiled(fn *CompiledFunction, args ...Object) (val Object, err error) {
+	v.stack = make([]Object, initialStackSize)
+	if fn == nil { // normal Run
+		// reset VM states
+		v.sp = 0
+	} else { // run user supplied function
+		entry := &CompiledFunction{
+			Instructions: concatInsts(
+				MakeInstruction(parser.OpCall, 1+len(args), 0),
+				MakeInstruction(parser.OpSuspend),
+			),
+		}
+		v.stack[0] = funcWrapper
+		v.stack[1] = fn
+		for i, arg := range args {
+			v.stack[i+2] = arg
+		}
+		v.sp = 2 + len(args)
+		v.frames[0].fn = entry
+	}
+
+	v.curFrame = v.frames[0]
 	v.curInsts = v.curFrame.fn.Instructions
 	v.framesIndex = 1
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
 
-	v.run()
-	atomic.StoreInt64(&v.aborting, 0)
-	err = v.err
-	if err != nil {
-		filePos := v.fileSet.Position(
-			v.curFrame.fn.SourcePos(v.ip - 1))
-		err = fmt.Errorf("Runtime Error: %w\n\tat %s",
-			err, filePos)
-		for v.framesIndex > 1 {
-			v.framesIndex--
-			v.curFrame = &v.frames[v.framesIndex-1]
-			filePos = v.fileSet.Position(
-				v.curFrame.fn.SourcePos(v.curFrame.ip - 1))
-			err = fmt.Errorf("%w\n\tat %s", err, filePos)
+	defer func() {
+		if perr := recover(); perr != nil {
+			v.err = ErrPanic{perr, debug.Stack()}
+			v.Abort() // run time panic should trigger abort chain
 		}
-		return err
+		v.childCtl.Wait() // waits for all child VMs to exit
+		err = v.postRun()
+		if fn != nil && atomic.LoadInt64(&v.aborting) == 0 {
+			val = v.stack[v.sp-1]
+		}
+		v.releaseSpace()
+	}()
+
+	val = UndefinedValue
+	v.run()
+	return
+}
+
+// ErrPanic is an error where panic happended in the VM.
+type ErrPanic struct {
+	perr  interface{}
+	stack []byte
+}
+
+func (e ErrPanic) Error() string {
+	return fmt.Sprintf("panic: %v\n%s", e.perr, e.stack)
+}
+
+func (v *VM) addError(err error) {
+	v.childCtl.Lock()
+	v.childCtl.errors = append(v.childCtl.errors, err)
+	v.childCtl.Unlock()
+}
+
+// Abort aborts the execution of current VM and all its descendant VMs.
+func (v *VM) Abort() {
+	if atomic.LoadInt64(&v.aborting) != 0 {
+		return
+	}
+	v.childCtl.Lock()
+	atomic.StoreInt64(&v.aborting, 1)
+	close(v.AbortChan) // broadcast to all receivers
+	for cvm := range v.childCtl.vmMap {
+		cvm.Abort()
+	}
+	v.childCtl.Unlock()
+}
+
+func (v *VM) addChild(cvm *VM) error {
+	v.childCtl.Lock()
+	defer v.childCtl.Unlock()
+	if atomic.LoadInt64(&v.aborting) != 0 {
+		return ErrVMAborted
+	}
+	v.childCtl.Add(1)
+	if cvm != nil {
+		v.childCtl.vmMap[cvm] = struct{}{}
 	}
 	return nil
+}
+
+func (v *VM) delChild(cvm *VM) {
+	if cvm != nil {
+		v.childCtl.Lock()
+		delete(v.childCtl.vmMap, cvm)
+		v.childCtl.Unlock()
+	}
+	v.childCtl.Done()
+}
+
+func (v *VM) callers() (frames []frame) {
+	curFrame := *v.curFrame
+	curFrame.ip = v.ip - 1
+	frames = append(frames, curFrame)
+	for i := v.framesIndex - 1; i >= 1; i-- {
+		curFrame = *v.frames[i-1]
+		frames = append(frames, curFrame)
+	}
+	return frames
+}
+
+func (v *VM) callStack(frames []frame) string {
+	if frames == nil {
+		frames = v.callers()
+	}
+
+	var sb strings.Builder
+	for _, f := range frames {
+		filePos := v.fileSet.Position(f.fn.SourcePos(f.ip))
+		fmt.Fprintf(&sb, "\n\tat %s", filePos)
+	}
+	return sb.String()
+}
+
+func (v *VM) postRun() (err error) {
+	err = v.err
+	// ErrVMAborted is user behavior thus it is not an actual runtime error
+	if errors.Is(err, ErrVMAborted) {
+		err = nil
+	}
+	if err != nil {
+		var e ErrPanic
+		if errors.As(err, &e) {
+			err = fmt.Errorf("\nRuntime Panic: %v%s\n%s", e.perr, v.callStack(nil), e.stack)
+		} else {
+			err = fmt.Errorf("\nRuntime Error: %w%s", err, v.callStack(nil))
+		}
+	}
+
+	var sb strings.Builder
+	for _, cerr := range v.childCtl.errors {
+		fmt.Fprintf(&sb, "%v\n", cerr)
+	}
+	cerrs := sb.String()
+
+	if err != nil && len(cerrs) != 0 {
+		err = fmt.Errorf("%w\n%s", err, cerrs)
+		return
+	}
+	if len(cerrs) != 0 {
+		err = fmt.Errorf("%s", cerrs)
+	}
+	return
+}
+
+// VMObj exports VM
+type VMObj struct {
+	ObjectImpl
+	Value *VM
+}
+
+func (v *VM) selfObject() Object {
+	return &VMObj{Value: v}
 }
 
 func (v *VM) run() {
@@ -553,12 +778,14 @@ func (v *VM) run() {
 				v.sp--
 				switch arr := v.stack[v.sp].(type) {
 				case *Array:
+					v.checkGrowStack(len(arr.Value))
 					for _, item := range arr.Value {
 						v.stack[v.sp] = item
 						v.sp++
 					}
 					numArgs += len(arr.Value) - 1
 				case *ImmutableArray:
+					v.checkGrowStack(len(arr.Value))
 					for _, item := range arr.Value {
 						v.stack[v.sp] = item
 						v.sp++
@@ -622,7 +849,10 @@ func (v *VM) run() {
 
 				// update call frame
 				v.curFrame.ip = v.ip // store current ip before call
-				v.curFrame = &(v.frames[v.framesIndex])
+				if v.framesIndex >= len(v.frames) {
+					v.frames = append(v.frames, &frame{})
+				}
+				v.curFrame = v.frames[v.framesIndex]
 				v.curFrame.fn = callee
 				v.curFrame.freeVars = callee.Free
 				v.curFrame.basePointer = v.sp - numArgs
@@ -632,6 +862,12 @@ func (v *VM) run() {
 				v.sp = v.sp - numArgs + callee.NumLocals
 			} else {
 				var args []Object
+				if bltnfn, ok := value.(*BuiltinFunction); ok {
+					if bltnfn.NeedVMObj {
+						// pass VM as the first para to builtin functions
+						args = append(args, v.selfObject())
+					}
+				}
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
 				ret, e := value.Call(args...)
 				v.sp -= numArgs + 1
@@ -677,7 +913,7 @@ func (v *VM) run() {
 			}
 			//v.sp--
 			v.framesIndex--
-			v.curFrame = &v.frames[v.framesIndex-1]
+			v.curFrame = v.frames[v.framesIndex-1]
 			v.curInsts = v.curFrame.fn.Instructions
 			v.ip = v.curFrame.ip
 			//v.sp = lastFrame.basePointer - 1
@@ -873,7 +1109,27 @@ func (v *VM) run() {
 			v.err = fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])
 			return
 		}
+		v.checkGrowStack(0)
 	}
+}
+
+func (v *VM) checkGrowStack(added int) {
+	should := v.sp + added
+	if should < len(v.stack) {
+		return
+	}
+	if should >= StackSize {
+		v.err = ErrStackOverflow
+		return
+	}
+	roundup := initialStackSize
+	newSize := len(v.stack) * 2
+	if should > newSize {
+		newSize = (should + roundup) / roundup * roundup
+	}
+	new := make([]Object, newSize)
+	copy(new, v.stack)
+	v.stack = new
 }
 
 // IsStackEmpty tests if the stack is empty or not.
