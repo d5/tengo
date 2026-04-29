@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/d5/tengo/v2"
@@ -664,4 +666,82 @@ data["b"] = 2
 
 	require.Equal(t, 1001, clone.Get("count").Int())
 	require.Equal(t, 2, len(clone.Get("data").Map()))
+}
+
+// TestScript_SetImportFS verifies that a virtual filesystem can be used to
+// resolve imports, including relative imports between modules.
+func TestScript_SetImportFS(t *testing.T) {
+	vfs := fstest.MapFS{
+		// top-level module
+		"greet.tengo": &fstest.MapFile{
+			Data: []byte(`export func(name) { return "hello, " + name }`),
+		},
+		// module in a subdirectory
+		"lib/math.tengo": &fstest.MapFile{
+			Data: []byte(`export func(a, b) { return a + b }`),
+		},
+		// module that imports a sibling via relative path
+		"lib/wrapper.tengo": &fstest.MapFile{
+			Data: []byte(`
+math := import("./math")
+export func(a, b) { return math(a, b) }
+`),
+		},
+	}
+
+	t.Run("absolute VFS import", func(t *testing.T) {
+		s := tengo.NewScript([]byte(`
+greet := import("greet")
+out := greet("world")
+`))
+		s.SetImportFS(vfs)
+		compiled, err := s.Run()
+		require.NoError(t, err)
+		require.Equal(t, "hello, world", compiled.Get("out").String())
+	})
+
+	t.Run("subdirectory VFS import", func(t *testing.T) {
+		s := tengo.NewScript([]byte(`
+add := import("lib/math")
+out := add(3, 4)
+`))
+		s.SetImportFS(vfs)
+		compiled, err := s.Run()
+		require.NoError(t, err)
+		require.Equal(t, 7, compiled.Get("out").Int())
+	})
+
+	t.Run("relative VFS import between modules", func(t *testing.T) {
+		s := tengo.NewScript([]byte(`
+wrapper := import("lib/wrapper")
+out := wrapper(10, 32)
+`))
+		s.SetImportFS(vfs)
+		compiled, err := s.Run()
+		require.NoError(t, err)
+		require.Equal(t, 42, compiled.Get("out").Int())
+	})
+
+	t.Run("module not found returns error", func(t *testing.T) {
+		s := tengo.NewScript([]byte(`x := import("missing")`))
+		s.SetImportFS(vfs)
+		_, err := s.Run()
+		require.Error(t, err)
+	})
+
+	t.Run("fs.Sub roots imports at subdirectory", func(t *testing.T) {
+		// fs.Sub(vfs, "lib") exposes lib/ as the FS root, so import("math")
+		// resolves to lib/math.tengo in the original tree.
+		libFS, subErr := fs.Sub(vfs, "lib")
+		require.NoError(t, subErr)
+
+		s := tengo.NewScript([]byte(`
+add := import("math")
+out := add(6, 7)
+`))
+		s.SetImportFS(libFS)
+		compiled, err := s.Run()
+		require.NoError(t, err)
+		require.Equal(t, 13, compiled.Get("out").Int())
+	})
 }
