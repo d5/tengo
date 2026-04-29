@@ -72,6 +72,7 @@ const (
 	Break
 	Continue
 	Else
+	Fallthrough
 	For
 	Func
 	Error
@@ -84,6 +85,9 @@ const (
 	In
 	Undefined
 	Import
+	Case
+	Default
+	Switch
 	_keywordEnd
 )
 
@@ -146,6 +150,7 @@ var tokens = [...]string{
 	Break:        "break",
 	Continue:     "continue",
 	Else:         "else",
+	Fallthrough:  "fallthrough",
 	For:          "for",
 	Func:         "func",
 	Error:        "error",
@@ -158,6 +163,9 @@ var tokens = [...]string{
 	In:           "in",
 	Undefined:    "undefined",
 	Import:       "import",
+	Case:         "case",
+	Default:      "default",
+	Switch:       "switch",
 }
 
 func (tok Token) String() string {
