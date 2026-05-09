@@ -219,7 +219,7 @@ func runVM(
 
 	start := time.Now()
 
-	v := tengo.NewVM(bytecode, globals, -1)
+	v := tengo.NewVM(bytecode, nil, globals, -1)
 	if err := v.Run(); err != nil {
 		return time.Since(start), nil, err
 	}
