@@ -15,4 +15,5 @@ var BuiltinModules = map[string]map[string]tengo.Object{
 	"json":   jsonModule,
 	"base64": base64Module,
 	"hex":    hexModule,
+	"http":   httpModule,
 }
