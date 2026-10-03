@@ -59,7 +59,7 @@ func TestJSON(t *testing.T) {
 		"arr": ARR{1, 2, 3, MAP{"a": false, "b": 109.4}}})
 
 	testJSONEncodeDecode(t, MAP{"id1": 7075984636689534001, "id2": 7075984636689534002})
-	testJSONEncodeDecode(t, ARR{1e3, 1E7})
+	testJSONEncodeDecode(t, ARR{1e3, 1e7})
 }
 
 func TestDecode(t *testing.T) {
@@ -84,6 +84,27 @@ func TestDecode(t *testing.T) {
 	testDecodeError(t, `{"a:"b"}`)
 	testDecodeError(t, `{a":"b"}`)
 	testDecodeError(t, `{"a":"b":"c"}`)
+}
+
+func TestDecodeIntOverflow(t *testing.T) {
+	// ParseInt reports overflow and also returns the extreme int64.
+	// Dropping that error made 2^63 decode as MaxInt64.
+	_, err := json.Decode([]byte("9223372036854775808"))
+	require.Error(t, err)
+	_, err = json.Decode([]byte("-9223372036854775809"))
+	require.Error(t, err)
+
+	o, err := json.Decode([]byte("9223372036854775807"))
+	require.NoError(t, err)
+	require.Equal(t, int64(9223372036854775807), o.(*tengo.Int).Value)
+
+	o, err = json.Decode([]byte("-9223372036854775808"))
+	require.NoError(t, err)
+	require.Equal(t, int64(-9223372036854775808), o.(*tengo.Int).Value)
+
+	o, err = json.Decode([]byte("1.5"))
+	require.NoError(t, err)
+	require.Equal(t, 1.5, o.(*tengo.Float).Value)
 }
 
 func testDecodeError(t *testing.T, input string) {

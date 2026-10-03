@@ -218,7 +218,12 @@ func (d *decodeState) literal() (tengo.Object, error) {
 			n, _ := strconv.ParseFloat(string(item), 10)
 			return &tengo.Float{Value: n}, nil
 		}
-		n, _ := strconv.ParseInt(string(item), 10, 64)
+		// ParseInt returns MaxInt64 or MinInt64 together with ErrRange.
+		// 9223372036854775808 decoded as 9223372036854775807.
+		n, err := strconv.ParseInt(string(item), 10, 64)
+		if err != nil {
+			return nil, err
+		}
 		return &tengo.Int{Value: n}, nil
 	}
 }
