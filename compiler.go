@@ -22,11 +22,13 @@ type compilationScope struct {
 	SourceMap    map[int]parser.Pos
 }
 
-// loop represents a loop construct that the compiler uses to track the current
-// loop.
+// loop represents a loop or switch construct that the compiler uses to track
+// break/continue/fallthrough targets.
 type loop struct {
-	Continues []int
-	Breaks    []int
+	Continues    []int
+	Breaks       []int
+	IsSwitch     bool  // true when this entry represents a switch, not a for loop
+	Fallthroughs []int // fallthrough jump positions within the current case body
 }
 
 // CompilerError represents a compiler error.
@@ -269,25 +271,36 @@ func (c *Compiler) Compile(node parser.Node) error {
 			curPos := len(c.currentInstructions())
 			c.changeOperand(jumpPos1, curPos)
 		}
+	case *parser.SwitchStmt:
+		return c.compileSwitchStmt(node)
 	case *parser.ForStmt:
 		return c.compileForStmt(node)
 	case *parser.ForInStmt:
 		return c.compileForInStmt(node)
 	case *parser.BranchStmt:
 		if node.Token == token.Break {
-			curLoop := c.currentLoop()
-			if curLoop == nil {
-				return c.errorf(node, "break not allowed outside loop")
+			// break exits the innermost loop OR switch
+			curTarget := c.currentBreakTarget()
+			if curTarget == nil {
+				return c.errorf(node, "break not allowed outside loop or switch")
 			}
 			pos := c.emit(node, parser.OpJump, 0)
-			curLoop.Breaks = append(curLoop.Breaks, pos)
+			curTarget.Breaks = append(curTarget.Breaks, pos)
 		} else if node.Token == token.Continue {
-			curLoop := c.currentLoop()
+			// continue skips switch contexts and targets the enclosing loop
+			curLoop := c.currentContinueTarget()
 			if curLoop == nil {
 				return c.errorf(node, "continue not allowed outside loop")
 			}
 			pos := c.emit(node, parser.OpJump, 0)
 			curLoop.Continues = append(curLoop.Continues, pos)
+		} else if node.Token == token.Fallthrough {
+			curSwitch := c.currentSwitchContext()
+			if curSwitch == nil {
+				return c.errorf(node, "fallthrough not allowed outside switch")
+			}
+			pos := c.emit(node, parser.OpJump, 0)
+			curSwitch.Fallthroughs = append(curSwitch.Fallthroughs, pos)
 		} else {
 			panic(fmt.Errorf("invalid branch statement: %s",
 				node.Token.String()))
@@ -1074,6 +1087,190 @@ func (c *Compiler) currentLoop() *loop {
 	if c.loopIndex >= 0 {
 		return c.loops[c.loopIndex]
 	}
+	return nil
+}
+
+// currentBreakTarget returns the innermost loop or switch context.
+func (c *Compiler) currentBreakTarget() *loop {
+	if c.loopIndex >= 0 {
+		return c.loops[c.loopIndex]
+	}
+	return nil
+}
+
+// currentContinueTarget returns the innermost non-switch loop context.
+func (c *Compiler) currentContinueTarget() *loop {
+	for i := c.loopIndex; i >= 0; i-- {
+		if !c.loops[i].IsSwitch {
+			return c.loops[i]
+		}
+	}
+	return nil
+}
+
+// currentSwitchContext returns the innermost switch context.
+func (c *Compiler) currentSwitchContext() *loop {
+	for i := c.loopIndex; i >= 0; i-- {
+		if c.loops[i].IsSwitch {
+			return c.loops[i]
+		}
+	}
+	return nil
+}
+
+func (c *Compiler) compileSwitchStmt(node *parser.SwitchStmt) error {
+	// new scope so that init variables don't leak
+	c.symbolTable = c.symbolTable.Fork(true)
+	defer func() {
+		c.symbolTable = c.symbolTable.Parent(false)
+	}()
+
+	if node.Init != nil {
+		if err := c.Compile(node.Init); err != nil {
+			return err
+		}
+	}
+
+	isTagged := node.Tag != nil
+	if isTagged {
+		if err := c.Compile(node.Tag); err != nil {
+			return err
+		}
+	}
+
+	// Collect clauses; validate default is last
+	var clauses []*parser.CaseClause
+	for _, stmt := range node.Body.Stmts {
+		clause, ok := stmt.(*parser.CaseClause)
+		if !ok {
+			continue
+		}
+		clauses = append(clauses, clause)
+	}
+	for i, clause := range clauses {
+		if clause.List == nil && i != len(clauses)-1 {
+			return c.errorf(clause, "default clause must be last in switch")
+		}
+	}
+
+	// Enter switch context (tracks breaks and per-case fallthroughs)
+	swCtx := &loop{IsSwitch: true}
+	c.loops = append(c.loops, swCtx)
+	c.loopIndex++
+
+	var exitJumps []int         // all jumps to the post-switch position
+	var pendingFTs []int        // fallthrough jumps from the previous case
+
+	for i, clause := range clauses {
+		isDefault := clause.List == nil
+		var bodyMatchJumps []int  // intermediate value matches → body start
+		var nextClauseJumps []int // condition miss → start of next clause
+
+		if !isDefault {
+			for j, val := range clause.List {
+				isLastVal := j == len(clause.List)-1
+
+				if isTagged {
+					c.emit(node, parser.OpDup)
+					if err := c.Compile(val); err != nil {
+						c.loops = c.loops[:len(c.loops)-1]
+						c.loopIndex--
+						return err
+					}
+					c.emit(node, parser.OpEqual)
+				} else {
+					if err := c.Compile(val); err != nil {
+						c.loops = c.loops[:len(c.loops)-1]
+						c.loopIndex--
+						return err
+					}
+				}
+
+				if isLastVal {
+					nextClauseJumps = append(nextClauseJumps,
+						c.emit(node, parser.OpJumpFalsy, 0))
+				} else {
+					// not matched → try next value
+					tryNext := c.emit(node, parser.OpJumpFalsy, 0)
+					// matched → jump to body start (forward ref)
+					bodyMatchJumps = append(bodyMatchJumps,
+						c.emit(node, parser.OpJump, 0))
+					c.changeOperand(tryNext, len(c.currentInstructions()))
+				}
+			}
+		}
+
+		// bodyStartWithPop: where matched-condition jumps land (tag still on stack)
+		bodyStartWithPop := len(c.currentInstructions())
+		for _, pos := range bodyMatchJumps {
+			c.changeOperand(pos, bodyStartWithPop)
+		}
+
+		// Pop the tag; reached by matched conditions (and by "no match → default")
+		if isTagged {
+			c.emit(node, parser.OpPop)
+		}
+
+		// bodyStartAfterPop: where fallthrough jumps land (tag already consumed)
+		bodyStartAfterPop := len(c.currentInstructions())
+		for _, pos := range pendingFTs {
+			c.changeOperand(pos, bodyStartAfterPop)
+		}
+		pendingFTs = nil
+
+		// Compile clause body; collect any fallthrough jumps emitted
+		swCtx.Fallthroughs = nil
+		for _, stmt := range clause.Body {
+			if err := c.Compile(stmt); err != nil {
+				c.loops = c.loops[:len(c.loops)-1]
+				c.loopIndex--
+				return err
+			}
+		}
+		pendingFTs = append(pendingFTs, swCtx.Fallthroughs...)
+		swCtx.Fallthroughs = nil
+
+		// Validate: fallthrough in the last clause is an error
+		if i == len(clauses)-1 && len(pendingFTs) > 0 {
+			c.loops = c.loops[:len(c.loops)-1]
+			c.loopIndex--
+			return c.errorf(node, "cannot fallthrough final case in switch")
+		}
+
+		// Jump to exit after each clause body
+		exitJumps = append(exitJumps, c.emit(node, parser.OpJump, 0))
+
+		// Backpatch condition-miss jumps to the start of the next clause
+		nextClauseStart := len(c.currentInstructions())
+		for _, pos := range nextClauseJumps {
+			c.changeOperand(pos, nextClauseStart)
+		}
+	}
+
+	// If no default and the tag wasn't consumed, pop it now
+	hasDefault := len(clauses) > 0 && clauses[len(clauses)-1].List == nil
+	if isTagged && !hasDefault {
+		c.emit(node, parser.OpPop)
+	}
+
+	// Backpatch any stray fallthroughs (empty clause list edge case)
+	exitPos := len(c.currentInstructions())
+	for _, pos := range pendingFTs {
+		c.changeOperand(pos, exitPos)
+	}
+
+	// Backpatch all exit jumps and break jumps to here
+	for _, pos := range exitJumps {
+		c.changeOperand(pos, exitPos)
+	}
+	for _, pos := range swCtx.Breaks {
+		c.changeOperand(pos, exitPos)
+	}
+
+	// Leave switch context
+	c.loops = c.loops[:len(c.loops)-1]
+	c.loopIndex--
+
 	return nil
 }
 
