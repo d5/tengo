@@ -320,8 +320,9 @@ func (o *Bool) GobEncode() (b []byte, err error) {
 // BuiltinFunction represents a builtin function.
 type BuiltinFunction struct {
 	ObjectImpl
-	Name  string
-	Value CallableFunc
+	Name      string
+	Value     CallableFunc
+	stackArgs bool
 }
 
 // TypeName returns the name of the type.
@@ -979,7 +980,7 @@ func (o *ImmutableMap) Equals(x Object) bool {
 
 // Iterate creates an immutable map iterator.
 func (o *ImmutableMap) Iterate() Iterator {
-	var keys []string
+	keys := make([]string, 0, len(o.Value))
 	for k := range o.Value {
 		keys = append(keys, k)
 	}
@@ -1001,6 +1002,27 @@ type Int struct {
 	Value int64
 }
 
+const (
+	smallIntMin = -128
+	smallIntMax = 1023
+)
+
+var smallInts [smallIntMax - smallIntMin + 1]Int
+
+func init() {
+	for i := range smallInts {
+		smallInts[i].Value = int64(i) + smallIntMin
+	}
+}
+
+// NewInt returns an Int object for v.
+func NewInt(v int64) *Int {
+	if v >= smallIntMin && v <= smallIntMax {
+		return &smallInts[v-smallIntMin]
+	}
+	return &Int{Value: v}
+}
+
 func (o *Int) String() string {
 	return strconv.FormatInt(o.Value, 10)
 }
@@ -1018,70 +1040,37 @@ func (o *Int) BinaryOp(op token.Token, rhs Object) (Object, error) {
 		switch op {
 		case token.Add:
 			r := o.Value + rhs.Value
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.Sub:
 			r := o.Value - rhs.Value
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.Mul:
 			r := o.Value * rhs.Value
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.Quo:
 			r := o.Value / rhs.Value
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.Rem:
 			r := o.Value % rhs.Value
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.And:
 			r := o.Value & rhs.Value
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.Or:
 			r := o.Value | rhs.Value
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.Xor:
 			r := o.Value ^ rhs.Value
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.AndNot:
 			r := o.Value &^ rhs.Value
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.Shl:
 			r := o.Value << uint64(rhs.Value)
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.Shr:
 			r := o.Value >> uint64(rhs.Value)
-			if r == o.Value {
-				return o, nil
-			}
-			return &Int{Value: r}, nil
+			return NewInt(r), nil
 		case token.Less:
 			if o.Value < rhs.Value {
 				return TrueValue, nil
@@ -1271,7 +1260,7 @@ func (o *Map) IndexSet(index, value Object) (err error) {
 
 // Iterate creates a map iterator.
 func (o *Map) Iterate() Iterator {
-	var keys []string
+	keys := make([]string, 0, len(o.Value))
 	for k := range o.Value {
 		keys = append(keys, k)
 	}
