@@ -895,6 +895,18 @@ func TestBuiltinFunction(t *testing.T) {
 		out = [deleted, v]`, nil, ARR{ARR{"b"}, ARR{"a", "d", "e", "c"}})
 }
 
+func TestRangeN(t *testing.T) {
+	curMaxRangeLen := tengo.MaxRangeLen
+	defer func() { tengo.MaxRangeLen = curMaxRangeLen }()
+	tengo.MaxRangeLen = 10
+
+	expectRun(t, `out = len(range(0, 10))`, nil, 10)
+	expectError(t, `range(0, 11)`, nil, "range size limit")
+	// a wide step keeps the materialized range small
+	expectRun(t, `out = range(0, 10, 9223372036854775806)`, nil,
+		&tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 0}}})
+}
+
 func TestBytesN(t *testing.T) {
 	curMaxBytesLen := tengo.MaxBytesLen
 	defer func() { tengo.MaxBytesLen = curMaxBytesLen }()

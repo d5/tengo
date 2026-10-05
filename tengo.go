@@ -15,6 +15,13 @@ var (
 	// MaxBytesLen is the maximum length for bytes value. Note this limit
 	// applies to all compiler/VM instances in the process.
 	MaxBytesLen = 2147483647
+
+	// MaxRangeLen is the maximum number of elements the builtin range
+	// function materializes into an array. Larger ranges return
+	// ErrRangeLimit. Each element costs ~24 bytes (Object interface slot
+	// plus Int backing), so this cap bounds one range at ~240 MB. Note this
+	// limit applies to all compiler/VM instances in the process.
+	MaxRangeLen = 10000000
 )
 
 const (

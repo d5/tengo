@@ -354,3 +354,18 @@ a := immutable([1, 2, 3])
 b := freeze(a)
 // b == a (same pointer, no allocation)
 ```
+
+## range
+
+Returns an array of integers from start to stop (exclusive), moving by step.
+Step is optional and defaults to 1. Step must be greater than zero. The array
+descends when start is greater than stop.
+
+```golang
+a := range(0, 5)      // a == [0, 1, 2, 3, 4]
+b := range(5, 0)      // b == [5, 4, 3, 2, 1]
+c := range(0, 10, 3)  // c == [0, 3, 6, 9]
+```
+
+`range` builds the whole array in memory. A range with more than `MaxRangeLen`
+elements returns an error.
