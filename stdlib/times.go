@@ -132,6 +132,10 @@ var timesModule = map[string]tengo.Object{
 		Name:  "time_weekday",
 		Value: timesTimeWeekday,
 	}, // time_weekday(time) => int
+	"time_isoweek": &tengo.UserFunction{
+		Name:  "time_isoweek",
+		Value: timesTimeISOWeek,
+	}, // time_isoweek(time) => int
 	"time_hour": &tengo.UserFunction{
 		Name:  "time_hour",
 		Value: timesTimeHour,
@@ -873,6 +877,28 @@ func timesTimeWeekday(args ...tengo.Object) (ret tengo.Object, err error) {
 	}
 
 	ret = &tengo.Int{Value: int64(t1.Weekday())}
+
+	return
+}
+
+func timesTimeISOWeek(args ...tengo.Object) (ret tengo.Object, err error) {
+	if len(args) != 1 {
+		err = tengo.ErrWrongNumArguments
+		return
+	}
+
+	t1, ok := tengo.ToTime(args[0])
+	if !ok {
+		err = tengo.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "time(compatible)",
+			Found:    args[0].TypeName(),
+		}
+		return
+	}
+
+	_, week := t1.ISOWeek()
+	ret = &tengo.Int{Value: int64(week)}
 
 	return
 }

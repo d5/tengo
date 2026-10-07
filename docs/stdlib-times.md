@@ -89,6 +89,7 @@ times := import("times")
 - `time_month(t time) => int`: returns the month of the year specified by t.
 - `time_day(t time) => int`: returns the day of the month specified by t.
 - `time_weekday(t time) => int`: returns the day of the week specified by t.
+- `time_isoweek(t time) => int`: returns the ISO 8601 week number specified by t, in the range [1,53].
 - `time_hour(t time) => int`: returns the hour within the day specified by t,
   in the range [0, 23].
 - `time_minute(t time) => int`: returns the minute offset within the hour
