@@ -1,6 +1,7 @@
 package tengo_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/d5/tengo/v2"
@@ -779,3 +780,68 @@ func boolValue(b bool) tengo.Object {
 	}
 	return tengo.FalseValue
 }
+
+func TestFromInterface_JSONNumber(t *testing.T) {
+	testFromInterface(t, json.Number("123"), &tengo.Int{Value: 123})
+	testFromInterface(t, json.Number("-123"), &tengo.Int{Value: -123})
+	testFromInterface(t, json.Number("0"), &tengo.Int{Value: 0})
+	testFromInterface(t, json.Number("123.45"), &tengo.Float{Value: 123.45})
+	testFromInterface(t, json.Number("-123.45"), &tengo.Float{Value: -123.45})
+	testFromInterface(t, json.Number("1e5"), &tengo.Float{Value: 100000})
+	testFromInterface(t, json.Number("1.5e-3"), &tengo.Float{Value: 0.0015})
+
+	numInt := json.Number("123")
+	testFromInterface(t, &numInt, &tengo.Int{Value: 123})
+	numFloat := json.Number("123.45")
+	testFromInterface(t, &numFloat, &tengo.Float{Value: 123.45})
+	var nilNum *json.Number
+	testFromInterface(t, nilNum, tengo.UndefinedValue)
+
+	testFromInterface(t, map[string]interface{}{
+		"int":   json.Number("123"),
+		"float": json.Number("123.45"),
+	}, &tengo.Map{
+		Value: map[string]tengo.Object{
+			"int":   &tengo.Int{Value: 123},
+			"float": &tengo.Float{Value: 123.45},
+		},
+	})
+
+	testFromInterface(t, []interface{}{
+		json.Number("123"),
+		json.Number("123.45"),
+	}, &tengo.Array{
+		Value: []tengo.Object{
+			&tengo.Int{Value: 123},
+			&tengo.Float{Value: 123.45},
+		},
+	})
+
+	_, err := tengo.FromInterface(json.Number("invalid"))
+	require.Error(t, err)
+
+	invalidNum := json.Number("not_a_number")
+	_, err = tengo.FromInterface(&invalidNum)
+	require.Error(t, err)
+}
+
+func TestScript_JSONNumber(t *testing.T) {
+	s := tengo.NewScript([]byte(`out := num_int + 1; f_out := num_float * 2.0`))
+	err := s.Add("num_int", json.Number("123"))
+	require.NoError(t, err)
+	err = s.Add("num_float", json.Number("123.45"))
+	require.NoError(t, err)
+
+	c, err := s.Run()
+	require.NoError(t, err)
+	require.Equal(t, int64(124), c.Get("out").Int64())
+	require.Equal(t, 246.9, c.Get("f_out").Float())
+}
+
+func testFromInterface(t *testing.T, v interface{}, expected tengo.Object) {
+	t.Helper()
+	actual, err := tengo.FromInterface(v)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
+}
+
