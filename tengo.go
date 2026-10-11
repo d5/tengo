@@ -1,6 +1,7 @@
 package tengo
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -304,6 +305,21 @@ func FromInterface(v interface{}) (Object, error) {
 		return v, nil
 	case CallableFunc:
 		return &UserFunction{Value: v}, nil
+	case json.Number:
+		i, err := v.Int64()
+		if err == nil {
+			return &Int{Value: i}, nil
+		}
+		f, err := v.Float64()
+		if err == nil {
+			return &Float{Value: f}, nil
+		}
+		return nil, err
+	case *json.Number:
+		if v == nil {
+			return UndefinedValue, nil
+		}
+		return FromInterface(*v)
 	}
 	return nil, fmt.Errorf("cannot convert to object: %T", v)
 }
