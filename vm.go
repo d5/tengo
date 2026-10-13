@@ -869,6 +869,9 @@ func (v *VM) run() {
 			v.sp++
 		case parser.OpSuspend:
 			return
+		case parser.OpDup:
+			v.stack[v.sp] = v.stack[v.sp-1]
+			v.sp++
 		default:
 			v.err = fmt.Errorf("unknown opcode: %d", v.curInsts[v.ip])
 			return

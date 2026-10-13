@@ -1036,7 +1036,7 @@ func TestCompilerErrorReport(t *testing.T) {
 	expectCompileError(t, `return 5`,
 		"Compile Error: return not allowed outside function\n\tat test:1:1")
 	expectCompileError(t, `func() { break }`,
-		"Compile Error: break not allowed outside loop\n\tat test:1:10")
+		"Compile Error: break not allowed outside loop or switch\n\tat test:1:10")
 	expectCompileError(t, `func() { continue }`,
 		"Compile Error: continue not allowed outside loop\n\tat test:1:10")
 	expectCompileError(t, `func() { export 5 }`,
