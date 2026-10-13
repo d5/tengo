@@ -2,6 +2,7 @@ package stdlib
 
 import (
 	"time"
+	_ "time/tzdata"
 
 	"github.com/d5/tengo/v2"
 )
