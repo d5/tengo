@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -55,6 +57,7 @@ type Compiler struct {
 	modules         ModuleGetter
 	compiledModules map[string]*CompiledFunction
 	allowFileImport bool
+	importFS        fs.FS
 	loops           []*loop
 	loopIndex       int
 	trace           io.Writer
@@ -526,7 +529,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 			default:
 				panic(fmt.Errorf("invalid import value type: %T", v))
 			}
-		} else if c.allowFileImport {
+		} else if c.allowFileImport || c.importFS != nil {
 			moduleName := node.ModuleName
 
 			modulePath, err := c.getPathModule(moduleName)
@@ -535,7 +538,12 @@ func (c *Compiler) Compile(node parser.Node) error {
 					err.Error())
 			}
 
-			moduleSrc, err := ioutil.ReadFile(modulePath)
+			var moduleSrc []byte
+			if c.importFS != nil {
+				moduleSrc, err = fs.ReadFile(c.importFS, modulePath)
+			} else {
+				moduleSrc, err = ioutil.ReadFile(modulePath)
+			}
 			if err != nil {
 				return c.errorf(node, "module file read error: %s",
 					err.Error())
@@ -657,6 +665,14 @@ func (c *Compiler) SetImportFileExt(exts ...string) error {
 // local module files.
 func (c *Compiler) GetImportFileExt() []string {
 	return c.importFileExt
+}
+
+// SetImportFS sets a virtual filesystem for module loading. When set, import
+// statements resolve against this FS instead of the OS filesystem.
+// Setting an FS implicitly enables file-based imports; calling
+// EnableFileImport is not required.
+func (c *Compiler) SetImportFS(fsys fs.FS) {
+	c.importFS = fsys
 }
 
 func (c *Compiler) compileAssign(
@@ -1125,8 +1141,14 @@ func (c *Compiler) fork(
 	child.allowFileImport = c.allowFileImport
 	child.importDir = c.importDir
 	child.importFileExt = c.importFileExt
-	if isFile && c.importDir != "" {
-		child.importDir = filepath.Dir(modulePath)
+	child.importFS = c.importFS
+	if isFile {
+		if c.importFS != nil {
+			// VFS paths always use forward slashes; path.Dir is OS-agnostic.
+			child.importDir = path.Dir(modulePath)
+		} else if c.importDir != "" {
+			child.importDir = filepath.Dir(modulePath)
+		}
 	}
 	return child
 }
@@ -1321,6 +1343,17 @@ func (c *Compiler) getPathModule(moduleName string) (pathFile string, err error)
 
 		if !strings.HasSuffix(nameFile, ext) {
 			nameFile += ext
+		}
+
+		if c.importFS != nil {
+			// VFS path: always forward-slash, never rooted with '/'.
+			// path.Join("", "mod") == "mod"; path.Join("lib", "./mod") == "lib/mod".
+			resolved := path.Clean(path.Join(c.importDir, nameFile))
+			if _, serr := fs.Stat(c.importFS, resolved); serr == nil {
+				return resolved, nil
+			}
+			pathFile = resolved // keep for the error message below
+			continue
 		}
 
 		pathFile, err = filepath.Abs(filepath.Join(c.importDir, nameFile))
