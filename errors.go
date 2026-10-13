@@ -52,6 +52,10 @@ var (
 
 	// ErrInvalidRangeStep is an error where the step parameter is less than or equal to 0 when using builtin range function.
 	ErrInvalidRangeStep = errors.New("range step must be greater than 0")
+
+	// ErrRangeLimit represents an error where a range has more elements than
+	// the builtin range function can materialize.
+	ErrRangeLimit = errors.New("exceeding range size limit")
 )
 
 // ErrInvalidArgumentType represents an invalid argument value type error.

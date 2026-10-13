@@ -1,5 +1,7 @@
 package tengo
 
+import "math"
+
 var builtinFuncs = []*BuiltinFunction{
 	{
 		Name:  "len",
@@ -337,63 +339,86 @@ func builtinRange(args ...Object) (Object, error) {
 	if numArgs < 2 || numArgs > 3 {
 		return nil, ErrWrongNumArguments
 	}
-	var start, stop, step *Int
-
-	for i, arg := range args {
-		v, ok := args[i].(*Int)
+	start, ok := args[0].(*Int)
+	if !ok {
+		return nil, ErrInvalidArgumentType{
+			Name:     "start",
+			Expected: "int",
+			Found:    args[0].TypeName(),
+		}
+	}
+	stop, ok := args[1].(*Int)
+	if !ok {
+		return nil, ErrInvalidArgumentType{
+			Name:     "stop",
+			Expected: "int",
+			Found:    args[1].TypeName(),
+		}
+	}
+	step := int64(1)
+	if numArgs == 3 {
+		v, ok := args[2].(*Int)
 		if !ok {
-			var name string
-			switch i {
-			case 0:
-				name = "start"
-			case 1:
-				name = "stop"
-			case 2:
-				name = "step"
-			}
-
 			return nil, ErrInvalidArgumentType{
-				Name:     name,
+				Name:     "step",
 				Expected: "int",
-				Found:    arg.TypeName(),
+				Found:    args[2].TypeName(),
 			}
 		}
-		if i == 2 && v.Value <= 0 {
+		if v.Value <= 0 {
 			return nil, ErrInvalidRangeStep
 		}
-		switch i {
-		case 0:
-			start = v
-		case 1:
-			stop = v
-		case 2:
-			step = v
-		}
+		step = v.Value
 	}
 
-	if step == nil {
-		step = &Int{Value: int64(1)}
+	n := rangeLen(start.Value, stop.Value, step)
+	if n > int64(MaxRangeLen) {
+		return nil, ErrRangeLimit
 	}
-
-	return buildRange(start.Value, stop.Value, step.Value), nil
+	return buildRange(start.Value, stop.Value, step, n), nil
 }
 
-func buildRange(start, stop, step int64) *Array {
-	array := &Array{}
+// rangeLen returns the number of integers in the sequence from start to stop
+// (exclusive) with the given positive step, counting downward when start >
+// stop. It uses unsigned math so a wide span does not overflow int64, and
+// saturates at math.MaxInt64.
+func rangeLen(start, stop, step int64) int64 {
+	var span uint64
 	if start <= stop {
-		for i := start; i < stop; i += step {
-			array.Value = append(array.Value, &Int{
-				Value: i,
-			})
-		}
+		span = uint64(stop) - uint64(start)
 	} else {
-		for i := start; i > stop; i -= step {
-			array.Value = append(array.Value, &Int{
-				Value: i,
-			})
-		}
+		span = uint64(start) - uint64(stop)
 	}
-	return array
+	ustep := uint64(step)
+	n := span / ustep
+	if span%ustep != 0 {
+		n++
+	}
+	if n > math.MaxInt64 {
+		return math.MaxInt64
+	}
+	return int64(n)
+}
+
+// buildRange materializes the range as an array. n is the element count,
+// as returned by rangeLen(start, stop, step).
+func buildRange(start, stop, step, n int64) *Array {
+	if n == 0 {
+		return &Array{}
+	}
+	if start > stop {
+		step = -step
+	}
+	// One backing allocation for all Int elements.
+	ints := make([]Int, n)
+	elems := make([]Object, n)
+	v := start
+	for i := range ints {
+		ints[i].Value = v
+		elems[i] = &ints[i]
+		v += step
+	}
+	return &Array{Value: elems}
 }
 
 func builtinFormat(args ...Object) (Object, error) {

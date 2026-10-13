@@ -2,6 +2,7 @@ package tengo_test
 
 import (
 	"errors"
+	"math"
 	"reflect"
 	"testing"
 
@@ -484,6 +485,23 @@ func Test_builtinRange(t *testing.T) {
 				},
 			},
 		},
+		{name: "step larger than span does not overflow",
+			args:    []tengo.Object{intObject(0), intObject(10), intObject(math.MaxInt64 - 1)},
+			wantErr: false,
+			result: &tengo.Array{
+				Value: []tengo.Object{intObject(0)},
+			},
+		},
+		{name: "span overflows int64",
+			args:      []tengo.Object{intObject(math.MinInt64), intObject(math.MaxInt64)},
+			wantErr:   true,
+			wantedErr: tengo.ErrRangeLimit,
+		},
+		{name: "exceeds size limit",
+			args:      []tengo.Object{intObject(0), intObject(int64(tengo.MaxRangeLen) + 1)},
+			wantErr:   true,
+			wantedErr: tengo.ErrRangeLimit,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -500,6 +518,45 @@ func Test_builtinRange(t *testing.T) {
 			if tt.result != nil && !reflect.DeepEqual(tt.result, got) {
 				t.Errorf("builtinRange() arrays are not equal expected"+
 					" %s, got %s", tt.result, got.(*tengo.Array))
+			}
+		})
+	}
+}
+
+func Benchmark_builtinRange(b *testing.B) {
+	var builtinRange func(args ...tengo.Object) (tengo.Object, error)
+	for _, f := range tengo.GetAllBuiltinFunctions() {
+		if f.Name == "range" {
+			builtinRange = f.Value
+			break
+		}
+	}
+	if builtinRange == nil {
+		b.Fatal("builtin range not found")
+	}
+	benchmarks := []struct {
+		name string
+		args []tengo.Object
+	}{
+		{"asc-10", []tengo.Object{
+			&tengo.Int{Value: 0}, &tengo.Int{Value: 10}}},
+		{"asc-1000", []tengo.Object{
+			&tengo.Int{Value: 0}, &tengo.Int{Value: 1000}}},
+		{"asc-100000", []tengo.Object{
+			&tengo.Int{Value: 0}, &tengo.Int{Value: 100000}}},
+		{"asc-100000-step-10", []tengo.Object{
+			&tengo.Int{Value: 0}, &tengo.Int{Value: 100000},
+			&tengo.Int{Value: 10}}},
+		{"desc-1000", []tengo.Object{
+			&tengo.Int{Value: 1000}, &tengo.Int{Value: 0}}},
+	}
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				if _, err := builtinRange(bm.args...); err != nil {
+					b.Fatal(err)
+				}
 			}
 		})
 	}
