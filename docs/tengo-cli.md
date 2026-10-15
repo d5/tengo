@@ -8,7 +8,7 @@ compiled and executed as native binary using `tengo` CLI tool.
 To install `tengo` tool, run:
 
 ```bash
-go get github.com/d5/tengo/cmd/tengo
+go install github.com/d5/tengo/v2/cmd/tengo@latest
 ```
 
 Or, you can download the precompiled binaries from
