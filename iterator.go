@@ -55,7 +55,7 @@ func (i *ArrayIterator) Next() bool {
 
 // Key returns the key or index value of the current element.
 func (i *ArrayIterator) Key() Object {
-	return &Int{Value: int64(i.i - 1)}
+	return NewInt(int64(i.i - 1))
 }
 
 // Value returns the value of the current element.

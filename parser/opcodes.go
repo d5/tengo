@@ -143,6 +143,12 @@ var OpcodeOperands = [...][]int{
 
 // ReadOperands reads operands from the bytecode.
 func ReadOperands(numOperands []int, ins []byte) (operands []int, offset int) {
+	return ReadOperandsInto(nil, numOperands, ins)
+}
+
+// ReadOperandsInto reads operands from the bytecode into buf.
+func ReadOperandsInto(buf []int, numOperands []int, ins []byte) (operands []int, offset int) {
+	operands = buf[:0]
 	for _, width := range numOperands {
 		switch width {
 		case 1:

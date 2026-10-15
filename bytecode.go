@@ -128,12 +128,13 @@ func (b *Bytecode) Decode(r io.Reader, modules *ModuleMap) error {
 // RemoveDuplicates finds and remove the duplicate values in Constants.
 // Note this function mutates Bytecode.
 func (b *Bytecode) RemoveDuplicates() {
-	var deduped []Object
+	n := len(b.Constants)
+	deduped := make([]Object, 0, n)
 
-	indexMap := make(map[int]int) // mapping from old constant index to new index
-	fns := make(map[*CompiledFunction]int)
+	indexMap := make([]int, n) // mapping from old constant index to new index
+	fns := make(map[*CompiledFunction]int, n)
 	ints := make(map[int64]int)
-	strings := make(map[string]int)
+	strings := make(map[string]int, n)
 	floats := make(map[float64]int)
 	chars := make(map[rune]int)
 	immutableMaps := make(map[string]int) // for modules
@@ -275,32 +276,21 @@ func fixDecodedObject(
 	return o, nil
 }
 
-func updateConstIndexes(insts []byte, indexMap map[int]int) {
+func updateConstIndexes(insts []byte, indexMap []int) {
 	i := 0
 	for i < len(insts) {
 		op := insts[i]
-		numOperands := parser.OpcodeOperands[op]
-		_, read := parser.ReadOperands(numOperands, insts[i+1:])
-
 		switch op {
-		case parser.OpConstant:
+		case parser.OpConstant, parser.OpClosure:
 			curIdx := int(insts[i+2]) | int(insts[i+1])<<8
-			newIdx, ok := indexMap[curIdx]
-			if !ok {
+			if curIdx >= len(indexMap) {
 				panic(fmt.Errorf("constant index not found: %d", curIdx))
 			}
-			copy(insts[i:], MakeInstruction(op, newIdx))
-		case parser.OpClosure:
-			curIdx := int(insts[i+2]) | int(insts[i+1])<<8
-			numFree := int(insts[i+3])
-			newIdx, ok := indexMap[curIdx]
-			if !ok {
-				panic(fmt.Errorf("constant index not found: %d", curIdx))
-			}
-			copy(insts[i:], MakeInstruction(op, newIdx, numFree))
+			newIdx := indexMap[curIdx]
+			insts[i+1] = byte(newIdx >> 8)
+			insts[i+2] = byte(newIdx)
 		}
-
-		i += 1 + read
+		i += instructionLen[op]
 	}
 }
 

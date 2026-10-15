@@ -6,38 +6,48 @@ import (
 	"github.com/d5/tengo/v2/parser"
 )
 
+var instructionLen [256]int
+
+func init() {
+	for op, widths := range parser.OpcodeOperands {
+		n := 1
+		for _, w := range widths {
+			n += w
+		}
+		instructionLen[op] = n
+	}
+}
+
 // MakeInstruction returns a bytecode for an opcode and the operands.
 func MakeInstruction(opcode parser.Opcode, operands ...int) []byte {
+	return appendInstruction(make([]byte, 0, instructionLen[opcode]),
+		opcode, operands...)
+}
+
+func appendInstruction(
+	dst []byte,
+	opcode parser.Opcode,
+	operands ...int,
+) []byte {
 	numOperands := parser.OpcodeOperands[opcode]
-
-	totalLen := 1
-	for _, w := range numOperands {
-		totalLen += w
-	}
-
-	instruction := make([]byte, totalLen)
-	instruction[0] = opcode
-
-	offset := 1
-	for i, o := range operands {
-		width := numOperands[i]
+	dst = append(dst, opcode)
+	for i, width := range numOperands {
+		var o int
+		if i < len(operands) {
+			o = operands[i]
+		}
 		switch width {
 		case 1:
-			instruction[offset] = byte(o)
+			dst = append(dst, byte(o))
 		case 2:
 			n := uint16(o)
-			instruction[offset] = byte(n >> 8)
-			instruction[offset+1] = byte(n)
+			dst = append(dst, byte(n>>8), byte(n))
 		case 4:
 			n := uint32(o)
-			instruction[offset] = byte(n >> 24)
-			instruction[offset+1] = byte(n >> 16)
-			instruction[offset+2] = byte(n >> 8)
-			instruction[offset+3] = byte(n)
+			dst = append(dst, byte(n>>24), byte(n>>16), byte(n>>8), byte(n))
 		}
-		offset += width
 	}
-	return instruction
+	return dst
 }
 
 // FormatInstructions returns string representation of bytecode instructions.
