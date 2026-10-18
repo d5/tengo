@@ -875,6 +875,9 @@ func textFormatFloat(args ...tengo.Object) (ret tengo.Object, err error) {
 		return
 	}
 
+	if s2 == "" {
+		return nil, fmt.Errorf("format must not be empty")
+	}
 	ret = &tengo.String{Value: strconv.FormatFloat(f1.Value, s2[0], i3, i4)}
 
 	return
