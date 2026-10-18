@@ -878,6 +878,7 @@ func TestBuiltinFunction(t *testing.T) {
 	expectRun(t, `out = []; splice(out, 0, 1, "a", "b")`, nil, ARR{"a", "b"})
 	expectRun(t, `out = []; out = splice(out, 0, 0, "a", "b")`, nil, ARR{})
 	expectRun(t, `out = splice(splice([1, 2, 3], 0, 3), 1, 3)`, nil, ARR{2, 3})
+	expectRun(t, fmt.Sprintf("out = splice([1, 2, 3], 1, %d)", int(^uint(0)>>1)), nil, ARR{2, 3})
 	// splice doc examples
 	expectRun(t, `v := [1, 2, 3]; deleted := splice(v, 0);
 		out = [deleted, v]`, nil, ARR{ARR{1, 2, 3}, ARR{}})

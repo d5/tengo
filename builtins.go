@@ -686,7 +686,7 @@ func builtinSplice(args ...Object) (Object, error) {
 		}
 	}
 	// if count of to be deleted items is bigger than expected, truncate it
-	if startIdx+delCount > arrayLen {
+	if delCount > arrayLen-startIdx {
 		delCount = arrayLen - startIdx
 	}
 	// delete items
