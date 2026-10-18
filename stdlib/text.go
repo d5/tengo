@@ -738,7 +738,7 @@ func textRepeat(args ...tengo.Object) (ret tengo.Object, err error) {
 		}
 	}
 
-	if len(s1)*i2 > tengo.MaxStringLen {
+	if len(s1) > 0 && i2 > tengo.MaxStringLen/len(s1) {
 		return nil, tengo.ErrStringLimit
 	}
 

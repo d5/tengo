@@ -276,6 +276,8 @@ func TestTextRepeat(t *testing.T) {
 		expect("111111111111")
 	module(t, "text").call("repeat", "1", "13").
 		expectError()
+	module(t, "text").call("repeat", "12", int(^uint(0)>>1)/2+1).
+		expectError()
 }
 
 func TestSubstr(t *testing.T) {
