@@ -72,6 +72,9 @@ func makeTextRegexp(re *regexp.Regexp) *tengo.ImmutableMap {
 
 						arr := &tengo.Array{}
 						for i := 0; i < len(m); i += 2 {
+							if m[i] < 0 || m[i+1] < 0 {
+								continue
+							}
 							arr.Value = append(arr.Value,
 								&tengo.ImmutableMap{
 									Value: map[string]tengo.Object{
@@ -111,6 +114,9 @@ func makeTextRegexp(re *regexp.Regexp) *tengo.ImmutableMap {
 					for _, m := range m {
 						subMatch := &tengo.Array{}
 						for i := 0; i < len(m); i += 2 {
+							if m[i] < 0 || m[i+1] < 0 {
+								continue
+							}
 							subMatch.Value = append(subMatch.Value,
 								&tengo.ImmutableMap{
 									Value: map[string]tengo.Object{

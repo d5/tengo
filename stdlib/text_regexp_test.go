@@ -50,3 +50,17 @@ func TestTextREAlternation(t *testing.T) {
 		},
 	}, "nested groups with alternation")
 }
+
+func TestTextRECompiledUnmatchedGroups(t *testing.T) {
+	t.Run("first", func(t *testing.T) {
+		module(t, "text").call("re_compile", "(a)|(b)").call("find", "a").expect(ARR{
+			ARR{IMAP{"text": "a", "begin": 0, "end": 1}, IMAP{"text": "a", "begin": 0, "end": 1}},
+		})
+	})
+	t.Run("all", func(t *testing.T) {
+		module(t, "text").call("re_compile", "(a)|(b)").call("find", "ab", -1).expect(ARR{
+			ARR{IMAP{"text": "a", "begin": 0, "end": 1}, IMAP{"text": "a", "begin": 0, "end": 1}},
+			ARR{IMAP{"text": "b", "begin": 1, "end": 2}, IMAP{"text": "b", "begin": 1, "end": 2}},
+		})
+	})
+}
