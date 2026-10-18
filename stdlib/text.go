@@ -906,6 +906,9 @@ func textFormatInt(args ...tengo.Object) (ret tengo.Object, err error) {
 		return
 	}
 
+	if i2 < 2 || i2 > 36 {
+		return nil, fmt.Errorf("base must be between 2 and 36")
+	}
 	ret = &tengo.String{Value: strconv.FormatInt(i1.Value, i2)}
 
 	return

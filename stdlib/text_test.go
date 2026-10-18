@@ -278,6 +278,12 @@ func TestTextRepeat(t *testing.T) {
 		expectError()
 }
 
+func TestTextFormatIntInvalidBase(t *testing.T) {
+	for _, base := range []int{0, 1, 37} {
+		module(t, "text").call("format_int", 42, base).expectError()
+	}
+}
+
 func TestSubstr(t *testing.T) {
 	module(t, "text").call("substr", "", 0, 0).expect("")
 	module(t, "text").call("substr", "abcdef", 0, 3).expect("abc")
