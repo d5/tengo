@@ -586,12 +586,17 @@ func FuncASSRSs(fn func(string, string) []string) tengo.CallableFunc {
 				Found:    args[1].TypeName(),
 			}
 		}
-		arr := &tengo.Array{}
-		for _, res := range fn(s1, s2) {
+
+		list := fn(s1, s2)
+		arr := &tengo.Array{Value: make([]tengo.Object, len(list))}
+		for index, res := range list {
 			if len(res) > tengo.MaxStringLen {
 				return nil, tengo.ErrStringLimit
 			}
-			arr.Value = append(arr.Value, &tengo.String{Value: res})
+			err := arr.IndexSet(&tengo.Int{Value: int64(index)}, &tengo.String{Value: res})
+			if err != nil {
+				return nil, err
+			}
 		}
 		return arr, nil
 	}
