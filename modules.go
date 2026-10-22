@@ -1,5 +1,7 @@
 package tengo
 
+import "fmt"
+
 // Importable interface represents importable module instance.
 type Importable interface {
 	// Import should return either an Object or module source code ([]byte).
@@ -39,9 +41,29 @@ func (m *ModuleMap) AddSourceModule(name string, src []byte) {
 	m.m[name] = &SourceModule{Src: src}
 }
 
-// Remove removes a named module.
-func (m *ModuleMap) Remove(name string) {
-	delete(m.m, name)
+// Remove removes a named module. If one or more attrNames are supplied, instead removes those attributes from the named module (will panic if module is not a *BuiltinModule).
+func (m *ModuleMap) Remove(name string, attrNames ...string) {
+	if len(attrNames) > 0 {
+		mod, ok := m.m[name]
+		if !ok {
+			// module doesn't exist, nothing to remove
+			return
+		}
+		builtinMod, ok := mod.(*BuiltinModule)
+		if !ok {
+			panic(fmt.Errorf("cannot remove attrs %v from module %q: expected module to be of type *BuiltinModule but is %T", attrNames, name, mod))
+		}
+		for _, attrName := range attrNames {
+			delete(builtinMod.Attrs, attrName)
+		}
+		if len(builtinMod.Attrs) == 0 {
+			// delete module as there are no attrs left
+			delete(m.m, name)
+		}
+	} else {
+		// delete whole module as no attrNames supplied
+		delete(m.m, name)
+	}
 }
 
 // Get returns an import module identified by name. It returns if the name is
