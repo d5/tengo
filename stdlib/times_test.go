@@ -66,6 +66,8 @@ func TestTimes(t *testing.T) {
 	module(t, "times").call("before", time2, time2.Add(-time.Hour)).
 		expect(false)
 
+	_, isoweek := time1.ISOWeek()
+	module(t, "times").call("time_isoweek", time1).expect(isoweek)
 	module(t, "times").call("time_year", time1).expect(time1.Year())
 	module(t, "times").call("time_month", time1).expect(int(time1.Month()))
 	module(t, "times").call("time_day", time1).expect(time1.Day())
