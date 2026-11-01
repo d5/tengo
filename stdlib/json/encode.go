@@ -251,7 +251,8 @@ func Encode(o tengo.Object) ([]byte, error) {
 	case *tengo.Undefined:
 		b = append(b, "null"...)
 	default:
-		// unknown type: ignore
+		// writing nothing would leave a hole such as {"a":,"b":1}
+		return nil, errors.New("unsupported type: " + o.TypeName())
 	}
 	return b, nil
 }
