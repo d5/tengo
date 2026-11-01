@@ -303,3 +303,10 @@ func TestPadLeft(t *testing.T) {
 	module(t, "text").call("pad_left", "ab", 7, "+-").expect("-+-+-ab")
 	module(t, "text").call("pad_right", "ab", 7, "+-").expect("ab+-+-+")
 }
+
+func TestPadPartialPattern(t *testing.T) {
+	module(t, "text").call("pad_left", "", 3, "+-").expect("-+-")
+	module(t, "text").call("pad_right", "", 3, "+-").expect("+-+")
+	module(t, "text").call("pad_left", "a", 7, "+-*/").expect("*/+-*/a")
+	module(t, "text").call("pad_right", "a", 7, "+-*/").expect("a+-*/+-")
+}

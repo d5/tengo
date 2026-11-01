@@ -645,7 +645,7 @@ func textPadLeft(args ...tengo.Object) (ret tengo.Object, err error) {
 		return
 	}
 
-	padCount := ((i2 - padStrLen) / padStrLen) + 1
+	padCount := (i2-sLen-1)/padStrLen + 1
 	retStr := strings.Repeat(s3, padCount) + s1
 	ret = &tengo.String{Value: retStr[len(retStr)-i2:]}
 
@@ -708,7 +708,7 @@ func textPadRight(args ...tengo.Object) (ret tengo.Object, err error) {
 		return
 	}
 
-	padCount := ((i2 - padStrLen) / padStrLen) + 1
+	padCount := (i2-sLen-1)/padStrLen + 1
 	retStr := s1 + strings.Repeat(s3, padCount)
 	ret = &tengo.String{Value: retStr[:i2]}
 
