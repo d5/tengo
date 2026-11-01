@@ -160,6 +160,7 @@ func (p *Parser) parseExpr() Expr {
 	if p.trace {
 		defer untracep(tracep(p, "Expression"))
 	}
+
 	p.incNestLev()
 	expr := p.parseBinaryExpr(token.LowestPrec + 1)
 
@@ -178,14 +179,19 @@ func (p *Parser) parseBinaryExpr(prec1 int) Expr {
 
 	x := p.parseUnaryExpr()
 
+	// each link nests the chain one level deeper on its left
+	links := 0
 	for {
 		op, prec := p.token, p.token.Precedence()
 		if prec < prec1 {
+			p.nestLev -= links
 			return x
 		}
 
 		pos := p.expect(op)
 
+		p.incNestLev()
+		links++
 		y := p.parseBinaryExpr(prec + 1)
 
 		x = &BinaryExpr{
@@ -216,6 +222,7 @@ func (p *Parser) parseUnaryExpr() Expr {
 	if p.trace {
 		defer untracep(tracep(p, "UnaryExpression"))
 	}
+
 	switch p.token {
 	case token.Add, token.Sub, token.Not, token.Xor:
 		pos, op := p.pos, p.token
@@ -239,6 +246,8 @@ func (p *Parser) parsePrimaryExpr() Expr {
 
 	x := p.parseOperand()
 
+	// each selector, index or call nests the chain one level deeper
+	links := 0
 L:
 	for {
 		switch p.token {
@@ -252,6 +261,7 @@ L:
 				pos := p.pos
 				p.errorExpected(pos, "selector")
 				p.advance(stmtStart)
+				p.nestLev -= links
 				return &BadExpr{From: pos, To: p.pos}
 			}
 		case token.LBrack:
@@ -261,7 +271,10 @@ L:
 		default:
 			break L
 		}
+		p.incNestLev()
+		links++
 	}
+	p.nestLev -= links
 	return x
 }
 
@@ -683,6 +696,7 @@ func (p *Parser) parseStmt() (stmt Stmt) {
 	if p.trace {
 		defer untracep(tracep(p, "Statement"))
 	}
+
 	switch p.token {
 	case // simple statements
 		token.Func, token.Error, token.Immutable, token.Ident, token.Int,
@@ -809,6 +823,7 @@ func (p *Parser) parseIfStmt() Stmt {
 	if p.trace {
 		defer untracep(tracep(p, "IfStmt"))
 	}
+
 	pos := p.expect(token.If)
 	init, cond := p.parseIfHeader()
 	body := p.parseBlockStmt()
