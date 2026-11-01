@@ -26,20 +26,25 @@ The following is an example where a Tengo script is compiled and run with no
 input/output variables.
 
 ```golang
-import "github.com/d5/tengo/v2"
+import (
+    "github.com/d5/tengo/v2"
+    "github.com/d5/tengo/v2/stdlib"
+)
 
 var code = `
+fmt := import("fmt")
 reduce := func(seq, fn) {
     s := 0
     for x in seq { fn(x, s) }
     return s
 }
 
-print(reduce([1, 2, 3], func(x, s) { s += x }))
+fmt.println(reduce([1, 2, 3], func(x, s) { s += x }))
 `
 
 func main() {
     s := tengo.NewScript([]byte(code))
+    s.SetImports(stdlib.GetModuleMap("fmt"))
     if _, err := s.Run(); err != nil {
         panic(err)
     }
@@ -180,7 +185,7 @@ func (dm *DynamicModules) Get(name string) tengo.Importable {
   if mod := dm.mods.Get(name); mod != nil {
     return mod
   }
-  return dm.fallback()
+  return dm.fallback(name)
 }
 // ...
 mods := &DynamicModules{
@@ -190,7 +195,7 @@ mods := &DynamicModules{
     return &tengo.SourceModule{Src: src}
   },
 }
-s := tengo.NewScript(`foo := import("foo")`)
+s := tengo.NewScript([]byte(`foo := import("foo")`))
 s.SetImports(mods)
 ```
 
