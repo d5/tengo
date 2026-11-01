@@ -35,10 +35,10 @@ func init() {
 	flag.BoolVar(&showVersion, "version", false, "Show version")
 	flag.BoolVar(&resolvePath, "resolve", false,
 		"Resolve relative import paths")
-	flag.Parse()
 }
 
 func main() {
+	flag.Parse()
 	if showHelp {
 		doHelp()
 		os.Exit(2)
