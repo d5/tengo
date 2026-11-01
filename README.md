@@ -83,6 +83,20 @@ go run golang.org/x/perf/cmd/benchstat@latest old.txt new.txt
 
 `make bench BENCH=Fib COUNT=20` runs a subset.
 
+Where `(*VM).run` lands in the binary can move Fib, FibTailCall, Loop and
+Closure by a few percent on some machines. A change touches a benchmark's
+path when it changes any code the benchmark times, such as the VM, an
+object's methods or the compiler, or the bytecode the compiler emits for
+the benchmark's script. If a benchmark moves after a change that touches
+neither, compare the two binaries, and treat the move as noise when only
+the function's address changed:
+
+```
+git checkout master && go test -c -o old.test .
+git checkout my-branch && go test -c -o new.test .
+go tool nm -size old.test new.test | grep 'VM).run$'
+```
+
 ## Quick Start
 
 ```
