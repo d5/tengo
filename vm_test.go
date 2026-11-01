@@ -2913,7 +2913,7 @@ func TestBangOperator(t *testing.T) {
 
 func TestAliasing(t *testing.T) {
 	// concatenation writes only into capacity no other array has written to
-	expectRun(t, `a := []; a = append(a, 1, 2, 3); p := a + [9]; q := a + [8]; out = [p, q]`,
+	expectRun(t, `a := [1, 2, 3]; p := a + [9]; q := a + [8]; out = [p, q]`,
 		nil, ARR{ARR{1, 2, 3, 9}, ARR{1, 2, 3, 8}})
 	expectRun(t, `a := [1, 2, 3, 4, 5, 6]; x := a[0:3] + [9]; out = [a, x]`,
 		nil, ARR{ARR{1, 2, 3, 4, 5, 6}, ARR{1, 2, 3, 9}})
@@ -2948,6 +2948,11 @@ func TestAliasing(t *testing.T) {
 		nil, 1)
 	expectRun(t, `a := [1]; f := freeze(immutable(a)); a[0] = 2; out = f`,
 		nil, IARR{1})
+
+	// export is immutable() too, so a module exports a snapshot
+	expectRun(t, `c := import("counter"); c.inc(); out = c.n`,
+		Opts().Module("counter",
+			`m := {n: 0}; m.inc = func() { m.n += 1 }; export m`), 0)
 }
 
 func TestObjectsLimit(t *testing.T) {
