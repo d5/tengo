@@ -126,6 +126,25 @@ var hex = "0123456789abcdef"
 
 // Encode returns the JSON encoding of the object.
 func Encode(o tengo.Object) ([]byte, error) {
+	var buf [8]tengo.Object
+	return encode(o, buf[:0])
+}
+
+// encode carries the containers above o, since a script can put a container
+// inside itself.
+func encode(o tengo.Object, path []tengo.Object) ([]byte, error) {
+	switch o.(type) {
+	case *tengo.Array, *tengo.ImmutableArray, *tengo.Map, *tengo.ImmutableMap:
+		for _, p := range path {
+			if p == o {
+				return nil, errors.New(
+					"unsupported value: encountered a cycle via " +
+						o.TypeName())
+			}
+		}
+		path = append(path, o)
+	}
+
 	var b []byte
 
 	switch o := o.(type) {
@@ -133,7 +152,7 @@ func Encode(o tengo.Object) ([]byte, error) {
 		b = append(b, '[')
 		len1 := len(o.Value) - 1
 		for idx, elem := range o.Value {
-			eb, err := Encode(elem)
+			eb, err := encode(elem, path)
 			if err != nil {
 				return nil, err
 			}
@@ -147,7 +166,7 @@ func Encode(o tengo.Object) ([]byte, error) {
 		b = append(b, '[')
 		len1 := len(o.Value) - 1
 		for idx, elem := range o.Value {
-			eb, err := Encode(elem)
+			eb, err := encode(elem, path)
 			if err != nil {
 				return nil, err
 			}
@@ -164,7 +183,7 @@ func Encode(o tengo.Object) ([]byte, error) {
 		for key, value := range o.Value {
 			b = encodeString(b, key)
 			b = append(b, ':')
-			eb, err := Encode(value)
+			eb, err := encode(value, path)
 			if err != nil {
 				return nil, err
 			}
@@ -182,7 +201,7 @@ func Encode(o tengo.Object) ([]byte, error) {
 		for key, value := range o.Value {
 			b = encodeString(b, key)
 			b = append(b, ':')
-			eb, err := Encode(value)
+			eb, err := encode(value, path)
 			if err != nil {
 				return nil, err
 			}

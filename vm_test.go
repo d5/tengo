@@ -2911,6 +2911,53 @@ func TestBangOperator(t *testing.T) {
 	expectRun(t, `out = !!5`, nil, true)
 }
 
+func TestCyclicValues(t *testing.T) {
+	// printing
+	expectRun(t, `a := [0]; a[0] = a; out = string(a)`, nil, "[[...]]")
+	expectRun(t, `m := {}; m.self = m; out = string(m)`, nil, "{self: {...}}")
+	expectRun(t, `a := [0]; m := {a: a}; a[0] = m; out = string(a)`,
+		nil, "[{a: [...]}]")
+	expectRun(t, `e := error([0]); e.value[0] = e; out = string(e)`,
+		nil, "error: [error: [...]]")
+	expectRun(t, `x := [1]; out = string([x, x])`, nil, "[[1], [1]]")
+
+	// equality
+	expectRun(t, `a := [0]; a[0] = a; out = a == a`, nil, true)
+	expectRun(t, `a := [0]; a[0] = a; b := [0]; b[0] = b; out = a == b`,
+		nil, true)
+	expectRun(t, `a := [0]; a[0] = a; b := [[0]]; out = a == b`, nil, false)
+	expectRun(t, `m := {}; m.self = m; n := {}; n.self = n; out = m == n`,
+		nil, true)
+	expectRun(t, `a := [0]; a[0] = a; out = a != immutable([a])`, nil, false)
+
+	// copying keeps the cycle inside the copy
+	expectRun(t, `a := [0]; a[0] = a; c := copy(a); x := c[0]; x[0] = 7; out = [c[0], string(a)]`,
+		nil, ARR{7, "[[...]]"})
+	expectRun(t, `m := {}; m.self = m; c := copy(m); c.self.k = 1; out = [c.k, m.k]`,
+		nil, ARR{1, tengo.UndefinedValue})
+	expectRun(t, `e := error([0]); e.value[0] = e; c := copy(e); out = string(c)`,
+		nil, "error: [error: [...]]")
+}
+
+func TestCyclicValuesToGo(t *testing.T) {
+	a := &tengo.Array{Value: []tengo.Object{nil, &tengo.Int{Value: 1}}}
+	a.Value[0] = a
+	m := &tengo.Map{Value: map[string]tengo.Object{}}
+	m.Value["self"] = m
+	m.Value["a"] = a
+
+	require.Equal(t, 3, tengo.CountObjects(m))
+
+	arr := tengo.ToInterface(a).([]interface{})
+	require.True(t,
+		reflect.ValueOf(arr).Pointer() == reflect.ValueOf(arr[0]).Pointer())
+	require.Equal(t, int64(1), arr[1])
+
+	mp := tengo.ToInterface(m).(map[string]interface{})
+	require.True(t,
+		reflect.ValueOf(mp).Pointer() == reflect.ValueOf(mp["self"]).Pointer())
+}
+
 func TestObjectsLimit(t *testing.T) {
 	testAllocsLimit(t, `5`, 0)
 	testAllocsLimit(t, `5 + 5`, 1)

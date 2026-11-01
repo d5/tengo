@@ -46,26 +46,40 @@ type CallableFunc = func(args ...Object) (ret Object, err error)
 // For scalar value types, it will always be 1. For compound value types,
 // this will include its elements and all of their elements recursively.
 func CountObjects(o Object) (c int) {
+	var buf [pathDepth]Object
+	return countObjects(o, buf[:0])
+}
+
+// countObjects counts a container that recurs into itself once.
+func countObjects(o Object, path []Object) (c int) {
+	if isContainer(o) {
+		for _, p := range path {
+			if p == o {
+				return 0
+			}
+		}
+		path = append(path, o)
+	}
 	c = 1
 	switch o := o.(type) {
 	case *Array:
 		for _, v := range o.Value {
-			c += CountObjects(v)
+			c += countObjects(v, path)
 		}
 	case *ImmutableArray:
 		for _, v := range o.Value {
-			c += CountObjects(v)
+			c += countObjects(v, path)
 		}
 	case *Map:
 		for _, v := range o.Value {
-			c += CountObjects(v)
+			c += countObjects(v, path)
 		}
 	case *ImmutableMap:
 		for _, v := range o.Value {
-			c += CountObjects(v)
+			c += countObjects(v, path)
 		}
 	case *Error:
-		c += CountObjects(o.Value)
+		c += countObjects(o.Value, path)
 	}
 	return
 }
@@ -205,6 +219,20 @@ func ToTime(o Object) (v time.Time, ok bool) {
 
 // ToInterface attempts to convert an object o to an interface{} value
 func ToInterface(o Object) (res interface{}) {
+	var buf [pathDepth]copyPair
+	return toInterface(o, buf[:0])
+}
+
+// toInterface converts a container that recurs into itself to a Go value
+// that recurs into itself.
+func toInterface(o Object, path []copyPair) (res interface{}) {
+	if isContainer(o) {
+		for _, p := range path {
+			if p.orig == o {
+				return p.copy
+			}
+		}
+	}
 	switch o := o.(type) {
 	case *Int:
 		res = o.Value
@@ -219,25 +247,13 @@ func ToInterface(o Object) (res interface{}) {
 	case *Bytes:
 		res = o.Value
 	case *Array:
-		res = make([]interface{}, len(o.Value))
-		for i, val := range o.Value {
-			res.([]interface{})[i] = ToInterface(val)
-		}
+		res = arrayToInterface(o, o.Value, path)
 	case *ImmutableArray:
-		res = make([]interface{}, len(o.Value))
-		for i, val := range o.Value {
-			res.([]interface{})[i] = ToInterface(val)
-		}
+		res = arrayToInterface(o, o.Value, path)
 	case *Map:
-		res = make(map[string]interface{})
-		for key, v := range o.Value {
-			res.(map[string]interface{})[key] = ToInterface(v)
-		}
+		res = mapToInterface(o, o.Value, path)
 	case *ImmutableMap:
-		res = make(map[string]interface{})
-		for key, v := range o.Value {
-			res.(map[string]interface{})[key] = ToInterface(v)
-		}
+		res = mapToInterface(o, o.Value, path)
 	case *Time:
 		res = o.Value
 	case *Error:
@@ -248,6 +264,24 @@ func ToInterface(o Object) (res interface{}) {
 		return o
 	}
 	return
+}
+
+func arrayToInterface(o Object, elems []Object, path []copyPair) interface{} {
+	res := make([]interface{}, len(elems))
+	path = append(path, copyPair{o, res})
+	for i, val := range elems {
+		res[i] = toInterface(val, path)
+	}
+	return res
+}
+
+func mapToInterface(o Object, m map[string]Object, path []copyPair) interface{} {
+	res := make(map[string]interface{})
+	path = append(path, copyPair{o, res})
+	for key, v := range m {
+		res[key] = toInterface(v, path)
+	}
+	return res
 }
 
 // FromInterface will attempt to convert an interface{} v to a Tengo Object

@@ -88,6 +88,21 @@ func TestDecode(t *testing.T) {
 	testDecodeError(t, `{"a":"b":"c"}`)
 }
 
+func TestEncodeCycle(t *testing.T) {
+	a := &tengo.Array{Value: []tengo.Object{nil}}
+	a.Value[0] = &tengo.Map{Value: map[string]tengo.Object{"a": a}}
+	_, err := json.Encode(a)
+	require.Error(t, err)
+	require.Equal(t, "unsupported value: encountered a cycle via array",
+		err.Error())
+
+	// a value shared by two elements is no cycle
+	x := &tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 1}}}
+	b, err := json.Encode(&tengo.Array{Value: []tengo.Object{x, x}})
+	require.NoError(t, err)
+	require.Equal(t, "[[1],[1]]", string(b))
+}
+
 func TestDecodeIntOverflow(t *testing.T) {
 	// ParseInt reports overflow and also returns the extreme int64.
 	// Dropping that error made 2^63 decode as MaxInt64.
