@@ -151,13 +151,19 @@ func randIntn(intn func(int64) int64) tengo.CallableFunc {
 	}
 }
 
-// randPerm rejects the n that makes Perm panic.
+// randPerm rejects the n that makes Perm panic, and caps n as range caps
+// the arrays it builds.
 func randPerm(perm func(int) []int) tengo.CallableFunc {
 	call := FuncAIRIs(perm)
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) == 1 {
-			if n, ok := tengo.ToInt(args[0]); ok && n < 0 {
-				return nil, errors.New("n must not be negative")
+			if n, ok := tengo.ToInt(args[0]); ok {
+				if n < 0 {
+					return nil, errors.New("n must not be negative")
+				}
+				if n > tengo.MaxRangeLen {
+					return nil, tengo.ErrRangeLimit
+				}
 			}
 		}
 		return call(args...)

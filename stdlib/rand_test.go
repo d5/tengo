@@ -23,6 +23,8 @@ func TestRand(t *testing.T) {
 	module(t, "rand").call("intn", -1).expectError()
 	module(t, "rand").call("perm", -1).expectError()
 	module(t, "rand").call("perm", 0).expect([]int{})
+	module(t, "rand").call("perm", tengo.MaxRangeLen+1).expectError()
+	module(t, "rand").call("perm", 1<<46).expectError()
 
 	buf1 := make([]byte, 10)
 	buf2 := &tengo.Bytes{Value: make([]byte, 10)}
