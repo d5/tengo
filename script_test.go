@@ -556,6 +556,46 @@ func (n *customNumber) binaryOpInt(op token.Token, rhs *tengo.Int) (tengo.Object
 	return nil, tengo.ErrInvalidOperator
 }
 
+type importFunc func(string) (interface{}, error)
+
+func (f importFunc) Import(name string) (interface{}, error) { return f(name) }
+
+func TestScript_ImportValue(t *testing.T) {
+	compile := func(v interface{}) (*tengo.Compiled, error) {
+		mods := tengo.NewModuleMap()
+		mods.Add("cfg", importFunc(func(string) (interface{}, error) {
+			return v, nil
+		}))
+		s := tengo.NewScript([]byte(`cfg := import("cfg"); out := cfg.a`))
+		s.SetImports(mods)
+		return s.Compile()
+	}
+
+	// an Object other than a builtin module's map is kept as a constant
+	c, err := compile(&tengo.Map{Value: map[string]tengo.Object{
+		"a": &tengo.Int{Value: 1},
+	}})
+	require.NoError(t, err)
+	require.NoError(t, c.Run())
+	require.Equal(t, int64(1), c.Get("out").Int64())
+
+	_, err = compile("not an object")
+	require.Error(t, err)
+	require.True(t, strings.Contains(err.Error(),
+		"invalid import value type: string"), err.Error())
+}
+
+func TestScript_TooManyVariables(t *testing.T) {
+	s := tengo.NewScript([]byte(`out := 1`))
+	for i := 0; i <= tengo.GlobalsSize; i++ {
+		require.NoError(t, s.Add(fmt.Sprintf("v%d", i), i))
+	}
+	_, err := s.Compile()
+	require.Error(t, err)
+	require.True(t, strings.Contains(err.Error(), "too many variables"),
+		err.Error())
+}
+
 func TestScript_ImportError(t *testing.T) {
 	m := `
 	exp := import("expression")

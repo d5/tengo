@@ -170,6 +170,12 @@ func (s *Script) prepCompile() (
 	globals []Object,
 	err error,
 ) {
+	if len(s.variables) > GlobalsSize {
+		err = fmt.Errorf("too many variables: %d (max %d)",
+			len(s.variables), GlobalsSize)
+		return
+	}
+
 	var names []string
 	for name := range s.variables {
 		names = append(names, name)
