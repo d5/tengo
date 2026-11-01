@@ -915,6 +915,7 @@ func TestBytesN(t *testing.T) {
 	expectRun(t, `out = bytes(0)`, nil, make([]byte, 0))
 	expectRun(t, `out = bytes(10)`, nil, make([]byte, 10))
 	expectError(t, `bytes(11)`, nil, "bytes size limit")
+	expectErrorIs(t, `bytes(-1)`, nil, tengo.ErrIndexOutOfBounds)
 
 	tengo.MaxBytesLen = 1000
 	expectRun(t, `out = bytes(1000)`, nil, make([]byte, 1000))
@@ -1247,6 +1248,12 @@ func TestForIn(t *testing.T) {
 		nil, 9) // _, value
 	expectRun(t, `out = ""; func() { for k, v in {a:2,b:3,c:4} { out = k; if v==3 { break } } }()`,
 		nil, "b") // key, value
+	expectRun(t, `out = 0; m := {a:2,b:3,c:4}; for k, v in m { m = {}; out += v }`,
+		nil, 9) // reassigning the variable keeps iterating the old map
+	expectRun(t, `out = 0; m := {a:2,b:3,c:4}; for k, v in m { delete(m, "a"); delete(m, "b"); delete(m, "c"); out++ }`,
+		nil, 1) // deleted keys are skipped
+	expectRun(t, `out = 0; m := {a:2,b:3,c:4}; for k, v in m { delete(m, k); out += v }`,
+		nil, 9) // a key deleted on its own turn changes nothing
 
 	// string
 	expectRun(t, `out = ""; for c in "abcde" { out += c }`,
@@ -2449,6 +2456,11 @@ func TestInteger(t *testing.T) {
 
 	expectRun(t, `out = 9 + '0'`, nil, '9')
 	expectRun(t, `out = '9' - 5`, nil, '4')
+
+	expectErrorIs(t, `a := 0; b := 5 / a`, nil, tengo.ErrDivisionByZero)
+	expectErrorIs(t, `a := 0; b := 5 % a`, nil, tengo.ErrDivisionByZero)
+	expectErrorIs(t, `a := 5; a /= 0`, nil, tengo.ErrDivisionByZero)
+	expectRun(t, `out = 5.0 / 0`, nil, math.Inf(1))
 }
 
 type StringArrayIterator struct {
@@ -3387,6 +3399,14 @@ out = x.at([1, 2, 3], 0)
 func TestVMStackOverflow(t *testing.T) {
 	expectError(t, `f := func() { return f() + 1 }; f()`,
 		nil, "stack overflow")
+	expectErrorIs(t, `f := func(n) { if n == 0 { return 0 }; return 1 + f(n-1) }; f(900)`,
+		nil, tengo.ErrStackOverflow)
+	expectErrorIs(t, `a := []; for i := 0; i < 3000; i++ { a = append(a, i) }; f := func(...x) { return len(x) }; f(a...)`,
+		nil, tengo.ErrStackOverflow)
+	expectErrorIs(t, `a := [0`+strings.Repeat(",0", tengo.StackSize)+`]`,
+		nil, tengo.ErrStackOverflow)
+	expectRun(t, `f := func(n) { if n == 0 { return 0 }; return 1 + f(n-1) }; out = f(500)`,
+		nil, 500)
 }
 
 func TestString(t *testing.T) {

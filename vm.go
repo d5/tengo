@@ -95,6 +95,17 @@ func (v *VM) Run() (err error) {
 }
 
 func (v *VM) run() {
+	// Pushes do not check the stack's bounds, so an overflow surfaces as Go's
+	// index panic with sp at or past StackSize.
+	defer func() {
+		if r := recover(); r != nil {
+			if v.sp < StackSize {
+				panic(r)
+			}
+			v.err = ErrStackOverflow
+		}
+	}()
+
 	for atomic.LoadInt64(&v.aborting) == 0 {
 		v.ip++
 

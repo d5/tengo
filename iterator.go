@@ -141,10 +141,15 @@ func (i *MapIterator) Copy() Object {
 	return &MapIterator{v: i.v, k: i.k, i: i.i, l: i.l}
 }
 
-// Next returns true if there are more elements to iterate.
+// Next returns true if there are more elements to iterate. A key deleted
+// before the iteration reaches it is skipped, as in Go.
 func (i *MapIterator) Next() bool {
-	i.i++
-	return i.i <= i.l
+	for i.i++; i.i <= i.l; i.i++ {
+		if _, ok := i.v[i.k[i.i-1]]; ok {
+			return true
+		}
+	}
+	return false
 }
 
 // Key returns the key or index value of the current element.
