@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"testing"
 
@@ -134,11 +135,15 @@ func TestOSOpenFile(t *testing.T) {
 	f.call("seek", 0, 99).expectErrorObject()
 	f.call("readdirnames", -1).expectErrorObject()
 
-	f.call("chmod", 0640).expect(true)
-	f.call("chown", os.Getuid(), os.Getgid()).expect(true)
+	if runtime.GOOS != "windows" {
+		f.call("chmod", 0640).expect(true)
+		f.call("chown", os.Getuid(), os.Getgid()).expect(true)
+		fi, err := os.Stat(name)
+		require.NoError(t, err)
+		require.Equal(t, int64(0640), int64(fi.Mode().Perm()))
+	}
 	stat, err := os.Stat(name)
 	require.NoError(t, err)
-	require.Equal(t, int64(0640), int64(stat.Mode().Perm()))
 	f.call("stat").expect(&tengo.ImmutableMap{
 		Value: map[string]tengo.Object{
 			"name":      &tengo.String{Value: "file.txt"},
@@ -175,6 +180,9 @@ func TestOSFileDir(t *testing.T) {
 	d.call("readdirnames", -1).expect(ARR{"a.txt"})
 	require.Equal(t, tengo.TrueValue,
 		d.call("stat").o.(*tengo.ImmutableMap).Value["directory"])
+	if runtime.GOOS == "windows" {
+		return
+	}
 
 	wd, err := os.Getwd()
 	require.NoError(t, err)
@@ -206,10 +214,12 @@ func TestOSMkdirChmod(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, fi.IsDir())
 
-	module(t, "os").call("chmod", sub, 0500).expect(true)
-	fi, err = os.Stat(sub)
-	require.NoError(t, err)
-	require.Equal(t, 0500, int(fi.Mode().Perm()))
+	if runtime.GOOS != "windows" {
+		module(t, "os").call("chmod", sub, 0500).expect(true)
+		fi, err = os.Stat(sub)
+		require.NoError(t, err)
+		require.Equal(t, 0500, int(fi.Mode().Perm()))
+	}
 	module(t, "os").call("chmod", filepath.Join(dir, "missing"), 0700).
 		expectErrorObject()
 }
@@ -263,6 +273,7 @@ func TestOSLookupEnv(t *testing.T) {
 }
 
 func TestOSFindProcess(t *testing.T) {
+	skipOnWindows(t)
 	p := module(t, "os").call("find_process", os.Getpid())
 	require.NoError(t, p.e)
 	for _, c := range []argErrorCase{
@@ -278,6 +289,7 @@ func TestOSFindProcess(t *testing.T) {
 }
 
 func TestOSStartProcess(t *testing.T) {
+	skipOnWindows(t)
 	dir := t.TempDir()
 	p := module(t, "os").call("start_process", "/bin/sh",
 		ARR{"sh", "-c", `printf "$FOO" > out.txt; exit 3`}, dir, ARR{"FOO=bar"})
@@ -374,6 +386,7 @@ func TestOSArgErrors(t *testing.T) {
 }
 
 func TestOSExecCommand(t *testing.T) {
+	skipOnWindows(t)
 	dir := t.TempDir()
 	sh := func(script string) callres {
 		cmd := module(t, "os").call("exec", "/bin/sh", "-c", script)
@@ -429,5 +442,11 @@ func TestOSExecCommand(t *testing.T) {
 		{"process", ARR{1}, tengo.ErrWrongNumArguments},
 	} {
 		cmd.call(c.fn, c.args...).expectErr(c.err, "cmd.%s%v", c.fn, c.args)
+	}
+}
+
+func skipOnWindows(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("needs Unix signals and /bin/sh")
 	}
 }

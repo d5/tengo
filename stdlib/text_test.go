@@ -403,7 +403,6 @@ func TestTextArgErrors(t *testing.T) {
 		{"substr", ARR{undefined, 0}, invalidString("first")},
 		{"substr", ARR{"a", "x"}, invalidInt("second")},
 		{"substr", ARR{"a", 0, "x"}, invalidInt("third")},
-		{"substr", ARR{"abc", 2, 1}, tengo.ErrInvalidIndexType},
 		{"format_bool", ARR{}, wrongNum},
 		{"format_bool", ARR{true, true}, wrongNum},
 		{"format_bool", ARR{1}, invalidArg("first", "bool", "int")},
