@@ -43,3 +43,17 @@ func TestRand(t *testing.T) {
 	randObj.call("read", buf2).expect(n)
 	require.Equal(t, buf1, buf2.Value)
 }
+
+func TestRandArgErrors(t *testing.T) {
+	expectArgErrors(t, "rand", []argErrorCase{
+		{"rand", ARR{}, tengo.ErrWrongNumArguments},
+		{"rand", ARR{"x"}, invalidArg("first", "int(compatible)", "string")},
+		{"read", ARR{}, tengo.ErrWrongNumArguments},
+		{"read", ARR{"x"}, invalidArg("first", "bytes", "string")},
+	})
+
+	randObj := module(t, "rand").call("rand", 1)
+	randObj.call("read").expectErr(tengo.ErrWrongNumArguments)
+	randObj.call("read", "x").
+		expectErr(invalidArg("first", "bytes", "string"))
+}

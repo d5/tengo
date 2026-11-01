@@ -1,6 +1,8 @@
 package tengo_test
 
 import (
+	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/d5/tengo/v2"
@@ -78,4 +80,58 @@ func TestVariable(t *testing.T) {
 		require.Equal(t, tc.Object, v.Object(), "Name: %s", tc.Name)
 		require.Equal(t, tc.IsUndefined, v.IsUndefined(), "Name: %s", tc.Name)
 	}
+}
+
+func TestVariable_Array(t *testing.T) {
+	v, err := tengo.NewVariable("a", []interface{}{1, "b", []interface{}{true}})
+	require.NoError(t, err)
+	expected := []interface{}{int64(1), "b", []interface{}{true}}
+	require.True(t, reflect.DeepEqual(expected, v.Array()),
+		"expected %#v, got %#v", expected, v.Array())
+
+	for _, value := range []interface{}{1, "abc", nil, map[string]interface{}{}} {
+		v, err = tengo.NewVariable("a", value)
+		require.NoError(t, err)
+		require.True(t, v.Array() == nil, "%#v", value)
+	}
+}
+
+func TestVariable_Bytes(t *testing.T) {
+	v, err := tengo.NewVariable("a", []byte{0, 1, 255})
+	require.NoError(t, err)
+	require.Equal(t, []byte{0, 1, 255}, v.Bytes())
+
+	v, err = tengo.NewVariable("a", "abc")
+	require.NoError(t, err)
+	require.Equal(t, []byte("abc"), v.Bytes())
+
+	for _, value := range []interface{}{1, 'a', nil, []interface{}{1}} {
+		v, err = tengo.NewVariable("a", value)
+		require.NoError(t, err)
+		require.Nil(t, v.Bytes(), "%#v", value)
+	}
+}
+
+func TestVariable_Error(t *testing.T) {
+	v, err := tengo.NewVariable("a", errors.New("boom"))
+	require.NoError(t, err)
+	require.Equal(t, "error", v.ValueType())
+	require.Error(t, v.Error())
+	require.Equal(t, `error: "boom"`, v.Error().Error())
+
+	for _, value := range []interface{}{1, "boom", nil} {
+		v, err = tengo.NewVariable("a", value)
+		require.NoError(t, err)
+		require.NoError(t, v.Error(), "%#v", value)
+	}
+
+	c := compile(t, `e := error("bad input"); n := 1`, nil)
+	compiledRun(t, c)
+	require.Equal(t, `error: "bad input"`, c.Get("e").Error().Error())
+	require.NoError(t, c.Get("n").Error())
+}
+
+func TestNewVariable_UnsupportedType(t *testing.T) {
+	_, err := tengo.NewVariable("a", make(chan int))
+	require.Error(t, err)
 }

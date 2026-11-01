@@ -156,6 +156,36 @@ func (c callres) expectError() {
 	require.Error(c.t, c.e)
 }
 
+func (c callres) expectErr(expected error, msgAndArgs ...interface{}) {
+	require.Equal(c.t, expected, c.e, msgAndArgs...)
+}
+
+func (c callres) expectErrorObject(msgAndArgs ...interface{}) {
+	require.NoError(c.t, c.e, msgAndArgs...)
+	require.IsType(c.t, &tengo.Error{}, c.o, msgAndArgs...)
+}
+
+func invalidArg(name, expected, found string) error {
+	return tengo.ErrInvalidArgumentType{
+		Name:     name,
+		Expected: expected,
+		Found:    found,
+	}
+}
+
+type argErrorCase struct {
+	fn   string
+	args ARR
+	err  error
+}
+
+func expectArgErrors(t *testing.T, moduleName string, cases []argErrorCase) {
+	for _, c := range cases {
+		module(t, moduleName).call(c.fn, c.args...).
+			expectErr(c.err, "%s.%s%v", moduleName, c.fn, c.args)
+	}
+}
+
 func module(t *testing.T, moduleName string) callres {
 	mod := stdlib.GetModuleMap(moduleName).GetBuiltinModule(moduleName)
 	if mod == nil {

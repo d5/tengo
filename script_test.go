@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -48,6 +49,20 @@ func TestScript_Remove(t *testing.T) {
 	require.True(t, s.Remove("b")) // b is removed
 	_, err = s.Compile()           // should not compile because b is undefined
 	require.Error(t, err)
+	require.False(t, s.Remove("b"))
+	require.False(t, s.Remove("never_added"))
+}
+
+func TestScript_AddUnsupportedType(t *testing.T) {
+	s := tengo.NewScript([]byte(`a := b`))
+	require.NoError(t, s.Add("b", 1))
+	err := s.Add("b", make(chan int))
+	require.Error(t, err)
+	require.True(t, strings.HasPrefix(err.Error(), "cannot convert to object"),
+		"%v", err)
+	c, err := s.Run()
+	require.NoError(t, err)
+	compiledGet(t, c, "a", int64(1))
 }
 
 func TestScript_Run(t *testing.T) {
@@ -664,4 +679,86 @@ data["b"] = 2
 
 	require.Equal(t, 1001, clone.Get("count").Int())
 	require.Equal(t, 2, len(clone.Get("data").Map()))
+}
+
+func TestScript_SetMaxAllocs(t *testing.T) {
+	s := tengo.NewScript([]byte(`a := [1, 2]; b := [a, 3]`))
+	s.SetMaxAllocs(2)
+	c, err := s.Compile()
+	require.NoError(t, err)
+	require.NoError(t, c.Run())
+	require.NoError(t, c.Run())
+
+	s.SetMaxAllocs(1)
+	_, err = s.Run()
+	require.True(t, errors.Is(err, tengo.ErrObjectAllocLimit), "%v", err)
+	require.NoError(t, c.Run())
+
+	s.SetMaxAllocs(0)
+	_, err = s.Run()
+	require.True(t, errors.Is(err, tengo.ErrObjectAllocLimit), "%v", err)
+
+	s.SetMaxAllocs(-1)
+	_, err = s.Run()
+	require.NoError(t, err)
+}
+
+func TestScript_EnableFileImport(t *testing.T) {
+	s := tengo.NewScript([]byte(`one := import("one"); out := one.fn("test")`))
+	s.SetImports(stdlib.GetModuleMap("text"))
+
+	_, err := s.Compile()
+	require.Error(t, err)
+	require.True(t, strings.Contains(err.Error(), "module 'one' not found"),
+		"%v", err)
+
+	require.NoError(t, s.SetImportDir("testdata/cli"))
+	_, err = s.Compile()
+	require.Error(t, err)
+
+	s.EnableFileImport(true)
+	c, err := s.Run()
+	require.NoError(t, err)
+	compiledGet(t, c, "out", "test one two three four five")
+
+	s.EnableFileImport(false)
+	_, err = s.Compile()
+	require.Error(t, err)
+}
+
+func TestScript_SetImportDir(t *testing.T) {
+	s := tengo.NewScript([]byte(`out := import("./two/four/four")`))
+	s.SetImports(stdlib.GetModuleMap("text"))
+	s.EnableFileImport(true)
+
+	_, err := s.Compile()
+	require.Error(t, err)
+
+	abs, err := filepath.Abs("testdata/cli")
+	require.NoError(t, err)
+	require.NoError(t, s.SetImportDir(abs))
+	_, err = s.Compile()
+	require.NoError(t, err)
+
+	require.NoError(t, s.SetImportDir("testdata"))
+	_, err = s.Compile()
+	require.Error(t, err)
+	require.True(t, strings.Contains(err.Error(),
+		filepath.Join("testdata", "two", "four", "four.tengo")), "%v", err)
+}
+
+func TestCompiled_Size(t *testing.T) {
+	small := compile(t, `a := 1`, nil)
+	large := compile(t, `
+a := 1
+b := "foo"
+c := func(x) { return x + a }
+d := c(2)`, nil)
+	require.True(t, small.Size() > 0)
+	require.True(t, large.Size() > small.Size(),
+		"%d <= %d", large.Size(), small.Size())
+
+	size := large.Size()
+	compiledRun(t, large)
+	require.Equal(t, size, large.Size())
 }

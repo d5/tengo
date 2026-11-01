@@ -5,8 +5,10 @@ import (
 	"math"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/d5/tengo/v2"
+	"github.com/d5/tengo/v2/require"
 )
 
 func Test_builtinDelete(t *testing.T) {
@@ -700,4 +702,140 @@ func TestBuiltinFreeze(t *testing.T) {
 			t.Fatal("expected error for two arguments")
 		}
 	})
+}
+
+func TestBuiltinIsType(t *testing.T) {
+	expectRun(t, `out = is_float(1.5)`, nil, true)
+	expectRun(t, `out = is_float(1)`, nil, false)
+	expectRun(t, `out = is_float("1.5")`, nil, false)
+
+	expectRun(t, `out = is_bool(true)`, nil, true)
+	expectRun(t, `out = is_bool(false)`, nil, true)
+	expectRun(t, `out = is_bool(0)`, nil, false)
+	expectRun(t, `out = is_bool(undefined)`, nil, false)
+
+	expectRun(t, `out = is_char('a')`, nil, true)
+	expectRun(t, `out = is_char(char(97))`, nil, true)
+	expectRun(t, `out = is_char("a")`, nil, false)
+	expectRun(t, `out = is_char(97)`, nil, false)
+
+	expectRun(t, `out = is_bytes(bytes("a"))`, nil, true)
+	expectRun(t, `out = is_bytes(bytes(0))`, nil, true)
+	expectRun(t, `out = is_bytes("a")`, nil, false)
+	expectRun(t, `out = is_bytes([97])`, nil, false)
+
+	expectRun(t, `out = is_time(time(0))`, nil, true)
+	expectRun(t, `out = is_time(0)`, nil, false)
+	expectRun(t, `out = is_time("2009-11-10")`, nil, false)
+
+	for _, iterable := range []string{
+		`[1]`, `[]`, `immutable([1])`, `{a: 1}`, `{}`, `immutable({a: 1})`,
+		`"abc"`, `""`, `bytes("a")`,
+	} {
+		expectRun(t, `out = is_iterable(`+iterable+`)`, nil, true)
+	}
+	for _, notIterable := range []string{
+		`1`, `1.5`, `true`, `'a'`, `error("e")`, `time(0)`, `func() {}`,
+		`len`,
+	} {
+		expectRun(t, `out = is_iterable(`+notIterable+`)`, nil, false)
+	}
+}
+
+func TestBuiltinWrongNumArguments(t *testing.T) {
+	one := &tengo.Int{Value: 1}
+	for _, name := range []string{
+		"type_name", "len", "copy", "bool",
+		"is_int", "is_float", "is_string", "is_bool", "is_char", "is_bytes",
+		"is_array", "is_immutable_array", "is_map", "is_immutable_map",
+		"is_iterable", "is_time", "is_error", "is_undefined", "is_function",
+		"is_callable",
+	} {
+		fn := builtinFunc(t, name)
+		for _, args := range [][]tengo.Object{nil, {one, one}} {
+			_, err := fn(args...)
+			require.Equal(t, tengo.ErrWrongNumArguments, err,
+				"%s with %d args", name, len(args))
+		}
+	}
+
+	for _, name := range []string{
+		"string", "int", "float", "char", "bytes", "time",
+	} {
+		fn := builtinFunc(t, name)
+		for _, args := range [][]tengo.Object{nil, {one, one, one}} {
+			_, err := fn(args...)
+			require.Equal(t, tengo.ErrWrongNumArguments, err,
+				"%s with %d args", name, len(args))
+		}
+	}
+
+	_, err := builtinFunc(t, "append")()
+	require.Equal(t, tengo.ErrWrongNumArguments, err)
+
+	expectError(t, `type_name()`, nil,
+		"wrong number of arguments in call to 'builtin-function:type_name'")
+	expectError(t, `is_iterable(1, 2)`, nil,
+		"wrong number of arguments in call to 'builtin-function:is_iterable'")
+}
+
+func TestBuiltinTime(t *testing.T) {
+	expectRun(t, `out = time(1257894000) - time(1257893999)`, nil,
+		int64(time.Second))
+	expectRun(t, `out = time(1257894000) == time(1257894000)`, nil, true)
+	expectRun(t, `t := time(1257894000); out = time(t) == t`, nil, true)
+	expectRun(t, `out = time(1257894000, "x") == time(1257894000)`, nil, true)
+	expectRun(t, `out = time("1257894000")`, nil, tengo.UndefinedValue)
+	expectRun(t, `out = time(1.5)`, nil, tengo.UndefinedValue)
+	expectRun(t, `out = time(undefined)`, nil, tengo.UndefinedValue)
+	expectRun(t, `out = time(undefined, "fallback")`, nil, "fallback")
+	expectRun(t, `out = time([], 5)`, nil, 5)
+
+	res, err := builtinFunc(t, "time")(&tengo.Int{Value: 1257894000})
+	require.NoError(t, err)
+	require.True(t, res.(*tengo.Time).Value.Equal(time.Unix(1257894000, 0)))
+}
+
+func TestBuiltinAppendInvalidArgument(t *testing.T) {
+	expectError(t, `append()`, nil,
+		"wrong number of arguments in call to 'builtin-function:append'")
+	expectError(t, `append(1, 2)`, nil,
+		"invalid type for argument 'first' in call to "+
+			"'builtin-function:append': expected array, found int")
+	expectError(t, `append({}, 2)`, nil,
+		"invalid type for argument 'first' in call to "+
+			"'builtin-function:append': expected array, found map")
+	expectError(t, `append("abc", "d")`, nil,
+		"invalid type for argument 'first' in call to "+
+			"'builtin-function:append': expected array, found string")
+	expectError(t, `append(undefined, 1)`, nil,
+		"invalid type for argument 'first' in call to "+
+			"'builtin-function:append': expected array, found undefined")
+}
+
+func TestBuiltinLenBytes(t *testing.T) {
+	expectRun(t, `out = len(bytes(""))`, nil, 0)
+	expectRun(t, `out = len(bytes("abc"))`, nil, 3)
+	expectRun(t, `out = len(bytes(5))`, nil, 5)
+	expectRun(t, `out = len(bytes("가"))`, nil, 3)
+}
+
+func TestBuiltinTypeName(t *testing.T) {
+	expectRun(t, `out = type_name(immutable([1]))`, nil, "immutable-array")
+	expectRun(t, `out = type_name(immutable({a: 1}))`, nil, "immutable-map")
+	expectRun(t, `out = type_name(time(0))`, nil, "time")
+	expectRun(t, `out = type_name(len)`, nil, "builtin-function:len")
+	expectRun(t, `out = type_name(x)`,
+		Opts().Symbol("x", &tengo.UserFunction{Name: "fn"}).Skip2ndPass(),
+		"user-function:fn")
+}
+
+func builtinFunc(t *testing.T, name string) tengo.CallableFunc {
+	for _, f := range tengo.GetAllBuiltinFunctions() {
+		if f.Name == name {
+			return f.Value
+		}
+	}
+	t.Fatalf("builtin %s not found", name)
+	return nil
 }
