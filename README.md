@@ -70,6 +70,19 @@ _* [fibt(35)](https://github.com/d5/tengobench/blob/master/code/fibtc.tengo):
 _* **Go** does not read the source code from file, while all other cases do_  
 _* See [here](https://github.com/d5/tengobench) for commands/codes used_
 
+`bench_test.go` holds the Go benchmarks every change is measured against:
+recursive and tail calls, loops, closures, arrays, maps and strings, stdlib
+calls, and compilation. A change must not slow any of them beyond
+[benchstat](https://pkg.go.dev/golang.org/x/perf/cmd/benchstat)'s noise.
+
+```
+git checkout master && make bench > old.txt
+git checkout my-branch && make bench > new.txt
+go run golang.org/x/perf/cmd/benchstat@latest old.txt new.txt
+```
+
+`make bench BENCH=Fib COUNT=20` runs a subset.
+
 ## Quick Start
 
 ```
