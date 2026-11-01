@@ -3407,6 +3407,32 @@ func TestVMStackOverflow(t *testing.T) {
 		nil, tengo.ErrStackOverflow)
 	expectRun(t, `f := func(n) { if n == 0 { return 0 }; return 1 + f(n-1) }; out = f(500)`,
 		nil, 500)
+
+	// a host panic on a full stack stays the host's panic
+	spread := func(n int) error {
+		items := make([]interface{}, n)
+		for i := range items {
+			items[i] = 0
+		}
+		s := tengo.NewScript([]byte(`boom(a...)`))
+		require.NoError(t, s.Add("a", items))
+		require.NoError(t, s.Add("boom", &tengo.UserFunction{
+			Value: func(...tengo.Object) (tengo.Object, error) {
+				panic("host bug")
+			},
+		}))
+		c, err := s.Compile()
+		require.NoError(t, err)
+		return c.Run()
+	}
+	panicked := func(n int) (r interface{}) {
+		defer func() { r = recover() }()
+		_ = spread(n)
+		return nil
+	}
+	require.Equal(t, "host bug", panicked(tengo.StackSize-2))
+	require.Equal(t, "host bug", panicked(tengo.StackSize-1))
+	require.True(t, errors.Is(spread(tengo.StackSize), tengo.ErrStackOverflow))
 }
 
 func TestString(t *testing.T) {
