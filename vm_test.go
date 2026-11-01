@@ -721,6 +721,23 @@ func TestBuiltinFunction(t *testing.T) {
 		nil, `foo {a: {b: {c: [1, 2, 3]}}}`)
 	expectRun(t, `out = format("%v", [1, [2, [3, 4]]])`,
 		nil, `[1, [2, [3, 4]]]`)
+	// one argument is formatted too
+	expectRun(t, `out = format("100%%")`, nil, "100%")
+	expectRun(t, `out = format("%d")`, nil, "%!d(MISSING)")
+	// %v takes width, precision and flags as the type's own verb does
+	expectRun(t, `out = format("[%.1v] [%05v] [%.2v] [%6v]", 12345, -5, 3.14159, 1.5)`,
+		nil, "[12345] [-0005] [3.14] [   1.5]")
+	expectRun(t, `out = format("%v %v %v %v", 1.5, 1e21, "s", true)`,
+		nil, `1.5 1000000000000000000000 "s" true`)
+	// a char takes the integer verbs
+	expectRun(t, `out = format("[%c] [%d] [%U] [%q] [%v] [%3v]", 'x', 'x', 'x', 'x', 'x', 'x')`,
+		nil, "[x] [120] [U+0078] ['x'] [x] [  x]")
+	// a bad verb names the type, and bytes report theirs
+	expectRun(t, `out = format("[%c] [%z]", bytes("ab"), 1)`,
+		nil, "[%!c(bytes=ab)] [%!z(int=1)]")
+	// %#g counts significant digits from the first non-zero one
+	expectRun(t, `out = format("[%#g] [%#.3g]", 0.0001234, 0.001)`,
+		nil, "[0.000123400] [0.00100]")
 
 	tengo.MaxStringLen = 9
 	expectError(t, `format("%s", "1234567890")`,

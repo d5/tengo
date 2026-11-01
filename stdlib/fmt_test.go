@@ -101,3 +101,14 @@ func TestFmtPrintErrors(t *testing.T) {
 		require.Equal(t, "", out, fn)
 	}
 }
+
+func TestFmtOneArgument(t *testing.T) {
+	module(t, `fmt`).call("sprintf", "50%%").expect("50%")
+
+	var res callres
+	out := captureStdout(t, func() {
+		res = module(t, `fmt`).call("printf", "tab\there 10%%\n")
+	})
+	require.NoError(t, res.e)
+	require.Equal(t, "tab\there 10%\n", out)
+}
