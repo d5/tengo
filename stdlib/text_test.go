@@ -303,3 +303,138 @@ func TestPadLeft(t *testing.T) {
 	module(t, "text").call("pad_left", "ab", 7, "+-").expect("-+-+-ab")
 	module(t, "text").call("pad_right", "ab", 7, "+-").expect("ab+-+-+")
 }
+
+func TestTextJoin(t *testing.T) {
+	module(t, "text").call("join", ARR{"a", "b", "c"}, ", ").expect("a, b, c")
+	module(t, "text").call("join", IARR{"a", "b"}, "-").expect("a-b")
+	module(t, "text").call("join", ARR{}, ",").expect("")
+	module(t, "text").call("join", ARR{"a"}, ",").expect("a")
+	module(t, "text").call("join", ARR{1, "b", true, 'c'}, "").
+		expect("1btruec")
+
+	curMaxStringLen := tengo.MaxStringLen
+	defer func() { tengo.MaxStringLen = curMaxStringLen }()
+	tengo.MaxStringLen = 5
+	module(t, "text").call("join", ARR{"ab", "cd"}, "-").expect("ab-cd")
+	module(t, "text").call("join", ARR{"ab", "cd"}, "--").
+		expectErr(tengo.ErrStringLimit)
+	module(t, "text").call("join", ARR{"abc", "def"}, "").
+		expectErr(tengo.ErrStringLimit)
+}
+
+func TestTextPad(t *testing.T) {
+	module(t, "text").call("pad_left", "ab", 4).expect("  ab")
+	module(t, "text").call("pad_right", "ab", 4).expect("ab  ")
+	module(t, "text").call("pad_left", "ab", 5, "").expect("ab")
+	module(t, "text").call("pad_right", "ab", 5, "").expect("ab")
+	module(t, "text").call("pad_left", "abc", 2, "x").expect("abc")
+	module(t, "text").call("pad_right", "abc", 3, "x").expect("abc")
+
+	curMaxStringLen := tengo.MaxStringLen
+	defer func() { tengo.MaxStringLen = curMaxStringLen }()
+	tengo.MaxStringLen = 10
+	module(t, "text").call("pad_left", "a", 10, "x").expect("xxxxxxxxxa")
+	module(t, "text").call("pad_right", "a", 10, "x").expect("axxxxxxxxx")
+	module(t, "text").call("pad_left", "a", 11, "x").
+		expectErr(tengo.ErrStringLimit)
+	module(t, "text").call("pad_right", "a", 11, "x").
+		expectErr(tengo.ErrStringLimit)
+}
+
+func TestTextFormatParse(t *testing.T) {
+	module(t, "text").call("format_float", 1.5, "e", 2, 64).expect("1.50e+00")
+	module(t, "text").call("format_float", 0.1, "g", -1, 32).expect("0.1")
+	module(t, "text").call("format_int", 255, 16).expect("ff")
+	module(t, "text").call("format_int", 5, 2).expect("101")
+	module(t, "text").call("format_int", 35, 36).expect("z")
+	module(t, "text").call("parse_bool", "T").expect(true)
+	module(t, "text").call("parse_bool", "FALSE").expect(false)
+	module(t, "text").call("parse_float", "1e3", 64).expect(1000.0)
+	module(t, "text").call("parse_float", "0.5", 32).expect(0.5)
+	module(t, "text").call("parse_int", "ff", 16, 64).expect(255)
+	module(t, "text").call("parse_int", "0x1f", 0, 64).expect(31)
+	module(t, "text").call("parse_int", "-101", 2, 8).expect(-5)
+}
+
+func TestTextArgErrors(t *testing.T) {
+	wrongNum := tengo.ErrWrongNumArguments
+	undefined := tengo.UndefinedValue
+	invalidString := func(name string) error {
+		return invalidArg(name, "string(compatible)", "undefined")
+	}
+	invalidInt := func(name string) error {
+		return invalidArg(name, "int(compatible)", "string")
+	}
+
+	cases := []argErrorCase{
+		{"re_match", ARR{"a"}, wrongNum},
+		{"re_match", ARR{undefined, "a"}, invalidString("first")},
+		{"re_match", ARR{"a", undefined}, invalidString("second")},
+		{"re_find", ARR{"a"}, wrongNum},
+		{"re_find", ARR{"a", "a", 1, 1}, wrongNum},
+		{"re_find", ARR{undefined, "a"}, invalidString("first")},
+		{"re_find", ARR{"a", undefined}, invalidString("second")},
+		{"re_find", ARR{"a", "a", "x"}, invalidInt("third")},
+		{"re_replace", ARR{"a", "a"}, wrongNum},
+		{"re_replace", ARR{undefined, "a", "b"}, invalidString("first")},
+		{"re_replace", ARR{"a", undefined, "b"}, invalidString("second")},
+		{"re_replace", ARR{"a", "a", undefined}, invalidString("third")},
+		{"re_split", ARR{"a"}, wrongNum},
+		{"re_split", ARR{"a", "a", 1, 1}, wrongNum},
+		{"re_split", ARR{undefined, "a"}, invalidString("first")},
+		{"re_split", ARR{"a", undefined}, invalidString("second")},
+		{"re_split", ARR{"a", "a", "x"}, invalidInt("third")},
+		{"re_compile", ARR{}, wrongNum},
+		{"re_compile", ARR{"a", "a"}, wrongNum},
+		{"re_compile", ARR{undefined}, invalidString("first")},
+		{"join", ARR{ARR{"a"}}, wrongNum},
+		{"join", ARR{ARR{"a"}, ",", ","}, wrongNum},
+		{"join", ARR{"a", ","}, invalidArg("first", "array", "string")},
+		{"join", ARR{ARR{"a", undefined}, ","}, invalidString("first[1]")},
+		{"join", ARR{IARR{undefined}, ","}, invalidString("first[0]")},
+		{"join", ARR{ARR{"a"}, undefined}, invalidString("second")},
+		{"replace", ARR{"a", "a", "b"}, wrongNum},
+		{"replace", ARR{undefined, "a", "b", 1}, invalidString("first")},
+		{"replace", ARR{"a", undefined, "b", 1}, invalidString("second")},
+		{"replace", ARR{"a", "a", undefined, 1}, invalidString("third")},
+		{"replace", ARR{"a", "a", "b", "x"}, invalidInt("fourth")},
+		{"substr", ARR{"a"}, wrongNum},
+		{"substr", ARR{"a", 0, 1, 2}, wrongNum},
+		{"substr", ARR{undefined, 0}, invalidString("first")},
+		{"substr", ARR{"a", "x"}, invalidInt("second")},
+		{"substr", ARR{"a", 0, "x"}, invalidInt("third")},
+		{"substr", ARR{"abc", 2, 1}, tengo.ErrInvalidIndexType},
+		{"format_bool", ARR{}, wrongNum},
+		{"format_bool", ARR{true, true}, wrongNum},
+		{"format_bool", ARR{1}, invalidArg("first", "bool", "int")},
+		{"format_bool", ARR{"true"}, invalidArg("first", "bool", "string")},
+		{"format_float", ARR{1.5, "f", 2}, wrongNum},
+		{"format_float", ARR{1, "f", 2, 64}, invalidArg("first", "float", "int")},
+		{"format_float", ARR{1.5, undefined, 2, 64}, invalidString("second")},
+		{"format_float", ARR{1.5, "f", "x", 64}, invalidInt("third")},
+		{"format_float", ARR{1.5, "f", 2, "x"}, invalidInt("fourth")},
+		{"format_int", ARR{1}, wrongNum},
+		{"format_int", ARR{1.5, 10}, invalidArg("first", "int", "float")},
+		{"format_int", ARR{1, "x"}, invalidInt("second")},
+		{"parse_bool", ARR{}, wrongNum},
+		{"parse_bool", ARR{"true", "true"}, wrongNum},
+		{"parse_bool", ARR{1}, invalidArg("first", "string", "int")},
+		{"parse_float", ARR{"1.5"}, wrongNum},
+		{"parse_float", ARR{1.5, 64}, invalidArg("first", "string", "float")},
+		{"parse_float", ARR{"1.5", "x"}, invalidInt("second")},
+		{"parse_int", ARR{"1", 10}, wrongNum},
+		{"parse_int", ARR{1, 10, 64}, invalidArg("first", "string", "int")},
+		{"parse_int", ARR{"1", "x", 64}, invalidInt("second")},
+		{"parse_int", ARR{"1", 10, "x"}, invalidInt("third")},
+	}
+	for _, fn := range []string{"pad_left", "pad_right"} {
+		cases = append(cases,
+			argErrorCase{fn, ARR{"a"}, wrongNum},
+			argErrorCase{fn, ARR{"a", 3, "x", "x"}, wrongNum},
+			argErrorCase{fn, ARR{undefined, 3}, invalidString("first")},
+			argErrorCase{fn, ARR{"a", "x"}, invalidInt("second")},
+			argErrorCase{fn, ARR{"a", 3, undefined}, invalidString("third")},
+		)
+	}
+	expectArgErrors(t, "text", cases)
+}

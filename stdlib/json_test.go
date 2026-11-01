@@ -1,6 +1,11 @@
 package stdlib_test
 
-import "testing"
+import (
+	"math"
+	"testing"
+
+	"github.com/d5/tengo/v2"
+)
 
 func TestJSON(t *testing.T) {
 	module(t, "json").call("encode", 5).
@@ -81,4 +86,46 @@ func TestJSON(t *testing.T) {
 			`{"M":"<html>foo &`+"\xe2\x80\xa8 \xe2\x80\xa9"+`</html>"}`)).
 		expect([]byte(
 			`{"M":"\u003chtml\u003efoo \u0026\u2028 \u2029\u003c/html\u003e"}`))
+}
+
+func TestJSONInputTypes(t *testing.T) {
+	module(t, "json").call("decode", []byte(`{"foo":[1,"bar"]}`)).
+		expect(MAP{"foo": ARR{1, "bar"}})
+	module(t, "json").call("indent", `{"foo":1}`, ">", "\t").
+		expect([]byte("{\n>\t\"foo\": 1\n>}"))
+	module(t, "json").call("html_escape", `"<a>&"`).
+		expect([]byte(`"\u003ca\u003e\u0026"`))
+}
+
+func TestJSONErrors(t *testing.T) {
+	wrongNum := tengo.ErrWrongNumArguments
+	expectArgErrors(t, "json", []argErrorCase{
+		{"decode", ARR{}, wrongNum},
+		{"decode", ARR{"1", "1"}, wrongNum},
+		{"decode", ARR{1}, invalidArg("first", "bytes/string", "int")},
+		{"encode", ARR{}, wrongNum},
+		{"encode", ARR{1, 1}, wrongNum},
+		{"indent", ARR{"{}", ""}, wrongNum},
+		{"indent", ARR{1, "", ""}, invalidArg("first", "bytes/string", "int")},
+		{"indent", ARR{"{}", tengo.UndefinedValue, ""},
+			invalidArg("prefix", "string(compatible)", "undefined")},
+		{"indent", ARR{"{}", "", tengo.UndefinedValue},
+			invalidArg("indent", "string(compatible)", "undefined")},
+		{"html_escape", ARR{}, wrongNum},
+		{"html_escape", ARR{"a", "a"}, wrongNum},
+		{"html_escape", ARR{1}, invalidArg("first", "bytes/string", "int")},
+	})
+
+	module(t, "json").call("decode", `{"foo":`).
+		expect(&tengo.Error{Value: &tengo.String{
+			Value: "unexpected end of JSON input"}})
+	module(t, "json").call("decode", []byte(`[1,]`)).
+		expect(&tengo.Error{Value: &tengo.String{
+			Value: "invalid character ']' looking for beginning of value"}})
+	module(t, "json").call("indent", `{"foo"`, "", " ").expectErrorObject()
+	module(t, "json").call("indent", []byte(`[1,]`), "", " ").
+		expectErrorObject()
+	module(t, "json").call("encode", math.Inf(1)).
+		expect(&tengo.Error{Value: &tengo.String{
+			Value: "unsupported float value"}})
 }
