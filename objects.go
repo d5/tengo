@@ -416,7 +416,10 @@ func extendObjects(a, b []Object) []Object {
 }
 
 // concatObjects returns a and b in a new slice, for an immutable array, whose
-// storage clones and other arrays can share.
+// storage clones and other arrays can share. It stays out of line, since
+// inlined into VM.run its copy moved the hot code and slowed Stdlib 3%.
+//
+//go:noinline
 func concatObjects(a, b []Object) []Object {
 	c := make([]Object, len(a)+len(b))
 	copy(c, a)
@@ -424,7 +427,10 @@ func concatObjects(a, b []Object) []Object {
 	return c
 }
 
-// copyObjectMap returns a new map with m's entries.
+// copyObjectMap returns a new map with m's entries. It stays out of line for
+// VM.run, as concatObjects does.
+//
+//go:noinline
 func copyObjectMap(m map[string]Object) map[string]Object {
 	c := make(map[string]Object, len(m))
 	for k, v := range m {
