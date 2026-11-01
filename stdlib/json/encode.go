@@ -126,23 +126,58 @@ var hex = "0123456789abcdef"
 
 // Encode returns the JSON encoding of the object.
 func Encode(o tengo.Object) ([]byte, error) {
-	var buf [8]tengo.Object
-	return encode(o, buf[:0])
+	var path encodePath
+	return encode(o, &path)
 }
 
-// encode carries the containers above o, since a script can put a container
-// inside itself.
-func encode(o tengo.Object, path []tengo.Object) ([]byte, error) {
+// encodePath is the containers above the value encode is in, since a script
+// can put a container inside itself. Past the first 8 it also keeps them in
+// a map, so a deep value encodes in linear time.
+type encodePath struct {
+	near [8]tengo.Object
+	far  map[tengo.Object]struct{}
+	n    int
+}
+
+func (p *encodePath) has(o tengo.Object) bool {
+	for i := 0; i < p.n && i < len(p.near); i++ {
+		if p.near[i] == o {
+			return true
+		}
+	}
+	_, ok := p.far[o]
+	return ok
+}
+
+func (p *encodePath) push(o tengo.Object) {
+	if p.n < len(p.near) {
+		p.near[p.n] = o
+	} else {
+		if p.far == nil {
+			p.far = make(map[tengo.Object]struct{})
+		}
+		p.far[o] = struct{}{}
+	}
+	p.n++
+}
+
+// pop removes o, the container push added last.
+func (p *encodePath) pop(o tengo.Object) {
+	p.n--
+	if p.n >= len(p.near) {
+		delete(p.far, o)
+	}
+}
+
+func encode(o tengo.Object, path *encodePath) ([]byte, error) {
 	switch o.(type) {
 	case *tengo.Array, *tengo.ImmutableArray, *tengo.Map, *tengo.ImmutableMap:
-		for _, p := range path {
-			if p == o {
-				return nil, errors.New(
-					"unsupported value: encountered a cycle via " +
-						o.TypeName())
-			}
+		if path.has(o) {
+			return nil, errors.New(
+				"unsupported value: encountered a cycle via " + o.TypeName())
 		}
-		path = append(path, o)
+		path.push(o)
+		defer path.pop(o)
 	}
 
 	var b []byte

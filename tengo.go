@@ -46,19 +46,22 @@ type CallableFunc = func(args ...Object) (ret Object, err error)
 // For scalar value types, it will always be 1. For compound value types,
 // this will include its elements and all of their elements recursively.
 func CountObjects(o Object) (c int) {
-	var buf [pathDepth]Object
-	return countObjects(o, buf[:0])
+	var near [pathDepth]Object
+	var far map[Object]struct{}
+	return countObjects(o, objectPath{near[:0], &far})
 }
 
 // countObjects counts a container that recurs into itself once.
-func countObjects(o Object, path []Object) (c int) {
+func countObjects(o Object, path objectPath) (c int) {
 	if isContainer(o) {
-		for _, p := range path {
-			if p == o {
-				return 0
-			}
+		if path.has(o) {
+			return 0
 		}
-		path = append(path, o)
+		next, far := path.push(o)
+		if far {
+			defer delete(*path.far, o)
+		}
+		path = next
 	}
 	c = 1
 	switch o := o.(type) {
@@ -217,21 +220,26 @@ func ToTime(o Object) (v time.Time, ok bool) {
 	return
 }
 
-// ToInterface attempts to convert an object o to an interface{} value
+// ToInterface attempts to convert an object o to an interface{} value. A
+// container inside itself converts to nil where it recurs.
 func ToInterface(o Object) (res interface{}) {
-	var buf [pathDepth]copyPair
-	return toInterface(o, buf[:0])
+	var near [pathDepth]Object
+	var far map[Object]struct{}
+	return toInterface(o, objectPath{near[:0], &far})
 }
 
-// toInterface converts a container that recurs into itself to a Go value
-// that recurs into itself.
-func toInterface(o Object, path []copyPair) (res interface{}) {
+// toInterface returns nil where a container recurs, since fmt and
+// FromInterface overflow on a Go value that contains itself.
+func toInterface(o Object, path objectPath) (res interface{}) {
 	if isContainer(o) {
-		for _, p := range path {
-			if p.orig == o {
-				return p.copy
-			}
+		if path.has(o) {
+			return nil
 		}
+		next, far := path.push(o)
+		if far {
+			defer delete(*path.far, o)
+		}
+		path = next
 	}
 	switch o := o.(type) {
 	case *Int:
@@ -247,13 +255,13 @@ func toInterface(o Object, path []copyPair) (res interface{}) {
 	case *Bytes:
 		res = o.Value
 	case *Array:
-		res = arrayToInterface(o, o.Value, path)
+		res = arrayToInterface(o.Value, path)
 	case *ImmutableArray:
-		res = arrayToInterface(o, o.Value, path)
+		res = arrayToInterface(o.Value, path)
 	case *Map:
-		res = mapToInterface(o, o.Value, path)
+		res = mapToInterface(o.Value, path)
 	case *ImmutableMap:
-		res = mapToInterface(o, o.Value, path)
+		res = mapToInterface(o.Value, path)
 	case *Time:
 		res = o.Value
 	case *Error:
@@ -266,18 +274,16 @@ func toInterface(o Object, path []copyPair) (res interface{}) {
 	return
 }
 
-func arrayToInterface(o Object, elems []Object, path []copyPair) interface{} {
+func arrayToInterface(elems []Object, path objectPath) []interface{} {
 	res := make([]interface{}, len(elems))
-	path = append(path, copyPair{o, res})
 	for i, val := range elems {
 		res[i] = toInterface(val, path)
 	}
 	return res
 }
 
-func mapToInterface(o Object, m map[string]Object, path []copyPair) interface{} {
+func mapToInterface(m map[string]Object, path objectPath) map[string]interface{} {
 	res := make(map[string]interface{})
-	path = append(path, copyPair{o, res})
 	for key, v := range m {
 		res[key] = toInterface(v, path)
 	}

@@ -160,8 +160,9 @@ func (o *Array) TypeName() string {
 }
 
 func (o *Array) String() string {
-	var buf [pathDepth]Object
-	return arrayString(o, o.Value, buf[:0])
+	var near [pathDepth]Object
+	var far map[Object]struct{}
+	return arrayString(o, o.Value, objectPath{near[:0], &far})
 }
 
 // BinaryOp returns another object that is the result of a given binary
@@ -181,8 +182,9 @@ func (o *Array) BinaryOp(op token.Token, rhs Object) (Object, error) {
 
 // Copy returns a copy of the type.
 func (o *Array) Copy() Object {
-	var buf [pathDepth]copyPair
-	return copyArray(o, o.Value, buf[:0])
+	var near [pathDepth]copyPair
+	var far map[Object]Object
+	return copyArray(o, o.Value, copyPath{near[:0], &far})
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -193,8 +195,9 @@ func (o *Array) IsFalsy() bool {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *Array) Equals(x Object) bool {
-	var buf [pathDepth]objectPair
-	return equalArrays(o, o.Value, x, buf[:0])
+	var near [pathDepth]objectPair
+	var far map[objectPair]struct{}
+	return equalArrays(o, o.Value, x, pairPath{near[:0], &far})
 }
 
 // IndexGet returns an element at a given index.
@@ -616,8 +619,9 @@ func (o *Error) TypeName() string {
 }
 
 func (o *Error) String() string {
-	var buf [pathDepth]Object
-	return elementString(o, buf[:0])
+	var near [pathDepth]Object
+	var far map[Object]struct{}
+	return elementString(o, objectPath{near[:0], &far})
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -627,8 +631,9 @@ func (o *Error) IsFalsy() bool {
 
 // Copy returns a copy of the type.
 func (o *Error) Copy() Object {
-	var buf [pathDepth]copyPair
-	return copyElement(o, buf[:0])
+	var near [pathDepth]copyPair
+	var far map[Object]Object
+	return copyElement(o, copyPath{near[:0], &far})
 }
 
 // Equals returns true if the value of the type is equal to the value of
@@ -798,8 +803,9 @@ func (o *ImmutableArray) TypeName() string {
 }
 
 func (o *ImmutableArray) String() string {
-	var buf [pathDepth]Object
-	return arrayString(o, o.Value, buf[:0])
+	var near [pathDepth]Object
+	var far map[Object]struct{}
+	return arrayString(o, o.Value, objectPath{near[:0], &far})
 }
 
 // BinaryOp returns another object that is the result of a given binary
@@ -816,8 +822,9 @@ func (o *ImmutableArray) BinaryOp(op token.Token, rhs Object) (Object, error) {
 
 // Copy returns a copy of the type.
 func (o *ImmutableArray) Copy() Object {
-	var buf [pathDepth]copyPair
-	return copyArray(o, o.Value, buf[:0])
+	var near [pathDepth]copyPair
+	var far map[Object]Object
+	return copyArray(o, o.Value, copyPath{near[:0], &far})
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -828,8 +835,9 @@ func (o *ImmutableArray) IsFalsy() bool {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *ImmutableArray) Equals(x Object) bool {
-	var buf [pathDepth]objectPair
-	return equalArrays(o, o.Value, x, buf[:0])
+	var near [pathDepth]objectPair
+	var far map[objectPair]struct{}
+	return equalArrays(o, o.Value, x, pairPath{near[:0], &far})
 }
 
 // IndexGet returns an element at a given index.
@@ -873,14 +881,16 @@ func (o *ImmutableMap) TypeName() string {
 }
 
 func (o *ImmutableMap) String() string {
-	var buf [pathDepth]Object
-	return mapString(o, o.Value, buf[:0])
+	var near [pathDepth]Object
+	var far map[Object]struct{}
+	return mapString(o, o.Value, objectPath{near[:0], &far})
 }
 
 // Copy returns a copy of the type.
 func (o *ImmutableMap) Copy() Object {
-	var buf [pathDepth]copyPair
-	return copyMap(o, o.Value, buf[:0])
+	var near [pathDepth]copyPair
+	var far map[Object]Object
+	return copyMap(o, o.Value, copyPath{near[:0], &far})
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -905,8 +915,9 @@ func (o *ImmutableMap) IndexGet(index Object) (res Object, err error) {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *ImmutableMap) Equals(x Object) bool {
-	var buf [pathDepth]objectPair
-	return equalMaps(o, o.Value, x, buf[:0])
+	var near [pathDepth]objectPair
+	var far map[objectPair]struct{}
+	return equalMaps(o, o.Value, x, pairPath{near[:0], &far})
 }
 
 // Iterate creates an immutable map iterator.
@@ -1137,14 +1148,16 @@ func (o *Map) TypeName() string {
 }
 
 func (o *Map) String() string {
-	var buf [pathDepth]Object
-	return mapString(o, o.Value, buf[:0])
+	var near [pathDepth]Object
+	var far map[Object]struct{}
+	return mapString(o, o.Value, objectPath{near[:0], &far})
 }
 
 // Copy returns a copy of the type.
 func (o *Map) Copy() Object {
-	var buf [pathDepth]copyPair
-	return copyMap(o, o.Value, buf[:0])
+	var near [pathDepth]copyPair
+	var far map[Object]Object
+	return copyMap(o, o.Value, copyPath{near[:0], &far})
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -1155,8 +1168,9 @@ func (o *Map) IsFalsy() bool {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *Map) Equals(x Object) bool {
-	var buf [pathDepth]objectPair
-	return equalMaps(o, o.Value, x, buf[:0])
+	var near [pathDepth]objectPair
+	var far map[objectPair]struct{}
+	return equalMaps(o, o.Value, x, pairPath{near[:0], &far})
 }
 
 // IndexGet returns the value for the given key.
@@ -1539,20 +1553,117 @@ func (o *UserFunction) CanCall() bool {
 // The helpers below walk an array, a map or an error with the path of
 // containers above them, since a script can put a container inside itself.
 
-// pathDepth is the nesting a path holds on the caller's stack before it
-// moves to the heap.
+// pathDepth is how many containers a path keeps in a slice over an array on
+// the entry's stack. Deeper ones go in a map, so a deep walk stays linear.
 const pathDepth = 8
 
-// copyPair is a container on a copy's path, and what it is copied or
-// converted to.
+// objectPath is the containers above a String, CountObjects or ToInterface.
+type objectPath struct {
+	near []Object
+	far  *map[Object]struct{}
+}
+
+func (p objectPath) has(o Object) bool {
+	for _, a := range p.near {
+		if a == o {
+			return true
+		}
+	}
+	if *p.far == nil {
+		return false
+	}
+	_, ok := (*p.far)[o]
+	return ok
+}
+
+// push returns the path with o on it. If far is true, the caller must delete
+// o from far once its walk under o ends.
+func (p objectPath) push(o Object) (next objectPath, far bool) {
+	if len(p.near) < pathDepth {
+		p.near = append(p.near, o)
+		return p, false
+	}
+	if *p.far == nil {
+		*p.far = make(map[Object]struct{})
+	}
+	(*p.far)[o] = struct{}{}
+	return p, true
+}
+
+// copyPath is the containers above a Copy, each with the copy made of it.
+type copyPath struct {
+	near []copyPair
+	far  *map[Object]Object
+}
+
+// copyPair is a container on a copy's path, and the copy made of it.
 type copyPair struct {
-	orig Object
-	copy interface{}
+	orig, copy Object
+}
+
+func (p copyPath) find(o Object) (Object, bool) {
+	for _, a := range p.near {
+		if a.orig == o {
+			return a.copy, true
+		}
+	}
+	if *p.far == nil {
+		return nil, false
+	}
+	c, ok := (*p.far)[o]
+	return c, ok
+}
+
+// push returns the path with o and its copy c on it. If far is true, the
+// caller must delete o from far once its walk under o ends.
+func (p copyPath) push(o, c Object) (next copyPath, far bool) {
+	if len(p.near) < pathDepth {
+		p.near = append(p.near, copyPair{o, c})
+		return p, false
+	}
+	if *p.far == nil {
+		*p.far = make(map[Object]Object)
+	}
+	(*p.far)[o] = c
+	return p, true
+}
+
+// pairPath is the pairs of containers above an Equals.
+type pairPath struct {
+	near []objectPair
+	far  *map[objectPair]struct{}
 }
 
 // objectPair is a pair of containers on Equals's path.
 type objectPair struct {
 	a, b Object
+}
+
+func (p pairPath) has(a, b Object) bool {
+	for _, e := range p.near {
+		if e.a == a && e.b == b {
+			return true
+		}
+	}
+	if *p.far == nil {
+		return false
+	}
+	_, ok := (*p.far)[objectPair{a, b}]
+	return ok
+}
+
+// push returns the path with a and b on it. If far is true, the caller must
+// delete the pair from far once its walk under it ends.
+func (p pairPath) push(a, b Object) (next pairPath, far bool) {
+	if len(p.near) < pathDepth {
+		p.near = append(p.near, objectPair{a, b})
+		return p, false
+	}
+	if *p.far == nil {
+		*p.far = make(map[objectPair]struct{})
+	}
+	(*p.far)[objectPair{a, b}] = struct{}{}
+	return p, true
 }
 
 func isContainer(o Object) bool {
@@ -1565,7 +1676,7 @@ func isContainer(o Object) bool {
 
 // elementString prints a container that recurs into itself as [...] or
 // {...}.
-func elementString(o Object, path []Object) string {
+func elementString(o Object, path objectPath) string {
 	switch o := o.(type) {
 	case *Array:
 		return arrayString(o, o.Value, path)
@@ -1579,52 +1690,64 @@ func elementString(o Object, path []Object) string {
 		if o.Value == nil {
 			return "error"
 		}
-		return "error: " + elementString(o.Value, path)
+		if path.has(o) {
+			return "error: ..."
+		}
+		next, far := path.push(o)
+		s := "error: " + elementString(o.Value, next)
+		if far {
+			delete(*path.far, o)
+		}
+		return s
 	}
 	return o.String()
 }
 
-func arrayString(o Object, elems []Object, path []Object) string {
-	for _, p := range path {
-		if p == o {
-			return "[...]"
-		}
+func arrayString(o Object, elems []Object, path objectPath) string {
+	if path.has(o) {
+		return "[...]"
 	}
+	next, far := path.push(o)
 	var elements []string
 	for _, e := range elems {
 		switch e.(type) {
 		case *Array, *ImmutableArray, *Map, *ImmutableMap, *Error:
-			elements = append(elements, elementString(e, append(path, o)))
+			elements = append(elements, elementString(e, next))
 		default:
 			elements = append(elements, e.String())
 		}
 	}
+	if far {
+		delete(*path.far, o)
+	}
 	return fmt.Sprintf("[%s]", strings.Join(elements, ", "))
 }
 
-func mapString(o Object, m map[string]Object, path []Object) string {
-	for _, p := range path {
-		if p == o {
-			return "{...}"
-		}
+func mapString(o Object, m map[string]Object, path objectPath) string {
+	if path.has(o) {
+		return "{...}"
 	}
+	next, far := path.push(o)
 	var pairs []string
 	for k, v := range m {
 		var vs string
 		switch v.(type) {
 		case *Array, *ImmutableArray, *Map, *ImmutableMap, *Error:
-			vs = elementString(v, append(path, o))
+			vs = elementString(v, next)
 		default:
 			vs = v.String()
 		}
 		pairs = append(pairs, fmt.Sprintf("%s: %s", k, vs))
+	}
+	if far {
+		delete(*path.far, o)
 	}
 	return fmt.Sprintf("{%s}", strings.Join(pairs, ", "))
 }
 
 // copyElement copies a container that recurs into itself as a copy that
 // recurs into itself.
-func copyElement(o Object, path []copyPair) Object {
+func copyElement(o Object, path copyPath) Object {
 	switch o := o.(type) {
 	case *Array:
 		return copyArray(o, o.Value, path)
@@ -1635,15 +1758,17 @@ func copyElement(o Object, path []copyPair) Object {
 	case *ImmutableMap:
 		return copyMap(o, o.Value, path)
 	case *Error:
-		for _, p := range path {
-			if p.orig == o {
-				return p.copy.(Object)
-			}
+		if c, ok := path.find(o); ok {
+			return c
 		}
 		c := &Error{}
 		switch {
 		case isContainer(o.Value):
-			c.Value = copyElement(o.Value, append(path, copyPair{o, c}))
+			next, far := path.push(o, c)
+			c.Value = copyElement(o.Value, next)
+			if far {
+				delete(*path.far, o)
+			}
 		case o.Value != nil:
 			c.Value = o.Value.Copy()
 		}
@@ -1652,48 +1777,52 @@ func copyElement(o Object, path []copyPair) Object {
 	return o.Copy()
 }
 
-func copyArray(o Object, elems []Object, path []copyPair) Object {
-	for _, p := range path {
-		if p.orig == o {
-			return p.copy.(Object)
-		}
+func copyArray(o Object, elems []Object, path copyPath) Object {
+	if c, ok := path.find(o); ok {
+		return c
 	}
 	c := &Array{}
 	if len(elems) > 0 {
 		c.Value = make([]Object, len(elems))
 	}
+	next, far := path.push(o, c)
 	for i, e := range elems {
 		switch e.(type) {
 		case *Array, *ImmutableArray, *Map, *ImmutableMap, *Error:
-			c.Value[i] = copyElement(e, append(path, copyPair{o, c}))
+			c.Value[i] = copyElement(e, next)
 		default:
 			c.Value[i] = e.Copy()
 		}
 	}
+	if far {
+		delete(*path.far, o)
+	}
 	return c
 }
 
-func copyMap(o Object, m map[string]Object, path []copyPair) Object {
-	for _, p := range path {
-		if p.orig == o {
-			return p.copy.(Object)
-		}
+func copyMap(o Object, m map[string]Object, path copyPath) Object {
+	if c, ok := path.find(o); ok {
+		return c
 	}
 	c := &Map{Value: make(map[string]Object, len(m))}
+	next, far := path.push(o, c)
 	for k, v := range m {
 		switch v.(type) {
 		case *Array, *ImmutableArray, *Map, *ImmutableMap, *Error:
-			c.Value[k] = copyElement(v, append(path, copyPair{o, c}))
+			c.Value[k] = copyElement(v, next)
 		default:
 			c.Value[k] = v.Copy()
 		}
+	}
+	if far {
+		delete(*path.far, o)
 	}
 	return c
 }
 
 // equalElements takes a pair of containers met again on the path as equal,
 // so two containers that recur into themselves alike compare equal.
-func equalElements(a, b Object, path []objectPair) bool {
+func equalElements(a, b Object, path pairPath) bool {
 	switch a := a.(type) {
 	case *Array:
 		return equalArrays(a, a.Value, b, path)
@@ -1707,7 +1836,7 @@ func equalElements(a, b Object, path []objectPair) bool {
 	return a.Equals(b)
 }
 
-func equalArrays(o Object, elems []Object, x Object, path []objectPair) bool {
+func equalArrays(o Object, elems []Object, x Object, path pairPath) bool {
 	var xVal []Object
 	switch x := x.(type) {
 	case *Array:
@@ -1720,27 +1849,29 @@ func equalArrays(o Object, elems []Object, x Object, path []objectPair) bool {
 	if len(elems) != len(xVal) {
 		return false
 	}
-	for _, p := range path {
-		if p.a == o && p.b == x {
-			return true
-		}
+	if path.has(o, x) {
+		return true
 	}
+	next, far := path.push(o, x)
+	equal := true
 	for i, e := range elems {
 		switch e.(type) {
 		case *Array, *ImmutableArray, *Map, *ImmutableMap:
-			if !equalElements(e, xVal[i], append(path, objectPair{o, x})) {
-				return false
-			}
+			equal = equalElements(e, xVal[i], next)
 		default:
-			if !e.Equals(xVal[i]) {
-				return false
-			}
+			equal = e.Equals(xVal[i])
+		}
+		if !equal {
+			break
 		}
 	}
-	return true
+	if far {
+		delete(*path.far, objectPair{o, x})
+	}
+	return equal
 }
 
-func equalMaps(o Object, m map[string]Object, x Object, path []objectPair) bool {
+func equalMaps(o Object, m map[string]Object, x Object, path pairPath) bool {
 	var xVal map[string]Object
 	switch x := x.(type) {
 	case *Map:
@@ -1753,22 +1884,24 @@ func equalMaps(o Object, m map[string]Object, x Object, path []objectPair) bool 
 	if len(m) != len(xVal) {
 		return false
 	}
-	for _, p := range path {
-		if p.a == o && p.b == x {
-			return true
-		}
+	if path.has(o, x) {
+		return true
 	}
+	next, far := path.push(o, x)
+	equal := true
 	for k, v := range m {
 		switch v.(type) {
 		case *Array, *ImmutableArray, *Map, *ImmutableMap:
-			if !equalElements(v, xVal[k], append(path, objectPair{o, x})) {
-				return false
-			}
+			equal = equalElements(v, xVal[k], next)
 		default:
-			if !v.Equals(xVal[k]) {
-				return false
-			}
+			equal = v.Equals(xVal[k])
+		}
+		if !equal {
+			break
 		}
 	}
-	return true
+	if far {
+		delete(*path.far, objectPair{o, x})
+	}
+	return equal
 }
