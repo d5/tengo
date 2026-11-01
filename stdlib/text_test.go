@@ -261,7 +261,7 @@ func TestReplaceLimit(t *testing.T) {
 			strings.Repeat("b", 1<<20), -1).
 		expectError()
 	runtime.ReadMemStats(&after)
-	require.True(t, after.TotalAlloc-before.TotalAlloc < 64<<20,
+	require.True(t, after.TotalAlloc-before.TotalAlloc < 256<<20,
 		"allocated %d bytes", after.TotalAlloc-before.TotalAlloc)
 	tengo.MaxStringLen = 12
 

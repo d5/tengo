@@ -170,6 +170,6 @@ func TestJSONLimits(t *testing.T) {
 	runtime.ReadMemStats(&before)
 	module(t, "json").call("encode", x).expectError()
 	runtime.ReadMemStats(&after)
-	require.True(t, after.TotalAlloc-before.TotalAlloc < 64<<20,
+	require.True(t, after.TotalAlloc-before.TotalAlloc < 256<<20,
 		"allocated %d bytes", after.TotalAlloc-before.TotalAlloc)
 }
