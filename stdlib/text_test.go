@@ -3,6 +3,7 @@ package stdlib_test
 import (
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/d5/tengo/v2"
 	"github.com/d5/tengo/v2/require"
@@ -264,7 +265,7 @@ func TestReplaceLimit(t *testing.T) {
 		expectError()
 }
 
-func TestTextArgumentNames(t *testing.T) {
+func TestArgumentNames(t *testing.T) {
 	// a type error names the bad argument and its own type
 	for _, fn := range []string{"compare", "split"} {
 		res := module(t, "text").call(fn, "a", tengo.UndefinedValue)
@@ -273,6 +274,11 @@ func TestTextArgumentNames(t *testing.T) {
 		require.Equal(t, "second", e.Name, fn)
 		require.Equal(t, "undefined", e.Found, fn)
 	}
+	res := module(t, "times").call("before", time.Now(), tengo.UndefinedValue)
+	e, ok := res.e.(tengo.ErrInvalidArgumentType)
+	require.True(t, ok, res.e)
+	require.Equal(t, "second", e.Name)
+	require.Equal(t, "undefined", e.Found)
 }
 
 func TestTextRepeat(t *testing.T) {
