@@ -138,6 +138,9 @@ func Encode(o tengo.Object) ([]byte, error) {
 				return nil, err
 			}
 			b = append(b, eb...)
+			if len(b) > tengo.MaxBytesLen {
+				return nil, tengo.ErrBytesLimit
+			}
 			if idx < len1 {
 				b = append(b, ',')
 			}
@@ -152,6 +155,9 @@ func Encode(o tengo.Object) ([]byte, error) {
 				return nil, err
 			}
 			b = append(b, eb...)
+			if len(b) > tengo.MaxBytesLen {
+				return nil, tengo.ErrBytesLimit
+			}
 			if idx < len1 {
 				b = append(b, ',')
 			}
@@ -169,6 +175,9 @@ func Encode(o tengo.Object) ([]byte, error) {
 				return nil, err
 			}
 			b = append(b, eb...)
+			if len(b) > tengo.MaxBytesLen {
+				return nil, tengo.ErrBytesLimit
+			}
 			if idx < len1 {
 				b = append(b, ',')
 			}
@@ -187,6 +196,9 @@ func Encode(o tengo.Object) ([]byte, error) {
 				return nil, err
 			}
 			b = append(b, eb...)
+			if len(b) > tengo.MaxBytesLen {
+				return nil, tengo.ErrBytesLimit
+			}
 			if idx < len1 {
 				b = append(b, ',')
 			}
@@ -252,6 +264,9 @@ func Encode(o tengo.Object) ([]byte, error) {
 		b = append(b, "null"...)
 	default:
 		// unknown type: ignore
+	}
+	if len(b) > tengo.MaxBytesLen {
+		return nil, tengo.ErrBytesLimit
 	}
 	return b, nil
 }

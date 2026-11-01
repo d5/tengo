@@ -2,10 +2,12 @@ package stdlib_test
 
 import (
 	"math"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/d5/tengo/v2"
+	"github.com/d5/tengo/v2/require"
 )
 
 func TestJSON(t *testing.T) {
@@ -157,4 +159,17 @@ func TestJSONLimits(t *testing.T) {
 	deep := strings.Repeat("[", 1000) + strings.Repeat("]", 1000)
 	module(t, "json").call("indent", deep, "", strings.Repeat(" ", 4096)).
 		expectError()
+
+	// shared references double the output at each level, so the encoder
+	// checks as it goes
+	x := tengo.Object(&tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 1}}})
+	for i := 0; i < 22; i++ {
+		x = &tengo.Array{Value: []tengo.Object{x, x}}
+	}
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	module(t, "json").call("encode", x).expectError()
+	runtime.ReadMemStats(&after)
+	require.True(t, after.TotalAlloc-before.TotalAlloc < 64<<20,
+		"allocated %d bytes", after.TotalAlloc-before.TotalAlloc)
 }

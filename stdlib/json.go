@@ -64,11 +64,11 @@ func jsonEncode(args ...tengo.Object) (ret tengo.Object, err error) {
 	}
 
 	b, err := json.Encode(args[0])
+	if err == tengo.ErrBytesLimit {
+		return nil, err
+	}
 	if err != nil {
 		return &tengo.Error{Value: &tengo.String{Value: err.Error()}}, nil
-	}
-	if len(b) > tengo.MaxBytesLen {
-		return nil, tengo.ErrBytesLimit
 	}
 
 	return &tengo.Bytes{Value: b}, nil
