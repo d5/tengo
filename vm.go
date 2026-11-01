@@ -356,8 +356,9 @@ func (v *VM) run() {
 			value := v.stack[v.sp-1]
 			switch value := value.(type) {
 			case *Array:
+				// a copy, since the mutable array can still change it
 				var immutableArray Object = &ImmutableArray{
-					Value: value.Value,
+					Value: concatObjects(value.Value, nil),
 				}
 				v.allocs--
 				if v.allocs == 0 {
@@ -367,7 +368,7 @@ func (v *VM) run() {
 				v.stack[v.sp-1] = immutableArray
 			case *Map:
 				var immutableMap Object = &ImmutableMap{
-					Value: value.Value,
+					Value: copyObjectMap(value.Value),
 				}
 				v.allocs--
 				if v.allocs == 0 {
@@ -482,8 +483,9 @@ func (v *VM) run() {
 				} else if highIdx > numElements {
 					highIdx = numElements
 				}
+				// a copy, since the slice is mutable
 				var val Object = &Array{
-					Value: left.Value[lowIdx:highIdx],
+					Value: concatObjects(left.Value[lowIdx:highIdx], nil),
 				}
 				v.allocs--
 				if v.allocs == 0 {
