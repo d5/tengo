@@ -738,6 +738,8 @@ func TestBuiltinFunction(t *testing.T) {
 	// %#g counts significant digits from the first non-zero one
 	expectRun(t, `out = format("[%#g] [%#.3g]", 0.0001234, 0.001)`,
 		nil, "[0.000123400] [0.00100]")
+	expectRun(t, `out = format("[%#g] [%#.3g]", 0.0, 0.0)`,
+		nil, "[0.00000] [0.00]")
 
 	tengo.MaxStringLen = 9
 	expectError(t, `format("%s", "1234567890")`,

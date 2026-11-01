@@ -596,6 +596,10 @@ func (f *formatter) fmtFloat(v float64, size int, verb rune, prec int) {
 			}
 		}
 		if !hasDecimalPoint {
+			// Leading digit 0 should contribute once to digits.
+			if len(num) == 2 && num[1] == '0' {
+				digits--
+			}
 			num = append(num, '.')
 		}
 		for digits > 0 {
@@ -866,7 +870,8 @@ func (p *pp) fmtInteger(v uint64, isSigned bool, verb rune) {
 func (p *pp) fmtFloat(v float64, size int, verb rune) {
 	switch verb {
 	case 'v':
-		p.fmt.fmtFloat(v, size, 'g', -1)
+		// %f with the shortest precision is what Float.String prints
+		p.fmt.fmtFloat(v, size, 'f', -1)
 	case 'b', 'g', 'G', 'x', 'X':
 		p.fmt.fmtFloat(v, size, verb, -1)
 	case 'f', 'e', 'E':
@@ -960,11 +965,6 @@ func (p *pp) printArg(arg Object, verb rune) {
 	case *Bool:
 		p.fmtBool(!f.IsFalsy(), verb)
 	case *Float:
-		if verb == 'v' {
-			// %f with the shortest precision is what Float.String prints
-			p.fmt.fmtFloat(f.Value, 64, 'f', -1)
-			return
-		}
 		p.fmtFloat(f.Value, 64, verb)
 	case *Int:
 		p.fmtInteger(uint64(f.Value), signed, verb)
