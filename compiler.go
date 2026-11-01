@@ -1394,14 +1394,15 @@ func untracec(c *Compiler) {
 // width, and returns "" if every operand fits.
 func operandOverflow(op parser.Opcode, operands []int) string {
 	for i, w := range parser.OpcodeOperands[op] {
-		limit := 1<<(8*w) - 1
+		// int64, since a 4-byte limit overflows a 32-bit int
+		limit := int64(1)<<(8*w) - 1
 		switch op {
 		case parser.OpGetGlobal, parser.OpSetGlobal, parser.OpSetSelGlobal:
 			if i == 0 {
 				limit = GlobalsSize - 1
 			}
 		}
-		if i >= len(operands) || operands[i] <= limit {
+		if i >= len(operands) || int64(operands[i]) <= limit {
 			continue
 		}
 		switch op {

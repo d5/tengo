@@ -111,7 +111,7 @@ func (s *Script) Compile() (*Compiled, error) {
 	}
 
 	// reduce globals size
-	globals = globals[:symbolTable.MaxSymbols()+1]
+	globals = globals[:symbolTable.MaxSymbols()]
 
 	// global symbol names to indexes
 	globalIndexes := make(map[string]int, len(globals))

@@ -586,11 +586,31 @@ func TestScript_ImportValue(t *testing.T) {
 }
 
 func TestScript_TooManyVariables(t *testing.T) {
-	s := tengo.NewScript([]byte(`out := 1`))
+	// exactly GlobalsSize globals fit, defined by the script or added
+	var src strings.Builder
+	for i := 0; i < tengo.GlobalsSize; i++ {
+		fmt.Fprintf(&src, "g%d := %d\n", i, i)
+	}
+	c, err := tengo.NewScript([]byte(src.String())).Compile()
+	require.NoError(t, err)
+	require.NoError(t, c.Run())
+	require.Equal(t, int64(tengo.GlobalsSize-1),
+		c.Get(fmt.Sprintf("g%d", tengo.GlobalsSize-1)).Int64())
+
+	s := tengo.NewScript([]byte(`out := v0 + 1`))
+	for i := 0; i < tengo.GlobalsSize-1; i++ {
+		require.NoError(t, s.Add(fmt.Sprintf("v%d", i), i))
+	}
+	c, err = s.Compile()
+	require.NoError(t, err)
+	require.NoError(t, c.Run())
+	require.Equal(t, int64(1), c.Get("out").Int64())
+
+	s = tengo.NewScript([]byte(`out := 1`))
 	for i := 0; i <= tengo.GlobalsSize; i++ {
 		require.NoError(t, s.Add(fmt.Sprintf("v%d", i), i))
 	}
-	_, err := s.Compile()
+	_, err = s.Compile()
 	require.Error(t, err)
 	require.True(t, strings.Contains(err.Error(), "too many variables"),
 		err.Error())
