@@ -826,7 +826,11 @@ func TestCompiled_CloneImmutable(t *testing.T) {
 	require.True(t, clone.Get("frozen").Object() == c.Get("frozen").Object())
 
 	// a mutable value inside an immutable one is the clone's own copy
-	s = tengo.NewScript([]byte(`cfg.a[0] += 1; e.value.x += 1; out := cfg.a[0]*10 + e.value.x`))
+	s = tengo.NewScript([]byte(`
+cfg.a[0] += 1
+e.value.x += 1
+ia[0][0] += 1
+out := cfg.a[0]*100 + e.value.x*10 + ia[0][0]`))
 	require.NoError(t, s.Add("cfg", &tengo.ImmutableMap{
 		Value: map[string]tengo.Object{
 			"a": &tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 1}}},
@@ -835,13 +839,18 @@ func TestCompiled_CloneImmutable(t *testing.T) {
 	require.NoError(t, s.Add("e", &tengo.Error{
 		Value: &tengo.Map{Value: map[string]tengo.Object{"x": &tengo.Int{Value: 1}}},
 	}))
+	require.NoError(t, s.Add("ia", &tengo.ImmutableArray{
+		Value: []tengo.Object{
+			&tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 1}}},
+		},
+	}))
 	c, err = s.Compile()
 	require.NoError(t, err)
 	clone = c.Clone()
 	require.NoError(t, clone.Run())
-	require.Equal(t, int64(22), clone.Get("out").Int64())
+	require.Equal(t, int64(222), clone.Get("out").Int64())
 	require.NoError(t, c.Run())
-	require.Equal(t, int64(22), c.Get("out").Int64())
+	require.Equal(t, int64(222), c.Get("out").Int64())
 	require.True(t, clone.Get("cfg").Object() != c.Get("cfg").Object())
 }
 
