@@ -18,6 +18,17 @@ func TestParserError(t *testing.T) {
 		Offset: 10, Line: 1, Column: 10,
 	}, Msg: "test"}
 	require.Equal(t, "Parse Error: test\n\tat 1:10", err.Error())
+
+	err = &Error{Pos: SourceFilePos{
+		Filename: "file", Offset: 10, Line: 2, Column: 3,
+	}, Msg: "test"}
+	require.Equal(t, "Parse Error: test\n\tat file:2:3", err.Error())
+
+	err = &Error{Pos: SourceFilePos{Filename: "file"}, Msg: "test"}
+	require.Equal(t, "Parse Error: test\n\tat file", err.Error())
+
+	err = &Error{Msg: "test"}
+	require.Equal(t, "Parse Error: test", err.Error())
 }
 
 func TestParserErrorList(t *testing.T) {
@@ -28,6 +39,32 @@ func TestParserErrorList(t *testing.T) {
 	list.Sort()
 	require.Equal(t, "Parse Error: error 1\n\tat 1:10 (and 2 more errors)",
 		list.Error())
+
+	var empty ErrorList
+	require.Equal(t, "no errors", empty.Error())
+	require.NoError(t, empty.Err())
+
+	var single ErrorList
+	single.Add(SourceFilePos{Offset: 1, Line: 1, Column: 2}, "error 1")
+	require.Equal(t, "Parse Error: error 1\n\tat 1:2", single.Error())
+	require.Error(t, single.Err())
+}
+
+func TestParserErrorListSort(t *testing.T) {
+	var list ErrorList
+	list.Add(SourceFilePos{Filename: "b", Line: 1, Column: 1}, "6")
+	list.Add(SourceFilePos{Filename: "a", Line: 3, Column: 1}, "5")
+	list.Add(SourceFilePos{Filename: "a", Line: 2, Column: 9}, "4")
+	list.Add(SourceFilePos{Filename: "a", Line: 1, Column: 5}, "3")
+	list.Add(SourceFilePos{Filename: "a", Line: 1, Column: 1}, "2")
+	list.Add(SourceFilePos{Filename: "a", Line: 1, Column: 1}, "1")
+	list.Sort()
+
+	var msgs []string
+	for _, e := range list {
+		msgs = append(msgs, e.Msg)
+	}
+	require.Equal(t, []string{"1", "2", "3", "4", "5", "6"}, msgs)
 }
 
 func TestParseArray(t *testing.T) {
@@ -285,6 +322,46 @@ func TestParseBoolean(t *testing.T) {
 	})
 }
 
+func TestParseBranch(t *testing.T) {
+	expectParse(t, "for { break }", func(p pfn) []Stmt {
+		return stmts(
+			forStmt(nil, nil, nil,
+				blockStmt(p(1, 5), p(1, 13),
+					branchStmt(token.Break, p(1, 7))),
+				p(1, 1)))
+	})
+
+	expectParse(t, `for {
+	continue
+}`, func(p pfn) []Stmt {
+		return stmts(
+			forStmt(nil, nil, nil,
+				blockStmt(p(1, 5), p(3, 1),
+					branchStmt(token.Continue, p(2, 2))),
+				p(1, 1)))
+	})
+
+	expectParse(t, "for x in y { if x { break }; continue }",
+		func(p pfn) []Stmt {
+			return stmts(
+				forInStmt(
+					ident("_", p(1, 5)),
+					ident("x", p(1, 5)),
+					ident("y", p(1, 10)),
+					blockStmt(p(1, 12), p(1, 39),
+						ifStmt(nil,
+							ident("x", p(1, 17)),
+							blockStmt(p(1, 19), p(1, 27),
+								branchStmt(token.Break, p(1, 21))),
+							nil,
+							p(1, 14)),
+						branchStmt(token.Continue, p(1, 30))),
+					p(1, 1)))
+		})
+
+	expectParseError(t, "for { break 1 }")
+}
+
 func TestParseCall(t *testing.T) {
 	expectParse(t, "add(1, 2, 3)", func(p pfn) []Stmt {
 		return stmts(
@@ -458,6 +535,8 @@ func TestParseChar(t *testing.T) {
 	expectParseError(t, `''`)
 	expectParseError(t, `'AB'`)
 	expectParseError(t, `'A九'`)
+	expectParseError(t, `a := ''`)
+	expectParseError(t, `a := 'AB'`)
 }
 
 func TestParseCondExpr(t *testing.T) {
@@ -540,6 +619,33 @@ func TestParseError(t *testing.T) {
 	})
 
 	expectParseError(t, `error()`) // must have a value
+}
+
+func TestParseExport(t *testing.T) {
+	expectParse(t, "export 5", func(p pfn) []Stmt {
+		return stmts(
+			exportStmt(p(1, 1), intLit(5, p(1, 8))))
+	})
+
+	expectParse(t, "export {a: 1}", func(p pfn) []Stmt {
+		return stmts(
+			exportStmt(p(1, 1),
+				mapLit(p(1, 8), p(1, 13),
+					mapElementLit("a", p(1, 9), p(1, 10), intLit(1, p(1, 12))))))
+	})
+
+	expectParse(t, `x := 1
+export x`, func(p pfn) []Stmt {
+		return stmts(
+			assignStmt(
+				exprs(ident("x", p(1, 1))),
+				exprs(intLit(1, p(1, 6))),
+				token.Define, p(1, 3)),
+			exportStmt(p(2, 1), ident("x", p(2, 8))))
+	})
+
+	expectParseError(t, "export")
+	expectParseError(t, "export a b")
 }
 
 func TestParseForIn(t *testing.T) {
@@ -996,6 +1102,58 @@ if a == 5 {
 	expectParseError(t, `if ; {}`)
 	expectParseError(t, `if a := 3; {}`)
 	expectParseError(t, `if ; a < 3 {}`)
+}
+
+func TestParseNonExprCondition(t *testing.T) {
+	for _, tc := range []struct {
+		input    string
+		expected string
+	}{
+		{"if a := 1 {}",
+			"expected boolean expression, found assignment\n\tat test:1:4"},
+		{"if a++ {}",
+			"expected boolean expression, found simple statement\n\tat test:1:4"},
+		{"if a := 1; b = 2 {}",
+			"expected boolean expression, found assignment\n\tat test:1:12"},
+		{"for a := 1 {}",
+			"expected condition expression, found assignment\n\tat test:1:5"},
+		{"for a++ {}",
+			"expected condition expression, found simple statement\n\tat test:1:5"},
+		{"for i := 0; i += 1; i++ {}",
+			"expected condition expression, found assignment\n\tat test:1:13"},
+	} {
+		_, err := parseSource("test", []byte(tc.input), nil)
+		require.Error(t, err, tc.input)
+		require.Equal(t, "Parse Error: "+tc.expected, err.Error())
+	}
+}
+
+func TestParseImmutable(t *testing.T) {
+	expectParse(t, "immutable([1, 2])", func(p pfn) []Stmt {
+		return stmts(
+			exprStmt(
+				immutableExpr(p(1, 1),
+					arrayLit(p(1, 11), p(1, 16),
+						intLit(1, p(1, 12)),
+						intLit(2, p(1, 15))),
+					p(1, 10), p(1, 17))))
+	})
+
+	expectParse(t, "a := immutable({b: 1})", func(p pfn) []Stmt {
+		return stmts(
+			assignStmt(
+				exprs(ident("a", p(1, 1))),
+				exprs(immutableExpr(p(1, 6),
+					mapLit(p(1, 16), p(1, 21),
+						mapElementLit(
+							"b", p(1, 17), p(1, 18), intLit(1, p(1, 20)))),
+					p(1, 15), p(1, 22))),
+				token.Define, p(1, 3)))
+	})
+
+	expectParseError(t, "immutable()")
+	expectParseError(t, "immutable 1")
+	expectParseError(t, "immutable(1")
 }
 
 func TestParseImport(t *testing.T) {
@@ -1667,6 +1825,79 @@ func TestParseNumberExpressions(t *testing.T) {
 	})
 }
 
+func TestParseErrorLimit(t *testing.T) {
+	_, err := parseSource("test",
+		[]byte(strings.Repeat("return a b\n", 15)), nil)
+	require.Error(t, err)
+	require.Equal(t, "Parse Error: expected ';', found b\n\tat test:1:10"+
+		" (and 10 more errors)", err.Error())
+
+	list, ok := err.(ErrorList)
+	require.True(t, ok)
+	require.Equal(t, 11, len(list))
+	require.Equal(t, 11, list[10].Pos.Line)
+}
+
+func TestParserTrace(t *testing.T) {
+	tr := &parseTracer{}
+	_, err := parseSource("test", []byte(""), tr)
+	require.NoError(t, err)
+	require.Equal(t, "    1:     1:  1: File (\n"+
+		"    1:     1:  1: . StatementList (\n"+
+		"    1:     1:  1: . )\n"+
+		"    1:     1:  1: . EOF\n"+
+		"    1:     1:  1: )\n", strings.Join(tr.out, ""))
+
+	tokens, _ := expectTrace(t, "x := true\ny")
+	require.Equal(t, []string{
+		`    1:     1:  1: IDENT x`,
+		`    3:     1:  3: ":="`,
+		`    6:     1:  6: "true"`,
+		`   10:     1: 10: ";"`,
+		`   11:     2:  1: IDENT y`,
+		`   12:     2:  2: ";"`,
+		`   12:     2:  2: EOF`,
+	}, tokens)
+
+	tokens, depth := expectTrace(t, "((((((((a))))))))")
+	require.True(t, depth > 32, "depth %d", depth)
+	require.Equal(t, 19, len(tokens))
+	require.Equal(t, `    9:     1:  9: IDENT a`, tokens[8])
+}
+
+func expectTrace(t *testing.T, input string) (tokens []string, maxDepth int) {
+	tr := &parseTracer{}
+	_, err := parseSource("test", []byte(input), tr)
+	require.NoError(t, err)
+
+	const headerLen = len("    1:     1:  1: ")
+	depth := 0
+	out := strings.TrimSuffix(strings.Join(tr.out, ""), "\n")
+	for _, line := range strings.Split(out, "\n") {
+		header, body := line[:headerLen], line[headerLen:]
+		indent := 0
+		for strings.HasPrefix(body, ". ") {
+			indent++
+			body = body[2:]
+		}
+		if body == ")" {
+			depth--
+		}
+		require.Equal(t, depth, indent, "%s", line)
+		switch {
+		case strings.HasSuffix(body, " ("):
+			depth++
+			if depth > maxDepth {
+				maxDepth = depth
+			}
+		case body != ")":
+			tokens = append(tokens, header+body)
+		}
+	}
+	require.Equal(t, 0, depth)
+	return
+}
+
 type pfn func(int, int) Pos          // position conversion function
 type expectedFn func(pos pfn) []Stmt // callback function to return expected results
 
@@ -1782,6 +2013,14 @@ func emptyStmt(implicit bool, pos Pos) *EmptyStmt {
 
 func returnStmt(pos Pos, result Expr) *ReturnStmt {
 	return &ReturnStmt{Result: result, ReturnPos: pos}
+}
+
+func exportStmt(pos Pos, result Expr) *ExportStmt {
+	return &ExportStmt{Result: result, ExportPos: pos}
+}
+
+func branchStmt(tok token.Token, pos Pos) *BranchStmt {
+	return &BranchStmt{Token: tok, TokenPos: pos}
 }
 
 func forStmt(
@@ -1970,6 +2209,16 @@ func errorExpr(
 	}
 }
 
+func immutableExpr(
+	pos Pos,
+	x Expr,
+	lparen, rparen Pos,
+) *ImmutableExpr {
+	return &ImmutableExpr{
+		Expr: x, ErrorPos: pos, LParen: lparen, RParen: rparen,
+	}
+}
+
 func selectorExpr(x, sel Expr) *SelectorExpr {
 	return &SelectorExpr{Expr: x, Sel: sel}
 }
@@ -2048,6 +2297,11 @@ func equalStmt(t *testing.T, expected, actual Stmt) {
 			actual.(*BranchStmt).Token)
 		require.Equal(t, expected.TokenPos,
 			actual.(*BranchStmt).TokenPos)
+	case *ExportStmt:
+		equalExpr(t, expected.Result,
+			actual.(*ExportStmt).Result)
+		require.Equal(t, expected.ExportPos,
+			actual.(*ExportStmt).ExportPos)
 	default:
 		panic(fmt.Errorf("unknown type: %T", expected))
 	}
@@ -2184,6 +2438,15 @@ func equalExpr(t *testing.T, expected, actual Expr) {
 			int(actual.(*ErrorExpr).LParen))
 		require.Equal(t, int(expected.RParen),
 			int(actual.(*ErrorExpr).RParen))
+	case *ImmutableExpr:
+		equalExpr(t, expected.Expr,
+			actual.(*ImmutableExpr).Expr)
+		require.Equal(t, int(expected.ErrorPos),
+			int(actual.(*ImmutableExpr).ErrorPos))
+		require.Equal(t, int(expected.LParen),
+			int(actual.(*ImmutableExpr).LParen))
+		require.Equal(t, int(expected.RParen),
+			int(actual.(*ImmutableExpr).RParen))
 	case *CondExpr:
 		equalExpr(t, expected.Cond,
 			actual.(*CondExpr).Cond)

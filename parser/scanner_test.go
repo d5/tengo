@@ -194,6 +194,98 @@ func TestScanner_Scan(t *testing.T) {
 		parser.DontInsertSemis, expectedSkipComments...)
 }
 
+func TestScanner_SemicolonBeforeComment(t *testing.T) {
+	scanExpect(t, "a // c\nb", 0,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Semicolon, "\n", 1, 3},
+		scanResult{token.Ident, "b", 2, 1},
+		scanResult{token.Semicolon, "\n", 2, 2})
+	scanExpect(t, "a // c\nb", parser.ScanComments,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Semicolon, "\n", 1, 3},
+		scanResult{token.Comment, "// c", 1, 3},
+		scanResult{token.Ident, "b", 2, 1},
+		scanResult{token.Semicolon, "\n", 2, 2})
+	scanExpect(t, "a /* c */", 0,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Semicolon, "\n", 1, 3})
+	scanExpect(t, "a /* c */\nb", 0,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Semicolon, "\n", 1, 3},
+		scanResult{token.Ident, "b", 2, 1},
+		scanResult{token.Semicolon, "\n", 2, 2})
+	scanExpect(t, "a /* c\n */ b", 0,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Semicolon, "\n", 1, 3},
+		scanResult{token.Ident, "b", 2, 5},
+		scanResult{token.Semicolon, "\n", 2, 6})
+	scanExpect(t, "a /* c */ // d\nb", 0,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Semicolon, "\n", 1, 3},
+		scanResult{token.Ident, "b", 2, 1},
+		scanResult{token.Semicolon, "\n", 2, 2})
+
+	scanExpect(t, "a /* c */ b", 0,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Ident, "b", 1, 11},
+		scanResult{token.Semicolon, "\n", 1, 12})
+	scanExpect(t, "a /* c */ /* d */ b", 0,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Ident, "b", 1, 19},
+		scanResult{token.Semicolon, "\n", 1, 20})
+	scanExpect(t, "a /* c */ / b", 0,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Quo, "", 1, 11},
+		scanResult{token.Ident, "b", 1, 13},
+		scanResult{token.Semicolon, "\n", 1, 14})
+}
+
+func TestScanner_PeriodAtEOF(t *testing.T) {
+	scanExpect(t, ".", 0,
+		scanResult{token.Period, "", 1, 1})
+	scanExpect(t, "a.", 0,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Period, "", 1, 2})
+	scanExpect(t, "a..", 0,
+		scanResult{token.Ident, "a", 1, 1},
+		scanResult{token.Period, "", 1, 2},
+		scanResult{token.Period, "", 1, 3})
+}
+
+func TestScanner_ScanEscape(t *testing.T) {
+	for _, tc := range []struct {
+		input    string
+		expected []string
+	}{
+		{`"\a\b\f\n\r\t\v\\\""`, nil},
+		{`'\''`, nil},
+		{`'\\'`, nil},
+		{`"\101\x41A\U00000041"`, nil},
+		{`"￿\U0010FFFF\377"`, nil},
+		{`"\z"`, []string{"test:1:3: unknown escape sequence"}},
+		{`"\'"`, []string{"test:1:3: unknown escape sequence"}},
+		{`'\"'`, []string{"test:1:3: unknown escape sequence"}},
+		{`"\x4g"`, []string{
+			"test:1:5: illegal character U+0067 'g' in escape sequence"}},
+		{`"\08"`, []string{
+			"test:1:4: illegal character U+0038 '8' in escape sequence"}},
+		{`"\400"`, []string{
+			"test:1:3: escape sequence is invalid Unicode code point"}},
+		{`"\uD800"`, []string{
+			"test:1:3: escape sequence is invalid Unicode code point"}},
+		{`"\U00110000"`, []string{
+			"test:1:3: escape sequence is invalid Unicode code point"}},
+		{`"\x4`, []string{
+			"test:1:5: escape sequence not terminated",
+			"test:1:1: string literal not terminated"}},
+		{`"\`, []string{
+			"test:1:3: escape sequence not terminated",
+			"test:1:1: string literal not terminated"}},
+	} {
+		require.Equal(t, tc.expected, scanErrors(tc.input), tc.input)
+	}
+}
+
 func TestStripCR(t *testing.T) {
 	for _, tc := range []struct {
 		input  string
@@ -245,6 +337,22 @@ func scanExpect(
 	tok, _, _ := s.Scan()
 	require.Equal(t, token.EOF, tok, "more tokens left")
 	require.Equal(t, 0, s.ErrorCount())
+}
+
+func scanErrors(input string) (errs []string) {
+	testFile := testFileSet.AddFile("test", -1, len(input))
+	s := parser.NewScanner(
+		testFile,
+		[]byte(input),
+		func(pos parser.SourceFilePos, msg string) {
+			errs = append(errs, pos.String()+": "+msg)
+		},
+		0)
+	for {
+		if tok, _, _ := s.Scan(); tok == token.EOF {
+			return
+		}
+	}
 }
 
 func countLines(s string) int {
