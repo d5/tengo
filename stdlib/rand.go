@@ -1,6 +1,7 @@
 package stdlib
 
 import (
+	"errors"
 	"math/rand"
 
 	"github.com/d5/tengo/v2"
@@ -17,7 +18,7 @@ var randModule = map[string]tengo.Object{
 	},
 	"intn": &tengo.UserFunction{
 		Name:  "intn",
-		Value: FuncAI64RI64(rand.Int63n),
+		Value: randIntn(rand.Int63n),
 	},
 	"exp_float": &tengo.UserFunction{
 		Name:  "exp_float",
@@ -29,7 +30,7 @@ var randModule = map[string]tengo.Object{
 	},
 	"perm": &tengo.UserFunction{
 		Name:  "perm",
-		Value: FuncAIRIs(rand.Perm),
+		Value: randPerm(rand.Perm),
 	},
 	"seed": &tengo.UserFunction{
 		Name:  "seed",
@@ -90,7 +91,7 @@ func randRand(r *rand.Rand) *tengo.ImmutableMap {
 			},
 			"intn": &tengo.UserFunction{
 				Name:  "intn",
-				Value: FuncAI64RI64(r.Int63n),
+				Value: randIntn(r.Int63n),
 			},
 			"exp_float": &tengo.UserFunction{
 				Name:  "exp_float",
@@ -102,7 +103,7 @@ func randRand(r *rand.Rand) *tengo.ImmutableMap {
 			},
 			"perm": &tengo.UserFunction{
 				Name:  "perm",
-				Value: FuncAIRIs(r.Perm),
+				Value: randPerm(r.Perm),
 			},
 			"seed": &tengo.UserFunction{
 				Name:  "seed",
@@ -134,5 +135,31 @@ func randRand(r *rand.Rand) *tengo.ImmutableMap {
 				},
 			},
 		},
+	}
+}
+
+// randIntn rejects the n that makes Int63n panic.
+func randIntn(intn func(int64) int64) tengo.CallableFunc {
+	call := FuncAI64RI64(intn)
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) == 1 {
+			if n, ok := tengo.ToInt64(args[0]); ok && n <= 0 {
+				return nil, errors.New("n must be positive")
+			}
+		}
+		return call(args...)
+	}
+}
+
+// randPerm rejects the n that makes Perm panic.
+func randPerm(perm func(int) []int) tengo.CallableFunc {
+	call := FuncAIRIs(perm)
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) == 1 {
+			if n, ok := tengo.ToInt(args[0]); ok && n < 0 {
+				return nil, errors.New("n must not be negative")
+			}
+		}
+		return call(args...)
 	}
 }

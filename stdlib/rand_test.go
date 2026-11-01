@@ -19,6 +19,10 @@ func TestRand(t *testing.T) {
 	module(t, "rand").call("exp_float").expect(r.ExpFloat64())
 	module(t, "rand").call("norm_float").expect(r.NormFloat64())
 	module(t, "rand").call("perm", 10).expect(r.Perm(10))
+	module(t, "rand").call("intn", 0).expectError()
+	module(t, "rand").call("intn", -1).expectError()
+	module(t, "rand").call("perm", -1).expectError()
+	module(t, "rand").call("perm", 0).expect([]int{})
 
 	buf1 := make([]byte, 10)
 	buf2 := &tengo.Bytes{Value: make([]byte, 10)}
@@ -36,6 +40,8 @@ func TestRand(t *testing.T) {
 	randObj.call("exp_float").expect(r.ExpFloat64())
 	randObj.call("norm_float").expect(r.NormFloat64())
 	randObj.call("perm", 10).expect(r.Perm(10))
+	randObj.call("intn", 0).expectError()
+	randObj.call("perm", -1).expectError()
 
 	buf1 = make([]byte, 12)
 	buf2 = &tengo.Bytes{Value: make([]byte, 12)}
