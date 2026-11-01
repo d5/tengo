@@ -104,6 +104,7 @@ type Parser struct {
 	trace     bool
 	indent    int
 	traceOut  io.Writer
+	nestLev   int
 }
 
 // NewParser creates a Parser.
@@ -159,13 +160,14 @@ func (p *Parser) parseExpr() Expr {
 	if p.trace {
 		defer untracep(tracep(p, "Expression"))
 	}
-
+	p.incNestLev()
 	expr := p.parseBinaryExpr(token.LowestPrec + 1)
 
 	// ternary conditional expression
 	if p.token == token.Question {
-		return p.parseCondExpr(expr)
+		expr = p.parseCondExpr(expr)
 	}
+	p.nestLev--
 	return expr
 }
 
@@ -214,12 +216,13 @@ func (p *Parser) parseUnaryExpr() Expr {
 	if p.trace {
 		defer untracep(tracep(p, "UnaryExpression"))
 	}
-
 	switch p.token {
 	case token.Add, token.Sub, token.Not, token.Xor:
 		pos, op := p.pos, p.token
 		p.next()
+		p.incNestLev()
 		x := p.parseUnaryExpr()
+		p.nestLev--
 		return &UnaryExpr{
 			Token:    op,
 			TokenPos: pos,
@@ -604,7 +607,9 @@ func (p *Parser) parseBody() *BlockStmt {
 	}
 
 	lbrace := p.expect(token.LBrace)
+	p.incNestLev()
 	list := p.parseStmtList()
+	p.nestLev--
 	rbrace := p.expect(token.RBrace)
 	return &BlockStmt{
 		LBrace: lbrace,
@@ -678,7 +683,6 @@ func (p *Parser) parseStmt() (stmt Stmt) {
 	if p.trace {
 		defer untracep(tracep(p, "Statement"))
 	}
-
 	switch p.token {
 	case // simple statements
 		token.Func, token.Error, token.Immutable, token.Ident, token.Int,
@@ -805,7 +809,6 @@ func (p *Parser) parseIfStmt() Stmt {
 	if p.trace {
 		defer untracep(tracep(p, "IfStmt"))
 	}
-
 	pos := p.expect(token.If)
 	init, cond := p.parseIfHeader()
 	body := p.parseBlockStmt()
@@ -816,7 +819,9 @@ func (p *Parser) parseIfStmt() Stmt {
 
 		switch p.token {
 		case token.If:
+			p.incNestLev()
 			elseStmt = p.parseIfStmt()
+			p.nestLev--
 		case token.LBrace:
 			elseStmt = p.parseBlockStmt()
 			p.expectSemi()
@@ -842,7 +847,9 @@ func (p *Parser) parseBlockStmt() *BlockStmt {
 	}
 
 	lbrace := p.expect(token.LBrace)
+	p.incNestLev()
 	list := p.parseStmtList()
+	p.nestLev--
 	rbrace := p.expect(token.RBrace)
 	return &BlockStmt{
 		LBrace: lbrace,
@@ -1126,6 +1133,24 @@ func (p *Parser) advance(to map[token.Token]bool) {
 			}
 		}
 	}
+}
+
+// maxNestLev is how deep expressions and statements may nest. The parser
+// and the compiler recurse once per level, and past Go's stack limit the
+// overflow is fatal, which no recover catches.
+const maxNestLev = 10000
+
+func (p *Parser) incNestLev() {
+	p.nestLev++
+	if p.nestLev > maxNestLev {
+		p.nestedTooDeep()
+	}
+}
+
+func (p *Parser) nestedTooDeep() {
+	// not p.error, which drops a second error on the same line
+	p.errors.Add(p.file.Position(p.pos), "exceeded max nesting depth")
+	panic(bailout{})
 }
 
 func (p *Parser) error(pos Pos, msg string) {
