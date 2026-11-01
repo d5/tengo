@@ -626,6 +626,12 @@ func (o *CompiledFunction) CanCall() bool {
 	return true
 }
 
+// Call returns an error. A compiled function runs only in the VM, which
+// holds the constants and globals its instructions refer to.
+func (o *CompiledFunction) Call(...Object) (Object, error) {
+	return nil, ErrCompiledFunctionCall
+}
+
 // Error represents an error value.
 type Error struct {
 	ObjectImpl

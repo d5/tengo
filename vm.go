@@ -79,7 +79,7 @@ func (v *VM) Run() (err error) {
 	err = v.err
 	if err != nil {
 		filePos := v.fileSet.Position(
-			v.curFrame.fn.SourcePos(v.ip - 1))
+			v.curFrame.fn.SourcePos(v.ip))
 		err = fmt.Errorf("Runtime Error: %w\n\tat %s",
 			err, filePos)
 		for v.framesIndex > 1 {
@@ -384,7 +384,7 @@ func (v *VM) run() {
 			val, err := left.IndexGet(index)
 			if err != nil {
 				if err == ErrNotIndexable {
-					v.err = fmt.Errorf("not indexable: %s", index.TypeName())
+					v.err = fmt.Errorf("not indexable: %s", left.TypeName())
 					return
 				}
 				if err == ErrInvalidIndexType {

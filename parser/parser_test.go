@@ -648,6 +648,30 @@ export x`, func(p pfn) []Stmt {
 	expectParseError(t, "export a b")
 }
 
+func TestParseNumberRange(t *testing.T) {
+	for _, src := range []string{"9223372036854775808", "1e400"} {
+		f := NewFileSet().AddFile("test", -1, len(src))
+		_, err := NewParser(f, []byte(src), nil).ParseFile()
+		require.Error(t, err)
+		require.True(t, strings.Contains(err.Error(), "number out of range"),
+			err.Error())
+	}
+}
+
+func TestParseExprEnd(t *testing.T) {
+	for _, src := range []string{`error(1)`, `immutable([1])`} {
+		f := NewFileSet().AddFile("test", -1, len(src))
+		file, err := NewParser(f, []byte(src), nil).ParseFile()
+		require.NoError(t, err)
+		expr := file.Stmts[0].(*ExprStmt).Expr
+		require.Equal(t, Pos(len(src)+1), expr.End(), src)
+	}
+	f := NewFileSet().AddFile("test", -1, 3)
+	file, err := NewParser(f, []byte(`- x`), nil).ParseFile()
+	require.NoError(t, err)
+	require.Equal(t, Pos(1), file.Stmts[0].(*ExprStmt).Expr.Pos())
+}
+
 func TestParseForIn(t *testing.T) {
 	expectParse(t, "for x in y {}", func(p pfn) []Stmt {
 		return stmts(

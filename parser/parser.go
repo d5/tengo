@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -377,7 +378,7 @@ func (p *Parser) parseOperand() Expr {
 		return p.parseIdent()
 	case token.Int:
 		v, err := strconv.ParseInt(p.tokenLit, 0, 64)
-		if err == strconv.ErrRange {
+		if errors.Is(err, strconv.ErrRange) {
 			p.error(p.pos, "number out of range")
 		} else if err != nil {
 			p.error(p.pos, "invalid integer")
@@ -392,7 +393,7 @@ func (p *Parser) parseOperand() Expr {
 
 	case token.Float:
 		v, err := strconv.ParseFloat(p.tokenLit, 64)
-		if err == strconv.ErrRange {
+		if errors.Is(err, strconv.ErrRange) {
 			p.error(p.pos, "number out of range")
 		} else if err != nil {
 			p.error(p.pos, "invalid float")

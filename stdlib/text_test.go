@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/d5/tengo/v2"
+	"github.com/d5/tengo/v2/require"
 )
 
 func TestTextRE(t *testing.T) {
@@ -261,6 +262,17 @@ func TestReplaceLimit(t *testing.T) {
 		expect("213456789021")
 	module(t, "text").call("re_replace", "(1)(2)", "123456789012", "${2}${1}x").
 		expectError()
+}
+
+func TestTextArgumentNames(t *testing.T) {
+	// a type error names the bad argument and its own type
+	for _, fn := range []string{"compare", "split"} {
+		res := module(t, "text").call(fn, "a", tengo.UndefinedValue)
+		e, ok := res.e.(tengo.ErrInvalidArgumentType)
+		require.True(t, ok, res.e)
+		require.Equal(t, "second", e.Name, fn)
+		require.Equal(t, "undefined", e.Found, fn)
+	}
 }
 
 func TestTextRepeat(t *testing.T) {
