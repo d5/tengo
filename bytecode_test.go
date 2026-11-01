@@ -2,6 +2,7 @@ package tengo_test
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 	"time"
 
@@ -295,4 +296,132 @@ func testBytecodeSerialization(t *testing.T, b *tengo.Bytecode) {
 	require.Equal(t, b.FileSet, r.FileSet)
 	require.Equal(t, b.MainFunction, r.MainFunction)
 	require.Equal(t, b.Constants, r.Constants)
+}
+
+func TestBytecode_Size(t *testing.T) {
+	b := &tengo.Bytecode{
+		FileSet: fileSet(srcfile{name: "a", size: 10},
+			srcfile{name: "b", size: 20}),
+		MainFunction: &tengo.CompiledFunction{
+			Instructions: concatInsts(
+				tengo.MakeInstruction(parser.OpConstant, 0),
+				tengo.MakeInstruction(parser.OpPop)),
+			SourceMap: map[int]parser.Pos{0: 1},
+		},
+		Constants: objectsArray(&tengo.Int{Value: 1}, &tengo.Int{Value: 2}),
+	}
+	require.Equal(t, int64(4+1+30+2), b.Size())
+}
+
+func TestBytecode_DecodeCanonicalizesSingletons(t *testing.T) {
+	b := bytecode(concatInsts(), objectsArray(
+		&tengo.ImmutableMap{Value: map[string]tengo.Object{
+			"array": &tengo.Array{Value: []tengo.Object{
+				tengo.TrueValue,
+				tengo.FalseValue,
+				tengo.UndefinedValue,
+				&tengo.Map{Value: map[string]tengo.Object{
+					"t": tengo.TrueValue,
+				}},
+			}},
+		}}))
+
+	var buf bytes.Buffer
+	require.NoError(t, b.Encode(&buf))
+	r := &tengo.Bytecode{}
+	require.NoError(t, r.Decode(bytes.NewReader(buf.Bytes()), nil))
+	arr := r.Constants[0].(*tengo.ImmutableMap).Value["array"].(*tengo.Array)
+	require.True(t, arr.Value[0] == tengo.TrueValue)
+	require.True(t, arr.Value[1] == tengo.FalseValue)
+	require.True(t, arr.Value[2] == tengo.UndefinedValue)
+	require.True(t, arr.Value[3].(*tengo.Map).Value["t"] == tengo.TrueValue)
+}
+
+func TestBytecode_DecodeBuiltinModule(t *testing.T) {
+	mods := tengo.NewModuleMap()
+	mods.AddBuiltinModule("mod", map[string]tengo.Object{
+		"double": &tengo.UserFunction{
+			Name: "double",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				return &tengo.Int{Value: args[0].(*tengo.Int).Value * 2}, nil
+			},
+		},
+	})
+
+	src := []byte(`out = import("mod").double(21)`)
+	fileSet := parser.NewFileSet()
+	srcFile := fileSet.AddFile("test", -1, len(src))
+	file, err := parser.NewParser(srcFile, src, nil).ParseFile()
+	require.NoError(t, err)
+	symbols := tengo.NewSymbolTable()
+	out := symbols.Define("out")
+	c := tengo.NewCompiler(srcFile, symbols, nil, mods, nil)
+	require.NoError(t, c.Compile(file))
+
+	var buf bytes.Buffer
+	require.NoError(t, c.Bytecode().Encode(&buf))
+
+	err = (&tengo.Bytecode{}).Decode(bytes.NewReader(buf.Bytes()), nil)
+	require.Error(t, err)
+	require.Equal(t, "user function not decodable", err.Error())
+
+	decoded := &tengo.Bytecode{}
+	require.NoError(t, decoded.Decode(bytes.NewReader(buf.Bytes()), mods))
+	globals := make([]tengo.Object, tengo.GlobalsSize)
+	require.NoError(t, tengo.NewVM(decoded, globals, -1).Run())
+	require.Equal(t, &tengo.Int{Value: 42}, globals[out.Index])
+}
+
+func TestBytecode_DecodeNestedUserFunction(t *testing.T) {
+	module := func() tengo.Object {
+		return &tengo.ImmutableMap{Value: map[string]tengo.Object{
+			"fn": &tengo.UserFunction{Name: "fn"},
+		}}
+	}
+	for _, c := range []tengo.Object{
+		module(),
+		&tengo.Array{Value: []tengo.Object{module()}},
+		&tengo.ImmutableArray{Value: []tengo.Object{module()}},
+		&tengo.Map{Value: map[string]tengo.Object{"m": module()}},
+		&tengo.ImmutableMap{Value: map[string]tengo.Object{"m": module()}},
+	} {
+		var buf bytes.Buffer
+		require.NoError(t, bytecode(concatInsts(), objectsArray(c)).Encode(&buf))
+		err := (&tengo.Bytecode{}).Decode(bytes.NewReader(buf.Bytes()), nil)
+		require.Error(t, err, c.TypeName())
+		require.Equal(t, "user function not decodable", err.Error())
+	}
+}
+
+func TestBytecode_DecodeTruncated(t *testing.T) {
+	b := bytecode(
+		concatInsts(
+			tengo.MakeInstruction(parser.OpConstant, 0),
+			tengo.MakeInstruction(parser.OpPop)),
+		objectsArray(&tengo.String{Value: "foo"}))
+	var buf bytes.Buffer
+	require.NoError(t, b.Encode(&buf))
+	data := buf.Bytes()
+
+	for n := 0; n < len(data); n++ {
+		err := (&tengo.Bytecode{}).Decode(bytes.NewReader(data[:n]), nil)
+		require.Error(t, err, "decoding %d of %d bytes", n, len(data))
+	}
+	require.NoError(t,
+		(&tengo.Bytecode{}).Decode(bytes.NewReader(data), nil))
+}
+
+func TestBytecode_EncodeWriteError(t *testing.T) {
+	writeErr := errors.New("write failed")
+	b := bytecode(concatInsts(), objectsArray())
+	err := b.Encode(failingWriter{err: writeErr})
+	require.True(t, errors.Is(err, writeErr), "%v", err)
+}
+
+type failingWriter struct {
+	err error
+}
+
+func (w failingWriter) Write([]byte) (int, error) {
+	return 0, w.err
 }

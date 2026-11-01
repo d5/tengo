@@ -1260,6 +1260,20 @@ func TestForIn(t *testing.T) {
 		nil, "abcde")
 	expectRun(t, `out = ""; for i, c in "abcde" { if i == 2 { continue }; out += c }`,
 		nil, "abde")
+
+	// bytes
+	expectRun(t, `out = 0; for b in bytes("ab") { out += b }`,
+		nil, 195)
+	expectRun(t, `out = 0; for i, b in bytes("ab") { out += i * 1000 + b }`,
+		nil, 1195)
+	expectRun(t, `out = 0; for i, _ in bytes(3) { out += i }`,
+		nil, 3)
+
+	// undefined
+	expectRun(t, `for k, v in undefined { out = 1 }`,
+		nil, tengo.UndefinedValue)
+	expectRun(t, `out = 0; for x in {}.missing { out = 1 }`,
+		nil, 0)
 }
 
 func TestFor(t *testing.T) {
@@ -2431,6 +2445,34 @@ func TestIndexAssignable(t *testing.T) {
 		Opts().Symbol("arr", strArr()).Skip2ndPass(), "TWO")
 	expectError(t, `arr["one"] = "ONE"`,
 		Opts().Symbol("arr", strArr()).Skip2ndPass(), "invalid index type")
+}
+
+func TestIndexAssignSelectorErrors(t *testing.T) {
+	expectError(t, `a := [[1]]; a["x"][0] = 2`, nil,
+		"Runtime Error: invalid index type: string")
+	expectError(t, `func() { a := [[1]]; a["x"][0] = 2 }()`, nil,
+		"Runtime Error: invalid index type: string")
+	expectError(t, `func() { a := [[1]]; func() { a["x"][0] = 2 }() }()`, nil,
+		"Runtime Error: invalid index type: string")
+	expectError(t, `a := {b: {c: 1}}; a[undefined].c = 2`, nil,
+		"Runtime Error: invalid index type: undefined")
+	expectError(t, `a := [{b: 1}]; a[1.5].b = 2`, nil,
+		"Runtime Error: invalid index type: float")
+
+	expectError(t, `e := error([1]); e.message[0] = 2`, nil,
+		"Runtime Error: invalid index on error")
+	expectError(t, `func() { e := error([1]); e.message[0] = 2 }()`, nil,
+		"Runtime Error: invalid index on error")
+
+	strArr := func() *StringArray {
+		return &StringArray{Value: []string{"one", "two", "three"}}
+	}
+	expectError(t, `arr[5][0] = "x"`,
+		Opts().Symbol("arr", strArr()).Skip2ndPass(),
+		"Runtime Error: index out of bounds")
+	expectErrorIs(t, `arr[5][0] = "x"`,
+		Opts().Symbol("arr", strArr()).Skip2ndPass(),
+		tengo.ErrIndexOutOfBounds)
 }
 
 func TestInteger(t *testing.T) {
