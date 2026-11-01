@@ -28,6 +28,9 @@ var (
 	// ErrInvalidOperator represents an error for invalid operator usage.
 	ErrInvalidOperator = errors.New("invalid operator")
 
+	// ErrDivisionByZero is an error where an integer is divided by zero.
+	ErrDivisionByZero = errors.New("division by zero")
+
 	// ErrWrongNumArguments represents a wrong number of arguments error.
 	ErrWrongNumArguments = errors.New("wrong number of arguments")
 

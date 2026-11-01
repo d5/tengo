@@ -110,10 +110,11 @@ func (i *BytesIterator) Value() Object {
 // MapIterator represents an iterator for the map.
 type MapIterator struct {
 	ObjectImpl
-	v map[string]Object
-	k []string
-	i int
-	l int
+	v   map[string]Object
+	k   []string
+	i   int
+	l   int
+	cur Object
 }
 
 // TypeName returns the name of the type.
@@ -138,13 +139,19 @@ func (i *MapIterator) Equals(Object) bool {
 
 // Copy returns a copy of the type.
 func (i *MapIterator) Copy() Object {
-	return &MapIterator{v: i.v, k: i.k, i: i.i, l: i.l}
+	return &MapIterator{v: i.v, k: i.k, i: i.i, l: i.l, cur: i.cur}
 }
 
-// Next returns true if there are more elements to iterate.
+// Next returns true if there are more elements to iterate. A key deleted
+// before the iteration reaches it is skipped, as in Go.
 func (i *MapIterator) Next() bool {
-	i.i++
-	return i.i <= i.l
+	for i.i++; i.i <= i.l; i.i++ {
+		if v, ok := i.v[i.k[i.i-1]]; ok {
+			i.cur = v
+			return true
+		}
+	}
+	return false
 }
 
 // Key returns the key or index value of the current element.
@@ -153,10 +160,9 @@ func (i *MapIterator) Key() Object {
 	return &String{Value: k}
 }
 
-// Value returns the value of the current element.
+// Value returns the value of the current element, as Next found it.
 func (i *MapIterator) Value() Object {
-	k := i.k[i.i-1]
-	return i.v[k]
+	return i.cur
 }
 
 // StringIterator represents an iterator for a string.

@@ -552,6 +552,9 @@ func builtinBytes(args ...Object) (Object, error) {
 
 	// bytes(N) => create a new bytes with given size N
 	if n, ok := args[0].(*Int); ok {
+		if n.Value < 0 {
+			return nil, ErrIndexOutOfBounds
+		}
 		if n.Value > int64(MaxBytesLen) {
 			return nil, ErrBytesLimit
 		}

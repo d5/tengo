@@ -94,6 +94,17 @@ func (v *VM) Run() (err error) {
 	return nil
 }
 
+// stackFull sets ErrStackOverflow if a push would overflow the stack. Only
+// the opcodes that push more than they pop call it.
+func (v *VM) stackFull() bool {
+	// uint lets the compiler drop the bounds check of the push that follows.
+	if uint(v.sp) >= StackSize {
+		v.err = ErrStackOverflow
+		return true
+	}
+	return false
+}
+
 func (v *VM) run() {
 	for atomic.LoadInt64(&v.aborting) == 0 {
 		v.ip++
@@ -103,9 +114,15 @@ func (v *VM) run() {
 			v.ip += 2
 			cidx := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = v.constants[cidx]
 			v.sp++
 		case parser.OpNull:
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = UndefinedValue
 			v.sp++
 		case parser.OpBinaryOp:
@@ -156,9 +173,15 @@ func (v *VM) run() {
 		case parser.OpPop:
 			v.sp--
 		case parser.OpTrue:
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = TrueValue
 			v.sp++
 		case parser.OpFalse:
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = FalseValue
 			v.sp++
 		case parser.OpLNot:
@@ -269,6 +292,9 @@ func (v *VM) run() {
 			v.ip += 2
 			globalIndex := int(v.curInsts[v.ip]) | int(v.curInsts[v.ip-1])<<8
 			val := v.globals[globalIndex]
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = val
 			v.sp++
 		case parser.OpArray:
@@ -288,6 +314,9 @@ func (v *VM) run() {
 				return
 			}
 
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = arr
 			v.sp++
 		case parser.OpMap:
@@ -305,6 +334,9 @@ func (v *VM) run() {
 			v.allocs--
 			if v.allocs == 0 {
 				v.err = ErrObjectAllocLimit
+				return
+			}
+			if v.stackFull() {
 				return
 			}
 			v.stack[v.sp] = m
@@ -553,12 +585,20 @@ func (v *VM) run() {
 				v.sp--
 				switch arr := v.stack[v.sp].(type) {
 				case *Array:
+					if v.sp+len(arr.Value) > StackSize {
+						v.err = ErrStackOverflow
+						return
+					}
 					for _, item := range arr.Value {
 						v.stack[v.sp] = item
 						v.sp++
 					}
 					numArgs += len(arr.Value) - 1
 				case *ImmutableArray:
+					if v.sp+len(arr.Value) > StackSize {
+						v.err = ErrStackOverflow
+						return
+					}
 					for _, item := range arr.Value {
 						v.stack[v.sp] = item
 						v.sp++
@@ -615,7 +655,8 @@ func (v *VM) run() {
 						continue
 					}
 				}
-				if v.framesIndex >= MaxFrames {
+				sp := v.sp - numArgs + callee.NumLocals
+				if v.framesIndex >= MaxFrames || sp >= StackSize {
 					v.err = ErrStackOverflow
 					return
 				}
@@ -629,7 +670,7 @@ func (v *VM) run() {
 				v.curInsts = callee.Instructions
 				v.ip = -1
 				v.framesIndex++
-				v.sp = v.sp - numArgs + callee.NumLocals
+				v.sp = sp
 			} else {
 				var args []Object
 				args = append(args, v.stack[v.sp-numArgs:v.sp]...)
@@ -737,11 +778,17 @@ func (v *VM) run() {
 			if obj, ok := val.(*ObjectPtr); ok {
 				val = *obj.Value
 			}
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = val
 			v.sp++
 		case parser.OpGetBuiltin:
 			v.ip++
 			builtinIndex := int(v.curInsts[v.ip])
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = builtinFuncs[builtinIndex]
 			v.sp++
 		case parser.OpClosure:
@@ -778,18 +825,27 @@ func (v *VM) run() {
 				v.err = ErrObjectAllocLimit
 				return
 			}
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = cl
 			v.sp++
 		case parser.OpGetFreePtr:
 			v.ip++
 			freeIndex := int(v.curInsts[v.ip])
 			val := v.curFrame.freeVars[freeIndex]
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = val
 			v.sp++
 		case parser.OpGetFree:
 			v.ip++
 			freeIndex := int(v.curInsts[v.ip])
 			val := *v.curFrame.freeVars[freeIndex].Value
+			if v.stackFull() {
+				return
+			}
 			v.stack[v.sp] = val
 			v.sp++
 		case parser.OpSetFree:
@@ -808,6 +864,9 @@ func (v *VM) run() {
 			} else {
 				freeVar = &ObjectPtr{Value: &val}
 				v.stack[sp] = freeVar
+			}
+			if v.stackFull() {
+				return
 			}
 			v.stack[v.sp] = freeVar
 			v.sp++
