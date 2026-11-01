@@ -6,7 +6,14 @@ lint:
 
 test: generate lint
 	go test -race -cover ./...
+	go test -run '^$$' -bench . -benchtime 1x ./...
 	go run ./cmd/tengo -resolve ./testdata/cli/test.tengo
+
+BENCH ?= .
+COUNT ?= 10
+
+bench:
+	go test -run '^$$' -bench '$(BENCH)' -benchmem -count $(COUNT) ./...
 
 fmt:
 	go fmt ./...
