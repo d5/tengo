@@ -1708,13 +1708,13 @@ func arrayString(o Object, elems []Object, path objectPath) string {
 		return "[...]"
 	}
 	next, far := path.push(o)
-	var elements []string
-	for _, e := range elems {
+	elements := make([]string, len(elems))
+	for i, e := range elems {
 		switch e.(type) {
 		case *Array, *ImmutableArray, *Map, *ImmutableMap, *Error:
-			elements = append(elements, elementString(e, next))
+			elements[i] = elementString(e, next)
 		default:
-			elements = append(elements, e.String())
+			elements[i] = e.String()
 		}
 	}
 	if far {
@@ -1728,7 +1728,7 @@ func mapString(o Object, m map[string]Object, path objectPath) string {
 		return "{...}"
 	}
 	next, far := path.push(o)
-	var pairs []string
+	pairs := make([]string, 0, len(m))
 	for k, v := range m {
 		var vs string
 		switch v.(type) {
