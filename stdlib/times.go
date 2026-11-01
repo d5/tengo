@@ -2,6 +2,8 @@ package stdlib
 
 import (
 	"time"
+	// Embed IANA timezone database for environments without local zoneinfo.
+	_ "time/tzdata"
 
 	"github.com/d5/tengo/v2"
 )

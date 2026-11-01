@@ -86,4 +86,13 @@ func TestTimes(t *testing.T) {
 		expect(time1.Location().String())
 	module(t, "times").call("time_string", time1).expect(time1.String())
 	module(t, "times").call("in_location", time1, location.String()).expect(time1.In(location))
+
+	for _, locName := range []string{"Asia/Shanghai", "UTC", "America/New_York"} {
+		loc, err := time.LoadLocation(locName)
+		require.NoError(t, err)
+		module(t, "times").call("in_location", time1, locName).expect(time1.In(loc))
+		module(t, "times").call("date", 1982, 9, 28, 19, 21, 44, 999, locName).
+			expect(time.Date(1982, 9, 28, 19, 21, 44, 999, loc))
+	}
+	module(t, "times").call("in_location", time1, "Invalid/Location").expectError()
 }
