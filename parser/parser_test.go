@@ -649,6 +649,8 @@ export x`, func(p pfn) []Stmt {
 }
 
 func TestParseForIn(t *testing.T) {
+	expectParseError(t, "for a, b, c in x {}")
+
 	expectParse(t, "for x in y {}", func(p pfn) []Stmt {
 		return stmts(
 			forInStmt(
