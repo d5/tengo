@@ -425,8 +425,7 @@ func concatObjects(a, b []Object) []Object {
 }
 
 // VM.run calls the two helpers below to build its copies. Inlined there, the
-// copies grew it 272 bytes and moved the hot code: Stdlib ran 3% slower, and
-// Fib 1.3%.
+// copies grew it 272 bytes and moved the hot code, and Stdlib ran 3% slower.
 
 // immutableOf returns an immutable array or map of o, or nil for any other
 // value. It shares o's storage if share is set, for a literal nothing else
