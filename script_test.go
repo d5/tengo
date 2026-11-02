@@ -762,3 +762,156 @@ d := c(2)`, nil)
 	compiledRun(t, large)
 	require.Equal(t, size, large.Size())
 }
+
+func TestCompiled_CloneClosures(t *testing.T) {
+	run := func(c *tengo.Compiled) int64 {
+		require.NoError(t, c.Run())
+		return c.Get("out").Int64()
+	}
+	compile := func(src string) *tengo.Compiled {
+		s := tengo.NewScript([]byte(src))
+		for _, name := range []string{"counter", "inc", "get", "out"} {
+			require.NoError(t, s.Add(name, nil))
+		}
+		c, err := s.Compile()
+		require.NoError(t, err)
+		return c
+	}
+
+	// a clone gets its own copy of a captured variable
+	c := compile(`
+if is_undefined(counter) {
+	counter = func() { n := 0; return func() { n++; return n } }()
+}
+out = counter()`)
+	require.Equal(t, int64(1), run(c))
+	clone := c.Clone()
+	require.Equal(t, int64(2), run(clone))
+	require.Equal(t, int64(2), run(c))
+
+	// closures that shared a variable still share its copy
+	c = compile(`
+if is_undefined(inc) {
+	fs := func() {
+		n := 0
+		return [func() { n++ }, func() { return n }]
+	}()
+	inc = fs[0]
+	get = fs[1]
+}
+inc()
+out = get()`)
+	require.Equal(t, int64(1), run(c))
+	clone = c.Clone()
+	require.Equal(t, int64(2), run(clone))
+	require.Equal(t, int64(3), run(clone))
+	require.Equal(t, int64(2), run(c))
+}
+
+func TestCompiled_CloneImmutable(t *testing.T) {
+	s := tengo.NewScript([]byte(`out := is_immutable_map(cfg)`))
+	require.NoError(t, s.Add("cfg", &tengo.ImmutableMap{
+		Value: map[string]tengo.Object{"x": &tengo.Int{Value: 1}},
+	}))
+	require.NoError(t, s.Add("frozen", &tengo.ImmutableArray{
+		Value: []tengo.Object{&tengo.String{Value: "a"}},
+	}))
+	c, err := s.Compile()
+	require.NoError(t, err)
+
+	clone := c.Clone()
+	require.NoError(t, clone.Run())
+	require.True(t, clone.Get("out").Bool())
+	// nothing inside can change, so the clone shares it
+	require.True(t, clone.Get("frozen").Object() == c.Get("frozen").Object())
+
+	// a mutable value inside an immutable one is the clone's own copy
+	s = tengo.NewScript([]byte(`
+cfg.a[0] += 1
+e.value.x += 1
+ia[0][0] += 1
+out := cfg.a[0]*100 + e.value.x*10 + ia[0][0]`))
+	require.NoError(t, s.Add("cfg", &tengo.ImmutableMap{
+		Value: map[string]tengo.Object{
+			"a": &tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 1}}},
+		},
+	}))
+	require.NoError(t, s.Add("e", &tengo.Error{
+		Value: &tengo.Map{Value: map[string]tengo.Object{"x": &tengo.Int{Value: 1}}},
+	}))
+	require.NoError(t, s.Add("ia", &tengo.ImmutableArray{
+		Value: []tengo.Object{
+			&tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 1}}},
+		},
+	}))
+	c, err = s.Compile()
+	require.NoError(t, err)
+	clone = c.Clone()
+	require.NoError(t, clone.Run())
+	require.Equal(t, int64(222), clone.Get("out").Int64())
+	require.NoError(t, c.Run())
+	require.Equal(t, int64(222), c.Get("out").Int64())
+	require.True(t, clone.Get("cfg").Object() != c.Get("cfg").Object())
+}
+
+func TestCompiled_CloneReplaceBuiltinModule(t *testing.T) {
+	mods := tengo.NewModuleMap()
+	mods.AddBuiltinModule("m", map[string]tengo.Object{
+		"v": &tengo.String{Value: "orig"},
+	})
+	s := tengo.NewScript([]byte(`m := import("m"); out := m.v`))
+	s.SetImports(mods)
+	c, err := s.Compile()
+	require.NoError(t, err)
+
+	clone := c.Clone()
+	c.ReplaceBuiltinModule("m", map[string]tengo.Object{
+		"v": &tengo.String{Value: "replaced"},
+	})
+	require.NoError(t, clone.Run())
+	require.Equal(t, "orig", clone.Get("out").String())
+	require.NoError(t, c.Run())
+	require.Equal(t, "replaced", c.Get("out").String())
+}
+
+func TestCompiled_CloneStringIndex(t *testing.T) {
+	// clones share string constants, whose rune cache -race watches
+	c, err := tengo.NewScript([]byte(`out := "h\u00e9llo w\u00f6rld"[1]; for x in "\u00e9t\u00e9" {}`)).Compile()
+	require.NoError(t, err)
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func(c *tengo.Compiled) {
+			defer wg.Done()
+			require.NoError(t, c.Run())
+		}(c.Clone())
+	}
+	wg.Wait()
+}
+
+func TestCompiled_CloneErrorPosition(t *testing.T) {
+	// a closure, which the clone copies
+	s := tengo.NewScript([]byte(`
+if is_undefined(f) {
+	f = func() { n := 0; return func() { n++; return undefined() } }()
+} else {
+	f()
+}`))
+	require.NoError(t, s.Add("f", nil))
+	c, err := s.Compile()
+	require.NoError(t, err)
+	require.NoError(t, c.Run())
+
+	err = c.Clone().Run()
+	require.Error(t, err)
+	require.True(t, strings.Contains(err.Error(), "at (main):3:"), err.Error())
+	require.False(t, strings.Contains(err.Error(), "at -"), err.Error())
+
+	// copy() of a function keeps its positions too
+	_, err = tengo.NewScript([]byte(`
+f := func() { return undefined() }
+copy(f)()`)).Run()
+	require.Error(t, err)
+	require.True(t, strings.Contains(err.Error(), "at (main):2:"), err.Error())
+	require.False(t, strings.Contains(err.Error(), "at -"), err.Error())
+}
