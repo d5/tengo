@@ -88,6 +88,31 @@ func TestDecode(t *testing.T) {
 	testDecodeError(t, `{"a":"b":"c"}`)
 }
 
+func TestEncodeUnsupported(t *testing.T) {
+	fn := &tengo.CompiledFunction{}
+	for _, o := range []tengo.Object{
+		fn,
+		&tengo.Map{Value: map[string]tengo.Object{"a": fn, "b": &tengo.Int{Value: 1}}},
+		&tengo.Array{Value: []tengo.Object{fn, &tengo.Int{Value: 1}}},
+		&tengo.Error{Value: &tengo.String{Value: "x"}},
+	} {
+		b, err := json.Encode(o)
+		require.Error(t, err, string(b))
+	}
+}
+
+func TestDecodeFloatOverflow(t *testing.T) {
+	_, err := json.Decode([]byte("1e400"))
+	require.Error(t, err)
+	_, err = json.Decode([]byte("[-1e400]"))
+	require.Error(t, err)
+
+	// underflow rounds to zero, as encoding/json does
+	o, err := json.Decode([]byte("1e-400"))
+	require.NoError(t, err)
+	require.Equal(t, 0.0, o.(*tengo.Float).Value)
+}
+
 func TestDecodeIntOverflow(t *testing.T) {
 	// ParseInt reports overflow and also returns the extreme int64.
 	// Dropping that error made 2^63 decode as MaxInt64.

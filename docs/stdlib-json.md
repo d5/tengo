@@ -10,7 +10,8 @@ json := import("json")
   object.
 - `encode(o object) => bytes`: Returns the JSON string (bytes) of the object.
   Unlike Go's JSON package, this function does not HTML-escape texts, but, one
-  can use `html_escape` function if needed.
+  can use `html_escape` function if needed. It returns an error for a value
+  JSON cannot hold, such as a function.
 - `indent(b string/bytes, prefix string, indent string) => bytes`: Returns an indented form of input JSON
   bytes string.
 - `html_escape(b string/bytes) => bytes`: Return an HTML-safe form of input
