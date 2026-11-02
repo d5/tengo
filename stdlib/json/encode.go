@@ -136,44 +136,48 @@ func Encode(o tengo.Object) ([]byte, error) {
 const cycleDepth = 64
 
 // encodePath is how deep encode is, and past cycleDepth the containers above
-// it, since a script can put a container inside itself.
+// it, since a script can put a container inside itself. An error ends the
+// walk, so a container that fails need not leave.
 type encodePath struct {
 	depth int
 	above map[tengo.Object]struct{}
 }
 
-func encode(o tengo.Object, path *encodePath) ([]byte, error) {
-	switch o.(type) {
-	case *tengo.Array, *tengo.ImmutableArray, *tengo.Map, *tengo.ImmutableMap:
-	default:
-		return encodeValue(o, path)
+func (p *encodePath) enter(o tengo.Object) error {
+	p.depth++
+	if p.depth <= cycleDepth {
+		return nil
 	}
-	if path.depth < cycleDepth {
-		path.depth++
-		b, err := encodeValue(o, path)
-		path.depth--
-		return b, err
-	}
-	if _, ok := path.above[o]; ok {
-		return nil, errors.New(
-			"unsupported value: encountered a cycle via " + o.TypeName())
-	}
-	if path.above == nil {
-		path.above = make(map[tengo.Object]struct{})
-	}
-	path.above[o] = struct{}{}
-	path.depth++
-	b, err := encodeValue(o, path)
-	path.depth--
-	delete(path.above, o)
-	return b, err
+	return p.track(o)
 }
 
-func encodeValue(o tengo.Object, path *encodePath) ([]byte, error) {
+func (p *encodePath) track(o tengo.Object) error {
+	if _, ok := p.above[o]; ok {
+		return errors.New(
+			"unsupported value: encountered a cycle via " + o.TypeName())
+	}
+	if p.above == nil {
+		p.above = make(map[tengo.Object]struct{})
+	}
+	p.above[o] = struct{}{}
+	return nil
+}
+
+func (p *encodePath) leave(o tengo.Object) {
+	if p.depth > cycleDepth {
+		delete(p.above, o)
+	}
+	p.depth--
+}
+
+func encode(o tengo.Object, path *encodePath) ([]byte, error) {
 	var b []byte
 
 	switch o := o.(type) {
 	case *tengo.Array:
+		if err := path.enter(o); err != nil {
+			return nil, err
+		}
 		b = append(b, '[')
 		len1 := len(o.Value) - 1
 		for idx, elem := range o.Value {
@@ -187,7 +191,11 @@ func encodeValue(o tengo.Object, path *encodePath) ([]byte, error) {
 			}
 		}
 		b = append(b, ']')
+		path.leave(o)
 	case *tengo.ImmutableArray:
+		if err := path.enter(o); err != nil {
+			return nil, err
+		}
 		b = append(b, '[')
 		len1 := len(o.Value) - 1
 		for idx, elem := range o.Value {
@@ -201,7 +209,11 @@ func encodeValue(o tengo.Object, path *encodePath) ([]byte, error) {
 			}
 		}
 		b = append(b, ']')
+		path.leave(o)
 	case *tengo.Map:
+		if err := path.enter(o); err != nil {
+			return nil, err
+		}
 		b = append(b, '{')
 		len1 := len(o.Value) - 1
 		idx := 0
@@ -219,7 +231,11 @@ func encodeValue(o tengo.Object, path *encodePath) ([]byte, error) {
 			idx++
 		}
 		b = append(b, '}')
+		path.leave(o)
 	case *tengo.ImmutableMap:
+		if err := path.enter(o); err != nil {
+			return nil, err
+		}
 		b = append(b, '{')
 		len1 := len(o.Value) - 1
 		idx := 0
@@ -237,6 +253,7 @@ func encodeValue(o tengo.Object, path *encodePath) ([]byte, error) {
 			idx++
 		}
 		b = append(b, '}')
+		path.leave(o)
 	case *tengo.Bool:
 		if o.IsFalsy() {
 			b = strconv.AppendBool(b, false)
