@@ -600,7 +600,7 @@ func builtinAppend(args ...Object) (Object, error) {
 	case *Array:
 		return &Array{Value: append(arg.Value, args[1:]...)}, nil
 	case *ImmutableArray:
-		return &Array{Value: append(arg.Value, args[1:]...)}, nil
+		return &Array{Value: concatObjects(arg.Value, args[1:])}, nil
 	default:
 		return nil, ErrInvalidArgumentType{
 			Name:     "first",

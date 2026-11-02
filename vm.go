@@ -352,29 +352,18 @@ func (v *VM) run() {
 				return
 			}
 			v.stack[v.sp-1] = e
-		case parser.OpImmutable:
-			value := v.stack[v.sp-1]
-			switch value := value.(type) {
-			case *Array:
-				var immutableArray Object = &ImmutableArray{
-					Value: value.Value,
-				}
+		case parser.OpImmutable, parser.OpImmutableLit:
+			// a copy, unless the value is a literal, since a mutable array or
+			// map can still change it
+			im := immutableOf(v.stack[v.sp-1],
+				v.curInsts[v.ip] == parser.OpImmutableLit)
+			if im != nil {
 				v.allocs--
 				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
-				v.stack[v.sp-1] = immutableArray
-			case *Map:
-				var immutableMap Object = &ImmutableMap{
-					Value: value.Value,
-				}
-				v.allocs--
-				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
-				}
-				v.stack[v.sp-1] = immutableMap
+				v.stack[v.sp-1] = im
 			}
 		case parser.OpIndex:
 			index := v.stack[v.sp-1]
@@ -482,9 +471,8 @@ func (v *VM) run() {
 				} else if highIdx > numElements {
 					highIdx = numElements
 				}
-				var val Object = &Array{
-					Value: left.Value[lowIdx:highIdx],
-				}
+				// a copy, since the slice is mutable
+				val := arrayOf(left.Value[lowIdx:highIdx])
 				v.allocs--
 				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit

@@ -295,6 +295,34 @@ func TestCompiler_Compile(t *testing.T) {
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray()))
 
+	// a literal is wrapped as it is, and anything else is copied first
+	expectCompile(t, `immutable([])`,
+		bytecode(
+			concatInsts(
+				tengo.MakeInstruction(parser.OpArray, 0),
+				tengo.MakeInstruction(parser.OpImmutableLit),
+				tengo.MakeInstruction(parser.OpPop),
+				tengo.MakeInstruction(parser.OpSuspend)),
+			objectsArray()))
+	expectCompile(t, `immutable({})`,
+		bytecode(
+			concatInsts(
+				tengo.MakeInstruction(parser.OpMap, 0),
+				tengo.MakeInstruction(parser.OpImmutableLit),
+				tengo.MakeInstruction(parser.OpPop),
+				tengo.MakeInstruction(parser.OpSuspend)),
+			objectsArray()))
+	expectCompile(t, `a := []; immutable(a)`,
+		bytecode(
+			concatInsts(
+				tengo.MakeInstruction(parser.OpArray, 0),
+				tengo.MakeInstruction(parser.OpSetGlobal, 0),
+				tengo.MakeInstruction(parser.OpGetGlobal, 0),
+				tengo.MakeInstruction(parser.OpImmutable),
+				tengo.MakeInstruction(parser.OpPop),
+				tengo.MakeInstruction(parser.OpSuspend)),
+			objectsArray()))
+
 	expectCompile(t, `[1, 2, 3]`,
 		bytecode(
 			concatInsts(
