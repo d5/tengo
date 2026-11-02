@@ -416,10 +416,7 @@ func extendObjects(a, b []Object) []Object {
 }
 
 // concatObjects returns a and b in a new slice, for an immutable array, whose
-// storage clones and other arrays can share. It stays out of line, since
-// inlined into VM.run its copy moved the hot code and slowed Stdlib 3%.
-//
-//go:noinline
+// storage clones and other arrays can share.
 func concatObjects(a, b []Object) []Object {
 	c := make([]Object, len(a)+len(b))
 	copy(c, a)
@@ -427,16 +424,40 @@ func concatObjects(a, b []Object) []Object {
 	return c
 }
 
-// copyObjectMap returns a new map with m's entries. It stays out of line for
-// VM.run, as concatObjects does.
+// VM.run calls the two helpers below to build its copies. Inlined there, the
+// copies grew it 272 bytes and moved the hot code: Stdlib ran 3% slower, and
+// Fib 1.3%.
+
+// immutableOf returns an immutable array or map of o, or nil for any other
+// value. It shares o's storage if share is set, for a literal nothing else
+// holds, and copies it otherwise.
 //
 //go:noinline
-func copyObjectMap(m map[string]Object) map[string]Object {
-	c := make(map[string]Object, len(m))
-	for k, v := range m {
-		c[k] = v
+func immutableOf(o Object, share bool) Object {
+	switch o := o.(type) {
+	case *Array:
+		if share {
+			return &ImmutableArray{Value: o.Value}
+		}
+		return &ImmutableArray{Value: concatObjects(o.Value, nil)}
+	case *Map:
+		if share {
+			return &ImmutableMap{Value: o.Value}
+		}
+		c := make(map[string]Object, len(o.Value))
+		for k, v := range o.Value {
+			c[k] = v
+		}
+		return &ImmutableMap{Value: c}
 	}
-	return c
+	return nil
+}
+
+// arrayOf returns a mutable copy of v.
+//
+//go:noinline
+func arrayOf(v []Object) Object {
+	return &Array{Value: concatObjects(v, nil)}
 }
 
 // Copy returns a copy of the type.

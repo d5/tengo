@@ -2948,6 +2948,9 @@ func TestAliasing(t *testing.T) {
 		nil, 1)
 	expectRun(t, `a := [1]; f := freeze(immutable(a)); a[0] = 2; out = f`,
 		nil, IARR{1})
+	expectRun(t, `out = immutable([1, [2]])`, nil, IARR{1, ARR{2}})
+	expectRun(t, `out = immutable({a: 1}).a`, nil, 1)
+	expectError(t, `a := immutable([1]); a[0] = 2`, nil, "not index-assignable")
 
 	// export is immutable() too, so a module exports a snapshot
 	expectRun(t, `c := import("counter"); c.inc(); out = c.n`,
