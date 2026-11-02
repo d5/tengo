@@ -1804,22 +1804,8 @@ func copyMap(o Object, m map[string]Object, path copyPath) Object {
 	return c
 }
 
-// equalElements takes a pair of containers met again as equal, so two
-// containers that recur into themselves alike compare equal.
-func equalElements(a, b Object, depth int, seen *map[objectPair]struct{}) bool {
-	switch a := a.(type) {
-	case *Array:
-		return equalArrays(a, a.Value, b, depth, seen)
-	case *ImmutableArray:
-		return equalArrays(a, a.Value, b, depth, seen)
-	case *Map:
-		return equalMaps(a, a.Value, b, depth, seen)
-	case *ImmutableMap:
-		return equalMaps(a, a.Value, b, depth, seen)
-	}
-	return a.Equals(b)
-}
-
+// equalArrays and equalMaps take a pair of containers met again as equal, so
+// two containers that recur into themselves alike compare equal.
 func equalArrays(o Object, elems []Object, x Object, depth int, seen *map[objectPair]struct{}) bool {
 	var xVal []Object
 	switch x := x.(type) {
@@ -1838,15 +1824,20 @@ func equalArrays(o Object, elems []Object, x Object, depth int, seen *map[object
 	}
 	equal := true
 	for i, e := range elems {
-		// int and string elements call Equals directly, which costs less
-		// than the dynamic call the other cases make
+		// a direct call costs less than the dynamic one in the default case
 		switch e := e.(type) {
 		case *Int:
 			equal = e.Equals(xVal[i])
 		case *String:
 			equal = e.Equals(xVal[i])
-		case *Array, *ImmutableArray, *Map, *ImmutableMap:
-			equal = equalElements(e, xVal[i], depth+1, seen)
+		case *Array:
+			equal = equalArrays(e, e.Value, xVal[i], depth+1, seen)
+		case *ImmutableArray:
+			equal = equalArrays(e, e.Value, xVal[i], depth+1, seen)
+		case *Map:
+			equal = equalMaps(e, e.Value, xVal[i], depth+1, seen)
+		case *ImmutableMap:
+			equal = equalMaps(e, e.Value, xVal[i], depth+1, seen)
 		default:
 			equal = e.Equals(xVal[i])
 		}
@@ -1880,8 +1871,14 @@ func equalMaps(o Object, m map[string]Object, x Object, depth int, seen *map[obj
 			equal = v.Equals(xVal[k])
 		case *String:
 			equal = v.Equals(xVal[k])
-		case *Array, *ImmutableArray, *Map, *ImmutableMap:
-			equal = equalElements(v, xVal[k], depth+1, seen)
+		case *Array:
+			equal = equalArrays(v, v.Value, xVal[k], depth+1, seen)
+		case *ImmutableArray:
+			equal = equalArrays(v, v.Value, xVal[k], depth+1, seen)
+		case *Map:
+			equal = equalMaps(v, v.Value, xVal[k], depth+1, seen)
+		case *ImmutableMap:
+			equal = equalMaps(v, v.Value, xVal[k], depth+1, seen)
 		default:
 			equal = v.Equals(xVal[k])
 		}
