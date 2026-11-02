@@ -648,6 +648,25 @@ export x`, func(p pfn) []Stmt {
 	expectParseError(t, "export a b")
 }
 
+func TestParseBranchLabel(t *testing.T) {
+	// the compiler has no labels, so a label would be silently ignored
+	for _, src := range []string{
+		"for { break outer }",
+		"for { continue outer }",
+	} {
+		f := NewFileSet().AddFile("test", -1, len(src))
+		_, err := NewParser(f, []byte(src), nil).ParseFile()
+		require.Error(t, err)
+		require.True(t, strings.Contains(err.Error(), "labels are not supported"),
+			err.Error())
+	}
+	for _, src := range []string{"for { break }", "for { continue }", "for { break\nx := 1 }"} {
+		f := NewFileSet().AddFile("test", -1, len(src))
+		_, err := NewParser(f, []byte(src), nil).ParseFile()
+		require.NoError(t, err, src)
+	}
+}
+
 func TestParseForIn(t *testing.T) {
 	expectParse(t, "for x in y {}", func(p pfn) []Stmt {
 		return stmts(
