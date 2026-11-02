@@ -2928,6 +2928,9 @@ func TestCyclicValues(t *testing.T) {
 	expectRun(t, `a := [0]; a[0] = a; b := [[0]]; out = a == b`, nil, false)
 	expectRun(t, `m := {}; m.self = m; n := {}; n.self = n; out = m == n`,
 		nil, true)
+	expectRun(t, `a := [0, 0]; a[0] = a; a[1] = a; out = a == a`, nil, true)
+	expectRun(t, `m := {}; m.a = m; m.b = m; n := {}; n.a = n; n.b = n; out = m == n`,
+		nil, true)
 	expectRun(t, `a := [0]; a[0] = a; out = a != immutable([a])`, nil, false)
 
 	// copying keeps the cycle inside the copy

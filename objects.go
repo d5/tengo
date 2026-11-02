@@ -1627,6 +1627,8 @@ func (p copyPath) push(o, c Object) (next copyPath, far bool) {
 // equalDepth is how deep Equals compares containers before it records the
 // pairs it meets. A pair met again compares equal, and a cycle repeats its
 // pairs at any depth, so values shallower than this pay nothing to check.
+// Once a walk gets this deep, Equals records pairs at every depth, or a
+// container that holds itself twice would take 2^64 steps.
 const equalDepth = 64
 
 // objectPair is a pair of containers an Equals compared.
@@ -1636,7 +1638,7 @@ type objectPair struct {
 
 // seenPair records a and b, and reports whether Equals met them before.
 func seenPair(a, b Object, depth int, seen *map[objectPair]struct{}) bool {
-	if depth < equalDepth {
+	if depth < equalDepth && *seen == nil {
 		return false
 	}
 	k := objectPair{a, b}
