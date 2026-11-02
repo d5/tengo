@@ -725,6 +725,9 @@ func TestBuiltinFunction(t *testing.T) {
 	tengo.MaxStringLen = 9
 	expectError(t, `format("%s", "1234567890")`,
 		nil, "exceeding string size limit")
+	expectRun(t, `out = format("%x", "abcd")`, nil, "61626364")
+	expectError(t, `format("%x", "abcde")`, nil, "exceeding string size limit")
+	expectError(t, `format("% #X", "abcd")`, nil, "exceeding string size limit")
 	tengo.MaxStringLen = 2147483647
 
 	// delete
