@@ -130,56 +130,46 @@ func Encode(o tengo.Object) ([]byte, error) {
 	return encode(o, &path)
 }
 
-// encodePath is the containers above the value encode is in, since a script
-// can put a container inside itself. Past the first 8 it also keeps them in
-// a map, so a deep value encodes in linear time.
+// cycleDepth is how deep encode goes before it tracks the containers above
+// it. A cycle makes the walk endless, so it still reaches that depth, and
+// shallower values pay nothing to check.
+const cycleDepth = 64
+
+// encodePath is how deep encode is, and past cycleDepth the containers above
+// it, since a script can put a container inside itself.
 type encodePath struct {
-	near [8]tengo.Object
-	far  map[tengo.Object]struct{}
-	n    int
-}
-
-func (p *encodePath) has(o tengo.Object) bool {
-	for i := 0; i < p.n && i < len(p.near); i++ {
-		if p.near[i] == o {
-			return true
-		}
-	}
-	_, ok := p.far[o]
-	return ok
-}
-
-func (p *encodePath) push(o tengo.Object) {
-	if p.n < len(p.near) {
-		p.near[p.n] = o
-	} else {
-		if p.far == nil {
-			p.far = make(map[tengo.Object]struct{})
-		}
-		p.far[o] = struct{}{}
-	}
-	p.n++
-}
-
-// pop removes o, the container push added last.
-func (p *encodePath) pop(o tengo.Object) {
-	p.n--
-	if p.n >= len(p.near) {
-		delete(p.far, o)
-	}
+	depth int
+	above map[tengo.Object]struct{}
 }
 
 func encode(o tengo.Object, path *encodePath) ([]byte, error) {
 	switch o.(type) {
 	case *tengo.Array, *tengo.ImmutableArray, *tengo.Map, *tengo.ImmutableMap:
-		if path.has(o) {
-			return nil, errors.New(
-				"unsupported value: encountered a cycle via " + o.TypeName())
-		}
-		path.push(o)
-		defer path.pop(o)
+	default:
+		return encodeValue(o, path)
 	}
+	if path.depth < cycleDepth {
+		path.depth++
+		b, err := encodeValue(o, path)
+		path.depth--
+		return b, err
+	}
+	if _, ok := path.above[o]; ok {
+		return nil, errors.New(
+			"unsupported value: encountered a cycle via " + o.TypeName())
+	}
+	if path.above == nil {
+		path.above = make(map[tengo.Object]struct{})
+	}
+	path.above[o] = struct{}{}
+	path.depth++
+	b, err := encodeValue(o, path)
+	path.depth--
+	delete(path.above, o)
+	return b, err
+}
 
+func encodeValue(o tengo.Object, path *encodePath) ([]byte, error) {
 	var b []byte
 
 	switch o := o.(type) {

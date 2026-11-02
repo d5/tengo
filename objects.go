@@ -195,9 +195,8 @@ func (o *Array) IsFalsy() bool {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *Array) Equals(x Object) bool {
-	var near [pathDepth]objectPair
-	var far map[objectPair]struct{}
-	return equalArrays(o, o.Value, x, pairPath{near[:0], &far})
+	var seen map[objectPair]struct{}
+	return equalArrays(o, o.Value, x, 0, &seen)
 }
 
 // IndexGet returns an element at a given index.
@@ -835,9 +834,8 @@ func (o *ImmutableArray) IsFalsy() bool {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *ImmutableArray) Equals(x Object) bool {
-	var near [pathDepth]objectPair
-	var far map[objectPair]struct{}
-	return equalArrays(o, o.Value, x, pairPath{near[:0], &far})
+	var seen map[objectPair]struct{}
+	return equalArrays(o, o.Value, x, 0, &seen)
 }
 
 // IndexGet returns an element at a given index.
@@ -915,9 +913,8 @@ func (o *ImmutableMap) IndexGet(index Object) (res Object, err error) {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *ImmutableMap) Equals(x Object) bool {
-	var near [pathDepth]objectPair
-	var far map[objectPair]struct{}
-	return equalMaps(o, o.Value, x, pairPath{near[:0], &far})
+	var seen map[objectPair]struct{}
+	return equalMaps(o, o.Value, x, 0, &seen)
 }
 
 // Iterate creates an immutable map iterator.
@@ -1168,9 +1165,8 @@ func (o *Map) IsFalsy() bool {
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *Map) Equals(x Object) bool {
-	var near [pathDepth]objectPair
-	var far map[objectPair]struct{}
-	return equalMaps(o, o.Value, x, pairPath{near[:0], &far})
+	var seen map[objectPair]struct{}
+	return equalMaps(o, o.Value, x, 0, &seen)
 }
 
 // IndexGet returns the value for the given key.
@@ -1628,42 +1624,30 @@ func (p copyPath) push(o, c Object) (next copyPath, far bool) {
 	return p, true
 }
 
-// pairPath is the pairs of containers above an Equals.
-type pairPath struct {
-	near []objectPair
-	far  *map[objectPair]struct{}
-}
+// equalDepth is how deep Equals compares containers before it records the
+// pairs it meets. A pair met again compares equal, and a cycle repeats its
+// pairs at any depth, so values shallower than this pay nothing to check.
+const equalDepth = 64
 
-// objectPair is a pair of containers on Equals's path.
+// objectPair is a pair of containers an Equals compared.
 type objectPair struct {
 	a, b Object
 }
 
-func (p pairPath) has(a, b Object) bool {
-	for _, e := range p.near {
-		if e.a == a && e.b == b {
-			return true
-		}
-	}
-	if *p.far == nil {
+// seenPair records a and b, and reports whether Equals met them before.
+func seenPair(a, b Object, depth int, seen *map[objectPair]struct{}) bool {
+	if depth < equalDepth {
 		return false
 	}
-	_, ok := (*p.far)[objectPair{a, b}]
-	return ok
-}
-
-// push returns the path with a and b on it. If far is true, the caller must
-// delete the pair from far once its walk under it ends.
-func (p pairPath) push(a, b Object) (next pairPath, far bool) {
-	if len(p.near) < pathDepth {
-		p.near = append(p.near, objectPair{a, b})
-		return p, false
+	k := objectPair{a, b}
+	if _, ok := (*seen)[k]; ok {
+		return true
 	}
-	if *p.far == nil {
-		*p.far = make(map[objectPair]struct{})
+	if *seen == nil {
+		*seen = make(map[objectPair]struct{})
 	}
-	(*p.far)[objectPair{a, b}] = struct{}{}
-	return p, true
+	(*seen)[k] = struct{}{}
+	return false
 }
 
 func isContainer(o Object) bool {
@@ -1820,23 +1804,23 @@ func copyMap(o Object, m map[string]Object, path copyPath) Object {
 	return c
 }
 
-// equalElements takes a pair of containers met again on the path as equal,
-// so two containers that recur into themselves alike compare equal.
-func equalElements(a, b Object, path pairPath) bool {
+// equalElements takes a pair of containers met again as equal, so two
+// containers that recur into themselves alike compare equal.
+func equalElements(a, b Object, depth int, seen *map[objectPair]struct{}) bool {
 	switch a := a.(type) {
 	case *Array:
-		return equalArrays(a, a.Value, b, path)
+		return equalArrays(a, a.Value, b, depth, seen)
 	case *ImmutableArray:
-		return equalArrays(a, a.Value, b, path)
+		return equalArrays(a, a.Value, b, depth, seen)
 	case *Map:
-		return equalMaps(a, a.Value, b, path)
+		return equalMaps(a, a.Value, b, depth, seen)
 	case *ImmutableMap:
-		return equalMaps(a, a.Value, b, path)
+		return equalMaps(a, a.Value, b, depth, seen)
 	}
 	return a.Equals(b)
 }
 
-func equalArrays(o Object, elems []Object, x Object, path pairPath) bool {
+func equalArrays(o Object, elems []Object, x Object, depth int, seen *map[objectPair]struct{}) bool {
 	var xVal []Object
 	switch x := x.(type) {
 	case *Array:
@@ -1849,15 +1833,20 @@ func equalArrays(o Object, elems []Object, x Object, path pairPath) bool {
 	if len(elems) != len(xVal) {
 		return false
 	}
-	if path.has(o, x) {
+	if seenPair(o, x, depth, seen) {
 		return true
 	}
-	next, far := path.push(o, x)
 	equal := true
 	for i, e := range elems {
-		switch e.(type) {
+		// int and string elements call Equals directly, which costs less
+		// than the dynamic call the other cases make
+		switch e := e.(type) {
+		case *Int:
+			equal = e.Equals(xVal[i])
+		case *String:
+			equal = e.Equals(xVal[i])
 		case *Array, *ImmutableArray, *Map, *ImmutableMap:
-			equal = equalElements(e, xVal[i], next)
+			equal = equalElements(e, xVal[i], depth+1, seen)
 		default:
 			equal = e.Equals(xVal[i])
 		}
@@ -1865,13 +1854,10 @@ func equalArrays(o Object, elems []Object, x Object, path pairPath) bool {
 			break
 		}
 	}
-	if far {
-		delete(*path.far, objectPair{o, x})
-	}
 	return equal
 }
 
-func equalMaps(o Object, m map[string]Object, x Object, path pairPath) bool {
+func equalMaps(o Object, m map[string]Object, x Object, depth int, seen *map[objectPair]struct{}) bool {
 	var xVal map[string]Object
 	switch x := x.(type) {
 	case *Map:
@@ -1884,24 +1870,24 @@ func equalMaps(o Object, m map[string]Object, x Object, path pairPath) bool {
 	if len(m) != len(xVal) {
 		return false
 	}
-	if path.has(o, x) {
+	if seenPair(o, x, depth, seen) {
 		return true
 	}
-	next, far := path.push(o, x)
 	equal := true
 	for k, v := range m {
-		switch v.(type) {
+		switch v := v.(type) {
+		case *Int:
+			equal = v.Equals(xVal[k])
+		case *String:
+			equal = v.Equals(xVal[k])
 		case *Array, *ImmutableArray, *Map, *ImmutableMap:
-			equal = equalElements(v, xVal[k], next)
+			equal = equalElements(v, xVal[k], depth+1, seen)
 		default:
 			equal = v.Equals(xVal[k])
 		}
 		if !equal {
 			break
 		}
-	}
-	if far {
-		delete(*path.far, objectPair{o, x})
 	}
 	return equal
 }
