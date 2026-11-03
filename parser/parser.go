@@ -12,12 +12,14 @@ import (
 type bailout struct{}
 
 var stmtStart = map[token.Token]bool{
-	token.Break:    true,
-	token.Continue: true,
-	token.For:      true,
-	token.If:       true,
-	token.Return:   true,
-	token.Export:   true,
+	token.Break:       true,
+	token.Continue:    true,
+	token.Fallthrough: true,
+	token.For:         true,
+	token.If:          true,
+	token.Return:      true,
+	token.Export:      true,
+	token.Switch:      true,
 }
 
 // Error represents a parser error.
@@ -697,8 +699,10 @@ func (p *Parser) parseStmt() (stmt Stmt) {
 		return p.parseIfStmt()
 	case token.For:
 		return p.parseForStmt()
-	case token.Break, token.Continue:
+	case token.Break, token.Continue, token.Fallthrough:
 		return p.parseBranchStmt(p.token)
+	case token.Switch:
+		return p.parseSwitchStmt()
 	case token.Semicolon:
 		s := &EmptyStmt{Semicolon: p.pos, Implicit: p.tokenLit == "\n"}
 		p.next()
@@ -833,6 +837,82 @@ func (p *Parser) parseIfStmt() Stmt {
 		Cond:  cond,
 		Body:  body,
 		Else:  elseStmt,
+	}
+}
+
+func (p *Parser) parseSwitchStmt() Stmt {
+	if p.trace {
+		defer untracep(tracep(p, "SwitchStmt"))
+	}
+
+	pos := p.expect(token.Switch)
+
+	var init Stmt
+	var tag Expr
+
+	if p.token != token.LBrace {
+		outer := p.exprLevel
+		p.exprLevel = -1
+
+		s := p.parseSimpleStmt(false)
+		if p.token == token.Semicolon {
+			p.next()
+			init = s
+			if p.token != token.LBrace {
+				tag = p.makeExpr(p.parseSimpleStmt(false), "switch expression")
+			}
+		} else {
+			tag = p.makeExpr(s, "switch expression")
+		}
+
+		p.exprLevel = outer
+	}
+
+	lbrace := p.expect(token.LBrace)
+	var list []Stmt
+	for p.token == token.Case || p.token == token.Default {
+		list = append(list, p.parseCaseClause())
+	}
+	rbrace := p.expect(token.RBrace)
+	p.expectSemi()
+
+	body := &BlockStmt{LBrace: lbrace, RBrace: rbrace, Stmts: list}
+	return &SwitchStmt{
+		SwitchPos: pos,
+		Init:      init,
+		Tag:       tag,
+		Body:      body,
+	}
+}
+
+func (p *Parser) parseCaseClause() *CaseClause {
+	if p.trace {
+		defer untracep(tracep(p, "CaseClause"))
+	}
+
+	pos := p.pos
+	var list []Expr
+
+	if p.token == token.Case {
+		p.next()
+		list = p.parseExprList()
+	} else {
+		p.expect(token.Default)
+	}
+
+	p.expect(token.Colon)
+
+	var body []Stmt
+	for p.token != token.Case && p.token != token.Default &&
+		p.token != token.RBrace && p.token != token.EOF {
+		body = append(body, p.parseStmt())
+	}
+
+	return &CaseClause{
+		CasePos: pos,
+		List:    list,
+		Body:    body,
+		EndPos:  p.pos,
 	}
 }
 
@@ -1098,8 +1178,8 @@ func (p *Parser) expect(token token.Token) Pos {
 
 func (p *Parser) expectSemi() {
 	switch p.token {
-	case token.RParen, token.RBrace:
-		// semicolon is optional before a closing ')' or '}'
+	case token.RParen, token.RBrace, token.Case, token.Default:
+		// semicolon is optional before a closing ')' or '}', or before a switch clause
 	case token.Comma:
 		// permit a ',' instead of a ';' but complain
 		p.errorExpected(p.pos, "';'")

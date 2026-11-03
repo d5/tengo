@@ -347,3 +347,62 @@ func (s *ReturnStmt) String() string {
 	}
 	return "return"
 }
+
+// CaseClause represents a case or default clause in a switch statement.
+type CaseClause struct {
+	CasePos Pos    // position of "case" or "default" keyword
+	List    []Expr // nil means default clause
+	Body    []Stmt
+	EndPos  Pos
+}
+
+func (s *CaseClause) stmtNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (s *CaseClause) Pos() Pos { return s.CasePos }
+
+// End returns the position of first character immediately after the node.
+func (s *CaseClause) End() Pos { return s.EndPos }
+
+func (s *CaseClause) String() string {
+	var bodyList []string
+	for _, stmt := range s.Body {
+		bodyList = append(bodyList, stmt.String())
+	}
+	body := strings.Join(bodyList, "; ")
+	if s.List == nil {
+		return "default: " + body
+	}
+	var list []string
+	for _, e := range s.List {
+		list = append(list, e.String())
+	}
+	return "case " + strings.Join(list, ", ") + ": " + body
+}
+
+// SwitchStmt represents a switch statement.
+type SwitchStmt struct {
+	SwitchPos Pos
+	Init      Stmt       // optional init statement; may be nil
+	Tag       Expr       // optional tag expression; nil means tagless switch
+	Body      *BlockStmt // list of CaseClause statements
+}
+
+func (s *SwitchStmt) stmtNode() {}
+
+// Pos returns the position of first character belonging to the node.
+func (s *SwitchStmt) Pos() Pos { return s.SwitchPos }
+
+// End returns the position of first character immediately after the node.
+func (s *SwitchStmt) End() Pos { return s.Body.End() }
+
+func (s *SwitchStmt) String() string {
+	var initStr, tagStr string
+	if s.Init != nil {
+		initStr = s.Init.String() + "; "
+	}
+	if s.Tag != nil {
+		tagStr = s.Tag.String() + " "
+	}
+	return "switch " + initStr + tagStr + s.Body.String()
+}
