@@ -62,8 +62,9 @@ e.g. -123456p-78
 ```
 Bool:                    %t
 Int:                     %d
-Float:                   %g
-String:                  %s
+Float:                   %f, with the shortest precision that round-trips
+Char:                    %c
+String:                  %q
 ```
 
 ## Compound Objects

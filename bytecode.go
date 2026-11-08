@@ -197,8 +197,8 @@ func (b *Bytecode) RemoveDuplicates() {
 				deduped = append(deduped, c)
 			}
 		default:
-			panic(fmt.Errorf("unsupported top-level constant type: %s",
-				c.TypeName()))
+			indexMap[curIdx] = len(deduped)
+			deduped = append(deduped, c)
 		}
 	}
 

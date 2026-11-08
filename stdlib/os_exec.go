@@ -1,6 +1,7 @@
 package stdlib
 
 import (
+	"errors"
 	"os/exec"
 
 	"github.com/d5/tengo/v2"
@@ -110,6 +111,9 @@ func makeOSExecCommand(cmd *exec.Cmd) *tengo.ImmutableMap {
 				Value: func(args ...tengo.Object) (tengo.Object, error) {
 					if len(args) != 0 {
 						return nil, tengo.ErrWrongNumArguments
+					}
+					if cmd.Process == nil {
+						return wrapError(errors.New("process not started")), nil
 					}
 					return makeOSProcess(cmd.Process), nil
 				},
