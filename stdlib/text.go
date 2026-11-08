@@ -738,6 +738,10 @@ func textRepeat(args ...tengo.Object) (ret tengo.Object, err error) {
 		}
 	}
 
+	if i2 < 0 {
+		return nil, fmt.Errorf("count must not be negative")
+	}
+
 	if len(s1)*i2 > tengo.MaxStringLen {
 		return nil, tengo.ErrStringLimit
 	}
@@ -872,6 +876,11 @@ func textFormatFloat(args ...tengo.Object) (ret tengo.Object, err error) {
 			Expected: "int(compatible)",
 			Found:    args[3].TypeName(),
 		}
+		return
+	}
+
+	if i4 != 32 && i4 != 64 {
+		err = fmt.Errorf("bits must be 32 or 64")
 		return
 	}
 

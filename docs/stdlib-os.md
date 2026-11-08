@@ -200,4 +200,5 @@ output := cmd.output()
 - `set_path(path string)`: sets the path of the command to run.
 - `set_dir(dir string)`: sets the working directory of the process.
 - `set_env(env [string])`: sets the environment of the process.
-- `process() => Process`: returns the underlying process, once started.
+- `process() => Process/error`: returns the underlying process, once started,
+  or an error before the command starts.

@@ -70,6 +70,11 @@ if !is_error(cmd) {
 }
 `, []byte("foo bar\n"))
 
+	// process() before the command starts
+	expect(t, `
+os := import("os")
+out := is_error(os.exec("echo").process())
+`, true)
 }
 
 func TestGetModules(t *testing.T) {

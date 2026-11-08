@@ -36,11 +36,6 @@ func fmtPrintf(args ...tengo.Object) (ret tengo.Object, err error) {
 			Found:    args[0].TypeName(),
 		}
 	}
-	if numArgs == 1 {
-		fmt.Print(format)
-		return nil, nil
-	}
-
 	s, err := tengo.Format(format.Value, args[1:]...)
 	if err != nil {
 		return nil, err
@@ -72,10 +67,6 @@ func fmtSprintf(args ...tengo.Object) (ret tengo.Object, err error) {
 			Expected: "string",
 			Found:    args[0].TypeName(),
 		}
-	}
-	if numArgs == 1 {
-		// okay to return 'format' directly as String is immutable
-		return format, nil
 	}
 	s, err := tengo.Format(format.Value, args[1:]...)
 	if err != nil {

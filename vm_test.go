@@ -721,6 +721,25 @@ func TestBuiltinFunction(t *testing.T) {
 		nil, `foo {a: {b: {c: [1, 2, 3]}}}`)
 	expectRun(t, `out = format("%v", [1, [2, [3, 4]]])`,
 		nil, `[1, [2, [3, 4]]]`)
+	// one argument is formatted too
+	expectRun(t, `out = format("100%%")`, nil, "100%")
+	expectRun(t, `out = format("%d")`, nil, "%!d(MISSING)")
+	// %v takes width, precision and flags as the type's own verb does
+	expectRun(t, `out = format("[%.1v] [%05v] [%.2v] [%6v]", 12345, -5, 3.14159, 1.5)`,
+		nil, "[12345] [-0005] [3.14] [   1.5]")
+	expectRun(t, `out = format("%v %v %v %v", 1.5, 1e21, "s", true)`,
+		nil, `1.5 1000000000000000000000 "s" true`)
+	// a char takes the integer verbs
+	expectRun(t, `out = format("[%c] [%d] [%U] [%q] [%v] [%3v]", 'x', 'x', 'x', 'x', 'x', 'x')`,
+		nil, "[x] [120] [U+0078] ['x'] [x] [  x]")
+	// a bad verb names the type, and bytes report theirs
+	expectRun(t, `out = format("[%c] [%z]", bytes("ab"), 1)`,
+		nil, "[%!c(bytes=ab)] [%!z(int=1)]")
+	// %#g counts significant digits from the first non-zero one
+	expectRun(t, `out = format("[%#g] [%#.3g]", 0.0001234, 0.001)`,
+		nil, "[0.000123400] [0.00100]")
+	expectRun(t, `out = format("[%#g] [%#.3g]", 0.0, 0.0)`,
+		nil, "[0.00000] [0.00]")
 
 	tengo.MaxStringLen = 9
 	expectError(t, `format("%s", "1234567890")`,
@@ -2911,6 +2930,84 @@ func TestBangOperator(t *testing.T) {
 	expectRun(t, `out = !!5`, nil, true)
 }
 
+func TestCyclicValues(t *testing.T) {
+	// printing
+	expectRun(t, `a := [0]; a[0] = a; out = string(a)`, nil, "[[...]]")
+	expectRun(t, `m := {}; m.self = m; out = string(m)`, nil, "{self: {...}}")
+	expectRun(t, `a := [0]; m := {a: a}; a[0] = m; out = string(a)`,
+		nil, "[{a: [...]}]")
+	expectRun(t, `e := error([0]); e.value[0] = e; out = string(e)`,
+		nil, "error: [error: ...]")
+	expectRun(t, `x := [1]; out = string([x, x])`, nil, "[[1], [1]]")
+
+	// equality
+	expectRun(t, `a := [0]; a[0] = a; out = a == a`, nil, true)
+	expectRun(t, `a := [0]; a[0] = a; b := [0]; b[0] = b; out = a == b`,
+		nil, true)
+	expectRun(t, `a := [0]; a[0] = a; b := [[0]]; out = a == b`, nil, false)
+	expectRun(t, `m := {}; m.self = m; n := {}; n.self = n; out = m == n`,
+		nil, true)
+	expectRun(t, `a := [0, 0]; a[0] = a; a[1] = a; out = a == a`, nil, true)
+	expectRun(t, `m := {}; m.a = m; m.b = m; n := {}; n.a = n; n.b = n; out = m == n`,
+		nil, true)
+	expectRun(t, `a := [0]; a[0] = a; out = a != immutable([a])`, nil, false)
+
+	// copying keeps the cycle inside the copy
+	expectRun(t, `a := [0]; a[0] = a; c := copy(a); x := c[0]; x[0] = 7; out = [c[0], string(a)]`,
+		nil, ARR{7, "[[...]]"})
+	expectRun(t, `m := {}; m.self = m; c := copy(m); c.self.k = 1; out = [c.k, m.k]`,
+		nil, ARR{1, tengo.UndefinedValue})
+	expectRun(t, `e := error([0]); e.value[0] = e; c := copy(e); out = string(c)`,
+		nil, "error: [error: ...]")
+
+	// a path deeper than its stack array still finds the cycle
+	expectRun(t, `a := [0]; b := a; for i := 0; i < 20; i++ { b[0] = [0]; b = b[0] }; b[0] = a; out = a == copy(a)`,
+		nil, true)
+}
+
+func TestCyclicValuesToGo(t *testing.T) {
+	a := &tengo.Array{Value: []tengo.Object{nil, &tengo.Int{Value: 1}}}
+	a.Value[0] = a
+	m := &tengo.Map{Value: map[string]tengo.Object{}}
+	m.Value["self"] = m
+	m.Value["a"] = a
+
+	require.Equal(t, 3, tengo.CountObjects(m))
+
+	// a container converts to nil where it recurs
+	require.True(t, reflect.DeepEqual(
+		[]interface{}{nil, int64(1)}, tengo.ToInterface(a)))
+	require.True(t, reflect.DeepEqual(map[string]interface{}{
+		"self": nil,
+		"a":    []interface{}{nil, int64(1)},
+	}, tengo.ToInterface(m)))
+
+	// so the host can hand the value back
+	s := tengo.NewScript([]byte(`a := [0]; a[0] = a; m := {}; m.self = m; b := 0; n := 0`))
+	c, err := s.Run()
+	require.NoError(t, err)
+	require.NoError(t, c.Set("b", c.Get("a").Value()))
+	require.NoError(t, c.Set("n", c.Get("m").Value()))
+
+	e := &tengo.Error{}
+	e.Value = e
+	require.Equal(t, "error: error: ...", e.String())
+	require.Equal(t, "error", (&tengo.Error{}).Copy().String())
+}
+
+func TestDeepValues(t *testing.T) {
+	// a deep path stays linear: 100k levels took seconds when every level
+	// scanned the whole path
+	deep := tengo.Object(&tengo.Array{})
+	for i := 0; i < 100000; i++ {
+		deep = &tengo.Array{Value: []tengo.Object{deep}}
+	}
+	c := deep.Copy()
+	require.True(t, deep.Equals(c))
+	require.Equal(t, 100001, tengo.CountObjects(deep))
+	require.NotNil(t, tengo.ToInterface(deep))
+}
+
 func TestAliasing(t *testing.T) {
 	// concatenation writes only into capacity no other array has written to
 	expectRun(t, `a := [1, 2, 3]; p := a + [9]; q := a + [8]; out = [p, q]`,
@@ -3624,6 +3721,29 @@ func TestString(t *testing.T) {
 	expectError(t, `"foo" - "bar"`, nil, "invalid operation")
 }
 
+func TestVMReuse(t *testing.T) {
+	// the second run starts without the first run's error
+	src := `out = fail ? undefined() : 7`
+	st := tengo.NewSymbolTable()
+	fail := st.Define("fail")
+	out := st.Define("out")
+	fileSet := parser.NewFileSet()
+	srcFile := fileSet.AddFile("test", -1, len(src))
+	file, err := parser.NewParser(srcFile, []byte(src), nil).ParseFile()
+	require.NoError(t, err)
+	c := tengo.NewCompiler(srcFile, st, nil, nil, nil)
+	require.NoError(t, c.Compile(file))
+
+	globals := make([]tengo.Object, tengo.GlobalsSize)
+	globals[fail.Index] = tengo.TrueValue
+	v := tengo.NewVM(c.Bytecode(), globals, -1)
+	require.Error(t, v.Run())
+
+	globals[fail.Index] = tengo.FalseValue
+	require.NoError(t, v.Run())
+	require.Equal(t, &tengo.Int{Value: 7}, globals[out.Index])
+}
+
 func TestTailCall(t *testing.T) {
 	expectRun(t, `
 	fac := func(n, a) {
@@ -3714,6 +3834,37 @@ iter := func(n, max) {
 iter(0, 9999)
 out = c 
 `, nil, 9999)
+
+	// a caller that uses the value costs one more frame, not one per call
+	expectRun(t, `
+c := 0
+iter := func(n, max) {
+	if n == max {
+		return
+	}
+	c++
+	iter(n+1, max)
+}
+out = is_undefined(iter(0, 9999)) ? c : -1
+`, nil, 9999)
+
+	// a tail call whose value the caller pops returns undefined
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; f(n-1) }; out = f(1)`,
+		nil, tengo.UndefinedValue)
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; f(n-1); return }; out = f(3)`,
+		nil, tengo.UndefinedValue)
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; return f(n-1) }; out = f(3)`,
+		nil, 42)
+	// whichever link pops the value, the whole chain returns undefined
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; if n == 2 { return f(n-1) }; f(n-1) }; out = f(3)`,
+		nil, tengo.UndefinedValue)
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; if n == 3 { return f(n-1) }; f(n-1) }; out = f(3)`,
+		nil, tengo.UndefinedValue)
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; if n < 3 { return f(n-1) }; f(n-1) }; out = f(3)`,
+		nil, tengo.UndefinedValue)
+	// a later call in the same frame slot returns its own value
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; f(n-1) }; f(2); g := func() { return 7 }; out = g()`,
+		nil, 7)
 }
 
 // tail call with free vars

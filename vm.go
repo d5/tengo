@@ -73,6 +73,7 @@ func (v *VM) Run() (err error) {
 	v.framesIndex = 1
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
+	v.err = nil
 
 	v.run()
 	atomic.StoreInt64(&v.aborting, 0)
@@ -103,6 +104,14 @@ func (v *VM) stackFull() bool {
 		return true
 	}
 	return false
+}
+
+// callerPops reports whether the current frame's caller pops the frame's
+// return value. A frame that pops a tail call's value returns undefined, so
+// it can take that call's place only when its own value is popped too.
+func (v *VM) callerPops() bool {
+	caller := &v.frames[v.framesIndex-2]
+	return caller.fn.Instructions[caller.ip+1] == parser.OpPop
 }
 
 func (v *VM) run() {
@@ -633,7 +642,8 @@ func (v *VM) run() {
 					nextOp := v.curInsts[v.ip+1]
 					if nextOp == parser.OpReturn ||
 						(nextOp == parser.OpPop &&
-							parser.OpReturn == v.curInsts[v.ip+2]) {
+							parser.OpReturn == v.curInsts[v.ip+2] &&
+							v.callerPops()) {
 						for p := 0; p < numArgs; p++ {
 							v.stack[v.curFrame.basePointer+p] =
 								v.stack[v.sp-numArgs+p]

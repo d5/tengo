@@ -791,6 +791,8 @@ func (p *Parser) parseBranchStmt(tok token.Token) Stmt {
 
 	var label *Ident
 	if p.token == token.Ident {
+		// the compiler has no labels, so `break outer` would act as `break`
+		p.error(p.pos, "labels are not supported")
 		label = p.parseIdent()
 	}
 	p.expectSemi()
@@ -984,6 +986,10 @@ func (p *Parser) parseSimpleStmt(forIn bool) Stmt {
 					p.errorExpected(x[1].Pos(), "identifier")
 					value = &Ident{Name: "_", NamePos: x[1].Pos()}
 				}
+			default:
+				p.errorExpected(x[2].Pos(), "'in'")
+				key = &Ident{Name: "_", NamePos: x[0].Pos()}
+				value = &Ident{Name: "_", NamePos: x[0].Pos()}
 			}
 			return &ForInStmt{
 				Key:      key,

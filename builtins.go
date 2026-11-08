@@ -434,10 +434,6 @@ func builtinFormat(args ...Object) (Object, error) {
 			Found:    args[0].TypeName(),
 		}
 	}
-	if numArgs == 1 {
-		// okay to return 'format' directly as String is immutable
-		return format, nil
-	}
 	s, err := Format(format.Value, args[1:]...)
 	if err != nil {
 		return nil, err
