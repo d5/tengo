@@ -324,7 +324,8 @@ func encode(o tengo.Object, path *encodePath) ([]byte, error) {
 	case *tengo.Undefined:
 		b = append(b, "null"...)
 	default:
-		// unknown type: ignore
+		// writing nothing would leave a hole such as {"a":,"b":1}
+		return nil, errors.New("unsupported type: " + o.TypeName())
 	}
 	if len(b) > tengo.MaxBytesLen {
 		return nil, tengo.ErrBytesLimit
