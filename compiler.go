@@ -564,7 +564,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 		if err := c.Compile(node.Result); err != nil {
 			return err
 		}
-		c.emit(node, parser.OpImmutable)
+		c.emit(node, immutableOp(node.Result))
 		c.emit(node, parser.OpReturn, 1)
 	case *parser.ErrorExpr:
 		if err := c.Compile(node.Expr); err != nil {
@@ -575,7 +575,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 		if err := c.Compile(node.Expr); err != nil {
 			return err
 		}
-		c.emit(node, parser.OpImmutable)
+		c.emit(node, immutableOp(node.Expr))
 	case *parser.CondExpr:
 		if err := c.Compile(node.Cond); err != nil {
 			return err
@@ -1437,4 +1437,15 @@ func operandOverflow(op parser.Opcode, operands []int) string {
 		}
 	}
 	return ""
+}
+
+// immutableOp returns the opcode that makes expr's value immutable. An array
+// or map literal builds a container nothing else holds, so it need not be
+// copied.
+func immutableOp(expr parser.Expr) parser.Opcode {
+	switch expr.(type) {
+	case *parser.ArrayLit, *parser.MapLit:
+		return parser.OpImmutableLit
+	}
+	return parser.OpImmutable
 }

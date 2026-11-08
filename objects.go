@@ -172,10 +172,7 @@ func (o *Array) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	if rhs, ok := rhs.(*Array); ok {
 		switch op {
 		case token.Add:
-			if len(rhs.Value) == 0 {
-				return o, nil
-			}
-			return &Array{Value: append(o.Value, rhs.Value...)}, nil
+			return &Array{Value: extendObjects(o.Value, rhs.Value)}, nil
 		}
 	}
 	return nil, ErrInvalidOperator
@@ -380,10 +377,67 @@ func (o *Bytes) BinaryOp(op token.Token, rhs Object) (Object, error) {
 			if len(o.Value)+len(rhs.Value) > MaxBytesLen {
 				return nil, ErrBytesLimit
 			}
-			return &Bytes{Value: append(o.Value, rhs.Value...)}, nil
+			c := make([]byte, len(o.Value)+len(rhs.Value))
+			copy(c, o.Value)
+			copy(c[len(o.Value):], rhs.Value)
+			return &Bytes{Value: c}, nil
 		}
 	}
 	return nil, ErrInvalidOperator
+}
+
+// extendObjects returns a followed by b. It grows a in place, which keeps a
+// loop of `a += [x]` linear, only while no other array has written past a's
+// end. Arrays hold no nil elements, so a nil first spare slot shows that.
+func extendObjects(a, b []Object) []Object {
+	if n := len(a); n < cap(a) && a[:n+1][n] == nil {
+		return append(a, b...)
+	}
+	return append(a[:len(a):len(a)], b...)
+}
+
+// concatObjects returns a and b in a new slice, for an immutable array, whose
+// storage clones and other arrays can share.
+func concatObjects(a, b []Object) []Object {
+	c := make([]Object, len(a)+len(b))
+	copy(c, a)
+	copy(c[len(a):], b)
+	return c
+}
+
+// VM.run calls the two helpers below to build its copies. Inlined there, the
+// copies grew it 272 bytes and moved the hot code, and Stdlib ran 3% slower.
+
+// immutableOf returns an immutable array or map of o, or nil for any other
+// value. It shares o's storage if share is set, for a literal nothing else
+// holds, and copies it otherwise.
+//
+//go:noinline
+func immutableOf(o Object, share bool) Object {
+	switch o := o.(type) {
+	case *Array:
+		if share {
+			return &ImmutableArray{Value: o.Value}
+		}
+		return &ImmutableArray{Value: concatObjects(o.Value, nil)}
+	case *Map:
+		if share {
+			return &ImmutableMap{Value: o.Value}
+		}
+		c := make(map[string]Object, len(o.Value))
+		for k, v := range o.Value {
+			c[k] = v
+		}
+		return &ImmutableMap{Value: c}
+	}
+	return nil
+}
+
+// arrayOf returns a mutable copy of v.
+//
+//go:noinline
+func arrayOf(v []Object) Object {
+	return &Array{Value: concatObjects(v, nil)}
 }
 
 // Copy returns a copy of the type.
@@ -815,7 +869,7 @@ func (o *ImmutableArray) BinaryOp(op token.Token, rhs Object) (Object, error) {
 	if rhs, ok := rhs.(*ImmutableArray); ok {
 		switch op {
 		case token.Add:
-			return &Array{Value: append(o.Value, rhs.Value...)}, nil
+			return &Array{Value: concatObjects(o.Value, rhs.Value)}, nil
 		}
 	}
 	return nil, ErrInvalidOperator

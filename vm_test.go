@@ -3011,6 +3011,53 @@ func TestDeepValues(t *testing.T) {
 	require.NotNil(t, tengo.ToInterface(deep))
 }
 
+func TestAliasing(t *testing.T) {
+	// concatenation writes only into capacity no other array has written to
+	expectRun(t, `a := [1, 2, 3]; p := a + [9]; q := a + [8]; out = [p, q]`,
+		nil, ARR{ARR{1, 2, 3, 9}, ARR{1, 2, 3, 8}})
+	expectRun(t, `a := [1, 2, 3, 4, 5, 6]; x := a[0:3] + [9]; out = [a, x]`,
+		nil, ARR{ARR{1, 2, 3, 4, 5, 6}, ARR{1, 2, 3, 9}})
+	expectRun(t, `a := []; for i := 0; i < 100; i++ { a += [i] }; out = len(a) + a[99]`,
+		nil, 199)
+	expectRun(t, `b := bytes("abcdef"); x := b[0:3] + bytes("XYZ"); out = string(b)`,
+		nil, "abcdef")
+	expectRun(t, `b := bytes("abc"); p := b + bytes("1"); q := b + bytes("2"); out = string(p) + string(q)`,
+		nil, "abc1abc2")
+
+	// nothing reaches an immutable array's storage
+	spare := func() *tengo.ImmutableArray {
+		v := make([]tengo.Object, 3, 10)
+		for i := range v {
+			v[i] = &tengo.Int{Value: int64(i)}
+		}
+		return &tengo.ImmutableArray{Value: v}
+	}
+	expectRun(t, `m := append(imm, 3); m[0] = 100; out = imm`,
+		Opts().Symbol("imm", spare()).Skip2ndPass(), IARR{0, 1, 2})
+	expectRun(t, `m := imm + immutable([3]); m[0] = 100; out = imm`,
+		Opts().Symbol("imm", spare()).Skip2ndPass(), IARR{0, 1, 2})
+	expectRun(t, `m := imm[:]; m[0] = 100; out = imm`,
+		Opts().Symbol("imm", spare()).Skip2ndPass(), IARR{0, 1, 2})
+	expectRun(t, `g := freeze([1, 2, 3]); h := g[1:]; h[0] = "m"; out = g`,
+		nil, IARR{1, 2, 3})
+
+	// immutable takes a snapshot, which freeze can then share
+	expectRun(t, `a := [1, 2]; b := immutable(a); a[0] = 9; out = b`,
+		nil, IARR{1, 2})
+	expectRun(t, `m := {x: 1}; n := immutable(m); m.x = 2; out = n.x`,
+		nil, 1)
+	expectRun(t, `a := [1]; f := freeze(immutable(a)); a[0] = 2; out = f`,
+		nil, IARR{1})
+	expectRun(t, `out = immutable([1, [2]])`, nil, IARR{1, ARR{2}})
+	expectRun(t, `out = immutable({a: 1}).a`, nil, 1)
+	expectError(t, `a := immutable([1]); a[0] = 2`, nil, "not index-assignable")
+
+	// export is immutable() too, so a module exports a snapshot
+	expectRun(t, `c := import("counter"); c.inc(); out = c.n`,
+		Opts().Module("counter",
+			`m := {n: 0}; m.inc = func() { m.n += 1 }; export m`), 0)
+}
+
 func TestObjectsLimit(t *testing.T) {
 	testAllocsLimit(t, `5`, 0)
 	testAllocsLimit(t, `5 + 5`, 1)
