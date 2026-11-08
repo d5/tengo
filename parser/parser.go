@@ -791,6 +791,8 @@ func (p *Parser) parseBranchStmt(tok token.Token) Stmt {
 
 	var label *Ident
 	if p.token == token.Ident {
+		// the compiler has no labels, so `break outer` would act as `break`
+		p.error(p.pos, "labels are not supported")
 		label = p.parseIdent()
 	}
 	p.expectSemi()
