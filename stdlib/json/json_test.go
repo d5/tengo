@@ -3,6 +3,7 @@ package json_test
 import (
 	gojson "encoding/json"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -126,6 +127,28 @@ func TestDecodeFloatOverflow(t *testing.T) {
 	o, err := json.Decode([]byte("1e-400"))
 	require.NoError(t, err)
 	require.Equal(t, 0.0, o.(*tengo.Float).Value)
+}
+
+func TestDecodeDepth(t *testing.T) {
+	deep := func(open, close string, n int) []byte {
+		return []byte(strings.Repeat(open, n) + "1" + strings.Repeat(close, n))
+	}
+	_, err := json.Decode(deep("[", "]", 10000))
+	require.NoError(t, err)
+	_, err = json.Decode(deep(`{"a":`, "}", 10000))
+	require.NoError(t, err)
+
+	// twenty million levels overflowed Go's stack, a fatal error
+	for _, b := range [][]byte{
+		deep("[", "]", 10001),
+		deep(`{"a":`, "}", 10001),
+		deep("[", "]", 20000000),
+	} {
+		_, err = json.Decode(b)
+		require.Error(t, err)
+		require.True(t, strings.Contains(err.Error(), "exceeded max depth"),
+			err.Error())
+	}
 }
 
 func TestDecodeIntOverflow(t *testing.T) {

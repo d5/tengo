@@ -691,6 +691,46 @@ func TestParseBranchLabel(t *testing.T) {
 	}
 }
 
+func TestParseNestingDepth(t *testing.T) {
+	deep := func(open, mid, close string, n int) string {
+		return strings.Repeat(open, n) + mid + strings.Repeat(close, n)
+	}
+	parse := func(src string) error {
+		f := NewFileSet().AddFile("test", -1, len(src))
+		_, err := NewParser(f, []byte(src), nil).ParseFile()
+		return err
+	}
+	forms := func(n int) []string {
+		return []string{
+			"x := " + deep("[", "1", "]", n),
+			"x := " + deep("(", "1", ")", n),
+			"x := " + deep("{a: ", "1", "}", n),
+			"x := " + deep("- ", "1", "", n),
+			"x := " + deep("func() { return ", "1", " }()", n),
+			"x := " + deep("true ? 1 : ", "1", "", n),
+			deep("if true { ", "", " }", n),
+			deep("if true {} else ", "{}", "", n),
+			// left-deep chains, built in a loop
+			"x := 1" + strings.Repeat(" + 1", n),
+			"x := 1" + strings.Repeat(" && true", n),
+			"x := a" + strings.Repeat(".b", n),
+			"x := a" + strings.Repeat("[0]", n),
+			"x := a" + strings.Repeat("()", n),
+		}
+	}
+	for _, src := range forms(1000) {
+		require.NoError(t, parse(src))
+	}
+	require.NoError(t, parse("x := 1"+strings.Repeat(" + 1", 9000)))
+	// a million levels overflowed Go's stack, a fatal error
+	for _, src := range forms(1000000) {
+		err := parse(src)
+		require.Error(t, err)
+		require.True(t, strings.Contains(err.Error(),
+			"exceeded max nesting depth"), err.Error())
+	}
+}
+
 func TestParseForIn(t *testing.T) {
 	expectParseError(t, "for a, b, c in x {}")
 
