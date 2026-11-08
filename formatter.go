@@ -434,6 +434,9 @@ func (f *formatter) fmtSbx(s string, b []byte, digits string) {
 		f.writePadding(f.wid - width)
 	}
 	// Write the encoding directly into the output fmtbuf.
+	if len(*f.buf)+width > MaxStringLen {
+		panic(ErrStringLimit)
+	}
 	buf := *f.buf
 	if f.sharp {
 		// Add leading 0x or 0X.

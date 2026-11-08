@@ -942,6 +942,9 @@ func FuncAYRS(fn func([]byte) string) tengo.CallableFunc {
 			}
 		}
 		res := fn(y1)
+		if len(res) > tengo.MaxStringLen {
+			return nil, tengo.ErrStringLimit
+		}
 		return &tengo.String{Value: res}, nil
 	}
 }
