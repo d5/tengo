@@ -292,6 +292,18 @@ func TestTextRepeat(t *testing.T) {
 		expect("111111111111")
 	module(t, "text").call("repeat", "1", "13").
 		expectError()
+	module(t, "text").call("repeat", "1", -1).
+		expectError()
+	module(t, "text").call("repeat", "1", 0).
+		expect("")
+}
+
+func TestTextFormatFloatBits(t *testing.T) {
+	module(t, "text").call("format_float", 1.5, "f", 2, 32).expect("1.50")
+	for _, bits := range []int{0, 16, 128} {
+		module(t, "text").call("format_float", 1.5, "f", 2, bits).
+			expectError()
+	}
 }
 
 func TestTextFormatFloatLimit(t *testing.T) {

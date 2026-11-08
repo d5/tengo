@@ -46,26 +46,43 @@ type CallableFunc = func(args ...Object) (ret Object, err error)
 // For scalar value types, it will always be 1. For compound value types,
 // this will include its elements and all of their elements recursively.
 func CountObjects(o Object) (c int) {
+	var near [pathDepth]Object
+	var far map[Object]struct{}
+	return countObjects(o, objectPath{near[:0], &far})
+}
+
+// countObjects counts a container that recurs into itself once.
+func countObjects(o Object, path objectPath) (c int) {
+	if isContainer(o) {
+		if path.has(o) {
+			return 0
+		}
+		next, far := path.push(o)
+		if far {
+			defer delete(*path.far, o)
+		}
+		path = next
+	}
 	c = 1
 	switch o := o.(type) {
 	case *Array:
 		for _, v := range o.Value {
-			c += CountObjects(v)
+			c += countObjects(v, path)
 		}
 	case *ImmutableArray:
 		for _, v := range o.Value {
-			c += CountObjects(v)
+			c += countObjects(v, path)
 		}
 	case *Map:
 		for _, v := range o.Value {
-			c += CountObjects(v)
+			c += countObjects(v, path)
 		}
 	case *ImmutableMap:
 		for _, v := range o.Value {
-			c += CountObjects(v)
+			c += countObjects(v, path)
 		}
 	case *Error:
-		c += CountObjects(o.Value)
+		c += countObjects(o.Value, path)
 	}
 	return
 }
@@ -203,8 +220,27 @@ func ToTime(o Object) (v time.Time, ok bool) {
 	return
 }
 
-// ToInterface attempts to convert an object o to an interface{} value
+// ToInterface attempts to convert an object o to an interface{} value. A
+// container inside itself converts to nil where it recurs.
 func ToInterface(o Object) (res interface{}) {
+	var near [pathDepth]Object
+	var far map[Object]struct{}
+	return toInterface(o, objectPath{near[:0], &far})
+}
+
+// toInterface returns nil where a container recurs, since fmt and
+// FromInterface overflow on a Go value that contains itself.
+func toInterface(o Object, path objectPath) (res interface{}) {
+	if isContainer(o) {
+		if path.has(o) {
+			return nil
+		}
+		next, far := path.push(o)
+		if far {
+			defer delete(*path.far, o)
+		}
+		path = next
+	}
 	switch o := o.(type) {
 	case *Int:
 		res = o.Value
@@ -219,25 +255,13 @@ func ToInterface(o Object) (res interface{}) {
 	case *Bytes:
 		res = o.Value
 	case *Array:
-		res = make([]interface{}, len(o.Value))
-		for i, val := range o.Value {
-			res.([]interface{})[i] = ToInterface(val)
-		}
+		res = arrayToInterface(o.Value, path)
 	case *ImmutableArray:
-		res = make([]interface{}, len(o.Value))
-		for i, val := range o.Value {
-			res.([]interface{})[i] = ToInterface(val)
-		}
+		res = arrayToInterface(o.Value, path)
 	case *Map:
-		res = make(map[string]interface{})
-		for key, v := range o.Value {
-			res.(map[string]interface{})[key] = ToInterface(v)
-		}
+		res = mapToInterface(o.Value, path)
 	case *ImmutableMap:
-		res = make(map[string]interface{})
-		for key, v := range o.Value {
-			res.(map[string]interface{})[key] = ToInterface(v)
-		}
+		res = mapToInterface(o.Value, path)
 	case *Time:
 		res = o.Value
 	case *Error:
@@ -248,6 +272,22 @@ func ToInterface(o Object) (res interface{}) {
 		return o
 	}
 	return
+}
+
+func arrayToInterface(elems []Object, path objectPath) []interface{} {
+	res := make([]interface{}, len(elems))
+	for i, val := range elems {
+		res[i] = toInterface(val, path)
+	}
+	return res
+}
+
+func mapToInterface(m map[string]Object, path objectPath) map[string]interface{} {
+	res := make(map[string]interface{})
+	for key, v := range m {
+		res[key] = toInterface(v, path)
+	}
+	return res
 }
 
 // FromInterface will attempt to convert an interface{} v to a Tengo Object
