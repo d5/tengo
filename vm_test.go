@@ -3655,6 +3655,29 @@ func TestString(t *testing.T) {
 	expectError(t, `"foo" - "bar"`, nil, "invalid operation")
 }
 
+func TestVMReuse(t *testing.T) {
+	// the second run starts without the first run's error
+	src := `out = fail ? undefined() : 7`
+	st := tengo.NewSymbolTable()
+	fail := st.Define("fail")
+	out := st.Define("out")
+	fileSet := parser.NewFileSet()
+	srcFile := fileSet.AddFile("test", -1, len(src))
+	file, err := parser.NewParser(srcFile, []byte(src), nil).ParseFile()
+	require.NoError(t, err)
+	c := tengo.NewCompiler(srcFile, st, nil, nil, nil)
+	require.NoError(t, c.Compile(file))
+
+	globals := make([]tengo.Object, tengo.GlobalsSize)
+	globals[fail.Index] = tengo.TrueValue
+	v := tengo.NewVM(c.Bytecode(), globals, -1)
+	require.Error(t, v.Run())
+
+	globals[fail.Index] = tengo.FalseValue
+	require.NoError(t, v.Run())
+	require.Equal(t, &tengo.Int{Value: 7}, globals[out.Index])
+}
+
 func TestTailCall(t *testing.T) {
 	expectRun(t, `
 	fac := func(n, a) {
@@ -3745,6 +3768,37 @@ iter := func(n, max) {
 iter(0, 9999)
 out = c 
 `, nil, 9999)
+
+	// a caller that uses the value costs one more frame, not one per call
+	expectRun(t, `
+c := 0
+iter := func(n, max) {
+	if n == max {
+		return
+	}
+	c++
+	iter(n+1, max)
+}
+out = is_undefined(iter(0, 9999)) ? c : -1
+`, nil, 9999)
+
+	// a tail call whose value the caller pops returns undefined
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; f(n-1) }; out = f(1)`,
+		nil, tengo.UndefinedValue)
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; f(n-1); return }; out = f(3)`,
+		nil, tengo.UndefinedValue)
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; return f(n-1) }; out = f(3)`,
+		nil, 42)
+	// whichever link pops the value, the whole chain returns undefined
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; if n == 2 { return f(n-1) }; f(n-1) }; out = f(3)`,
+		nil, tengo.UndefinedValue)
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; if n == 3 { return f(n-1) }; f(n-1) }; out = f(3)`,
+		nil, tengo.UndefinedValue)
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; if n < 3 { return f(n-1) }; f(n-1) }; out = f(3)`,
+		nil, tengo.UndefinedValue)
+	// a later call in the same frame slot returns its own value
+	expectRun(t, `f := func(n) { if n == 0 { return 42 }; f(n-1) }; f(2); g := func() { return 7 }; out = g()`,
+		nil, 7)
 }
 
 // tail call with free vars
