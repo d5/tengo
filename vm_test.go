@@ -2911,6 +2911,84 @@ func TestBangOperator(t *testing.T) {
 	expectRun(t, `out = !!5`, nil, true)
 }
 
+func TestCyclicValues(t *testing.T) {
+	// printing
+	expectRun(t, `a := [0]; a[0] = a; out = string(a)`, nil, "[[...]]")
+	expectRun(t, `m := {}; m.self = m; out = string(m)`, nil, "{self: {...}}")
+	expectRun(t, `a := [0]; m := {a: a}; a[0] = m; out = string(a)`,
+		nil, "[{a: [...]}]")
+	expectRun(t, `e := error([0]); e.value[0] = e; out = string(e)`,
+		nil, "error: [error: ...]")
+	expectRun(t, `x := [1]; out = string([x, x])`, nil, "[[1], [1]]")
+
+	// equality
+	expectRun(t, `a := [0]; a[0] = a; out = a == a`, nil, true)
+	expectRun(t, `a := [0]; a[0] = a; b := [0]; b[0] = b; out = a == b`,
+		nil, true)
+	expectRun(t, `a := [0]; a[0] = a; b := [[0]]; out = a == b`, nil, false)
+	expectRun(t, `m := {}; m.self = m; n := {}; n.self = n; out = m == n`,
+		nil, true)
+	expectRun(t, `a := [0, 0]; a[0] = a; a[1] = a; out = a == a`, nil, true)
+	expectRun(t, `m := {}; m.a = m; m.b = m; n := {}; n.a = n; n.b = n; out = m == n`,
+		nil, true)
+	expectRun(t, `a := [0]; a[0] = a; out = a != immutable([a])`, nil, false)
+
+	// copying keeps the cycle inside the copy
+	expectRun(t, `a := [0]; a[0] = a; c := copy(a); x := c[0]; x[0] = 7; out = [c[0], string(a)]`,
+		nil, ARR{7, "[[...]]"})
+	expectRun(t, `m := {}; m.self = m; c := copy(m); c.self.k = 1; out = [c.k, m.k]`,
+		nil, ARR{1, tengo.UndefinedValue})
+	expectRun(t, `e := error([0]); e.value[0] = e; c := copy(e); out = string(c)`,
+		nil, "error: [error: ...]")
+
+	// a path deeper than its stack array still finds the cycle
+	expectRun(t, `a := [0]; b := a; for i := 0; i < 20; i++ { b[0] = [0]; b = b[0] }; b[0] = a; out = a == copy(a)`,
+		nil, true)
+}
+
+func TestCyclicValuesToGo(t *testing.T) {
+	a := &tengo.Array{Value: []tengo.Object{nil, &tengo.Int{Value: 1}}}
+	a.Value[0] = a
+	m := &tengo.Map{Value: map[string]tengo.Object{}}
+	m.Value["self"] = m
+	m.Value["a"] = a
+
+	require.Equal(t, 3, tengo.CountObjects(m))
+
+	// a container converts to nil where it recurs
+	require.True(t, reflect.DeepEqual(
+		[]interface{}{nil, int64(1)}, tengo.ToInterface(a)))
+	require.True(t, reflect.DeepEqual(map[string]interface{}{
+		"self": nil,
+		"a":    []interface{}{nil, int64(1)},
+	}, tengo.ToInterface(m)))
+
+	// so the host can hand the value back
+	s := tengo.NewScript([]byte(`a := [0]; a[0] = a; m := {}; m.self = m; b := 0; n := 0`))
+	c, err := s.Run()
+	require.NoError(t, err)
+	require.NoError(t, c.Set("b", c.Get("a").Value()))
+	require.NoError(t, c.Set("n", c.Get("m").Value()))
+
+	e := &tengo.Error{}
+	e.Value = e
+	require.Equal(t, "error: error: ...", e.String())
+	require.Equal(t, "error", (&tengo.Error{}).Copy().String())
+}
+
+func TestDeepValues(t *testing.T) {
+	// a deep path stays linear: 100k levels took seconds when every level
+	// scanned the whole path
+	deep := tengo.Object(&tengo.Array{})
+	for i := 0; i < 100000; i++ {
+		deep = &tengo.Array{Value: []tengo.Object{deep}}
+	}
+	c := deep.Copy()
+	require.True(t, deep.Equals(c))
+	require.Equal(t, 100001, tengo.CountObjects(deep))
+	require.NotNil(t, tengo.ToInterface(deep))
+}
+
 func TestObjectsLimit(t *testing.T) {
 	testAllocsLimit(t, `5`, 0)
 	testAllocsLimit(t, `5 + 5`, 1)
