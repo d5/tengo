@@ -215,7 +215,12 @@ func (d *decodeState) literal() (tengo.Object, error) {
 			panic(phasePanicMsg)
 		}
 		if isFloat {
-			n, _ := strconv.ParseFloat(string(item), 10)
+			// ParseFloat returns ±Inf together with ErrRange: 1e400 decoded
+			// as +Inf, which encode then rejects.
+			n, err := strconv.ParseFloat(string(item), 64)
+			if err != nil {
+				return nil, err
+			}
 			return &tengo.Float{Value: n}, nil
 		}
 		// ParseInt returns MaxInt64 or MinInt64 together with ErrRange.

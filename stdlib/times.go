@@ -781,7 +781,7 @@ func timesBefore(args ...tengo.Object) (ret tengo.Object, err error) {
 		err = tengo.ErrInvalidArgumentType{
 			Name:     "second",
 			Expected: "time(compatible)",
-			Found:    args[0].TypeName(),
+			Found:    args[1].TypeName(),
 		}
 		return
 	}

@@ -89,6 +89,46 @@ func TestDecode(t *testing.T) {
 	testDecodeError(t, `{"a":"b":"c"}`)
 }
 
+func TestEncodeCycle(t *testing.T) {
+	a := &tengo.Array{Value: []tengo.Object{nil}}
+	a.Value[0] = &tengo.Map{Value: map[string]tengo.Object{"a": a}}
+	_, err := json.Encode(a)
+	require.Error(t, err)
+	require.Equal(t, "unsupported value: encountered a cycle via array",
+		err.Error())
+
+	// a value shared by two elements is no cycle
+	x := &tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 1}}}
+	b, err := json.Encode(&tengo.Array{Value: []tengo.Object{x, x}})
+	require.NoError(t, err)
+	require.Equal(t, "[[1],[1]]", string(b))
+}
+
+func TestEncodeUnsupported(t *testing.T) {
+	fn := &tengo.CompiledFunction{}
+	for _, o := range []tengo.Object{
+		fn,
+		&tengo.Map{Value: map[string]tengo.Object{"a": fn, "b": &tengo.Int{Value: 1}}},
+		&tengo.Array{Value: []tengo.Object{fn, &tengo.Int{Value: 1}}},
+		&tengo.Error{Value: &tengo.String{Value: "x"}},
+	} {
+		b, err := json.Encode(o)
+		require.Error(t, err, string(b))
+	}
+}
+
+func TestDecodeFloatOverflow(t *testing.T) {
+	_, err := json.Decode([]byte("1e400"))
+	require.Error(t, err)
+	_, err = json.Decode([]byte("[-1e400]"))
+	require.Error(t, err)
+
+	// underflow rounds to zero, as encoding/json does
+	o, err := json.Decode([]byte("1e-400"))
+	require.NoError(t, err)
+	require.Equal(t, 0.0, o.(*tengo.Float).Value)
+}
+
 func TestDecodeDepth(t *testing.T) {
 	deep := func(open, close string, n int) []byte {
 		return []byte(strings.Repeat(open, n) + "1" + strings.Repeat(close, n))

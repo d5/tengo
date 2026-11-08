@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -393,7 +394,7 @@ func (p *Parser) parseOperand() Expr {
 		return p.parseIdent()
 	case token.Int:
 		v, err := strconv.ParseInt(p.tokenLit, 0, 64)
-		if err == strconv.ErrRange {
+		if errors.Is(err, strconv.ErrRange) {
 			p.error(p.pos, "number out of range")
 		} else if err != nil {
 			p.error(p.pos, "invalid integer")
@@ -408,7 +409,7 @@ func (p *Parser) parseOperand() Expr {
 
 	case token.Float:
 		v, err := strconv.ParseFloat(p.tokenLit, 64)
-		if err == strconv.ErrRange {
+		if errors.Is(err, strconv.ErrRange) {
 			p.error(p.pos, "number out of range")
 		} else if err != nil {
 			p.error(p.pos, "invalid float")
@@ -809,6 +810,8 @@ func (p *Parser) parseBranchStmt(tok token.Token) Stmt {
 
 	var label *Ident
 	if p.token == token.Ident {
+		// the compiler has no labels, so `break outer` would act as `break`
+		p.error(p.pos, "labels are not supported")
 		label = p.parseIdent()
 	}
 	p.expectSemi()
@@ -1006,6 +1009,10 @@ func (p *Parser) parseSimpleStmt(forIn bool) Stmt {
 					p.errorExpected(x[1].Pos(), "identifier")
 					value = &Ident{Name: "_", NamePos: x[1].Pos()}
 				}
+			default:
+				p.errorExpected(x[2].Pos(), "'in'")
+				key = &Ident{Name: "_", NamePos: x[0].Pos()}
+				value = &Ident{Name: "_", NamePos: x[0].Pos()}
 			}
 			return &ForInStmt{
 				Key:      key,

@@ -73,13 +73,14 @@ func (v *VM) Run() (err error) {
 	v.framesIndex = 1
 	v.ip = -1
 	v.allocs = v.maxAllocs + 1
+	v.err = nil
 
 	v.run()
 	atomic.StoreInt64(&v.aborting, 0)
 	err = v.err
 	if err != nil {
 		filePos := v.fileSet.Position(
-			v.curFrame.fn.SourcePos(v.ip - 1))
+			v.curFrame.fn.SourcePos(v.ip))
 		err = fmt.Errorf("Runtime Error: %w\n\tat %s",
 			err, filePos)
 		for v.framesIndex > 1 {
@@ -103,6 +104,14 @@ func (v *VM) stackFull() bool {
 		return true
 	}
 	return false
+}
+
+// callerPops reports whether the current frame's caller pops the frame's
+// return value. A frame that pops a tail call's value returns undefined, so
+// it can take that call's place only when its own value is popped too.
+func (v *VM) callerPops() bool {
+	caller := &v.frames[v.framesIndex-2]
+	return caller.fn.Instructions[caller.ip+1] == parser.OpPop
 }
 
 func (v *VM) run() {
@@ -352,29 +361,18 @@ func (v *VM) run() {
 				return
 			}
 			v.stack[v.sp-1] = e
-		case parser.OpImmutable:
-			value := v.stack[v.sp-1]
-			switch value := value.(type) {
-			case *Array:
-				var immutableArray Object = &ImmutableArray{
-					Value: value.Value,
-				}
+		case parser.OpImmutable, parser.OpImmutableLit:
+			// a copy, unless the value is a literal, since a mutable array or
+			// map can still change it
+			im := immutableOf(v.stack[v.sp-1],
+				v.curInsts[v.ip] == parser.OpImmutableLit)
+			if im != nil {
 				v.allocs--
 				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
 					return
 				}
-				v.stack[v.sp-1] = immutableArray
-			case *Map:
-				var immutableMap Object = &ImmutableMap{
-					Value: value.Value,
-				}
-				v.allocs--
-				if v.allocs == 0 {
-					v.err = ErrObjectAllocLimit
-					return
-				}
-				v.stack[v.sp-1] = immutableMap
+				v.stack[v.sp-1] = im
 			}
 		case parser.OpIndex:
 			index := v.stack[v.sp-1]
@@ -384,7 +382,7 @@ func (v *VM) run() {
 			val, err := left.IndexGet(index)
 			if err != nil {
 				if err == ErrNotIndexable {
-					v.err = fmt.Errorf("not indexable: %s", index.TypeName())
+					v.err = fmt.Errorf("not indexable: %s", left.TypeName())
 					return
 				}
 				if err == ErrInvalidIndexType {
@@ -482,9 +480,8 @@ func (v *VM) run() {
 				} else if highIdx > numElements {
 					highIdx = numElements
 				}
-				var val Object = &Array{
-					Value: left.Value[lowIdx:highIdx],
-				}
+				// a copy, since the slice is mutable
+				val := arrayOf(left.Value[lowIdx:highIdx])
 				v.allocs--
 				if v.allocs == 0 {
 					v.err = ErrObjectAllocLimit
@@ -645,7 +642,8 @@ func (v *VM) run() {
 					nextOp := v.curInsts[v.ip+1]
 					if nextOp == parser.OpReturn ||
 						(nextOp == parser.OpPop &&
-							parser.OpReturn == v.curInsts[v.ip+2]) {
+							parser.OpReturn == v.curInsts[v.ip+2] &&
+							v.callerPops()) {
 						for p := 0; p < numArgs; p++ {
 							v.stack[v.curFrame.basePointer+p] =
 								v.stack[v.sp-numArgs+p]

@@ -738,6 +738,10 @@ func textRepeat(args ...tengo.Object) (ret tengo.Object, err error) {
 		}
 	}
 
+	if i2 < 0 {
+		return nil, fmt.Errorf("count must not be negative")
+	}
+
 	if len(s1)*i2 > tengo.MaxStringLen {
 		return nil, tengo.ErrStringLimit
 	}
@@ -875,7 +879,23 @@ func textFormatFloat(args ...tengo.Object) (ret tengo.Object, err error) {
 		return
 	}
 
-	ret = &tengo.String{Value: strconv.FormatFloat(f1.Value, s2[0], i3, i4)}
+	if i4 != 32 && i4 != 64 {
+		err = fmt.Errorf("bits must be 32 or 64")
+		return
+	}
+
+	// FormatFloat pads 'f' and 'e' with prec digits before any check here
+	if i3 > tengo.MaxStringLen {
+		err = tengo.ErrStringLimit
+		return
+	}
+
+	s := strconv.FormatFloat(f1.Value, s2[0], i3, i4)
+	if len(s) > tengo.MaxStringLen {
+		err = tengo.ErrStringLimit
+		return
+	}
+	ret = &tengo.String{Value: s}
 
 	return
 }
@@ -1038,6 +1058,11 @@ func doTextReplace(s, old, new string, n int) (string, bool) {
 		return s, true // avoid allocation
 	} else if n < 0 || m < n {
 		n = m
+	}
+
+	// The buffer is the result's exact size, so check it before allocating.
+	if d := len(new) - len(old); d > 0 && d > (tengo.MaxStringLen-len(s))/n {
+		return "", false
 	}
 
 	// Apply replacements to buffer.

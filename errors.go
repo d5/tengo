@@ -53,6 +53,11 @@ var (
 	// required method.
 	ErrNotImplemented = errors.New("not implemented")
 
+	// ErrCompiledFunctionCall is an error where Go code calls a compiled
+	// function, which only the VM can run.
+	ErrCompiledFunctionCall = errors.New(
+		"a compiled function cannot be called from Go")
+
 	// ErrInvalidRangeStep is an error where the step parameter is less than or equal to 0 when using builtin range function.
 	ErrInvalidRangeStep = errors.New("range step must be greater than 0")
 

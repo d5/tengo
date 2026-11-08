@@ -59,6 +59,7 @@ type Compiler struct {
 	loopIndex       int
 	trace           io.Writer
 	indent          int
+	emitErr         error
 }
 
 // NewCompiler creates a Compiler.
@@ -524,7 +525,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 			case Object: // builtin module
 				c.emit(node, parser.OpConstant, c.addConstant(v))
 			default:
-				panic(fmt.Errorf("invalid import value type: %T", v))
+				return c.errorf(node, "invalid import value type: %T", v)
 			}
 		} else if c.allowFileImport {
 			moduleName := node.ModuleName
@@ -563,7 +564,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 		if err := c.Compile(node.Result); err != nil {
 			return err
 		}
-		c.emit(node, parser.OpImmutable)
+		c.emit(node, immutableOp(node.Result))
 		c.emit(node, parser.OpReturn, 1)
 	case *parser.ErrorExpr:
 		if err := c.Compile(node.Expr); err != nil {
@@ -574,7 +575,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 		if err := c.Compile(node.Expr); err != nil {
 			return err
 		}
-		c.emit(node, parser.OpImmutable)
+		c.emit(node, immutableOp(node.Expr))
 	case *parser.CondExpr:
 		if err := c.Compile(node.Cond); err != nil {
 			return err
@@ -600,7 +601,7 @@ func (c *Compiler) Compile(node parser.Node) error {
 		curPos = len(c.currentInstructions())
 		c.changeOperand(jumpPos2, curPos)
 	}
-	return nil
+	return c.emitErr
 }
 
 // Bytecode returns a compiled bytecode.
@@ -769,6 +770,8 @@ func (c *Compiler) compileAssign(
 		} else {
 			c.emit(node, parser.OpSetFree, symbol.Index)
 		}
+	case ScopeBuiltin:
+		return c.errorf(node, "cannot assign to builtin '%s'", ident)
 	default:
 		panic(fmt.Errorf("invalid assignment variable scope: %s",
 			symbol.Scope))
@@ -1289,6 +1292,14 @@ func (c *Compiler) emit(
 		filePos = node.Pos()
 	}
 
+	// MakeInstruction truncates an operand to its width, so a wide one would
+	// silently address the wrong local, constant or argument count.
+	if c.emitErr == nil {
+		if what := operandOverflow(opcode, operands); what != "" {
+			c.emitErr = c.errorf(node, "too many %s", what)
+		}
+	}
+
 	inst := MakeInstruction(opcode, operands...)
 	pos := c.addInstruction(inst)
 	c.scopes[c.scopeIndex].SourceMap[pos] = filePos
@@ -1377,4 +1388,64 @@ func tracec(c *Compiler, msg string) *Compiler {
 func untracec(c *Compiler) {
 	c.indent--
 	c.printTrace("}")
+}
+
+// operandOverflow names what an operand counts if it does not fit its
+// width, and returns "" if every operand fits.
+func operandOverflow(op parser.Opcode, operands []int) string {
+	for i, w := range parser.OpcodeOperands[op] {
+		// int64, since a 4-byte limit overflows a 32-bit int
+		limit := int64(1)<<(8*w) - 1
+		switch op {
+		case parser.OpGetGlobal, parser.OpSetGlobal, parser.OpSetSelGlobal:
+			if i == 0 {
+				limit = GlobalsSize - 1
+			}
+		}
+		if i >= len(operands) || int64(operands[i]) <= limit {
+			continue
+		}
+		switch op {
+		case parser.OpConstant:
+			return "constants"
+		case parser.OpGetGlobal, parser.OpSetGlobal, parser.OpSetSelGlobal,
+			parser.OpGetLocal, parser.OpSetLocal, parser.OpDefineLocal,
+			parser.OpSetSelLocal, parser.OpGetLocalPtr:
+			if i == 0 {
+				return "variables"
+			}
+			return "selectors"
+		case parser.OpGetFree, parser.OpSetFree, parser.OpGetFreePtr,
+			parser.OpSetSelFree:
+			if i == 0 {
+				return "captured variables"
+			}
+			return "selectors"
+		case parser.OpClosure:
+			if i == 0 {
+				return "constants"
+			}
+			return "captured variables"
+		case parser.OpCall:
+			return "arguments"
+		case parser.OpArray:
+			return "array elements"
+		case parser.OpMap:
+			return "map elements"
+		default:
+			return "operands"
+		}
+	}
+	return ""
+}
+
+// immutableOp returns the opcode that makes expr's value immutable. An array
+// or map literal builds a container nothing else holds, so it need not be
+// copied.
+func immutableOp(expr parser.Expr) parser.Opcode {
+	switch expr.(type) {
+	case *parser.ArrayLit, *parser.MapLit:
+		return parser.OpImmutableLit
+	}
+	return parser.OpImmutable
 }

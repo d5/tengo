@@ -648,6 +648,49 @@ export x`, func(p pfn) []Stmt {
 	expectParseError(t, "export a b")
 }
 
+func TestParseNumberRange(t *testing.T) {
+	for _, src := range []string{"9223372036854775808", "1e400"} {
+		f := NewFileSet().AddFile("test", -1, len(src))
+		_, err := NewParser(f, []byte(src), nil).ParseFile()
+		require.Error(t, err)
+		require.True(t, strings.Contains(err.Error(), "number out of range"),
+			err.Error())
+	}
+}
+
+func TestParseExprEnd(t *testing.T) {
+	for _, src := range []string{`error(1)`, `immutable([1])`} {
+		f := NewFileSet().AddFile("test", -1, len(src))
+		file, err := NewParser(f, []byte(src), nil).ParseFile()
+		require.NoError(t, err)
+		expr := file.Stmts[0].(*ExprStmt).Expr
+		require.Equal(t, Pos(len(src)+1), expr.End(), src)
+	}
+	f := NewFileSet().AddFile("test", -1, 3)
+	file, err := NewParser(f, []byte(`- x`), nil).ParseFile()
+	require.NoError(t, err)
+	require.Equal(t, Pos(1), file.Stmts[0].(*ExprStmt).Expr.Pos())
+}
+
+func TestParseBranchLabel(t *testing.T) {
+	// the compiler has no labels, so a label would be silently ignored
+	for _, src := range []string{
+		"for { break outer }",
+		"for { continue outer }",
+	} {
+		f := NewFileSet().AddFile("test", -1, len(src))
+		_, err := NewParser(f, []byte(src), nil).ParseFile()
+		require.Error(t, err)
+		require.True(t, strings.Contains(err.Error(), "labels are not supported"),
+			err.Error())
+	}
+	for _, src := range []string{"for { break }", "for { continue }", "for { break\nx := 1 }"} {
+		f := NewFileSet().AddFile("test", -1, len(src))
+		_, err := NewParser(f, []byte(src), nil).ParseFile()
+		require.NoError(t, err, src)
+	}
+}
+
 func TestParseNestingDepth(t *testing.T) {
 	deep := func(open, mid, close string, n int) string {
 		return strings.Repeat(open, n) + mid + strings.Repeat(close, n)
@@ -689,6 +732,8 @@ func TestParseNestingDepth(t *testing.T) {
 }
 
 func TestParseForIn(t *testing.T) {
+	expectParseError(t, "for a, b, c in x {}")
+
 	expectParse(t, "for x in y {}", func(p pfn) []Stmt {
 		return stmts(
 			forInStmt(
