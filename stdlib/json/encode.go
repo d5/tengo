@@ -126,73 +126,146 @@ var hex = "0123456789abcdef"
 
 // Encode returns the JSON encoding of the object.
 func Encode(o tengo.Object) ([]byte, error) {
+	var path encodePath
+	return encode(o, &path)
+}
+
+// cycleDepth is how deep encode goes before it tracks the containers above
+// it. A cycle makes the walk endless, so it still reaches that depth, and
+// shallower values pay nothing to check.
+const cycleDepth = 64
+
+// encodePath is how deep encode is, and past cycleDepth the containers above
+// it, since a script can put a container inside itself. An error ends the
+// walk, so a container that fails need not leave.
+type encodePath struct {
+	depth int
+	above map[tengo.Object]struct{}
+}
+
+func (p *encodePath) enter(o tengo.Object) error {
+	p.depth++
+	if p.depth <= cycleDepth {
+		return nil
+	}
+	return p.track(o)
+}
+
+func (p *encodePath) track(o tengo.Object) error {
+	if _, ok := p.above[o]; ok {
+		return errors.New(
+			"unsupported value: encountered a cycle via " + o.TypeName())
+	}
+	if p.above == nil {
+		p.above = make(map[tengo.Object]struct{})
+	}
+	p.above[o] = struct{}{}
+	return nil
+}
+
+func (p *encodePath) leave(o tengo.Object) {
+	if p.depth > cycleDepth {
+		delete(p.above, o)
+	}
+	p.depth--
+}
+
+func encode(o tengo.Object, path *encodePath) ([]byte, error) {
 	var b []byte
 
 	switch o := o.(type) {
 	case *tengo.Array:
+		if err := path.enter(o); err != nil {
+			return nil, err
+		}
 		b = append(b, '[')
 		len1 := len(o.Value) - 1
 		for idx, elem := range o.Value {
-			eb, err := Encode(elem)
+			eb, err := encode(elem, path)
 			if err != nil {
 				return nil, err
 			}
 			b = append(b, eb...)
+			if len(b) > tengo.MaxBytesLen {
+				return nil, tengo.ErrBytesLimit
+			}
 			if idx < len1 {
 				b = append(b, ',')
 			}
 		}
 		b = append(b, ']')
+		path.leave(o)
 	case *tengo.ImmutableArray:
+		if err := path.enter(o); err != nil {
+			return nil, err
+		}
 		b = append(b, '[')
 		len1 := len(o.Value) - 1
 		for idx, elem := range o.Value {
-			eb, err := Encode(elem)
+			eb, err := encode(elem, path)
 			if err != nil {
 				return nil, err
 			}
 			b = append(b, eb...)
+			if len(b) > tengo.MaxBytesLen {
+				return nil, tengo.ErrBytesLimit
+			}
 			if idx < len1 {
 				b = append(b, ',')
 			}
 		}
 		b = append(b, ']')
+		path.leave(o)
 	case *tengo.Map:
+		if err := path.enter(o); err != nil {
+			return nil, err
+		}
 		b = append(b, '{')
 		len1 := len(o.Value) - 1
 		idx := 0
 		for key, value := range o.Value {
 			b = encodeString(b, key)
 			b = append(b, ':')
-			eb, err := Encode(value)
+			eb, err := encode(value, path)
 			if err != nil {
 				return nil, err
 			}
 			b = append(b, eb...)
+			if len(b) > tengo.MaxBytesLen {
+				return nil, tengo.ErrBytesLimit
+			}
 			if idx < len1 {
 				b = append(b, ',')
 			}
 			idx++
 		}
 		b = append(b, '}')
+		path.leave(o)
 	case *tengo.ImmutableMap:
+		if err := path.enter(o); err != nil {
+			return nil, err
+		}
 		b = append(b, '{')
 		len1 := len(o.Value) - 1
 		idx := 0
 		for key, value := range o.Value {
 			b = encodeString(b, key)
 			b = append(b, ':')
-			eb, err := Encode(value)
+			eb, err := encode(value, path)
 			if err != nil {
 				return nil, err
 			}
 			b = append(b, eb...)
+			if len(b) > tengo.MaxBytesLen {
+				return nil, tengo.ErrBytesLimit
+			}
 			if idx < len1 {
 				b = append(b, ',')
 			}
 			idx++
 		}
 		b = append(b, '}')
+		path.leave(o)
 	case *tengo.Bool:
 		if o.IsFalsy() {
 			b = strconv.AppendBool(b, false)
@@ -252,6 +325,9 @@ func Encode(o tengo.Object) ([]byte, error) {
 		b = append(b, "null"...)
 	default:
 		// unknown type: ignore
+	}
+	if len(b) > tengo.MaxBytesLen {
+		return nil, tengo.ErrBytesLimit
 	}
 	return b, nil
 }

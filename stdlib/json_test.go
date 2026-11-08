@@ -2,9 +2,12 @@ package stdlib_test
 
 import (
 	"math"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/d5/tengo/v2"
+	"github.com/d5/tengo/v2/require"
 )
 
 func TestJSON(t *testing.T) {
@@ -128,4 +131,45 @@ func TestJSONErrors(t *testing.T) {
 	module(t, "json").call("encode", math.Inf(1)).
 		expect(&tengo.Error{Value: &tengo.String{
 			Value: "unsupported float value"}})
+}
+
+func TestJSONLimits(t *testing.T) {
+	curMaxBytesLen := tengo.MaxBytesLen
+	defer func() { tengo.MaxBytesLen = curMaxBytesLen }()
+	tengo.MaxBytesLen = 12
+
+	module(t, "json").call("encode", "0123456789").
+		expect([]byte(`"0123456789"`))
+	module(t, "json").call("encode", "01234567890").expectError()
+
+	module(t, "json").call("html_escape", "<>").
+		expect([]byte(`\u003c\u003e`))
+	module(t, "json").call("html_escape", "<>&").expectError()
+	module(t, "json").call("html_escape", "\xe2\x80\xa8\xe2\x80\xa8").
+		expect([]byte(`\u2028\u2028`))
+	module(t, "json").call("html_escape", "\xe2\x80\xa8\xe2\x80\xa9a").
+		expectError()
+
+	module(t, "json").call("indent", "[1]", "", " ").
+		expect([]byte("[\n 1\n]"))
+	module(t, "json").call("indent", "[1,2,3]", "", " ").expectError()
+
+	// a 2 KB input would indent to tens of gigabytes
+	tengo.MaxBytesLen = 1 << 20
+	deep := strings.Repeat("[", 1000) + strings.Repeat("]", 1000)
+	module(t, "json").call("indent", deep, "", strings.Repeat(" ", 4096)).
+		expectError()
+
+	// shared references double the output at each level, so the encoder
+	// checks as it goes
+	x := tengo.Object(&tengo.Array{Value: []tengo.Object{&tengo.Int{Value: 1}}})
+	for i := 0; i < 22; i++ {
+		x = &tengo.Array{Value: []tengo.Object{x, x}}
+	}
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	module(t, "json").call("encode", x).expectError()
+	runtime.ReadMemStats(&after)
+	require.True(t, after.TotalAlloc-before.TotalAlloc < 256<<20,
+		"allocated %d bytes", after.TotalAlloc-before.TotalAlloc)
 }

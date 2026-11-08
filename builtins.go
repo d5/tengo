@@ -434,10 +434,6 @@ func builtinFormat(args ...Object) (Object, error) {
 			Found:    args[0].TypeName(),
 		}
 	}
-	if numArgs == 1 {
-		// okay to return 'format' directly as String is immutable
-		return format, nil
-	}
 	s, err := Format(format.Value, args[1:]...)
 	if err != nil {
 		return nil, err
@@ -600,7 +596,7 @@ func builtinAppend(args ...Object) (Object, error) {
 	case *Array:
 		return &Array{Value: append(arg.Value, args[1:]...)}, nil
 	case *ImmutableArray:
-		return &Array{Value: append(arg.Value, args[1:]...)}, nil
+		return &Array{Value: concatObjects(arg.Value, args[1:])}, nil
 	default:
 		return nil, ErrInvalidArgumentType{
 			Name:     "first",

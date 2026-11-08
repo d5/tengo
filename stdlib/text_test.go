@@ -2,6 +2,8 @@ package stdlib_test
 
 import (
 	"regexp"
+	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -251,6 +253,19 @@ func TestReplaceLimit(t *testing.T) {
 	module(t, "text").call("replace", "123456789012", "012", "xyzz", -1).
 		expectError()
 
+	// the result is checked before its buffer is allocated
+	tengo.MaxStringLen = 1 << 20
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	module(t, "text").
+		call("replace", strings.Repeat("a", 1<<10), "a",
+			strings.Repeat("b", 1<<20), -1).
+		expectError()
+	runtime.ReadMemStats(&after)
+	require.True(t, after.TotalAlloc-before.TotalAlloc < 256<<20,
+		"allocated %d bytes", after.TotalAlloc-before.TotalAlloc)
+	tengo.MaxStringLen = 12
+
 	module(t, "text").call("re_replace", "1", "123456789012", "x").
 		expect("x234567890x2")
 	module(t, "text").call("re_replace", "12", "123456789012", "x").
@@ -294,6 +309,29 @@ func TestTextRepeat(t *testing.T) {
 		expect("111111111111")
 	module(t, "text").call("repeat", "1", "13").
 		expectError()
+	module(t, "text").call("repeat", "1", -1).
+		expectError()
+	module(t, "text").call("repeat", "1", 0).
+		expect("")
+}
+
+func TestTextFormatFloatBits(t *testing.T) {
+	module(t, "text").call("format_float", 1.5, "f", 2, 32).expect("1.50")
+	for _, bits := range []int{0, 16, 128} {
+		module(t, "text").call("format_float", 1.5, "f", 2, bits).
+			expectError()
+	}
+}
+
+func TestTextFormatFloatLimit(t *testing.T) {
+	curMaxStringLen := tengo.MaxStringLen
+	defer func() { tengo.MaxStringLen = curMaxStringLen }()
+	tengo.MaxStringLen = 12
+
+	module(t, "text").call("format_float", 1.5, "f", 2, 64).expect("1.50")
+	module(t, "text").call("format_float", 1.5, "f", 11, 64).expectError()
+	// FormatFloat would build a terabyte of zeros before any check
+	module(t, "text").call("format_float", 1.5, "f", 1<<40, 64).expectError()
 }
 
 func TestSubstr(t *testing.T) {

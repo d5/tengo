@@ -47,6 +47,7 @@ const (
 	OpIteratorValue               // Iterator value
 	OpBinaryOp                    // Binary operation
 	OpSuspend                     // Suspend VM
+	OpImmutableLit                // Immutable object of a literal, uncopied
 )
 
 // OpcodeNames are string representation of opcodes.
@@ -93,6 +94,7 @@ var OpcodeNames = [...]string{
 	OpIteratorValue: "ITVAL",
 	OpBinaryOp:      "BINARYOP",
 	OpSuspend:       "SUSPEND",
+	OpImmutableLit:  "IMMUTLIT",
 }
 
 // OpcodeOperands is the number of operands.
@@ -139,6 +141,7 @@ var OpcodeOperands = [...][]int{
 	OpIteratorValue: {},
 	OpBinaryOp:      {1},
 	OpSuspend:       {},
+	OpImmutableLit:  {},
 }
 
 // ReadOperands reads operands from the bytecode.

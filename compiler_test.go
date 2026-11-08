@@ -295,6 +295,34 @@ func TestCompiler_Compile(t *testing.T) {
 				tengo.MakeInstruction(parser.OpSuspend)),
 			objectsArray()))
 
+	// a literal is wrapped as it is, and anything else is copied first
+	expectCompile(t, `immutable([])`,
+		bytecode(
+			concatInsts(
+				tengo.MakeInstruction(parser.OpArray, 0),
+				tengo.MakeInstruction(parser.OpImmutableLit),
+				tengo.MakeInstruction(parser.OpPop),
+				tengo.MakeInstruction(parser.OpSuspend)),
+			objectsArray()))
+	expectCompile(t, `immutable({})`,
+		bytecode(
+			concatInsts(
+				tengo.MakeInstruction(parser.OpMap, 0),
+				tengo.MakeInstruction(parser.OpImmutableLit),
+				tengo.MakeInstruction(parser.OpPop),
+				tengo.MakeInstruction(parser.OpSuspend)),
+			objectsArray()))
+	expectCompile(t, `a := []; immutable(a)`,
+		bytecode(
+			concatInsts(
+				tengo.MakeInstruction(parser.OpArray, 0),
+				tengo.MakeInstruction(parser.OpSetGlobal, 0),
+				tengo.MakeInstruction(parser.OpGetGlobal, 0),
+				tengo.MakeInstruction(parser.OpImmutable),
+				tengo.MakeInstruction(parser.OpPop),
+				tengo.MakeInstruction(parser.OpSuspend)),
+			objectsArray()))
+
 	expectCompile(t, `[1, 2, 3]`,
 		bytecode(
 			concatInsts(
@@ -1041,6 +1069,53 @@ func TestCompilerErrorReport(t *testing.T) {
 		"Compile Error: continue not allowed outside loop\n\tat test:1:10")
 	expectCompileError(t, `func() { export 5 }`,
 		"Compile Error: export not allowed inside function\n\tat test:1:10")
+	expectCompileError(t, `len = 1`,
+		"Compile Error: cannot assign to builtin 'len'\n\tat test:1:1")
+	expectCompileError(t, `func() { len += 1 }`,
+		"Compile Error: cannot assign to builtin 'len'\n\tat test:1:10")
+}
+
+func TestCompilerOperandLimits(t *testing.T) {
+	compile := func(src string) error {
+		_, _, err := traceCompile(src, nil)
+		return err
+	}
+	repeat := func(n int, format string) string {
+		var b strings.Builder
+		for i := 0; i < n; i++ {
+			fmt.Fprintf(&b, format, i)
+		}
+		return b.String()
+	}
+
+	// a local index is one byte
+	require.NoError(t, compile("func() {\n"+repeat(256, "a%d := 0\n")+"}"))
+	expectCompileError(t, "func() {\n"+repeat(257, "a%d := 0\n")+"}",
+		"Compile Error: too many variables\n\tat test:258:1")
+
+	require.NoError(t, compile(repeat(tengo.GlobalsSize, "g%d := 0\n")))
+	expectCompileError(t, repeat(tengo.GlobalsSize+1, "g%d := 0\n"),
+		"too many variables")
+
+	// a constant index is two bytes
+	require.NoError(t, compile("a := 0\n"+strings.Repeat("a = 1\n", 65535)))
+	expectCompileError(t, "a := 0\n"+strings.Repeat("a = 1\n", 65536),
+		"too many constants")
+
+	// an argument count is one byte
+	call := func(n int) string {
+		return "f := func(...a) { return a }; f(" +
+			strings.Repeat("0, ", n-1) + "0)"
+	}
+	require.NoError(t, compile(call(255)))
+	expectCompileError(t, call(256), "too many arguments")
+
+	// an element count is two bytes
+	require.NoError(t, compile("v := 0; a := [v"+strings.Repeat(", v", 65534)+"]"))
+	expectCompileError(t, "v := 0; a := [v"+strings.Repeat(", v", 65535)+"]",
+		"too many array elements")
+	expectCompileError(t, "v := 0; m := {z: v"+repeat(32767, ", k%d: v")+"}",
+		"too many map elements")
 }
 
 func TestCompilerDeadCode(t *testing.T) {
