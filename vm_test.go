@@ -1134,6 +1134,15 @@ export func() {
 	return b + "foo"
 }`), "Runtime Error: invalid operation: int + string\n\tat mod2:4:9")
 
+	// an error points at the expression, and names the container
+	expectError(t, `a := 1
+b := -"s"`, nil, "Runtime Error: invalid operation: -string\n\tat test:2:6")
+	expectError(t, `b := "s"
+c := -(
+  b)`, nil, "Runtime Error: invalid operation: -string\n\tat test:2:6")
+	expectError(t, `x := 5; y := x["key"]`, nil,
+		"Runtime Error: not indexable: int\n\tat test:1:14")
+
 	expectError(t, `a := [1, 2, 3]; b := a[:"invalid"];`, nil,
 		"Runtime Error: invalid slice index type: string")
 	expectError(t, `a := immutable([4, 5, 6]); b := a[:false];`, nil,
@@ -1142,6 +1151,21 @@ export func() {
 		"Runtime Error: invalid slice index type: float")
 	expectError(t, `a := bytes("world"); b := a[:time(1)];`, nil,
 		"Runtime Error: invalid slice index type: time")
+}
+
+func TestCompiledFunctionCall(t *testing.T) {
+	// a compiled function needs the VM, so Go code gets an error, not nothing
+	called := false
+	s := tengo.NewScript([]byte(`out := call(func() { return 1 })`))
+	require.NoError(t, s.Add("call", &tengo.UserFunction{
+		Value: func(args ...tengo.Object) (tengo.Object, error) {
+			called = args[0].CanCall()
+			return args[0].Call()
+		},
+	}))
+	_, err := s.Run()
+	require.True(t, called)
+	require.True(t, errors.Is(err, tengo.ErrCompiledFunctionCall), err)
 }
 
 func TestVMErrorUnwrap(t *testing.T) {

@@ -207,7 +207,7 @@ func (e *ErrorExpr) Pos() Pos {
 
 // End returns the position of first character immediately after the node.
 func (e *ErrorExpr) End() Pos {
-	return e.RParen
+	return e.RParen + 1
 }
 
 func (e *ErrorExpr) String() string {
@@ -323,7 +323,7 @@ func (e *ImmutableExpr) Pos() Pos {
 
 // End returns the position of first character immediately after the node.
 func (e *ImmutableExpr) End() Pos {
-	return e.RParen
+	return e.RParen + 1
 }
 
 func (e *ImmutableExpr) String() string {
@@ -567,7 +567,7 @@ func (e *UnaryExpr) exprNode() {}
 
 // Pos returns the position of first character belonging to the node.
 func (e *UnaryExpr) Pos() Pos {
-	return e.Expr.Pos()
+	return e.TokenPos
 }
 
 // End returns the position of first character immediately after the node.

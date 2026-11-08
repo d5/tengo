@@ -581,7 +581,7 @@ func FuncASSRSs(fn func(string, string) []string) tengo.CallableFunc {
 		s2, ok := tengo.ToString(args[1])
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "first",
+				Name:     "second",
 				Expected: "string(compatible)",
 				Found:    args[1].TypeName(),
 			}
@@ -659,7 +659,7 @@ func FuncASSRI(fn func(string, string) int) tengo.CallableFunc {
 			return nil, tengo.ErrInvalidArgumentType{
 				Name:     "second",
 				Expected: "string(compatible)",
-				Found:    args[0].TypeName(),
+				Found:    args[1].TypeName(),
 			}
 		}
 		return &tengo.Int{Value: int64(fn(s1, s2))}, nil

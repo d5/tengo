@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/d5/tengo/v2"
 	"github.com/d5/tengo/v2/require"
@@ -277,6 +278,22 @@ func TestReplaceLimit(t *testing.T) {
 		expect("213456789021")
 	module(t, "text").call("re_replace", "(1)(2)", "123456789012", "${2}${1}x").
 		expectError()
+}
+
+func TestArgumentNames(t *testing.T) {
+	// a type error names the bad argument and its own type
+	for _, fn := range []string{"compare", "split"} {
+		res := module(t, "text").call(fn, "a", tengo.UndefinedValue)
+		e, ok := res.e.(tengo.ErrInvalidArgumentType)
+		require.True(t, ok, res.e)
+		require.Equal(t, "second", e.Name, fn)
+		require.Equal(t, "undefined", e.Found, fn)
+	}
+	res := module(t, "times").call("before", time.Now(), tengo.UndefinedValue)
+	e, ok := res.e.(tengo.ErrInvalidArgumentType)
+	require.True(t, ok, res.e)
+	require.Equal(t, "second", e.Name)
+	require.Equal(t, "undefined", e.Found)
 }
 
 func TestTextRepeat(t *testing.T) {
