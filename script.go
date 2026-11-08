@@ -138,7 +138,6 @@ func (s *Script) Compile() (*Compiled, error) {
 		bytecode:      bytecode,
 		globals:       globals,
 		maxAllocs:     s.maxAllocs,
-		fullClone:     true, // we do not share bytecode or global indexes with other clones
 	}, nil
 }
 
@@ -207,7 +206,6 @@ type Compiled struct {
 	globals       []Object
 	maxAllocs     int64
 	lock          sync.RWMutex
-	fullClone     bool
 }
 
 // Run executes the compiled script in the virtual machine.
@@ -272,12 +270,11 @@ func (c *Compiled) Clone() *Compiled {
 		bytecode:      c.bytecode,
 		globals:       make([]Object, len(c.globals)),
 		maxAllocs:     c.maxAllocs,
-		fullClone:     false, // this clone shares bytecode and global indexes with the 'original'
 	}
-	// copy global objects
+	var cl cloner
 	for idx, g := range c.globals {
 		if g != nil {
-			clone.globals[idx] = g.Copy()
+			clone.globals[idx], _ = cl.value(g)
 		}
 	}
 	return clone
@@ -292,23 +289,8 @@ func (c *Compiled) ReplaceBuiltinModule(name string, attrs map[string]Object) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	if !c.fullClone {
-		// To safely modify compiled script internals we need to be sure noone shares
-		// the same bytecode or global indexes.
-		// We do not do full copy during Clone() call to skip additional memory allocations
-		// when they are not needed, leaving Clone() call as optional as it was
-		// before the 'ReplaceBuiltinModule' feature was added.
-
-		indexes := make(map[string]int, len(c.globalIndexes))
-		for name, idx := range c.globalIndexes {
-			indexes[name] = idx
-		}
-		c.globalIndexes = indexes
-		c.bytecode = c.bytecode.Clone()
-
-		c.fullClone = true
-	}
-
+	// Clones share the bytecode, so replace the module in a copy of it.
+	c.bytecode = c.bytecode.Clone()
 	c.bytecode.ReplaceBuiltinModule(name, attrs)
 }
 
@@ -382,4 +364,135 @@ func (c *Compiled) Set(name string, value interface{}) error {
 	}
 	c.globals[idx] = obj
 	return nil
+}
+
+// cloner copies the globals of a Clone. A closure gets its own copy of each
+// variable it captured, and closures that shared a variable share its copy.
+// A value with nothing mutable inside is shared, as freeze promises.
+type cloner struct {
+	objs map[Object]Object
+	ptrs map[*ObjectPtr]*ObjectPtr
+}
+
+// value returns the clone's copy of o, and whether it is a new object.
+func (c *cloner) value(o Object) (Object, bool) {
+	switch o := o.(type) {
+	case *Int, *Float, *String, *Char, *Bool, *Undefined, *Bytes, *Time,
+		*BuiltinFunction, *UserFunction:
+		return o, false
+	case *CompiledFunction:
+		if len(o.Free) == 0 {
+			return o, false
+		}
+		if d, ok := c.objs[o]; ok {
+			return d, true
+		}
+		d := &CompiledFunction{
+			Instructions:  o.Instructions,
+			NumLocals:     o.NumLocals,
+			NumParameters: o.NumParameters,
+			VarArgs:       o.VarArgs,
+			SourceMap:     o.SourceMap,
+			Free:          make([]*ObjectPtr, len(o.Free)),
+		}
+		c.memo(o, d)
+		for i, p := range o.Free {
+			d.Free[i] = c.ptr(p)
+		}
+		return d, true
+	case *Array:
+		if d, ok := c.objs[o]; ok {
+			return d, true
+		}
+		d := &Array{Value: make([]Object, len(o.Value))}
+		c.memo(o, d)
+		for i, e := range o.Value {
+			d.Value[i], _ = c.value(e)
+		}
+		return d, true
+	case *Map:
+		if d, ok := c.objs[o]; ok {
+			return d, true
+		}
+		d := &Map{Value: make(map[string]Object, len(o.Value))}
+		c.memo(o, d)
+		for k, e := range o.Value {
+			d.Value[k], _ = c.value(e)
+		}
+		return d, true
+	case *ImmutableArray:
+		if d, ok := c.objs[o]; ok {
+			return d, d != Object(o)
+		}
+		d := &ImmutableArray{Value: make([]Object, len(o.Value))}
+		c.memo(o, d)
+		changed := false
+		for i, e := range o.Value {
+			var ch bool
+			d.Value[i], ch = c.value(e)
+			changed = changed || ch
+		}
+		if !changed {
+			c.objs[o] = o
+			return o, false
+		}
+		return d, true
+	case *ImmutableMap:
+		if d, ok := c.objs[o]; ok {
+			return d, d != Object(o)
+		}
+		d := &ImmutableMap{Value: make(map[string]Object, len(o.Value))}
+		c.memo(o, d)
+		changed := false
+		for k, e := range o.Value {
+			var ch bool
+			d.Value[k], ch = c.value(e)
+			changed = changed || ch
+		}
+		if !changed {
+			c.objs[o] = o
+			return o, false
+		}
+		return d, true
+	case *Error:
+		if o.Value == nil {
+			return o, false
+		}
+		if d, ok := c.objs[o]; ok {
+			return d, d != Object(o)
+		}
+		d := &Error{}
+		c.memo(o, d)
+		var ch bool
+		d.Value, ch = c.value(o.Value)
+		if !ch {
+			c.objs[o] = o
+			return o, false
+		}
+		return d, true
+	}
+	return o.Copy(), true
+}
+
+func (c *cloner) memo(o, d Object) {
+	if c.objs == nil {
+		c.objs = make(map[Object]Object)
+	}
+	c.objs[o] = d
+}
+
+func (c *cloner) ptr(p *ObjectPtr) *ObjectPtr {
+	if d, ok := c.ptrs[p]; ok {
+		return d
+	}
+	if c.ptrs == nil {
+		c.ptrs = make(map[*ObjectPtr]*ObjectPtr)
+	}
+	v := new(Object)
+	d := &ObjectPtr{Value: v}
+	c.ptrs[p] = d
+	if p.Value != nil && *p.Value != nil {
+		*v, _ = c.value(*p.Value)
+	}
+	return d
 }

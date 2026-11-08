@@ -6,6 +6,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/d5/tengo/v2/parser"
@@ -580,6 +581,7 @@ func (o *CompiledFunction) Copy() Object {
 		NumLocals:     o.NumLocals,
 		NumParameters: o.NumParameters,
 		VarArgs:       o.VarArgs,
+		SourceMap:     o.SourceMap,
 		Free:          append([]*ObjectPtr{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
 	}
 }
@@ -1246,8 +1248,10 @@ func (o *ObjectPtr) Equals(x Object) bool {
 // String represents a string value.
 type String struct {
 	ObjectImpl
-	Value   string
-	runeStr []rune
+	Value string
+	// runes caches Value as []rune. Clones share String constants, so the
+	// cache is written atomically.
+	runes atomic.Value
 }
 
 // TypeName returns the name of the type.
@@ -1341,25 +1345,30 @@ func (o *String) IndexGet(index Object) (res Object, err error) {
 		return
 	}
 	idxVal := int(intIdx.Value)
-	if o.runeStr == nil {
-		o.runeStr = []rune(o.Value)
-	}
-	if idxVal < 0 || idxVal >= len(o.runeStr) {
+	runes := o.runeSlice()
+	if idxVal < 0 || idxVal >= len(runes) {
 		res = UndefinedValue
 		return
 	}
-	res = &Char{Value: o.runeStr[idxVal]}
+	res = &Char{Value: runes[idxVal]}
 	return
+}
+
+func (o *String) runeSlice() []rune {
+	if r, ok := o.runes.Load().([]rune); ok {
+		return r
+	}
+	r := []rune(o.Value)
+	o.runes.Store(r)
+	return r
 }
 
 // Iterate creates a string iterator.
 func (o *String) Iterate() Iterator {
-	if o.runeStr == nil {
-		o.runeStr = []rune(o.Value)
-	}
+	runes := o.runeSlice()
 	return &StringIterator{
-		v: o.runeStr,
-		l: len(o.runeStr),
+		v: runes,
+		l: len(runes),
 	}
 }
 
