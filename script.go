@@ -271,7 +271,7 @@ func (c *Compiled) Clone() *Compiled {
 		globals:       make([]Object, len(c.globals)),
 		maxAllocs:     c.maxAllocs,
 	}
-	var cl cloner
+	cl := cloner{newGlobals: clone.globals}
 	for idx, g := range c.globals {
 		if g != nil {
 			clone.globals[idx], _ = cl.value(g)
@@ -370,8 +370,9 @@ func (c *Compiled) Set(name string, value interface{}) error {
 // variable it captured, and closures that shared a variable share its copy.
 // A value with nothing mutable inside is shared, as freeze promises.
 type cloner struct {
-	objs map[Object]Object
-	ptrs map[*ObjectPtr]*ObjectPtr
+	objs       map[Object]Object
+	ptrs       map[*ObjectPtr]*ObjectPtr
+	newGlobals []Object
 }
 
 // value returns the clone's copy of o, and whether it is a new object.
@@ -381,11 +382,25 @@ func (c *cloner) value(o Object) (Object, bool) {
 		*BuiltinFunction, *UserFunction:
 		return o, false
 	case *CompiledFunction:
-		if len(o.Free) == 0 {
+		if len(o.Free) == 0 && o.vmContext == nil {
 			return o, false
 		}
 		if d, ok := c.objs[o]; ok {
 			return d, true
+		}
+		var ctx *vmContext
+		if o.vmContext != nil {
+			globals := o.vmContext.globals
+			if c.newGlobals != nil {
+				globals = c.newGlobals
+			}
+			ctx = &vmContext{
+				constants: o.vmContext.constants,
+				globals:   globals,
+				fileSet:   o.vmContext.fileSet,
+				maxAllocs: o.vmContext.maxAllocs,
+				aborting:  o.vmContext.aborting,
+			}
 		}
 		d := &CompiledFunction{
 			Instructions:  o.Instructions,
@@ -394,6 +409,7 @@ func (c *cloner) value(o Object) (Object, bool) {
 			VarArgs:       o.VarArgs,
 			SourceMap:     o.SourceMap,
 			Free:          make([]*ObjectPtr, len(o.Free)),
+			vmContext:     ctx,
 		}
 		c.memo(o, d)
 		for i, p := range o.Free {
