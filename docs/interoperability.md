@@ -3,6 +3,7 @@
 ## Table of Contents
 
 - [Using Scripts](#using-scripts)
+  - [Script Defaults and Runtime Overrides](#script-defaults-and-runtime-overrides)
   - [Type Conversion Table](#type-conversion-table)
   - [User Types](#user-types)
 - [Sandbox Environments](#sandbox-environments)
@@ -103,6 +104,73 @@ Value of the global variables can be replaced using
 [Compiled.Set](https://godoc.org/github.com/d5/tengo#Compiled.Set) function.
 But it will return an error if you try to set the value of un-defined global
 variables _(e.g. trying to set the value of `x` in the example)_.  
+
+### Script Defaults and Runtime Overrides
+
+`Compiled.Set` replaces a global variable's value; it does not skip assignments
+in the script. For example, a top-level `a := 0` initializes `a` again on every
+run, overwriting a value supplied with `Set("a", 10)` before that run.
+
+One option is to register a single map for overrides. The script owns its
+field names and defaults; the Go host only needs to register `overrides` before
+compilation and replace that map before each run:
+
+```golang
+package main
+
+import (
+	"fmt"
+
+	"github.com/d5/tengo/v2"
+)
+
+func main() {
+	s := tengo.NewScript([]byte(`
+settings := {a: 0, b: 1}
+for key, value in overrides {
+    settings[key] = value
+}
+result := settings.a + settings.b
+`))
+	if err := s.Add("overrides", map[string]interface{}{}); err != nil {
+		panic(err)
+	}
+	c, err := s.Compile()
+	if err != nil {
+		panic(err)
+	}
+
+	inputs := []map[string]interface{}{
+		{},
+		{"a": 10, "b": 20},
+		{"b": 0},
+		{"a": 10},
+		{},
+	}
+	for _, input := range inputs {
+		if err := c.Set("overrides", input); err != nil {
+			panic(err)
+		}
+		if err := c.Run(); err != nil {
+			panic(err)
+		}
+		fmt.Println(c.Get("result").Int())
+	}
+}
+```
+
+[Run this example on the Go Playground](https://go.dev/play/p/ZTWz3dxvg5V).
+
+This prints `1`, `30`, `0`, `11`, and `1`. Missing fields keep their script
+defaults, while supplied fields replace them, including an explicit zero.
+The script creates a new `settings` map on every run, so the final empty
+input restores the defaults rather than retaining the preceding overrides.
+This is a shallow copy of supplied fields, not a recursive merge.
+
+The host still needs to declare the `overrides` global with `Script.Add` before
+compilation. This pattern avoids declaring every field separately; it does not
+make unknown global identifiers available automatically. A standalone script
+also needs an `overrides` value supplied by its caller or declared in its source.
 
 ### Type Conversion Table
 
