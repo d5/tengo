@@ -16,6 +16,15 @@ type frame struct {
 	basePointer int
 }
 
+// vmContext holds shared VM state needed to execute compiled functions and closures.
+type vmContext struct {
+	constants []Object
+	globals   []Object
+	fileSet   *parser.SourceFileSet
+	maxAllocs int64
+	aborting  *int64
+}
+
 // VM is a virtual machine that executes the bytecode compiled by Compiler.
 type VM struct {
 	constants   []Object
@@ -32,6 +41,8 @@ type VM struct {
 	maxAllocs   int64
 	allocs      int64
 	err         error
+	ctx         *vmContext
+	retVal      Object
 }
 
 // NewVM creates a VM.
@@ -52,16 +63,28 @@ func NewVM(
 		ip:          -1,
 		maxAllocs:   maxAllocs,
 	}
+	v.ctx = &vmContext{
+		constants: bytecode.Constants,
+		globals:   globals,
+		fileSet:   bytecode.FileSet,
+		maxAllocs: maxAllocs,
+		aborting:  &v.aborting,
+	}
 	v.frames[0].fn = bytecode.MainFunction
 	v.frames[0].ip = -1
 	v.curFrame = &v.frames[0]
-	v.curInsts = v.curFrame.fn.Instructions
+	if bytecode.MainFunction != nil {
+		v.curInsts = v.curFrame.fn.Instructions
+	}
 	return v
 }
 
 // Abort aborts the execution.
 func (v *VM) Abort() {
 	atomic.StoreInt64(&v.aborting, 1)
+	if v.ctx != nil && v.ctx.aborting != nil {
+		atomic.StoreInt64(v.ctx.aborting, 1)
+	}
 }
 
 // Run starts the execution.
@@ -110,12 +133,15 @@ func (v *VM) stackFull() bool {
 // return value. A frame that pops a tail call's value returns undefined, so
 // it can take that call's place only when its own value is popped too.
 func (v *VM) callerPops() bool {
+	if v.framesIndex < 2 {
+		return false
+	}
 	caller := &v.frames[v.framesIndex-2]
 	return caller.fn.Instructions[caller.ip+1] == parser.OpPop
 }
 
 func (v *VM) run() {
-	for atomic.LoadInt64(&v.aborting) == 0 {
+	for atomic.LoadInt64(&v.aborting) == 0 && (v.ctx == nil || v.ctx.aborting == nil || atomic.LoadInt64(v.ctx.aborting) == 0) {
 		v.ip++
 
 		switch v.curInsts[v.ip] {
@@ -126,7 +152,11 @@ func (v *VM) run() {
 			if v.stackFull() {
 				return
 			}
-			v.stack[v.sp] = v.constants[cidx]
+			val := v.constants[cidx]
+			if fn, ok := val.(*CompiledFunction); ok && v.ctx != nil {
+				val = fn.bind(v.ctx)
+			}
+			v.stack[v.sp] = val
 			v.sp++
 		case parser.OpNull:
 			if v.stackFull() {
@@ -714,6 +744,10 @@ func (v *VM) run() {
 			} else {
 				retVal = UndefinedValue
 			}
+			if v.framesIndex == 1 {
+				v.retVal = retVal
+				return
+			}
 			//v.sp--
 			v.framesIndex--
 			v.curFrame = &v.frames[v.framesIndex-1]
@@ -817,6 +851,7 @@ func (v *VM) run() {
 				VarArgs:       fn.VarArgs,
 				SourceMap:     fn.SourceMap,
 				Free:          free,
+				vmContext:     v.ctx,
 			}
 			v.allocs--
 			if v.allocs == 0 {
@@ -936,6 +971,87 @@ func (v *VM) run() {
 // IsStackEmpty tests if the stack is empty or not.
 func (v *VM) IsStackEmpty() bool {
 	return v.sp == 0
+}
+
+func (v *VM) runCompiledFunction(fn *CompiledFunction, args ...Object) (Object, error) {
+	numArgs := len(args)
+	if fn.VarArgs {
+		realArgs := fn.NumParameters - 1
+		varArgs := numArgs - realArgs
+		if varArgs >= 0 {
+			numArgs = realArgs + 1
+			vArgs := make([]Object, varArgs)
+			copy(vArgs, args[realArgs:])
+			args = append(append([]Object(nil), args[:realArgs]...), &Array{Value: vArgs})
+		}
+	}
+	if numArgs != fn.NumParameters {
+		if fn.VarArgs {
+			return nil, fmt.Errorf(
+				"wrong number of arguments: want>=%d, got=%d",
+				fn.NumParameters-1, len(args))
+		}
+		return nil, fmt.Errorf(
+			"wrong number of arguments: want=%d, got=%d",
+			fn.NumParameters, len(args))
+	}
+
+	if fn.NumLocals >= StackSize {
+		return nil, ErrStackOverflow
+	}
+
+	for i, arg := range args {
+		v.stack[i] = arg
+	}
+	for i := len(args); i < fn.NumLocals; i++ {
+		v.stack[i] = UndefinedValue
+	}
+	v.sp = fn.NumLocals
+
+	v.frames[0].fn = fn
+	v.frames[0].freeVars = fn.Free
+	v.frames[0].basePointer = 0
+	v.frames[0].ip = -1
+	v.curFrame = &v.frames[0]
+	v.curInsts = fn.Instructions
+	v.framesIndex = 1
+	v.ip = -1
+	v.allocs = v.maxAllocs + 1
+	v.err = nil
+
+	v.run()
+
+	if v.err != nil {
+		var filePos string
+		if v.curFrame != nil && v.curFrame.fn != nil {
+			pos := v.curFrame.fn.SourcePos(v.ip)
+			if v.fileSet != nil {
+				filePos = v.fileSet.Position(pos).String()
+			} else {
+				filePos = fmt.Sprintf(":%d", pos)
+			}
+		}
+		err := fmt.Errorf("Runtime Error: %w\n\tat %s", v.err, filePos)
+		for v.framesIndex > 1 {
+			v.framesIndex--
+			v.curFrame = &v.frames[v.framesIndex-1]
+			filePos = ""
+			if v.curFrame != nil && v.curFrame.fn != nil {
+				pos := v.curFrame.fn.SourcePos(v.curFrame.ip - 1)
+				if v.fileSet != nil {
+					filePos = v.fileSet.Position(pos).String()
+				} else {
+					filePos = fmt.Sprintf(":%d", pos)
+				}
+			}
+			err = fmt.Errorf("%w\n\tat %s", err, filePos)
+		}
+		return nil, err
+	}
+	if v.retVal == nil {
+		return UndefinedValue, nil
+	}
+	return v.retVal, nil
 }
 
 func indexAssign(dst, src Object, selectors []Object) error {

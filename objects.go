@@ -611,7 +611,11 @@ type CompiledFunction struct {
 	VarArgs       bool
 	SourceMap     map[int]parser.Pos
 	Free          []*ObjectPtr
+	vmContext     *vmContext
 }
+
+// CompiledClosure is an alias for CompiledFunction.
+type CompiledClosure = CompiledFunction
 
 // TypeName returns the name of the type.
 func (o *CompiledFunction) TypeName() string {
@@ -637,7 +641,17 @@ func (o *CompiledFunction) Copy() Object {
 		VarArgs:       o.VarArgs,
 		SourceMap:     o.SourceMap,
 		Free:          append([]*ObjectPtr{}, o.Free...), // DO NOT Copy() of elements; these are variable pointers
+		vmContext:     o.vmContext,
 	}
+}
+
+func (o *CompiledFunction) bind(ctx *vmContext) *CompiledFunction {
+	if o.vmContext == ctx {
+		return o
+	}
+	res := *o
+	res.vmContext = ctx
+	return &res
 }
 
 // Equals returns true if the value of the type is equal to the value of
@@ -662,10 +676,22 @@ func (o *CompiledFunction) CanCall() bool {
 	return true
 }
 
-// Call returns an error. A compiled function runs only in the VM, which
-// holds the constants and globals its instructions refer to.
-func (o *CompiledFunction) Call(...Object) (Object, error) {
-	return nil, ErrCompiledFunctionCall
+// Call executes the compiled function using its VM execution context. If the
+// function is not bound to a VM execution context, it returns ErrCompiledFunctionCall.
+func (o *CompiledFunction) Call(args ...Object) (Object, error) {
+	if o.vmContext == nil {
+		return nil, ErrCompiledFunctionCall
+	}
+	v := &VM{
+		constants:   o.vmContext.constants,
+		globals:     o.vmContext.globals,
+		fileSet:     o.vmContext.fileSet,
+		maxAllocs:   o.vmContext.maxAllocs,
+		ctx:         o.vmContext,
+		framesIndex: 1,
+		ip:          -1,
+	}
+	return v.runCompiledFunction(o, args...)
 }
 
 // Error represents an error value.

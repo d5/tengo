@@ -1154,7 +1154,13 @@ c := -(
 }
 
 func TestCompiledFunctionCall(t *testing.T) {
-	// a compiled function needs the VM, so Go code gets an error, not nothing
+	// an unbound compiled function cannot be called from Go
+	unbound := &tengo.CompiledFunction{}
+	require.True(t, unbound.CanCall())
+	_, err := unbound.Call()
+	require.True(t, errors.Is(err, tengo.ErrCompiledFunctionCall), err)
+
+	// a compiled function with VM context executes and returns its value
 	called := false
 	s := tengo.NewScript([]byte(`out := call(func() { return 1 })`))
 	require.NoError(t, s.Add("call", &tengo.UserFunction{
@@ -1163,9 +1169,111 @@ func TestCompiledFunctionCall(t *testing.T) {
 			return args[0].Call()
 		},
 	}))
-	_, err := s.Run()
+	c, err := s.Run()
+	require.NoError(t, err)
 	require.True(t, called)
-	require.True(t, errors.Is(err, tengo.ErrCompiledFunctionCall), err)
+	require.Equal(t, int64(1), c.Get("out").Int64())
+}
+
+func TestClosureImportAccess(t *testing.T) {
+	// Reproduction for issue #467: closures called from Go retain full access
+	// to imported modules and variable bindings.
+	var closureResult tengo.Object
+	modules := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
+	modules.AddBuiltinModule("demo", map[string]tengo.Object{
+		"callClosure": &tengo.UserFunction{
+			Name: "callClosure",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				if len(args) != 1 || !args[0].CanCall() {
+					return nil, fmt.Errorf("callClosure requires a callable argument")
+				}
+				res, err := args[0].Call()
+				if err != nil {
+					return nil, err
+				}
+				closureResult = res
+				return res, nil
+			},
+		},
+		"callWithArgs": &tengo.UserFunction{
+			Name: "callWithArgs",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				if len(args) < 1 || !args[0].CanCall() {
+					return nil, fmt.Errorf("callWithArgs requires a callable argument")
+				}
+				return args[0].Call(args[1:]...)
+			},
+		},
+	})
+
+	// Case 1: minimal reproduction from #467 with fmt module access
+	s1 := tengo.NewScript([]byte(`
+fmt := import("fmt")
+demo := import("demo")
+
+localVar := "test"
+out := demo.callClosure(func() {
+	fmt.println("INSIDE CLOSURE CALLED FROM GO")
+	return fmt.sprintf("result: localVar=%s", localVar)
+})
+`))
+	s1.SetImports(modules)
+	c1, err := s1.Run()
+	require.NoError(t, err)
+	require.Equal(t, "result: localVar=test", c1.Get("out").String())
+	require.Equal(t, &tengo.String{Value: "result: localVar=test"}, closureResult)
+
+	// Case 2: closure with arguments passed from Go calling imported module
+	s2 := tengo.NewScript([]byte(`
+fmt := import("fmt")
+text := import("text")
+demo := import("demo")
+
+out := demo.callWithArgs(func(a, b) {
+	joined := fmt.sprintf("%s-%s", a, b)
+	return text.to_upper(joined)
+}, "hello", "world")
+`))
+	s2.SetImports(modules)
+	c2, err := s2.Run()
+	require.NoError(t, err)
+	require.Equal(t, "HELLO-WORLD", c2.Get("out").String())
+
+	// Case 3: nested closure capturing outer local variable and mutating it
+	s3 := tengo.NewScript([]byte(`
+fmt := import("fmt")
+demo := import("demo")
+
+wrapper := func() {
+	count := 10
+	demo.callClosure(func() {
+		count += 5
+		return fmt.sprintf("count=%d", count)
+	})
+	return count
+}
+out := wrapper()
+`))
+	s3.SetImports(modules)
+	c3, err := s3.Run()
+	require.NoError(t, err)
+	require.Equal(t, int64(15), c3.Get("out").Int64())
+
+	// Case 4: calling a compiled function from Go after script execution
+	s4 := tengo.NewScript([]byte(`
+fmt := import("fmt")
+adder := func(x, y) {
+	return fmt.sprintf("%d", x + y)
+}
+`))
+	s4.SetImports(modules)
+	c4, err := s4.Run()
+	require.NoError(t, err)
+	fn, ok := c4.Get("adder").Object().(*tengo.CompiledFunction)
+	require.True(t, ok)
+	res, err := fn.Call(&tengo.Int{Value: 20}, &tengo.Int{Value: 22})
+	require.NoError(t, err)
+	require.Equal(t, &tengo.String{Value: "42"}, res)
 }
 
 func TestVMErrorUnwrap(t *testing.T) {
